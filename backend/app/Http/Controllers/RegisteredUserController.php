@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 
 class RegisteredUserController extends Controller
 {
@@ -55,6 +57,8 @@ class RegisteredUserController extends Controller
                 'password' => Hash::make($request->password),
                 'role_id' => $roleId, // Asignar el rol (predeterminado o el proporcionado)
             ]);
+
+            Mail::to($user->email)->send(new WelcomeMail($user));
 
             // Crear token de autenticación
             $token = $user->createToken('Groupify')->plainTextToken;
