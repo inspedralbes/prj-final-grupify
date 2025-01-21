@@ -9,7 +9,6 @@
 
 <script setup>
 definePageMeta({
-  layout: 'alumnes',
-})
+  layout: "alumnes",
+});
 </script>
-
