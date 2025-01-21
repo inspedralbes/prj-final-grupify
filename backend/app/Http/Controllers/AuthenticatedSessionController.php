@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use App\Mail\LoginNotificationMail;
+use Illuminate\Support\Facades\Mail;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -53,6 +55,8 @@ class AuthenticatedSessionController extends Controller
 
         // Crear nuevo token
         $token = $user->createToken('Groupify')->plainTextToken;
+
+        Mail::to($user->email)->send(new LoginNotificationMail($user));
 
         return response()->json([
             'token' => $token,
