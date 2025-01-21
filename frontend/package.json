@@ -1,0 +1,35 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "format": "prettier --write \"**/*.{js,vue,css}\"",
+    "lint": "eslint --ext .js,.vue,.ts .",
+    "lint:fix": "eslint --ext .js,.vue,.ts . --fix"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@heroicons/vue": "^2.2.0",
+    "@pinia/nuxt": "^0.9.0",
+    "marked": "^15.0.6",
+    "nuxt": "^3.15.2",
+    "pinia": "^2.3.0",
+    "vue": "latest",
+    "vue-router": "latest",
+    "vue3-google-login": "^2.0.33"
+  },
+  "devDependencies": {
+    "@nuxtjs/eslint-config": "^12.0.0",
+    "@nuxtjs/tailwindcss": "^6.13.1",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-vue": "^9.32.0",
+    "prettier": "^3.4.2"
+  }
+}
