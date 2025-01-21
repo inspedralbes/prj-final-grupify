@@ -60,7 +60,7 @@
             </div>
             
             <div class="message">
-                Hola {{ $user->name }},
+                Hola,
             </div>
             
             <div class="message">
