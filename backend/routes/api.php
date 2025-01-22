@@ -116,6 +116,7 @@ Route::resource('groups', GroupController::class)->only(['index'])->middleware('
 // Para los demás métodos de la ruta
 Route::resource('groups', GroupController::class)->except(['index']);
 Route::post('/groups/{id}/addStudentsToGroup', [GroupController::class, 'addStudentsToGroup']);
+Route::put('/groups/{id}', [GroupController::class, 'update']);
 
 
 Route::post('/api/users/{userId}/assign-course-division', [UserController::class, 'assignCourseAndDivision']);
