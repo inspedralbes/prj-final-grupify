@@ -52,7 +52,7 @@ const gestioSubmit = async e => {
 
     // Redirección basada en roles
     const dashboardRoutes = {
-      admin: "/dashboardAdmin",
+      admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumno: "/alumne/dashboard",
     };
