@@ -1,17 +1,18 @@
 import { defineStore } from 'pinia';
 
-export const useGroupsStore = defineStore("groups", {
+export const useGroupStore = defineStore('groups', {
   state: () => ({
-    groups: [],
+    groups: [],  // Para almacenar los grupos
   }),
   actions: {
     async fetchGroups() {
       try {
-        const response = await fetch("http://localhost:8000/api/groups", {
-          method: "GET",
+        const token = localStorage.getItem('auth_token');  // Obtener el token de autenticación
+        const response = await fetch('http://localhost:8000/api/groups', {
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
           },
         });
         if (response.ok) {
@@ -54,7 +55,7 @@ export const useGroupsStore = defineStore("groups", {
 
         return data;
       } catch (error) {
-        throw new Error(error.message);
+        console.error('Error fetching groups:', error);
       }
     },
   },
