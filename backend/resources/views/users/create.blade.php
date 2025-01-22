@@ -38,7 +38,7 @@
         <div class="form-group">
             <label for="role">Rol:</label>
             <select name="role_id" id="role" class="form-control" required>
-                <option value="">Select a role</option>
+                <option value="">Selecciona un rol</option>
                 @foreach ($roles as $role)
                     <option value="{{ $role->id }}">{{ $role->name }}</option>
                 @endforeach
@@ -49,7 +49,7 @@
         <div class="form-group" id="subject-group" style="display: none;">
             <label for="subject">Assignatura:</label>
             <select name="subject_id" id="subject" class="form-control">
-                <option value="">Select a subject</option>
+                <option value="">Selecciona una assignatura </option>
                 @foreach ($subjects as $subject)
                     <option value="{{ $subject->id }}">{{ $subject->name }}</option>
                 @endforeach
@@ -62,7 +62,7 @@
             <div class="form-group">
                 <label for="course">Curs:</label>
                 <select name="courses[]" id="course" class="form-control" multiple>
-                <option value="">Select a course</option>
+                <option value="">Selecciona un curs</option>
                     @foreach ($courses as $course)
                         <option value="{{ $course->id }}">{{ $course->name }}</option>
                     @endforeach

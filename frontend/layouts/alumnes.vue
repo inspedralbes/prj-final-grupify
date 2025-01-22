@@ -81,7 +81,7 @@ const menuItems = [
   { name: "Dashboard", path: "/alumne/dashboard", icon: HomeIcon },
   { name: "Grups", path: "/alumne/grups", icon: UserGroupIcon },
   { name: "Formularis", path: "/alumne/formularis", icon: DocumentTextIcon },
-  { name: "Log out", path: "/alumne/tancar-sessio", icon: PowerIcon },
+  { name: "Tancar la sessió", path: "/alumne/tancar-sessio", icon: PowerIcon },
 ];
 
 const isMenuOpen = ref(true);
