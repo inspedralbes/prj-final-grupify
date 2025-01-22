@@ -1,6 +1,6 @@
 <template>
   <div class="p-6">
-   <div class="relative flex items-center mb-6">
+    <div class="relative flex items-center mb-6">
       <button
         class="absolute left-0 flex items-center space-x-1 text-gray-700 hover:text-gray-900"
         @click="navigateTo(`/professor/formularis/respostes/${formId}`)"
@@ -22,10 +22,11 @@
         <span>Tornar</span>
       </button>
 
-      <h1 class="flex-grow text-center text-2xl font-bold">Respuestas del Usuario</h1>
+      <h1 class="flex-grow text-center text-2xl font-bold">
+        Respuestas del Usuario
+      </h1>
     </div>
-  
-    
+
     <div v-if="error">
       <p>Error: {{ error }}</p>
     </div>
@@ -37,14 +38,19 @@
         <!-- Mostrar título del formulario -->
         <h2>Formulario: {{ answers.form_title }}</h2>
         <!-- Mostrar nombre y apellido del usuario -->
-        <p><strong>Usuario:</strong> {{ answers.user_name }} {{ answers.user_lastname }}</p>
+        <p>
+          <strong>Usuario:</strong> {{ answers.user_name }}
+          {{ answers.user_lastname }}
+        </p>
 
         <ul>
           <li v-for="(answer, index) in answers.answers" :key="index">
-            <p><strong>Pregunta:</strong> {{ answer.question.title }}</p> <!-- Cambié 'text' por 'title' -->
-            <p><strong>Respuesta:</strong> 
+            <p><strong>Pregunta:</strong> {{ answer.question.title }}</p>
+            <!-- Cambié 'text' por 'title' -->
+            <p>
+              <strong>Respuesta:</strong>
               <span v-if="Array.isArray(answer.answer)">
-                {{ answer.answer.join(', ') }}
+                {{ answer.answer.join(", ") }}
               </span>
               <span v-else>
                 {{ answer.answer }}
@@ -59,39 +65,42 @@
 </template>
 
 <script setup>
-const route = useRoute()
-const formId = route.params.formId
-const userId = route.params.userId
+const route = useRoute();
+const formId = route.params.formId;
+const userId = route.params.userId;
 
-const answers = ref(null) // Cambié de [] a null porque inicialmente no tenemos datos.
-const isLoading = ref(true)
-const error = ref(null)
+const answers = ref(null); // Cambié de [] a null porque inicialmente no tenemos datos.
+const isLoading = ref(true);
+const error = ref(null);
 
 const fetchAnswers = async (formId, userId) => {
   try {
-    const response = await fetch(`http://localhost:8000/api/forms/${formId}/users/${userId}/answers`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // Ajusta según tu implementación de autenticación
-      },
-    })
+    const response = await fetch(
+      `http://localhost:8000/api/forms/${formId}/users/${userId}/answers`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // Ajusta según tu implementación de autenticación
+        },
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`Error al obtener respuestas: ${response.statusText}`)
+      throw new Error(`Error al obtener respuestas: ${response.statusText}`);
     }
 
-    const data = await response.json()
-    answers.value = data // Asignamos la respuesta completa
+    const data = await response.json();
+    answers.value = data; // Asignamos la respuesta completa
   } catch (err) {
-    console.error("Error:", err)
-    error.value = err.message
+    console.error("Error:", err);
+    error.value = err.message;
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 // Llamar a la función cuando se monte el componente
-onMounted(() => fetchAnswers(formId, userId))
+onMounted(() => fetchAnswers(formId, userId));
 </script>

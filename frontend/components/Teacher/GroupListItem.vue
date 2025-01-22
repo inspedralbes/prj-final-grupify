@@ -44,7 +44,7 @@ defineProps({
       </div>
     </td>
     <td>{{ group.number_of_students }}</td>
-    <td>{{ group.description || 'No description available' }}</td>
+    <td>{{ group.description || "No description available" }}</td>
 
     <td>
       <div class="flex space-x-2">

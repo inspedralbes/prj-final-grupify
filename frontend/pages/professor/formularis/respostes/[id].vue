@@ -12,24 +12,26 @@ const goToFormularis = () => {
   navigateTo("/professor/formularis");
 };
 
-const getUsersByForm = async (formId) => {
+const getUsersByForm = async formId => {
   try {
-    const response = await fetch(`http://localhost:8000/api/forms/${formId}/users`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      },
-    });
+    const response = await fetch(
+      `http://localhost:8000/api/forms/${formId}/users`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Error al obtener usuarios.");
     }
 
-    const data = await response.json(); 
-    students.value = data; 
-
+    const data = await response.json();
+    students.value = data;
   } catch (error) {
     console.error("Error:", error);
   } finally {
@@ -62,13 +64,11 @@ const getUsersByForm = async (formId) => {
         <span>Tornar</span>
       </button>
 
-      <h1 class="flex-grow text-center text-2xl font-bold">
-        Alumnos
-      </h1>
+      <h1 class="flex-grow text-center text-2xl font-bold">Alumnos</h1>
     </div>
     <div v-if="isLoading" class="text-center p-8">Carregant estudiants...</div>
     <div v-else>
-      <TeacherStudentAnsweredList :students="students" :formId="formId"/>
+      <TeacherStudentAnsweredList :students="students" :formId="formId" />
     </div>
   </div>
 </template>

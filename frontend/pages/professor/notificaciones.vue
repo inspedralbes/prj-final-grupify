@@ -1,6 +1,6 @@
 <script setup>
 const { connect, sendNotification, socket } = useSocket();
-const notificationText = ref('');
+const notificationText = ref("");
 
 onMounted(() => {
   connect();
@@ -9,7 +9,7 @@ onMounted(() => {
 const handleSend = () => {
   if (notificationText.value.trim()) {
     sendNotification(notificationText.value);
-    notificationText.value = '';
+    notificationText.value = "";
   }
 };
 </script>
@@ -28,7 +28,7 @@ const handleSend = () => {
       class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
       :disabled="!socket?.connected"
     >
-      {{ socket?.connected ? 'Enviar a alumnos' : 'Conectando...' }}
+      {{ socket?.connected ? "Enviar a alumnos" : "Conectando..." }}
     </button>
   </div>
 </template>

@@ -107,7 +107,7 @@ async function submitResponses() {
     }
 
     triggerToast("Respuestas enviadas correctamente.", "success");
-    setTimeout(() => (navigateTo("/alumne/dashboard")), 500);
+    setTimeout(() => navigateTo("/alumne/dashboard"), 500);
   } catch (error) {
     console.error("Error al enviar las respuestas:", error);
     triggerToast("Hubo un problema al enviar las respuestas.", "error");

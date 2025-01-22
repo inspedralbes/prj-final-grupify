@@ -4,14 +4,14 @@ defineProps({
     type: Object,
     required: true,
   },
-    formId: {
-        type: Number,
-        required: true,
-    },
+  formId: {
+    type: Number,
+    required: true,
+  },
 });
 
 const viewAnswers = (studentId, formId) => {
-    navigateTo(`/professor/formularis/${formId}/users/${studentId}/answers`);
+  navigateTo(`/professor/formularis/${formId}/users/${studentId}/answers`);
 };
 </script>
 
@@ -40,7 +40,8 @@ const viewAnswers = (studentId, formId) => {
         <button
           class="p-1 hover:text-primary"
           @click="viewAnswers(student.id, formId)"
-        > Veure Respostes
+        >
+          Veure Respostes
           <EyeIcon class="w-5 h-5" />
         </button>
       </div>

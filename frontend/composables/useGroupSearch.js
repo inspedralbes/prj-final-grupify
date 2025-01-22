@@ -8,19 +8,18 @@ export function useGroupSearch(groupsRef) {
 
   const filteredGroups = computed(() => {
     const groups = groupsRef.value || [];
-    
+
     return groups.filter(group => {
       // Manejar valores nulos/undefined
-      const groupName = group.name?.toLowerCase() || '';
-      const groupDescription = group.description?.toLowerCase() || '';
-      const groupCourse = group.course || '';
-      const groupDivision = group.division || '';
+      const groupName = group.name?.toLowerCase() || "";
+      const groupDescription = group.description?.toLowerCase() || "";
+      const groupCourse = group.course || "";
+      const groupDivision = group.division || "";
 
       const searchTerm = searchQuery.value.toLowerCase();
-      
-      const matchesSearch = 
-        groupName.includes(searchTerm) ||
-        groupDescription.includes(searchTerm);
+
+      const matchesSearch =
+        groupName.includes(searchTerm) || groupDescription.includes(searchTerm);
 
       const matchesCourse =
         selectedCourse.value === "all" ||
@@ -38,6 +37,6 @@ export function useGroupSearch(groupsRef) {
     searchQuery,
     selectedCourse,
     selectedDivision,
-    filteredGroups
+    filteredGroups,
   };
 }

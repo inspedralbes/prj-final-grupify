@@ -1,5 +1,5 @@
 <script setup>
-import StudentAnsweredItem from '@/components/Teacher/StudentAnsweredItem.vue';
+import StudentAnsweredItem from "@/components/Teacher/StudentAnsweredItem.vue";
 defineProps({
   students: {
     type: Array,
@@ -23,7 +23,12 @@ defineProps({
           </tr>
         </thead>
         <tbody>
-          <StudentAnsweredItem v-for="student in students" :key="student.id" :student="student" :formId="formId" />
+          <StudentAnsweredItem
+            v-for="student in students"
+            :key="student.id"
+            :student="student"
+            :formId="formId"
+          />
         </tbody>
       </table>
     </div>
