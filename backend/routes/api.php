@@ -111,7 +111,10 @@ Route::resource('answers', AnswerController::class);
 Route::resource('groups', GroupController::class);
 
 // Rutas para grupos
-Route::resource('groups', GroupController::class);
+Route::resource('groups', GroupController::class)->only(['index'])->middleware('auth:sanctum');
+
+// Para los demás métodos de la ruta
+Route::resource('groups', GroupController::class)->except(['index']);
 Route::post('/groups/{id}/addStudentsToGroup', [GroupController::class, 'addStudentsToGroup']);
 
 

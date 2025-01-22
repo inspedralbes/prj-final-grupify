@@ -2,6 +2,12 @@
   <div class="space-y-6">
     <h2 class="text-2xl font-bold">Grups</h2>
 
+    <!-- Verificar si no hay grupos -->
+    <div v-if="groupStore.groups.length === 0" class="text-gray-500 text-center">
+      No se le ha asignado a ningún grupo.
+    </div>
+
+    <!-- Lista de grupos -->
     <div
       v-for="group in groupStore.groups"
       :key="group.id"

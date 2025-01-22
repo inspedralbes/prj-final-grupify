@@ -28,8 +28,17 @@ class GroupController extends Controller
 
     public function index(Request $request)
     {
-        // Cargar todos los grupos con sus usuarios (integrantes)
-        $groups = Group::with('users')->get();
+        // Obtener el usuario autenticado
+        $user = $request->user();
+
+        // Verificar el rol del usuario
+        if ($user->role === 'admin' || $user->role === 'professor') {
+            // Administradores y profesores ven todos los grupos
+            $groups = Group::with('users')->get();
+        } else {
+            // Alumnos solo ven los grupos a los que están inscritos
+            $groups = $user->groups()->with('users')->get();
+        }
 
         // Verificar si la solicitud es API
         if ($request->expectsJson()) {
@@ -39,7 +48,7 @@ class GroupController extends Controller
         // Para la vista
         return view('groups', compact('groups'));
     }
-
+    
     /**
      * @OA\Post(
      *     path="/api/groups",
