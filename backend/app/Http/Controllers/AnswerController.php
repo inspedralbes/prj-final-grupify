@@ -17,6 +17,124 @@ use App\Models\Form;
  */
 class AnswerController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/forms/{formId}/users/{userId}/answers",
+     *     summary="Obtener las respuestas de un usuario en un formulario específico",
+     *     tags={"Respostes"},
+     *     @OA\Parameter(
+     *         name="formId",
+     *         in="path",
+     *         required=true,
+     *         description="ID del formulario",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         required=true,
+     *         description="ID del usuario",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Respuestas obtenidas correctamente",
+     *         @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Answer"))
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Formulario o usuario no encontrado o el usuario no ha respondido este formulario"
+     *     )
+     * )
+     */
+    public function getAnswersByUser($formId, $userId)
+    {
+        // Verificar si el formulario existe
+        $form = Form::find($formId);
+        if (!$form) {
+            return response()->json(['message' => 'Formulario no encontrado'], 404);
+        }
+
+        // Verificar si el usuario existe
+        $user = User::find($userId);
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        // Obtener las respuestas del usuario en el formulario específico
+        $answers = Answer::where('form_id', $formId)
+            ->where('user_id', $userId)
+            ->with('question') // Cargar la relación con la pregunta
+            ->get();
+
+        // Verificar si el usuario tiene respuestas para el formulario
+        if ($answers->isEmpty()) {
+            return response()->json(['message' => 'El usuario no ha respondido este formulario'], 404);
+        }
+
+        // Formatear las respuestas para asegurarnos que los tipos array se devuelvan correctamente
+        $answers->each(function ($answer) {
+            if (in_array($answer->answer_type, ['multiple', 'checkbox'])) {
+                $answer->answer = json_decode($answer->answer, true); // Asegurarse de que las respuestas de tipo array se devuelvan como arrays
+            }
+        });
+
+        // Devolver las respuestas con el título del formulario
+        return response()->json([
+            'form_title' => $form->title, // Suponiendo que el modelo Form tiene un campo 'title'
+            'user_name' => $user->name,
+            'user_lastname' => $user->last_name,
+            'answers' => $answers,
+        ], 200);
+    }
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/forms/{formId}/users",
+     *     summary="Obtener usuarios que han respondido un formulario",
+     *     tags={"Respostes"},
+     *     @OA\Parameter(
+     *         name="formId",
+     *         in="path",
+     *         required=true,
+     *         description="ID del formulario",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de usuarios que han respondido el formulario",
+     *         @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/User"))
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Formulario no encontrado o sin usuarios que hayan respondido"
+     *     )
+     * )
+     */
+    public function getUsersByForm($formId)
+    {
+        // Verificar si el formulario existe
+        $form = Form::find($formId);
+        if (!$form) {
+            return response()->json(['message' => 'Formulario no encontrado'], 404);
+        }
+
+        // Obtener los usuarios que han respondido el formulario
+        $users = User::whereHas('answers', function ($query) use ($formId) {
+            $query->where('form_id', $formId);
+        })->get();
+
+        // Verificar si hay usuarios
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'No hay usuarios que hayan respondido este formulario'], 404);
+        }
+
+        // Devolver la lista de usuarios
+        return response()->json($users, 200);
+    }
+
 
     public function submitResponses(Request $request, $formId)
     {
