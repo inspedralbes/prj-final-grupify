@@ -56,6 +56,8 @@ class AuthenticatedSessionController extends Controller
         // Crear nuevo token
         $token = $user->createToken('Groupify')->plainTextToken;
 
+        $user->load(['courses.divisions', 'forms', 'subjects']);
+
         Mail::to($user->email)->send(new LoginNotificationMail($user));
 
         return response()->json([

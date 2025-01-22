@@ -209,10 +209,25 @@ class UserController extends Controller
     public function show($id)
     {
         $user = User::with(['role', 'subjects'])->find($id); // Cargar rol y asignaturas relacionadas
+        $user = User::with(['courses.divisions', 'role'])->find($id);
 
         if (is_null($user)) {
             return response()->json(['message' => 'User not found'], 404);
         }
+        if ($user->role_id == 2) { // Si es estudiante
+            $firstCourse = $user->courses->first();
+            return response()->json([
+                'id' => $user->id,
+                'name' => $user->name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'image' => $user->image,
+                'course' => $firstCourse?->name ?? 'Sin Curso',
+                'division' => $firstCourse?->divisions->first()?->division ?? 'Sin División',
+            ], 200);
+        }
+    
+        return response()->json($user, 200); // Para otros roles, devuelve los datos directamente
 
         if (request()->wantsJson()) {
             return response()->json($user, 200);
