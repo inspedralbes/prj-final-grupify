@@ -72,7 +72,7 @@ const handleCreateGroup = async () => {
     successMessage.value = "Grup creat amb èxit";
 
     setTimeout(() => {
-      router.push("/dashboard");
+      navigateTo("/professor/dashboard");
     }, 2000);
   } catch (error) {
     errorMessage.value = "Hi ha hagut un error al crear el grup";
