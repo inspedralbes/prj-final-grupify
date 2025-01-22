@@ -66,6 +66,11 @@ const updateFormStatus = async (formId, newStatus) => {
   }
 };
 
+const viewUsersAnswered = (formId) => {
+  navigateTo(`/professor/formularis/respostes/${formId}`);
+};
+
+
 const openAssignModal = form => {
   selectedForm.value = form;
   showAssignModal.value = true;
@@ -240,6 +245,7 @@ const handleFormAssigned = assignments => {
                       class="w-5 h-5"
                     />
                   </button>
+                  <button @click="viewUsersAnswered(form.id)">Ver respuestas </button>
                 </div>
               </td>
             </tr>

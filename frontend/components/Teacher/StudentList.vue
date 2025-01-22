@@ -1,6 +1,4 @@
 <script setup>
-import { useStudentsStore } from "@/stores/studentsStore";
-
 // Usar store
 const studentsStore = useStudentsStore();
 

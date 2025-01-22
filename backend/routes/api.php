@@ -63,6 +63,12 @@ Route::post('/forms/{formId}/submit-responses', [AnswerController::class, 'submi
 //RUTA PARA ACTUALIZAR ESTADO DE FORMULARIO
 Route::patch('/forms/{formId}/status', [FormController::class, 'updateFormStatus']);
 
+//RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO UN FORMULARIO
+Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm']);
+
+//RUTA PARA OBETENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
+Route::get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
+
 
 
 Route::get('/roles', [RoleController::class, 'index']);

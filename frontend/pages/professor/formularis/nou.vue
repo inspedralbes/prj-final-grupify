@@ -7,24 +7,6 @@ const formDescription = ref("");
 const formContext = ref("");
 const showAssignModal = ref(false);
 
-const students = ref([
-  {
-    id: 1,
-    name: "Ana García",
-    course: "1º ESO",
-  },
-  {
-    id: 2,
-    name: "Carlos Rodríguez",
-    course: "2º ESO",
-  },
-  {
-    id: 3,
-    name: "Laura Martínez",
-    course: "1º ESO",
-  },
-]);
-
 const goBack = () => {
   navigateTo("/professor/formularis");
 };
