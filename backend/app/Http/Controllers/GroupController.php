@@ -223,28 +223,74 @@ class GroupController extends Controller
         return response()->json($members);
     }
 
-    // Añadir estudiantes a un grupo desde vista profesor 
-    public function addStudentsToGroup(Request $request, $groupId)
-    {
-        // Validar los IDs de los estudiantes
-        $request->validate([
-            'student_ids' => 'required|array',
-            'student_ids.*' => 'exists:users,id', // Los IDs deben existir en la tabla de usuarios
-        ]);
+    /**
+ * @OA\Post(
+ *     path="/api/groups/{id}/addStudentsToGroup",
+ *     summary="Añadir estudiantes a un grupo",
+ *     tags={"Groups"},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del grupo",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"student_ids"},
+ *             @OA\Property(
+ *                 property="student_ids",
+ *                 type="array",
+ *                 @OA\Items(type="integer")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Estudiantes añadidos correctamente al grupo"
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="Grupo no encontrado"
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Error de validación"
+ *     )
+ * )
+ */
+public function addStudentsToGroup(Request $request, $groupId)
+{
+    // Validar los IDs de los estudiantes
+    $validated = $request->validate([
+        'student_ids' => 'required|array|min:1',
+        'student_ids.*' => 'exists:users,id', // Los IDs deben existir en la tabla de usuarios
+    ]);
 
-        $group = Group::findOrFail($groupId);
+    // Buscar el grupo
+    $group = Group::find($groupId);
 
-        $currentTimestamp = now(); // Obtener el timestamp actual
-
-        // Asociar los estudiantes seleccionados al grupo con los timestamps
-        foreach ($request->student_ids as $studentId) {
-            // Insertar cada relación entre el grupo y los estudiantes
-            $group->users()->attach($studentId, [
-                'created_at' => $currentTimestamp,
-                'updated_at' => $currentTimestamp
-            ]);
-        }
-
-        return response()->json(['message' => 'Estudiantes asignados correctamente al grupo.'], 200);
+    if (!$group) {
+        return response()->json(['message' => 'Grupo no encontrado'], 404);
     }
+
+    $currentTimestamp = now(); // Obtener el timestamp actual
+
+    // Evitar duplicados en la relación
+    $newStudentIds = collect($validated['student_ids'])->diff($group->users->pluck('id'));
+
+    // Asociar los nuevos estudiantes al grupo
+    if ($newStudentIds->isNotEmpty()) {
+        $group->users()->attach($newStudentIds, [
+            'created_at' => $currentTimestamp,
+            'updated_at' => $currentTimestamp
+        ]);
+    }
+
+    return response()->json([
+        'message' => 'Estudiantes asignados correctamente al grupo.',
+        'added_students' => $newStudentIds->values()
+    ], 200);
+}
 }
