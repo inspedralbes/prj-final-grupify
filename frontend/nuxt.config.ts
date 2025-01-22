@@ -5,4 +5,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["/assets/css/main.css"],
   ssr: false,
+  runtimeConfig: {
+    public: {
+      SOCKET_URL: process.env.SOCKET_URL || 'http://localhost:5000'
+    }
+  }
 });

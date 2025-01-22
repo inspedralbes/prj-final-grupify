@@ -1,29 +1,34 @@
 <script setup>
-const { $socketIO: socket } = useNuxtApp();
+const { connect, sendNotification, socket } = useSocket();
+const notificationText = ref('');
 
 onMounted(() => {
-  socket.connect();
-  
-  socket.on('nueva-notificacion', (data) => {
-    console.log('Nueva notificación:', data);
-    // Aquí tu lógica para mostrar la notificación
-  });
+  connect();
 });
 
-onBeforeUnmount(() => {
-  socket.disconnect();
-});
-
-const enviarNotificacion = () => {
-  socket.emit('notificacion', {
-    mensaje: '¡Nueva actualización!',
-    fecha: new Date()
-  });
+const handleSend = () => {
+  if (notificationText.value.trim()) {
+    sendNotification(notificationText.value);
+    notificationText.value = '';
+  }
 };
 </script>
 
 <template>
-  <button @click="enviarNotificacion">
-    Enviar notificación
-  </button>
+  <div class="notification-panel">
+    <h3 class="text-xl font-bold mb-4">Enviar Notificación</h3>
+    <textarea
+      v-model="notificationText"
+      placeholder="Escribe tu mensaje..."
+      class="w-full p-2 border rounded mb-4"
+      rows="4"
+    ></textarea>
+    <button
+      @click="handleSend"
+      class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+      :disabled="!socket?.connected"
+    >
+      {{ socket?.connected ? 'Enviar a alumnos' : 'Conectando...' }}
+    </button>
+  </div>
 </template>
