@@ -1,4 +1,6 @@
 <script setup>
+import { useRouter } from 'vue-router'; 
+
 const name = ref("");
 const last_name = ref("");
 const email = ref("");
@@ -6,8 +8,9 @@ const password = ref("");
 const confirmPassword = ref("");
 const isLoading = ref(false);
 const msgError = ref("");
+const router = useRouter();
 
-// Valida el formulario
+// Valida el formulari
 const validateForm = () => {
   if (!name.value) {
     msgError.value = "El nom és obligatori";
@@ -33,7 +36,7 @@ const validateForm = () => {
 };
 
 // Enviar el formulario de registro
-const gestioSubmit = async e => {
+const gestioSubmit = async (e) => {
   e.preventDefault();
   msgError.value = "";
 
@@ -42,25 +45,26 @@ const gestioSubmit = async e => {
   isLoading.value = true;
 
   try {
+    // Solicitar registro al servidor
     const response = await fetch("http://localhost:8000/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json", // Añade esto
+        Accept: "application/json",
       },
       body: JSON.stringify({
         name: name.value,
         last_name: last_name.value,
         email: email.value,
         password: password.value,
-        password_confirmation: confirmPassword.value, // Añade esto
+        password_confirmation: confirmPassword.value,
       }),
     });
 
-    const data = await response.json(); // Siempre intenta parsear JSON
+    const data = await response.json();
 
     if (!response.ok) {
-      // Maneja errores de validación
+      // Manejar errores de validación
       if (data.errors) {
         const errorMessages = Object.values(data.errors).flat();
         msgError.value = errorMessages.join(", ");
@@ -70,12 +74,38 @@ const gestioSubmit = async e => {
       throw new Error(msgError.value);
     }
 
-    // Registro exitoso
-    // console.log('Usuari registrat!', data);
+    console.log("Usuari registrat!", data);
+
+    // fer login després de registrar-se
+    const loginResponse = await fetch("http://localhost:8000/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value,
+      }),
+    });
+
+    const loginData = await loginResponse.json();
+
+    if (!loginResponse.ok) {
+      msgError.value = loginData.message || "Error en el login automàtic";
+      throw new Error(msgError.value);
+    }
+
+    // Desar token i dades del usuari en localStorage
+    localStorage.setItem("auth_token", loginData.token);
+    localStorage.setItem("role", loginData.role);
+    localStorage.setItem("user", JSON.stringify(loginData.user));
+
+    // Redirigir al dashboard alumne
+    router.push("/alumne/dashboard");
   } catch (err) {
     msgError.value =
-      err.message ||
-      "No s'ha pogut registrar l'usuari. Si us plau, torna-ho a provar.";
+      err.message || "No s'ha pogut registrar l'usuari. Si us plau, torna-ho a provar.";
   } finally {
     isLoading.value = false;
   }
