@@ -30,13 +30,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 
 definePageMeta({
   layout: "alumnes",
 });
-
+const router = useRouter();
 const authStore = useAuthStore();
 const forms = ref([]);
 const user = authStore.user; // Asegúrate de que el user_id esté almacenado en localStorage o donde sea pertinente.
@@ -76,9 +75,9 @@ const handleFormClick = formId => {
   if (formId === 2) {
     navigateTo(`/alumne/cesc/${formId}`); // Redirige a la ruta del cesc si el formId es 2
   } else if (formId === 3) {
-    navigateTo("/alumne/sociograma"); // Redirige a /sociograma si el formId es 3
+    navigateTo(`/alumne/FormQuestions/${formId}`); // Redirige a la ruta correspondiente para cualquier otro formId
   } else {
-    navigateTo(`/alumne/formulari/${formId}`); // Redirige a la ruta correspondiente para cualquier otro formId
+    navigateTo(`/alumne/forms/${formId}`); // Redirige a la ruta correspondiente para cualquier otro formId
   }
 };
 </script>

@@ -1,65 +1,70 @@
 <script setup>
 import { useStudentSearch } from "@/composables/useStudentSearch";
 import { useStudentsStore } from "@/stores/studentsStore";
+import DashboardNavTeacher from '~/components/Teacher/DashboardNavTeacher.vue'
 
 const studentsStore = useStudentsStore();
 const isLoading = ref(true);
 
-// Llamar a la API al montar el componente
 onMounted(async () => {
   await studentsStore.fetchStudents();
   isLoading.value = false;
 });
 
-// Utilizar computed para asegurar que reaccionen cambios en el estado
 const students = computed(() => studentsStore.students || []);
-const { searchQuery, selectedCourse, selectedDivision, filteredStudents } =
-  useStudentSearch(students);
-
-// Método para navegar al dashboard
-const goToDashboard = () => {
-  navigateTo("/professor/dashboard");
-};
+const { searchQuery, selectedCourse, selectedDivision, filteredStudents } = useStudentSearch(students);
 </script>
 
 <template>
-  <div class="p-6">
-    <div class="relative flex items-center mb-6">
-      <!-- Botón de volver -->
-      <button
-        class="absolute left-0 flex items-center space-x-1 text-gray-700 hover:text-gray-900"
-        @click="goToDashboard"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        <span>Tornar</span>
-      </button>
+  <div class="min-h-screen bg-gray-50">
+    <DashboardNavTeacher />
+    
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+          Gestió de Alumnes
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Gestiona i supervisa l'alumnat registrat a l'institut
+        </p>
+      </div>
 
-      <!-- Título centrado -->
-      <h1 class="flex-grow text-center text-2xl font-bold">
-        Gestión de Alumnos
-      </h1>
-    </div>
-    <div v-if="isLoading" class="text-center p-8">Carregant estudiants...</div>
-    <div v-else>
-      <TeacherStudentFilters
-        v-model:search-query="searchQuery"
-        v-model:selected-course="selectedCourse"
-        v-model:selected-division="selectedDivision"
-      />
-      <TeacherStudentList :students="filteredStudents" />
-    </div>
+      <!-- Estado de carga -->
+      <div v-if="isLoading" 
+           class="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="mt-4 text-gray-600 font-medium">Carregant estudiants...</p>
+      </div>
+
+      <div v-else class="space-y-6">
+        <!-- Tarjeta de filtros -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <TeacherStudentFilters
+            v-model:search-query="searchQuery"
+            v-model:selected-course="selectedCourse"
+            v-model:selected-division="selectedDivision"
+          />
+        </div>
+
+        <!-- Lista de estudiantes -->
+        <div class="bg-white rounded-lg shadow-sm">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-medium text-gray-900">
+                Llistat d'estudiants
+              </h2>
+              <span class="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full">
+                {{ filteredStudents.length }} estudiants
+              </span>
+            </div>
+          </div>
+          
+          <TeacherStudentList 
+            :students="filteredStudents" 
+            class="divide-y divide-gray-200"
+          />
+        </div>
+      </div>
+    </main>
   </div>
 </template>

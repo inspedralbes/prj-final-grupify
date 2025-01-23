@@ -63,6 +63,19 @@ Route::post('/forms/{formId}/submit-responses', [AnswerController::class, 'submi
 //RUTA PARA ACTUALIZAR ESTADO DE FORMULARIO
 Route::patch('/forms/{formId}/status', [FormController::class, 'updateFormStatus']);
 
+//RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO UN FORMULARIO
+Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm']);
+
+//RUTA PARA OBETENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
+Route::get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
+
+//RUTA PARA OBETENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
+Route::get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
+
+//RUTA PARA OBTENER RESPUSTA DE UN USUARIO DEL SOCIOGRAMA
+Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
+
+
 
 
 Route::get('/roles', [RoleController::class, 'index']);
@@ -110,8 +123,12 @@ Route::resource('questions', QuestionController::class);
 Route::resource('answers', AnswerController::class);
 Route::resource('groups', GroupController::class);
 
-// Rutas para grupos
-Route::resource('groups', GroupController::class);
+Route::resource('groups', GroupController::class)->only(['index'])->middleware('auth:sanctum');
+// Para los demás métodos de la ruta
+Route::resource('groups', GroupController::class)->except(['index']);
+Route::post('/groups/{id}/addStudentsToGroup', [GroupController::class, 'addStudentsToGroup']);
+Route::put('/groups/{id}', [GroupController::class, 'update']);
+
 
 Route::post('/api/users/{userId}/assign-course-division', [UserController::class, 'assignCourseAndDivision']);
 

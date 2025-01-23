@@ -58,6 +58,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'id_group');
     }
+
     public function forms()
     {
         return $this->belongsToMany(Form::class, 'form_user', 'user_id', 'form_id')
