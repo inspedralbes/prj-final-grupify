@@ -26,6 +26,7 @@ defineProps({
             <th class="text-left py-3">Curs</th>
             <th class="text-left py-3">Classe</th>
             <th class="text-left py-3">Fitxa</th>
+            <th class="text-left py-3">Estat</th>
           </tr>
         </thead>
         <tbody>

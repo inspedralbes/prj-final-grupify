@@ -54,5 +54,14 @@ defineProps({
         </button>
       </div>
     </td>
+     <!-- Estado -->
+     <td>
+      <span
+        class="px-3 py-1 rounded-full text-white text-sm font-medium"
+        :class="student.active ? 'bg-green-500' : 'bg-red-500'"
+      >
+        {{ student.active ? 'Actiu' : 'Inactiu' }}
+      </span>
+    </td>
   </tr>
 </template>

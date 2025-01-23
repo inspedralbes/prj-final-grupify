@@ -1,32 +1,67 @@
-// src/stores/students.js
 import { defineStore } from "pinia";
 
 export const useStudentsStore = defineStore("students", {
   state: () => ({
-    students: [], // Aquí guardamos el listado de estudiantes
-    loading: false, // Puedes usarlo para mostrar una carga mientras se obtienen los datos
-    error: null, // Para manejar posibles errores
+    students: [], // Listado de estudiantes
+    loading: false, // Estado de carga
+    error: null, // Manejo de errores
   }),
   actions: {
-    async fetchStudents() {
-      this.loading = true; // Comienza la carga
+    async fetchStudents(force = false) {
+      if (!force && this.students.length > 0) {
+        return; // Evitar recarga innecesaria
+      }
+
+      this.loading = true;
+      this.error = null;
+
       try {
         const response = await fetch("http://localhost:8000/api/get-students");
 
         if (!response.ok) {
-          throw new Error(`Error: ${response.divisionText}`);
+          throw new Error(`Error: ${response.statusText}`);
         }
 
         const data = await response.json();
-        this.students = data; // Guarda los estudiantes en el estado
-        // console.log('Datos recibidos de la API:', data);
+
+        if (!Array.isArray(data)) {
+          throw new Error("La respuesta de la API no tiene el formato esperado.");
+        }
+
+        this.students = data.map(student => ({
+          ...student,
+          active: student.active ?? true, // Si no viene definido
+        }));
       } catch (error) {
-        this.error = error.message;
+        this.error = `Error al cargar estudiantes: ${error.message}`;
         console.error("Error fetching students:", error);
       } finally {
-        this.loading = false; // Termina la carga
+        this.loading = false;// Termina la carga
       }
     },
+
+    updateStudent(updatedStudent) {
+      const studentIndex = this.students.findIndex(student => student.id === updatedStudent.id);
+      if (studentIndex !== -1) {
+        this.students.splice(studentIndex, 1, updatedStudent); // Garantiza reactividad
+      } else {
+        console.warn(`Estudiante con ID ${updatedStudent.id} no encontrado.`);
+      }
+    },
+
+    toggleActive(studentId) {
+      const student = this.students.find(s => s.id === studentId);
+      if (student) {
+        student.active = !student.active; // Cambia el estado
+      } else {
+        console.warn(`Estudiante con ID ${studentId} no encontrado.`);
+      }
+    },
+
+    removeStudent(studentId) {
+      this.students = this.students.filter(student => student.id !== studentId);
+    },
+
     getStudentById(id) {
       // console.log('Buscando estudiante con ID:', id, typeof id);
       const found = this.students.find(student => student.id === Number(id));
