@@ -42,46 +42,50 @@ const isActiveRoute = (itemRoute) => route.path === itemRoute;
 <template>
   <nav class="bg-[#00ADEC] shadow-lg">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16">
+      <div class="flex justify-between items-center h-16">
+        <!-- Botón de inicio -->
         <button
           @click="goHome"
           class="flex items-center text-white hover:text-blue-100 transition-colors duration-200"
         >
           <svg class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+            />
           </svg>
           <span class="text-lg font-semibold">Inici</span>
         </button>
 
+        <!-- Menú de navegación -->
         <div class="flex space-x-1">
           <NuxtLink
             v-for="item in menuItems"
             :key="item.title"
             :to="item.route"
-            class="group px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
-            :class="[
+            class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
+            :class="[ 
               isActiveRoute(item.route)
                 ? 'bg-blue-700 text-white'
                 : 'text-blue-50 hover:bg-blue-600 hover:text-white'
             ]"
           >
-            <div class="flex items-center space-x-2">
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  :d="item.icon"
-                />
-              </svg>
-              <span>{{ item.title }}</span>
-            </div>
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                :d="item.icon"
+              />
+            </svg>
+            <span>{{ item.title }}</span>
           </NuxtLink>
         </div>
       </div>

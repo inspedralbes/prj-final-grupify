@@ -1,16 +1,17 @@
 <script setup>
+import DashboardNavTeacher from '@/components/Teacher/DashboardNavTeacher.vue'
+
+
 const route = useRoute();
 const formId = route.params.id;
 const isLoading = ref(true);
 const students = ref([]);
 
+
 onMounted(() => {
   getUsersByForm(formId);
 });
 
-const goToFormularis = () => {
-  navigateTo("/professor/formularis");
-};
 
 const getUsersByForm = async formId => {
   try {
@@ -26,9 +27,11 @@ const getUsersByForm = async formId => {
       }
     );
 
+
     if (!response.ok) {
       throw new Error("Error al obtener usuarios.");
     }
+
 
     const data = await response.json();
     students.value = data;
@@ -40,35 +43,36 @@ const getUsersByForm = async formId => {
 };
 </script>
 
-<template>
-  <div class="p-6">
-    <div class="relative flex items-center mb-6">
-      <button
-        class="absolute left-0 flex items-center space-x-1 text-gray-700 hover:text-gray-900"
-        @click="goToFormularis"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        <span>Tornar</span>
-      </button>
 
-      <h1 class="flex-grow text-center text-2xl font-bold">Alumnos</h1>
-    </div>
-    <div v-if="isLoading" class="text-center p-8">Carregant estudiants...</div>
-    <div v-else>
-      <TeacherStudentAnsweredList :students="students" :formId="formId" />
+<template>
+  <div class="min-h-screen bg-gray-100 flex flex-col">
+    <DashboardNavTeacher class="shadow-md z-10" />
+   
+    <div class="flex-1 container mx-auto px-4 py-8">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center mb-8">
+          <h1 class="text-3xl font-bold text-gray-800 flex-grow text-center">
+            Llistat d'Estudiants
+          </h1>
+        </div>
+
+
+        <div v-if="isLoading" class="flex justify-center items-center h-64">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+       
+        <div v-else-if="students.length === 0" class="text-center text-gray-500 py-8">
+          No hi ha estudiants en aquest formulari
+        </div>
+       
+        <div v-else>
+          <TeacherStudentAnsweredList
+            :students="students"
+            :formId="formId"
+            class="w-full"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>

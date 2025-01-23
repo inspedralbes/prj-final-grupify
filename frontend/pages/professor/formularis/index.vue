@@ -211,11 +211,12 @@ const handleFormAssigned = assignments => {
         </table>
       </div>
     </div>
-
+   
     <FormsAssignFormModal
       v-model="showAssignModal"
       :form="selectedForm || {}"
       @assigned="handleFormAssigned"
     />
+    </main>
   </div>
 </template>
