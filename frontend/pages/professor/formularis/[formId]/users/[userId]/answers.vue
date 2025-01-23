@@ -158,7 +158,7 @@ const fetchAnswersSociogram = async (formId, userId) => {
 
     const data = await response.json();
     answers.value = data; // Asignamos la respuesta completa
-    console.log(answers.value);
+    // console.log(answers.value);
   } catch (err) {
     console.error("Error:", err);
     error.value = err.message;
