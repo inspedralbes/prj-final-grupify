@@ -11,6 +11,7 @@ const handleNewNotification = (data) => {
   notificationStore.addNotification({
     message: data.message,
     teacher_name: data.from,
+    priority: data.priority || 'normal',
     created_at: data.timestamp || new Date().toISOString()
   });
 };
@@ -43,6 +44,33 @@ const formatDate = (dateString) => {
     minute: '2-digit'
   });
 };
+
+// Configuración de colores por prioridad
+const priorityStyles = {
+  low: {
+    border: 'border-l-gray-400',
+    bg: 'bg-gray-50',
+    badge: 'bg-gray-200 text-gray-700'
+  },
+  normal: {
+    border: 'border-l-blue-400',
+    bg: 'bg-blue-50',
+    badge: 'bg-blue-200 text-blue-700'
+  },
+  high: {
+    border: 'border-l-red-400',
+    bg: 'bg-red-50',
+    badge: 'bg-red-200 text-red-700'
+  }
+};
+
+const getPriorityLabel = (priority) => {
+  return {
+    low: 'Baja',
+    normal: 'Normal',
+    high: 'Alta'
+  }[priority] || 'Normal';
+};
 </script>
 
 <template>
@@ -71,16 +99,28 @@ const formatDate = (dateString) => {
           v-for="notification in notificationStore.sortedNotifications" 
           :key="notification.id"
           :class="[
-            'p-4 rounded-lg transition-all cursor-pointer',
-            notification.read ? 'bg-gray-50' : 'bg-blue-50 hover:bg-blue-100'
+            'p-4 rounded-lg transition-all cursor-pointer border-l-4',
+            priorityStyles[notification.priority || 'normal'].border,
+            priorityStyles[notification.priority || 'normal'].bg,
+            notification.read ? 'opacity-75' : 'hover:shadow-md'
           ]"
           @click="notificationStore.markAsRead(notification.id)"
         >
           <div class="flex items-start justify-between">
-            <div>
-              <h4 class="font-semibold text-gray-900">
-                {{ notification.title }}
-              </h4>
+            <div class="w-full">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="font-semibold text-gray-900">
+                  {{ notification.title }}
+                </h4>
+                <span 
+                  :class="[
+                    'text-xs px-2 py-1 rounded-full',
+                    priorityStyles[notification.priority || 'normal'].badge
+                  ]"
+                >
+                  {{ getPriorityLabel(notification.priority) }}
+                </span>
+              </div>
               <p class="text-sm text-gray-600 mt-1">
                 {{ notification.message }}
               </p>
@@ -91,7 +131,7 @@ const formatDate = (dateString) => {
             </div>
             <div 
               v-if="!notification.read" 
-              class="h-2 w-2 bg-blue-500 rounded-full"
+              class="h-2 w-2 bg-blue-500 rounded-full ml-2"
             ></div>
           </div>
         </div>
@@ -99,3 +139,10 @@ const formatDate = (dateString) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Transiciones suaves */
+div[class*='border-l-'] {
+  transition: all 0.2s ease-in-out;
+}
+</style>

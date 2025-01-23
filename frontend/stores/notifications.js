@@ -60,6 +60,7 @@ export const useNotificationStore = defineStore('notifications', {
         title: notification.title || 'Nueva notificación',
         message: notification.message,
         teacher_name: notification.teacher_name,
+        priority: notification.priority || 'normal',
         created_at: notification.created_at || new Date().toISOString(),
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
         read: false,
