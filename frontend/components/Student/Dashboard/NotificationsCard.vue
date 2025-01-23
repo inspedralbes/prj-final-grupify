@@ -6,31 +6,31 @@ import { BellIcon } from '@heroicons/vue/24/outline';
 
 const notificationStore = useNotificationStore();
 const { connect, socket } = useSocket();
-const authStore = useAuthStore(); // Asume que tienes un store de autenticación
 
-onMounted(() => {
-  connect();
-  
-  if (socket) {
-    // Registrar al alumno con su ID real
-    socket.emit('register_role', { 
-      role: 'alumno', 
-      userId: authStore.user.id // Obtener ID del usuario autenticado
-    });
+const handleNewNotification = (data) => {
+  notificationStore.addNotification({
+    message: data.message,
+    teacher_name: data.from,
+    created_at: data.timestamp || new Date().toISOString()
+  });
+};
 
-    socket.on("nueva-notificacion", data => {
-      notificationStore.addNotification({
-        message: data.message,
-        teacher_name: data.from,
-        created_at: data.timestamp
-      });
-    });
+onMounted(async () => {
+  try {
+    await notificationStore.fetchNotifications();
+    connect();
+    
+    if (socket) {
+      socket.on("nueva-notificacion", handleNewNotification);
+    }
+  } catch (error) {
+    console.error('Error initializing notifications:', error);
   }
 });
 
 onBeforeUnmount(() => {
   if (socket) {
-    socket.off("nueva-notificacion");
+    socket.off("nueva-notificacion", handleNewNotification);
   }
 });
 
@@ -60,7 +60,7 @@ const formatDate = (dateString) => {
     
     <div class="space-y-4">
       <div 
-        v-if="notificationStore.sortedNotifications.length === 0" 
+        v-if="notificationStore.notifications.length === 0" 
         class="text-center text-gray-500"
       >
         No hi ha notificacions.
