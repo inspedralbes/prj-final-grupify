@@ -51,10 +51,10 @@ const { searchQuery, selectedCourse, selectedDivision, filteredStudents } = useS
           <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between">
               <h2 class="text-lg font-medium text-gray-900">
-                Lista de Estudiantes
+                Llistat d'estudiants
               </h2>
               <span class="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full">
-                {{ filteredStudents.length }} estudiantes
+                {{ filteredStudents.length }} estudiants
               </span>
             </div>
           </div>
