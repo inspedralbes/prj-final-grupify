@@ -22,7 +22,7 @@ const { searchQuery, selectedCourse, selectedDivision, filteredStudents } = useS
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900">
-          Gestió de Alumnes
+          Gestió d'Alumnes
         </h1>
         <p class="mt-2 text-sm text-gray-600">
           Gestiona i supervisa l'alumnat registrat a l'institut

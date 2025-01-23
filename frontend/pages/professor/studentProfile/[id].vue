@@ -147,7 +147,7 @@ onMounted(async () => {
 
         <!-- Modal para seleccionar motivo de baja -->
         <div v-if="showBajaModal" class="mt-8 bg-gray-50 p-6 rounded-lg border shadow-md">
-          <h2 class="text-lg font-bold text-gray-800 mb-4">Selecciona un motiu per donar de baixaaaa</h2>
+          <h2 class="text-lg font-bold text-gray-800 mb-4">Selecciona un motiu per donar de baixa</h2>
           <div class="space-y-2">
             <label v-for="reason in reasons" :key="reason" class="flex items-center space-x-2">
               <input
