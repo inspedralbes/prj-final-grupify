@@ -93,9 +93,6 @@ Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 Route::post('/register', [RegisteredUserController::class, 'store']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthenticatedSessionController::class, 'logout']);
 
-
-//AÑADIDO RECIEN
-
 // Ruta para obtener el usuario autenticado
 Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'getAuthenticatedUser']);
 
@@ -117,11 +114,12 @@ Route::resource('answers', AnswerController::class);
 Route::resource('groups', GroupController::class);
 
 Route::resource('groups', GroupController::class)->only(['index'])->middleware('auth:sanctum');
-// Para los demás métodos de la ruta
+
+// Para los demás métodos de la ruta GRUPO
 Route::resource('groups', GroupController::class)->except(['index']);
 Route::post('/groups/{id}/addStudentsToGroup', [GroupController::class, 'addStudentsToGroup']);
 Route::put('/groups/{id}', [GroupController::class, 'update']);
-
+Route::delete('/groups/{groupId}/removeStudentFromGroup', [GroupController::class, 'removeStudentFromGroup']);
 
 Route::post('/api/users/{userId}/assign-course-division', [UserController::class, 'assignCourseAndDivision']);
 
