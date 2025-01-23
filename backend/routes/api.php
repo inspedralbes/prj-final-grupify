@@ -69,6 +69,13 @@ Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm'])
 //RUTA PARA OBETENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
 Route::get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
 
+//RUTA PARA OBETENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
+Route::get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
+
+//RUTA PARA OBTENER RESPUSTA DE UN USUARIO DEL SOCIOGRAMA
+Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
+
+
 
 
 Route::get('/roles', [RoleController::class, 'index']);

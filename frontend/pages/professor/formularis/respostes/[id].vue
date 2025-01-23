@@ -12,19 +12,21 @@ const goToFormularis = () => {
   navigateTo("/professor/formularis");
 };
 
-const getUsersByForm = async formId => {
+const getUsersByForm = async (formId) => {
   try {
-    const response = await fetch(
-      `http://localhost:8000/api/forms/${formId}/users`,
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-      }
-    );
+    const apiUrl =
+      formId === "3"
+        ? `http://localhost:8000/api/forms/${formId}/responded-users`
+        : `http://localhost:8000/api/forms/${formId}/users`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+      },
+    });
 
     if (!response.ok) {
       throw new Error("Error al obtener usuarios.");
