@@ -1,6 +1,5 @@
 <script setup>
 import { EyeIcon } from "@heroicons/vue/24/outline";
-import { useStudentsStore } from "@/stores/studentsStore";
 
 const studentsStore = useStudentsStore();
 onMounted(() => {
@@ -10,8 +9,8 @@ onMounted(() => {
 
 const router = useRouter();
 
-const viewProfile = studentId => {
-  router.push({ name: "StudentProfile", params: { id: studentId } });
+const viewProfile = (studentId) => {
+  router.push(`/professor/studentProfile/${studentId}`);
 };
 // Declara la prop 'student' en este componente
 defineProps({
