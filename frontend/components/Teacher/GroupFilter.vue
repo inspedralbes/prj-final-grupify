@@ -1,4 +1,3 @@
-<!-- components/GroupFilter.vue -->
 <script setup>
 defineProps({
   searchQuery: String,
