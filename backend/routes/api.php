@@ -30,6 +30,7 @@ Route::middleware('api')->resource('courses', CourseController::class);
 Route::resource('roles', RoleController::class);
 Route::resource('courses', CourseController::class);
 Route::resource('subjects', SubjectController::class);
+Route::resource('groups', GroupController::class)->middleware('auth:sanctum');
 
 //CRUD USERSS
 Route::resource('users', UserController::class)->names([
@@ -85,7 +86,6 @@ Route::resource('divisions', DivisionController::class);
 Route::resource('forms', FormController::class);
 Route::resource('questions', QuestionController::class);
 Route::resource('answers', AnswerController::class);
-Route::resource('groups', GroupController::class);
 
 // ruta para pedir todas las preguntas y respuestas de un formulario
 Route::get('forms/{formId}/questions', [FormController::class, 'getQuestionsAndAnswers']);
@@ -123,12 +123,13 @@ Route::resource('groups', GroupController::class);
 Route::resource('groups', GroupController::class)->only(['index'])->middleware('auth:sanctum');
 
 // Para los demás métodos de la ruta GRUPO
-Route::resource('groups', GroupController::class)->except(['index']);
 Route::post('/groups/{id}/addStudentsToGroup', [GroupController::class, 'addStudentsToGroup']);
 Route::put('/groups/{id}', [GroupController::class, 'update']);
 Route::delete('/groups/{groupId}/removeStudentFromGroup', [GroupController::class, 'removeStudentFromGroup']);
-
+Route::post('/groups', [GroupController::class, 'store']);
 Route::post('/api/users/{userId}/assign-course-division', [UserController::class, 'assignCourseAndDivision']);
+Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
+
 
 // Rutas para relaciones sociométricas
 Route::prefix('sociogram-relationships')->group(function () {
