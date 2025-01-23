@@ -1,89 +1,127 @@
 <template>
-  <div class="p-6">
-    <div class="relative flex items-center mb-6">
-      <button
-        class="absolute left-0 flex items-center space-x-1 text-gray-700 hover:text-gray-900"
-        @click="navigateTo(`/professor/formularis/respostes/${formId}`)"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        <span>Tornar</span>
-      </button>
-
-      <h1 class="flex-grow text-center text-2xl font-bold">
-        Respuestas del Usuario
-      </h1>
-    </div>
+  <div class="min-h-screen bg-gray-50 flex flex-col">
+    <DashboardNavTeacher class="shadow-md z-10"/>
     
-    <!-- Manejo de estados de carga y errores -->
-    <div v-if="error">
-      <p class="text-red-500">Error: {{ error }}</p>
-    </div>
-    <div v-else-if="isLoading">
-      <p class="text-gray-500">Cargando respuestas...</p>
-    </div>
-    <div v-else>
-      <!-- Mostrar respuestas si existen -->
-      <div v-if="answers && answers.form_title">
-        <h2 class="text-2xl font-bold mb-4">{{ answers.form_title }}</h2>
-        <p class="text-gray-700">
-          <strong>Usuario:</strong> {{ answers.user_name }} {{ answers.user_lastname }}
-        </p>
+    <div class="container mx-auto px-4 py-8 flex-grow">
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto">
+        <div 
+          class="h-1" 
+          style="background-color: rgb(0, 173, 238)"
+        ></div>
+        
+        <div class="p-8">
+          <div class="flex justify-between items-center mb-8">
+            <button 
+              @click="navigateBack" 
+              class="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <h1 
+              class="text-2xl font-semibold text-center flex-grow"
+              style="color: rgb(0, 173, 238)"
+            >
+              {{ answers?.form_title || 'Form Responses' }}
+            </h1>
+          </div>
 
-        <!-- Mostrar relaciones sociométricas agrupadas por pregunta -->
-        <div v-if="answers.relationships && Object.keys(answers.relationships).length">
-          <h3 class="text-xl font-bold mt-6 mb-4">Relaciones Sociométricas</h3>
-          <div v-for="(relationship, questionId) in answers.relationships" :key="questionId">
-            <div class="bg-gray-50 p-4 rounded-lg shadow mb-4">
-              <p class="text-lg font-semibold"><strong>Pregunta:</strong> {{ relationship.question_title }}</p>
-              
-              <ul class="mt-2 space-y-2">
-                <li v-for="(peer, peerIndex) in relationship.peers" :key="peerIndex" class="text-sm text-gray-600">
-                  <strong>Compañero/a:</strong> {{ peer.name }} {{ peer.last_name }}<br>
-                  <strong>Tipo de Relación:</strong>
-                  <span :class="peer.relationship_type === 'positive' ? 'text-green-500' : 'text-red-500'">
-                    {{ peer.relationship_type === 'positive' ? 'Positiva' : 'Negativa' }}
+          <div v-if="isLoading" class="text-center py-12">
+            <div class="animate-pulse h-4 bg-gray-200 w-1/2 mx-auto"></div>
+          </div>
+
+          <div v-else-if="error" class="text-center text-red-500">
+            {{ error }}
+          </div>
+
+          <div v-else-if="answers">
+            <div class="mb-8">
+              <h2 
+                class="text-lg font-medium mb-4 pb-2 border-b"
+                style="color: rgb(0, 173, 238)"
+              >
+                Student Details
+              </h2>
+              <p class="text-gray-700 capitalize">
+                {{ answers.user_name }} {{ answers.user_lastname }}
+              </p>
+            </div>
+
+            <!-- Sociometric Relationships -->
+            <div v-if="answers.relationships && Object.keys(answers.relationships).length">
+              <h2 
+                class="text-lg font-medium mb-4 pb-2 border-b"
+                style="color: rgb(0, 173, 238)"
+              >
+                Sociometric Relationships
+              </h2>
+              <div 
+                v-for="(relationship, questionId) in answers.relationships" 
+                :key="questionId" 
+                class="mb-6"
+              >
+                <h3 class="font-medium mb-3 text-gray-600">
+                  {{ relationship.question_title }}
+                </h3>
+                <div class="grid md:grid-cols-2 gap-3">
+                  <div 
+                    v-for="(peer, peerIndex) in relationship.peers" 
+                    :key="peerIndex" 
+                    class="bg-gray-100 rounded-lg p-3"
+                  >
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-800">
+                        {{ peer.name }} {{ peer.last_name }}
+                      </span>
+                      <span 
+                        :class="peer.relationship_type === 'positive' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'"
+                        class="px-2 py-1 rounded-full text-xs"
+                      >
+                        {{ peer.relationship_type === 'positive' ? 'Positive' : 'Negative' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Answers -->
+            <div v-if="answers.answers && answers.answers.length">
+              <h2 
+                class="text-lg font-medium mb-4 pb-2 border-b"
+                style="color: rgb(0, 173, 238)"
+              >
+                Responses
+              </h2>
+              <div 
+                v-for="(answer, index) in answers.answers" 
+                :key="index" 
+                class="mb-4 p-4 bg-gray-100 rounded-lg"
+              >
+                <h3 class="font-medium mb-2 text-gray-700">
+                  {{ answer.question.title }}
+                </h3>
+                <p class="text-gray-600">
+                  <span v-if="Array.isArray(answer.answer)">
+                    {{ answer.answer.join(", ") }}
                   </span>
-                </li>
-              </ul>
+                  <span v-else>{{ answer.answer }}</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
-
-        <!-- Mostrar respuestas normales si existen -->
-        <div v-if="answers.answers && answers.answers.length">
-          <h2 class="text-2xl font-bold mb-4">Formulario: {{ answers.form_title }}</h2>
-          <ul class="mt-4 space-y-4">
-            <li v-for="(answer, index) in answers.answers" :key="index" class="bg-gray-50 p-4 rounded-lg shadow">
-              <p class="text-lg font-semibold"><strong>Pregunta:</strong> {{ answer.question.title }}</p>
-              <p class="text-sm text-gray-600">
-                <strong>Respuesta:</strong>
-                <span v-if="Array.isArray(answer.answer)">{{ answer.answer.join(", ") }}</span>
-                <span v-else>{{ answer.answer }}</span>
-              </p>
-            </li>
-          </ul>
-        </div>
-
-        <p v-else class="text-gray-500">No hay respuestas para este usuario.</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import DashboardNavTeacher from '~/components/Teacher/DashboardNavTeacher.vue';
 const route = useRoute();
 const formId = route.params.formId;
 const userId = route.params.userId;
@@ -91,6 +129,10 @@ const userId = route.params.userId;
 const answers = ref(null); // Cambié de [] a null porque inicialmente no tenemos datos.
 const isLoading = ref(true);
 const error = ref(null);
+
+const navigateBack = () => {
+  navigateTo(`/professor/formularis/respostes/${formId}`)
+}
 
 const fetchAnswers = async (formId, userId) => {
   try {

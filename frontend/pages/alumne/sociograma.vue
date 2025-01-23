@@ -221,7 +221,7 @@ const handleFinish = async () => {
     successMessage.value = "Respostes enviades correctament.";
     setTimeout(() => {
       successMessage.value = ""; // Desaparecer el mensaje después de 3 segundos
-      router.push("/student/forms");
+      navigateTo("/alumne/formularis");
     }, 3000);
 
     const completedForms = JSON.parse(
