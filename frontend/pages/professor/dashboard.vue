@@ -76,10 +76,19 @@ const logout = () => {
       <!-- Welcome Section -->
       <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
         <div v-if="userData" class="text-center">
-          <h1 class="text-3xl font-bold text-gray-800 mb-4">
-            Benvingut, {{ userData.name }} {{ userData.last_name }}!
-          </h1>
-          <p class="text-gray-600">{{ userData.email }}</p>
+          <div class="flex flex-col items-center">
+            <!-- Avatar -->
+            <img
+              :src="userData.image || 'https://via.placeholder.com/150'"
+              alt="Avatar"
+              class="w-24 h-24 rounded-full object-cover mb-4"
+            />
+            <!-- Información del profesor -->
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+              Benvingut, {{ userData.name }} {{ userData.last_name }}!
+            </h1>
+            <p class="text-gray-600">{{ userData.email }}</p>
+          </div>
         </div>
       </div>
 

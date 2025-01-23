@@ -10,17 +10,16 @@ const userData = ref({
 });
 
 onMounted(() => {
-  const user = authStore.user; // Obtenemos el usuario autenticado desde el store
+  const user = authStore.user; 
 
   if (user) {
-    // Asignamos los datos incluyendo curso y división
     userData.value = {
       name: user.name,
       last_name: user.last_name,
       email: user.email,
       image: user.image,
-      course: user.courses?.[0]?.name || "Sin Curso", // Accedemos al primer curso si existe
-      division: user.courses?.[0]?.divisions?.[0]?.division || "Sin División", // Accedemos a la primera división
+      course: user.courses?.[0]?.name || "Sin Curso", 
+      division: user.courses?.[0]?.divisions?.[0]?.division || "Sin División", 
     };
   }
 });
