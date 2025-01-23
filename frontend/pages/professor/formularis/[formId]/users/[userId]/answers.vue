@@ -26,40 +26,59 @@
         Respuestas del Usuario
       </h1>
     </div>
-
+    
+    <!-- Manejo de estados de carga y errores -->
     <div v-if="error">
-      <p>Error: {{ error }}</p>
+      <p class="text-red-500">Error: {{ error }}</p>
     </div>
     <div v-else-if="isLoading">
-      <p>Cargando respuestas...</p>
+      <p class="text-gray-500">Cargando respuestas...</p>
     </div>
     <div v-else>
-      <div v-if="answers && answers.answers && answers.answers.length">
-        <!-- Mostrar título del formulario -->
-        <h2>Formulario: {{ answers.form_title }}</h2>
-        <!-- Mostrar nombre y apellido del usuario -->
-        <p>
-          <strong>Usuario:</strong> {{ answers.user_name }}
-          {{ answers.user_lastname }}
+      <!-- Mostrar respuestas si existen -->
+      <div v-if="answers && answers.form_title">
+        <h2 class="text-2xl font-bold mb-4">{{ answers.form_title }}</h2>
+        <p class="text-gray-700">
+          <strong>Usuario:</strong> {{ answers.user_name }} {{ answers.user_lastname }}
         </p>
 
-        <ul>
-          <li v-for="(answer, index) in answers.answers" :key="index">
-            <p><strong>Pregunta:</strong> {{ answer.question.title }}</p>
-            <!-- Cambié 'text' por 'title' -->
-            <p>
-              <strong>Respuesta:</strong>
-              <span v-if="Array.isArray(answer.answer)">
-                {{ answer.answer.join(", ") }}
-              </span>
-              <span v-else>
-                {{ answer.answer }}
-              </span>
-            </p>
-          </li>
-        </ul>
+        <!-- Mostrar relaciones sociométricas agrupadas por pregunta -->
+        <div v-if="answers.relationships && Object.keys(answers.relationships).length">
+          <h3 class="text-xl font-bold mt-6 mb-4">Relaciones Sociométricas</h3>
+          <div v-for="(relationship, questionId) in answers.relationships" :key="questionId">
+            <div class="bg-gray-50 p-4 rounded-lg shadow mb-4">
+              <p class="text-lg font-semibold"><strong>Pregunta:</strong> {{ relationship.question_title }}</p>
+              
+              <ul class="mt-2 space-y-2">
+                <li v-for="(peer, peerIndex) in relationship.peers" :key="peerIndex" class="text-sm text-gray-600">
+                  <strong>Compañero/a:</strong> {{ peer.name }} {{ peer.last_name }}<br>
+                  <strong>Tipo de Relación:</strong>
+                  <span :class="peer.relationship_type === 'positive' ? 'text-green-500' : 'text-red-500'">
+                    {{ peer.relationship_type === 'positive' ? 'Positiva' : 'Negativa' }}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mostrar respuestas normales si existen -->
+        <div v-if="answers.answers && answers.answers.length">
+          <h2 class="text-2xl font-bold mb-4">Formulario: {{ answers.form_title }}</h2>
+          <ul class="mt-4 space-y-4">
+            <li v-for="(answer, index) in answers.answers" :key="index" class="bg-gray-50 p-4 rounded-lg shadow">
+              <p class="text-lg font-semibold"><strong>Pregunta:</strong> {{ answer.question.title }}</p>
+              <p class="text-sm text-gray-600">
+                <strong>Respuesta:</strong>
+                <span v-if="Array.isArray(answer.answer)">{{ answer.answer.join(", ") }}</span>
+                <span v-else>{{ answer.answer }}</span>
+              </p>
+            </li>
+          </ul>
+        </div>
+
+        <p v-else class="text-gray-500">No hay respuestas para este usuario.</p>
       </div>
-      <p v-else>No hay respuestas para este usuario.</p>
     </div>
   </div>
 </template>
@@ -82,7 +101,7 @@ const fetchAnswers = async (formId, userId) => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // Ajusta según tu implementación de autenticación
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
         },
       }
     );
@@ -93,6 +112,53 @@ const fetchAnswers = async (formId, userId) => {
 
     const data = await response.json();
     answers.value = data; // Asignamos la respuesta completa
+    // Agrupar las respuestas sociométricas por question_id
+    if (data.relationships) {
+      answers.value.relationships = data.relationships.reduce((acc, relationship) => {
+        const { question_id, question_title, peer, relationship_type } = relationship;
+        if (!acc[question_id]) {
+          acc[question_id] = {
+            question_title,
+            peers: [],
+          };
+        }
+        acc[question_id].peers.push({
+          name: peer.name,
+          last_name: peer.last_name,
+          relationship_type,
+        });
+        return acc;
+      }, {});
+    }
+  } catch (err) {
+    console.error("Error:", err);
+    error.value = err.message;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const fetchAnswersSociogram = async (formId, userId) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/forms/${formId}/users/${userId}/relationships`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener relaciones: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    answers.value = data; // Asignamos la respuesta completa
+    // console.log(answers.value);
   } catch (err) {
     console.error("Error:", err);
     error.value = err.message;
@@ -102,5 +168,11 @@ const fetchAnswers = async (formId, userId) => {
 };
 
 // Llamar a la función cuando se monte el componente
-onMounted(() => fetchAnswers(formId, userId));
+onMounted(() => {
+  if (formId === '3') {
+    fetchAnswersSociogram(formId, userId);  // Llamamos a la función sociograma
+  } else {
+    fetchAnswers(formId, userId);  // Llamamos a la función estándar
+  }
+});
 </script>
