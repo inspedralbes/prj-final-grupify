@@ -168,7 +168,6 @@ class FormController extends Controller
             return response()->json(['message' => 'Formulario no encontrado'], 404);
         }
 
-
         return response()->json($form, 200);
     }
 
@@ -186,18 +185,36 @@ class FormController extends Controller
      * )
      */
 
-    public function index(Request $request)
-    {
-        // Obtener los formularios activos con preguntas y respuestas
-        $forms = Form::with('questions.answers')->get();
+     public function index(Request $request)
+     {
+         // Obtener el teacher_id del usuario autenticado o de la solicitud
+         $teacherId = $request->input('teacher_id');
 
-        if ($request->expectsJson()) {
-            return response()->json($forms, 200);
-        }
+         // Comienza la consulta para obtener los formularios
+         $query = Form::with('questions.answers'); // Incluye preguntas y respuestas
 
-        // Pasar los formularios a la vista
-        return view('forms', compact('forms'));
-    }
+         // Filtros:
+         // 1. Filtrar por teacher_id si se pasa en la solicitud
+         if ($teacherId) {
+             $query->where('teacher_id', $teacherId);
+         }
+
+         // 2. Incluir también los formularios donde is_global es 1
+         $query->orWhere('is_global', 1);
+
+         // Obtener los formularios filtrados
+         $forms = $query->get();
+
+         // Verificar si la solicitud espera una respuesta JSON
+         if ($request->expectsJson()) {
+             return response()->json($forms, 200);
+         }
+
+         // Si no es una solicitud JSON, se devuelve la vista
+         return view('forms', compact('forms'));
+     }
+
+
 
 
 
