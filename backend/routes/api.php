@@ -16,7 +16,7 @@ use Illuminate\Auth\Events\Authenticated;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SociogramRelationshipController;
-
+use App\Http\Controllers\CommentController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
@@ -138,4 +138,22 @@ Route::prefix('sociogram-relationships')->group(function () {
     Route::get('/user/{id}', [SociogramRelationshipController::class, 'byUser']); // Filtrar por usuario
     Route::post('/', [SociogramRelationshipController::class, 'store']); // Guardar relaciones
     Route::delete('/{id}', [SociogramRelationshipController::class, 'destroy']); // Eliminar una relación específica
+});
+
+// rutas para los comentarios:
+Route::prefix('comments')->group(function () {
+    // Crear un comentario
+    Route::post('/', [CommentController::class, 'store']);
+    // Mostrar todos los comentarios
+    Route::get('/', [CommentController::class, 'index']);
+    // Mostrar un comentario específico por su ID
+    Route::get('/{id}', [CommentController::class, 'show']);
+    // Actualizar un comentario existente
+    Route::put('/{id}', [CommentController::class, 'update']);
+    // Eliminar un comentario
+    Route::delete('/{id}', [CommentController::class, 'destroy']);
+    // Obtener los comentarios por alumno
+    Route::get('/students/{studentId}', [CommentController::class, 'getCommentsForStudent']);
+    // Obtener los comentarios hechos por un profesor
+    Route::get('/teachers/{teacherId}', [CommentController::class, 'getCommentsByTeacher']);
 });

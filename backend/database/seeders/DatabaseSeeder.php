@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Answer;
+use App\Models\Comment;
 use App\Models\Course;
 use App\Models\Division;
 use App\Models\Group;
@@ -39,8 +40,9 @@ class DatabaseSeeder extends Seeder
             OptionSeeder::class,
             CourseUserSeeder::class,
             SociogramRelationshipSeeder::class,
+            CommentSeeder::class,
+            CommentUserSeeder::class,
             CourseDivisionSeeder::class,
-
         ]);
     }
 }
