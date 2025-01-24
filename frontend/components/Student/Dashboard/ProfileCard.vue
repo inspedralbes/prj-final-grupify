@@ -10,7 +10,7 @@ const userData = ref({
 });
 
 onMounted(() => {
-  const user = authStore.user; 
+  const user = authStore.user;
 
   if (user) {
     userData.value = {
@@ -18,8 +18,8 @@ onMounted(() => {
       last_name: user.last_name,
       email: user.email,
       image: user.image,
-      course: user.courses?.[0]?.name || "Sin Curso", 
-      division: user.courses?.[0]?.divisions?.[0]?.division || "Sin División", 
+      course: user.courses?.[0]?.name || "Sin Curso",
+      division: user.courses?.[0]?.divisions?.[0]?.division || "Sin División",
     };
   }
 });
@@ -77,12 +77,14 @@ onMounted(() => {
         accept="image/*"
         @change="handleFileChange"
       />
-       <!-- Información del estudiante -->
+      <!-- Información del estudiante -->
       <h2 class="text-2xl font-bold text-gray-800">
         {{ userData.name }} {{ userData.last_name }}
       </h2>
       <p class="text-gray-500 text-sm">{{ userData.email }}</p>
-      <p class="text-gray-500 text-sm">Curs: {{ userData.course }} {{ userData.division }} </p>
+      <p class="text-gray-500 text-sm">
+        Curs: {{ userData.course }} {{ userData.division }}
+      </p>
     </div>
   </div>
 </template>

@@ -1,7 +1,7 @@
-import { defineStore } from 'pinia';
-import { useAuthStore } from '~/stores/auth';
+import { defineStore } from "pinia";
+import { useAuthStore } from "~/stores/auth";
 
-export const useNotificationStore = defineStore('notifications', {
+export const useNotificationStore = defineStore("notifications", {
   state: () => ({
     notifications: [],
   }),
@@ -10,30 +10,29 @@ export const useNotificationStore = defineStore('notifications', {
     async fetchNotifications() {
       const authStore = useAuthStore();
       const userId = authStore.user?.id;
-      
+
       if (!userId) {
-        console.error('Usuario no autenticado');
+        console.error("Usuario no autenticado");
         return;
       }
 
       try {
-        const response = await $fetch(
-          `/api/notifications/student/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${useCookie('auth_token').value}`,
-            }
-          }
-        );
+        const response = await $fetch(`/api/notifications/student/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${useCookie("auth_token").value}`,
+          },
+        });
 
         const serverNotifications = Array.isArray(response) ? response : [];
         const localNotifications = this.getLocalNotifications();
-        
-        this.notifications = this.mergeNotifications(serverNotifications, localNotifications);
-        this.saveLocalNotifications();
 
+        this.notifications = this.mergeNotifications(
+          serverNotifications,
+          localNotifications
+        );
+        this.saveLocalNotifications();
       } catch (error) {
-        console.error('Error fetching notifications:', error);
+        console.error("Error fetching notifications:", error);
         this.notifications = this.getLocalNotifications();
       }
     },
@@ -52,21 +51,21 @@ export const useNotificationStore = defineStore('notifications', {
 
     addNotification(notification) {
       if (!notification?.message || !notification?.teacher_name) {
-        console.error('Notificación inválida:', notification);
+        console.error("Notificación inválida:", notification);
         return;
       }
 
-      const withLocalFlag = { 
-        title: notification.title || 'Nueva notificación',
+      const withLocalFlag = {
+        title: notification.title || "Nueva notificación",
         message: notification.message,
         teacher_name: notification.teacher_name,
-        priority: notification.priority || 'normal',
+        priority: notification.priority || "normal",
         created_at: notification.created_at || new Date().toISOString(),
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
         read: false,
-        isLocal: true
+        isLocal: true,
       };
-      
+
       this.notifications = [withLocalFlag, ...this.notifications];
       this.saveLocalNotifications();
     },
@@ -74,10 +73,10 @@ export const useNotificationStore = defineStore('notifications', {
     getLocalNotifications() {
       if (import.meta.client) {
         try {
-          const local = localStorage.getItem('notifications');
+          const local = localStorage.getItem("notifications");
           return local ? JSON.parse(local) : [];
         } catch (error) {
-          console.error('Error loading local notifications:', error);
+          console.error("Error loading local notifications:", error);
           return [];
         }
       }
@@ -90,40 +89,46 @@ export const useNotificationStore = defineStore('notifications', {
           const localNotifications = this.notifications
             .filter(n => n.isLocal && !n.read)
             .map(({ isLocal, ...rest }) => rest); // Remove isLocal flag before saving
-          localStorage.setItem('notifications', JSON.stringify(localNotifications));
+          localStorage.setItem(
+            "notifications",
+            JSON.stringify(localNotifications)
+          );
         } catch (error) {
-          console.error('Error saving local notifications:', error);
+          console.error("Error saving local notifications:", error);
         }
       }
     },
 
     mergeNotifications(serverNotifications, localNotifications) {
-      const validServer = Array.isArray(serverNotifications) ? serverNotifications : [];
-      const validLocal = Array.isArray(localNotifications) ? localNotifications : [];
-      
+      const validServer = Array.isArray(serverNotifications)
+        ? serverNotifications
+        : [];
+      const validLocal = Array.isArray(localNotifications)
+        ? localNotifications
+        : [];
+
       const serverIds = new Set(validServer.map(n => n.id));
       return [
         ...validServer,
-        ...validLocal.filter(n => 
-          !serverIds.has(n.id) && 
-          !n.read &&
-          typeof n.id === 'string'
-        )
+        ...validLocal.filter(
+          n => !serverIds.has(n.id) && !n.read && typeof n.id === "string"
+        ),
       ];
     },
 
     clearLocalNotifications() {
       if (import.meta.client) {
-        localStorage.removeItem('notifications');
+        localStorage.removeItem("notifications");
       }
-    }
+    },
   },
 
   getters: {
-    unreadCount: (state) => state.notifications.filter(n => !n.read).length,
-    
-    sortedNotifications: (state) => 
-      [...state.notifications].sort((a, b) => 
-        new Date(b.created_at) - new Date(a.created_at))
-  }
+    unreadCount: state => state.notifications.filter(n => !n.read).length,
+
+    sortedNotifications: state =>
+      [...state.notifications].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      ),
+  },
 });

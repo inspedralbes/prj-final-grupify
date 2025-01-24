@@ -49,20 +49,23 @@ export const useGroupStore = defineStore("groups", {
     async addStudentsToGroup(groupId, studentIds) {
       try {
         const token = localStorage.getItem("auth_token");
-        const response = await fetch(`http://localhost:8000/api/groups/${groupId}/addStudentsToGroup`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ student_ids: studentIds }),
-        });
-    
+        const response = await fetch(
+          `http://localhost:8000/api/groups/${groupId}/addStudentsToGroup`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ student_ids: studentIds }),
+          }
+        );
+
         if (!response.ok) {
           throw new Error("Error adding students to group");
         }
-    
+
         const data = await response.json();
         return data;
       } catch (error) {
@@ -70,7 +73,7 @@ export const useGroupStore = defineStore("groups", {
         throw error;
       }
     },
-    
+
     async removeStudentFromGroup(groupId, studentId) {
       try {
         const token = localStorage.getItem("auth_token");
@@ -108,18 +111,21 @@ export const useGroupStore = defineStore("groups", {
     async deleteGroup(groupId) {
       try {
         const token = localStorage.getItem("auth_token");
-        const response = await fetch(`http://localhost:8000/api/groups/${groupId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        });
-    
+        const response = await fetch(
+          `http://localhost:8000/api/groups/${groupId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+
         if (!response.ok) {
           throw new Error("Error deleting group");
         }
-    
+
         // Actualizar la lista de grupos después de eliminar uno
         await this.fetchGroups();
       } catch (error) {
@@ -139,17 +145,17 @@ export const useGroupStore = defineStore("groups", {
           },
           body: JSON.stringify(groupData),
         });
-    
+
         if (!response.ok) {
           throw new Error("Error creating group");
         }
-    
+
         const data = await response.json();
         return data;
       } catch (error) {
         console.error("Error creating group:", error);
         throw error;
       }
-    }
+    },
   },
 });

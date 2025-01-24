@@ -21,7 +21,7 @@ export const useSocket = () => {
           isConnected.value = false;
         });
 
-        $socket.on("delivery-confirmation", (data) => {
+        $socket.on("delivery-confirmation", data => {
           console.log(`Notificación entregada a ${data.count} alumnos`);
         });
       }
@@ -30,24 +30,29 @@ export const useSocket = () => {
 
   return {
     connect,
-    sendNotification: (message, priority = 'normal') => {
+    sendNotification: (message, priority = "normal") => {
       if ($socket?.connected && role.value === "profesor") {
-        return new Promise((resolve) => {
-          $socket.emit("notificacion", {
-            message,
-            priority,
-            from: JSON.parse(localStorage.getItem("user"))?.name || "Profesor",
-            timestamp: new Date().toISOString(),
-            target: 'student'
-          }, (response) => {
-            console.log('Confirmación de entrega:', response);
-            resolve(response);
-          });
+        return new Promise(resolve => {
+          $socket.emit(
+            "notificacion",
+            {
+              message,
+              priority,
+              from:
+                JSON.parse(localStorage.getItem("user"))?.name || "Profesor",
+              timestamp: new Date().toISOString(),
+              target: "student",
+            },
+            response => {
+              console.log("Confirmación de entrega:", response);
+              resolve(response);
+            }
+          );
         });
       }
       return Promise.resolve();
     },
     socket: $socket,
-    isConnected
+    isConnected,
   };
 };

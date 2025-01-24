@@ -1,7 +1,7 @@
 <script setup>
 import { useStudentsStore } from "@/stores/studentsStore";
 import { useGroupStore } from "@/stores/groupStore";
-import DashboardNavTeacher from '@/components/Teacher/DashboardNavTeacher.vue'
+import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
 const route = useRoute();
 const studentsStore = useStudentsStore();
@@ -13,14 +13,11 @@ const errorMessage = ref("");
 const successMessage = ref("");
 
 onMounted(async () => {
-  await Promise.all([
-    studentsStore.fetchStudents(),
-    groupStore.fetchGroups()
-  ]);
+  await Promise.all([studentsStore.fetchStudents(), groupStore.fetchGroups()]);
 });
 
 const students = computed(() => studentsStore.students);
-const group = computed(() => 
+const group = computed(() =>
   groupStore.groups.find(g => g.id === parseInt(route.params.id))
 );
 
@@ -31,13 +28,15 @@ const availableStudents = computed(() => {
 
 const handleAddStudent = async () => {
   if (!selectedStudent.value) return;
-  
+
   try {
     isLoading.value = true;
-    await groupStore.addStudentsToGroup(group.value.id, [parseInt(selectedStudent.value)]);
+    await groupStore.addStudentsToGroup(group.value.id, [
+      parseInt(selectedStudent.value),
+    ]);
     successMessage.value = "Alumne afegit al grup amb èxit";
     selectedStudent.value = "";
-    await groupStore.fetchGroups(); // Recargar los grupos para actualizar la vista
+    await groupStore.fetchGroups();
   } catch (error) {
     errorMessage.value = "Hi ha hagut un error al afegir l'alumne al grup";
   } finally {
@@ -49,12 +48,12 @@ const handleAddStudent = async () => {
   }
 };
 
-const handleRemoveStudent = async (studentId) => {
+const handleRemoveStudent = async studentId => {
   try {
     isLoading.value = true;
     await groupStore.removeStudentFromGroup(group.value.id, studentId);
     successMessage.value = "Alumne eliminat del grup amb èxit";
-    await groupStore.fetchGroups(); // Recargar los grupos para actualizar la vista
+    await groupStore.fetchGroups();
   } catch (error) {
     errorMessage.value = "Hi ha hagut un error al eliminar l'alumne del grup";
   } finally {
@@ -70,80 +69,181 @@ const handleRemoveStudent = async (studentId) => {
 <template>
   <div class="min-h-screen bg-gray-50">
     <DashboardNavTeacher />
-    
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="mb-8 flex items-center justify-between">
+
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <!-- Header Section with Back Button -->
+      <div class="flex items-center justify-between mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">{{ group?.name }}</h1>
-          <p class="mt-1 text-sm text-gray-500">{{ group?.description }}</p>
+          <h1 class="text-3xl font-bold text-gray-800">{{ group?.name }}</h1>
+          <p class="mt-2 text-gray-600">{{ group?.description }}</p>
         </div>
         <NuxtLink
           to="/professor/grups"
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-[rgb(0,173,238)] hover:bg-[rgba(0,173,238,0.1)] transition-colors"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
           Tornar
         </NuxtLink>
       </div>
 
-      <!-- Sección para añadir nuevos alumnos -->
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Afegir nou alumne</h2>
-        <div class="flex gap-4">
-          <select
-            v-model="selectedStudent"
-            class="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500"
-            :disabled="isLoading"
-          >
-            <option value="">Selecciona un alumne</option>
-            <option
-              v-for="student in availableStudents"
-              :key="student.id"
-              :value="student.id"
-            >
-              {{ student.name }} {{ student.last_name }}
-            </option>
-          </select>
-          <button
-            @click="handleAddStudent"
-            :disabled="!selectedStudent || isLoading"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {{ isLoading ? 'Afegint...' : 'Afegir' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Mensajes de estado -->
-      <div v-if="successMessage || errorMessage" class="mb-6">
-        <p v-if="successMessage" class="bg-green-100 text-green-800 p-3 rounded-lg">{{ successMessage }}</p>
-        <p v-if="errorMessage" class="bg-red-100 text-red-800 p-3 rounded-lg">{{ errorMessage }}</p>
-      </div>
-
-      <!-- Listado de miembros -->
-      <div class="bg-white rounded-lg shadow-sm p-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-6">Membres del grup</h2>
-        <div class="space-y-3">
-          <div
-            v-for="member in group?.members"
-            :key="member.id"
-            class="bg-gray-50 rounded-lg p-4 flex items-center justify-between"
-          >
-            <span class="text-sm font-medium text-gray-900">
-              {{ member.name }} {{ member.last_name }}
-            </span>
-            <button
-              @click="handleRemoveStudent(member.id)"
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Add Student Section -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-6">
+            Afegir nou alumne
+          </h2>
+          <div class="space-y-4">
+            <select
+              v-model="selectedStudent"
+              class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[rgb(0,173,238)] focus:border-[rgb(0,173,238)]"
               :disabled="isLoading"
-              class="text-sm text-red-600 hover:text-red-800 disabled:opacity-50"
             >
-              {{ isLoading ? 'Eliminant...' : 'Eliminar' }}
+              <option value="">Selecciona un alumne</option>
+              <option
+                v-for="student in availableStudents"
+                :key="student.id"
+                :value="student.id"
+              >
+                {{ student.name }} {{ student.last_name }}
+              </option>
+            </select>
+
+            <button
+              @click="handleAddStudent"
+              :disabled="!selectedStudent || isLoading"
+              class="w-full px-6 py-3 rounded-lg bg-[rgb(0,173,238)] text-white hover:bg-[rgb(0,153,218)] disabled:opacity-50 transition-colors font-medium"
+            >
+              <span
+                v-if="isLoading"
+                class="flex items-center justify-center gap-2"
+              >
+                <svg
+                  class="animate-spin h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </span>
+              <span v-else>Afegir alumne</span>
             </button>
           </div>
-          <p v-if="!group?.members?.length" class="text-gray-500 text-center py-4">
-            No hi ha membres en aquest grup
-          </p>
+
+          <!-- Messages -->
+          <div class="mt-4">
+            <p
+              v-if="successMessage"
+              class="px-4 py-3 bg-green-50 text-green-700 rounded-lg"
+            >
+              {{ successMessage }}
+            </p>
+            <p
+              v-if="errorMessage"
+              class="px-4 py-3 bg-red-50 text-red-700 rounded-lg"
+            >
+              {{ errorMessage }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Members List Section -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800">
+              Membres del grup
+            </h2>
+            <span
+              class="px-4 py-1.5 bg-[rgba(0,173,238,0.1)] text-[rgb(0,173,238)] rounded-full text-sm font-medium"
+            >
+              {{ group?.members?.length || 0 }} membres
+            </span>
+          </div>
+
+          <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 -mr-2">
+            <div
+              v-for="member in group?.members"
+              :key="member.id"
+              class="group relative bg-gray-50 rounded-lg p-4 flex items-center justify-between hover:bg-[rgba(0,173,238,0.05)] transition-colors"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-full bg-[rgba(0,173,238,0.1)] flex items-center justify-center text-[rgb(0,173,238)]"
+                >
+                  {{ member.name.charAt(0).toUpperCase() }}
+                </div>
+                <span class="font-medium text-gray-700">
+                  {{ member.name }} {{ member.last_name }}
+                </span>
+              </div>
+              <button
+                @click="handleRemoveStudent(member.id)"
+                :disabled="isLoading"
+                class="p-2 text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div
+              v-if="!group?.members?.length"
+              class="py-8 text-center text-gray-500"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-12 w-12 mx-auto mb-3 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <p>No hi ha membres en aquest grup</p>
+            </div>
+          </div>
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </template>

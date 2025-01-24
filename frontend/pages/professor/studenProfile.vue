@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import StudentProfile from '@/components/Students/StudentProfile.vue';
-import { useStudentsStore } from '@/stores/studentsStore';
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import StudentProfile from "@/components/Students/StudentProfile.vue";
+import { useStudentsStore } from "@/stores/studentsStore";
 
 const route = useRoute();
 const studentsStore = useStudentsStore();
@@ -10,7 +10,7 @@ const studentsStore = useStudentsStore();
 // Estado para el estudiante encontrado, error y loading
 const student = ref(null);
 const isLoading = ref(true);
-const error = ref('');
+const error = ref("");
 const id = Number(route.params.id); // Convierte el ID a número
 
 // Usar onMounted para la carga inicial
@@ -23,8 +23,8 @@ onMounted(async () => {
     // console.log('Estudiantes cargados:', studentsStore.students);
 
     if (!id) {
-      console.error('No se pasó un ID de estudiante en la URL');
-      error.value = 'ID no proporcionado';
+      console.error("No se pasó un ID de estudiante en la URL");
+      error.value = "ID no proporcionado";
       return;
     }
 
@@ -35,13 +35,12 @@ onMounted(async () => {
     // console.log('Estudiante encontrado:', student.value);
 
     if (!student.value) {
-      console.error('Estudiante no encontrado con ID:', id);
-      error.value = 'Estudiante no encontrado';
+      console.error("Estudiante no encontrado con ID:", id);
+      error.value = "Estudiante no encontrado";
     }
-
   } catch (err) {
-    console.error('Error al cargar los estudiantes:', err);
-    error.value = 'Error al cargar los estudiantes';
+    console.error("Error al cargar los estudiantes:", err);
+    error.value = "Error al cargar los estudiantes";
   } finally {
     isLoading.value = false;
   }

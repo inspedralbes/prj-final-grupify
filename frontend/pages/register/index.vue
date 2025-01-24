@@ -1,5 +1,5 @@
 <script setup>
-import { useRouter } from 'vue-router'; 
+import { useRouter } from "vue-router";
 
 const name = ref("");
 const last_name = ref("");
@@ -36,7 +36,7 @@ const validateForm = () => {
 };
 
 // Enviar el formulario de registro
-const gestioSubmit = async (e) => {
+const gestioSubmit = async e => {
   e.preventDefault();
   msgError.value = "";
 
@@ -105,7 +105,8 @@ const gestioSubmit = async (e) => {
     router.push("/alumne/dashboard");
   } catch (err) {
     msgError.value =
-      err.message || "No s'ha pogut registrar l'usuari. Si us plau, torna-ho a provar.";
+      err.message ||
+      "No s'ha pogut registrar l'usuari. Si us plau, torna-ho a provar.";
   } finally {
     isLoading.value = false;
   }

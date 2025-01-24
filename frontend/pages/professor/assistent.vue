@@ -1,7 +1,7 @@
 <script setup>
 import { useChatStore } from "@/stores/chatStore";
 import { useChat } from "@/composables/useChat";
-import DashboardNavTeacher from '@/components/Teacher/DashboardNavTeacher.vue'
+import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
 const chatStore = useChatStore();
 const { sendMessage, isLoading, processFile } = useChat();

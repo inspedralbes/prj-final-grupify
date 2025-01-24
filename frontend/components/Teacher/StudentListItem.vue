@@ -9,7 +9,7 @@ onMounted(() => {
 
 const router = useRouter();
 
-const viewProfile = (studentId) => {
+const viewProfile = studentId => {
   router.push(`/professor/studentProfile/${studentId}`);
 };
 // Declara la prop 'student' en este componente
@@ -54,13 +54,13 @@ defineProps({
         </button>
       </div>
     </td>
-     <!-- Estado -->
-     <td>
+    <!-- Estado -->
+    <td>
       <span
         class="px-3 py-1 rounded-full text-white text-sm font-medium"
         :class="student.active ? 'bg-green-500' : 'bg-red-500'"
       >
-        {{ student.active ? 'Actiu' : 'Inactiu' }}
+        {{ student.active ? "Actiu" : "Inactiu" }}
       </span>
     </td>
   </tr>

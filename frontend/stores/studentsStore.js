@@ -25,7 +25,9 @@ export const useStudentsStore = defineStore("students", {
         const data = await response.json();
 
         if (!Array.isArray(data)) {
-          throw new Error("La respuesta de la API no tiene el formato esperado.");
+          throw new Error(
+            "La respuesta de la API no tiene el formato esperado."
+          );
         }
 
         this.students = data.map(student => ({
@@ -36,12 +38,14 @@ export const useStudentsStore = defineStore("students", {
         this.error = `Error al cargar estudiantes: ${error.message}`;
         console.error("Error fetching students:", error);
       } finally {
-        this.loading = false;// Termina la carga
+        this.loading = false; // Termina la carga
       }
     },
 
     updateStudent(updatedStudent) {
-      const studentIndex = this.students.findIndex(student => student.id === updatedStudent.id);
+      const studentIndex = this.students.findIndex(
+        student => student.id === updatedStudent.id
+      );
       if (studentIndex !== -1) {
         this.students.splice(studentIndex, 1, updatedStudent); // Garantiza reactividad
       } else {
