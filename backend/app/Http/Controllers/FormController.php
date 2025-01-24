@@ -86,6 +86,10 @@ class FormController extends Controller
         // Devolver los formularios y su estado 'answered'
         return response()->json($forms);
     }
+
+
+
+
     public function assignFormToUser(Request $request)
     {
         $validatedData = $request->validate([
@@ -123,6 +127,8 @@ class FormController extends Controller
             'questions.*.options' => 'nullable|array',
             'questions.*.options.*.text' => 'required_with:questions.*.options|string',
             'questions.*.options.*.value' => 'nullable|integer',
+            'teacher_id' => 'nullable|exists:users,id',
+            'is_global' => 'nullable|boolean',
         ]);
 
         $form = $this->formService->createForm($validatedData);

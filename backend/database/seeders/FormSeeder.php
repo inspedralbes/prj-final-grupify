@@ -14,6 +14,8 @@ class FormSeeder extends Seeder
             Form::create([
                 'title' => 'Formulario de prueba',
                 'description' => 'Un formulario generado para pruebas.',
+                'teacher_id' => 1,
+                'is_global' => false,
             ]);
         }
 
@@ -21,13 +23,15 @@ class FormSeeder extends Seeder
             Form::create([
                 'title' => 'Formulario CESC',
                 'description' => 'Conducta y Experiencias Sociales en Clase',
+                'is_global' => true,
             ]);
         }
-        
+
         if (!Form::where('title', 'Formulario Sociograma')->exists()) {
             Form::create([
                 'title' => 'Formulario Sociograma',
                 'description' => 'Relaciones entre estudiantes en el aula.',
+                'is_global' => true,
             ]);
         }
     }
