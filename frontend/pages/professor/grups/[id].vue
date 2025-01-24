@@ -8,12 +8,21 @@ const studentsStore = useStudentsStore();
 const groupStore = useGroupStore();
 
 const selectedStudent = ref("");
-const isLoading = ref(false);
+const isAdding = ref(false);
+const isRemoving = ref(false);
+const isLoadingMembers = ref(true); 
 const errorMessage = ref("");
 const successMessage = ref("");
 
 onMounted(async () => {
-  await Promise.all([studentsStore.fetchStudents(), groupStore.fetchGroups()]);
+  try {
+    await Promise.all([studentsStore.fetchStudents(), groupStore.fetchGroups()]);
+  } catch (error) {
+    console.error("Error loading data:", error);
+    errorMessage.value = "Error al cargar los datos. Inténtalo de nuevo más tarde.";
+  } finally {
+    isLoadingMembers.value = false; 
+  }
 });
 
 const students = computed(() => studentsStore.students);
@@ -30,17 +39,20 @@ const handleAddStudent = async () => {
   if (!selectedStudent.value) return;
 
   try {
-    isLoading.value = true;
-    await groupStore.addStudentsToGroup(group.value.id, [
-      parseInt(selectedStudent.value),
-    ]);
+    isAdding.value = true;
+    const studentToAdd = students.value.find(s => s.id === parseInt(selectedStudent.value));
+    
+    group.value.members.push(studentToAdd);
+    
+    await groupStore.addStudentsToGroup(group.value.id, [parseInt(selectedStudent.value)]);
+    
     successMessage.value = "Alumne afegit al grup amb èxit";
     selectedStudent.value = "";
-    await groupStore.fetchGroups();
   } catch (error) {
+    group.value.members = group.value.members.filter(m => m.id !== parseInt(selectedStudent.value));
     errorMessage.value = "Hi ha hagut un error al afegir l'alumne al grup";
   } finally {
-    isLoading.value = false;
+    isAdding.value = false;
     setTimeout(() => {
       successMessage.value = "";
       errorMessage.value = "";
@@ -48,16 +60,24 @@ const handleAddStudent = async () => {
   }
 };
 
-const handleRemoveStudent = async studentId => {
+const handleRemoveStudent = async (studentId) => {
+  let studentToRemove; 
+
   try {
-    isLoading.value = true;
+    isRemoving.value = true; 
+    studentToRemove = group.value.members.find(m => m.id === studentId);
+    group.value.members = group.value.members.filter(m => m.id !== studentId);
+
     await groupStore.removeStudentFromGroup(group.value.id, studentId);
+
     successMessage.value = "Alumne eliminat del grup amb èxit";
-    await groupStore.fetchGroups();
   } catch (error) {
+    if (studentToRemove) {
+      group.value.members.push(studentToRemove); 
+    }
     errorMessage.value = "Hi ha hagut un error al eliminar l'alumne del grup";
   } finally {
-    isLoading.value = false;
+    isRemoving.value = false; 
     setTimeout(() => {
       successMessage.value = "";
       errorMessage.value = "";
@@ -109,7 +129,7 @@ const handleRemoveStudent = async studentId => {
             <select
               v-model="selectedStudent"
               class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[rgb(0,173,238)] focus:border-[rgb(0,173,238)]"
-              :disabled="isLoading"
+              :disabled="isAdding"
             >
               <option value="">Selecciona un alumne</option>
               <option
@@ -123,11 +143,11 @@ const handleRemoveStudent = async studentId => {
 
             <button
               @click="handleAddStudent"
-              :disabled="!selectedStudent || isLoading"
+              :disabled="!selectedStudent || isAdding"
               class="w-full px-6 py-3 rounded-lg bg-[rgb(0,173,238)] text-white hover:bg-[rgb(0,153,218)] disabled:opacity-50 transition-colors font-medium"
             >
               <span
-                v-if="isLoading"
+                v-if="isAdding"
                 class="flex items-center justify-center gap-2"
               >
                 <svg
@@ -155,7 +175,7 @@ const handleRemoveStudent = async studentId => {
             </button>
           </div>
 
-          <!-- Messages -->
+          <!-- Mensaje -->
           <div class="mt-4">
             <p
               v-if="successMessage"
@@ -172,7 +192,7 @@ const handleRemoveStudent = async studentId => {
           </div>
         </div>
 
-        <!-- Members List Section -->
+        <!-- Miembros de un Seccion de la Lista -->
         <div class="bg-white rounded-xl shadow-sm p-6">
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-semibold text-gray-800">
@@ -185,7 +205,33 @@ const handleRemoveStudent = async studentId => {
             </span>
           </div>
 
-          <div class="space-y-3 max-h-[500px] overflow-y-auto pr-2 -mr-2">
+          <!-- Mensaje de carga -->
+          <div v-if="isLoadingMembers" class="py-8 text-center text-gray-500">
+            <svg
+              class="animate-spin h-8 w-8 mx-auto mb-3 text-gray-400"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <p>Carregant membres del grup...</p>
+          </div>
+
+          <!-- Lista de miembros -->
+          <div v-else class="space-y-3 max-h-[500px] overflow-y-auto pr-2 -mr-2">
             <div
               v-for="member in group?.members"
               :key="member.id"
@@ -203,7 +249,7 @@ const handleRemoveStudent = async studentId => {
               </div>
               <button
                 @click="handleRemoveStudent(member.id)"
-                :disabled="isLoading"
+                :disabled="isRemoving"
                 class="p-2 text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
               >
                 <svg

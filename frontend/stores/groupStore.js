@@ -2,12 +2,12 @@ import { defineStore } from "pinia";
 
 export const useGroupStore = defineStore("groups", {
   state: () => ({
-    groups: [], // Para almacenar los grupos
+    groups: [], 
   }),
   actions: {
     async fetchGroups() {
       try {
-        const token = localStorage.getItem("auth_token"); // Obtener el token de autenticación
+        const token = localStorage.getItem("auth_token");
         const response = await fetch("http://localhost:8000/api/groups", {
           method: "GET",
           headers: {
@@ -21,10 +21,10 @@ export const useGroupStore = defineStore("groups", {
         }
 
         const data = await response.json();
-        this.groups = data; // Asignar los grupos a la variable del estado
+        this.groups = data;
 
-        // Para cada grupo, obtener sus integrantes
-        for (const group of this.groups) {
+        // Cargar los miembros de todos los grupos en paralelo
+        const memberPromises = this.groups.map(async (group) => {
           const membersResponse = await fetch(
             `http://localhost:8000/api/groups/${group.id}/members`,
             {
@@ -38,11 +38,14 @@ export const useGroupStore = defineStore("groups", {
 
           if (membersResponse.ok) {
             const membersData = await membersResponse.json();
-            group.members = membersData; // Asignar los miembros del grupo
+            group.members = membersData;
           }
-        }
+        });
+
+        await Promise.all(memberPromises);
       } catch (error) {
         console.error("Error fetching groups:", error);
+        throw error;
       }
     },
 
@@ -102,10 +105,9 @@ export const useGroupStore = defineStore("groups", {
           group.number_of_students = data.number_of_students;
         }
 
-        // Actualizar la lista de miembros del grupo
-        await this.fetchGroups();
       } catch (error) {
         console.error("Error removing student from group:", error);
+        throw error;
       }
     },
     async deleteGroup(groupId) {
@@ -127,7 +129,6 @@ export const useGroupStore = defineStore("groups", {
         }
 
         // Actualizar la lista de grupos después de eliminar uno
-        await this.fetchGroups();
       } catch (error) {
         console.error("Error deleting group:", error);
         throw error;

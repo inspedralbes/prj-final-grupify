@@ -7,12 +7,13 @@ import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 const studentsStore = useStudentsStore();
 const groupStore = useGroupStore();
 
-const selectedStudents = ref([]);
-const isLoading = ref(false);
 const errorMessage = ref("");
 const successMessage = ref("");
 const selectedStatus = ref("all");
 const selectedDate = ref("all");
+const showDeleteModal = ref(false);
+const groupToDelete = ref(null);
+const modalTitle = ref("");
 
 const goToGroup = groupId => {
   navigateTo(`/professor/grups/${groupId}`);
@@ -27,45 +28,23 @@ const students = computed(() => studentsStore.students);
 const groups = computed(() => groupStore.groups);
 const { searchQuery, filteredGroups } = useGroupSearch(groups);
 
-const handleDeleteGroup = async groupId => {
+const confirmDelete = (groupId, groupName) => {
+  groupToDelete.value = groupId;
+  modalTitle.value = groupName;
+  showDeleteModal.value = true;
+};
+
+const handleDeleteGroup = async () => {
   try {
-    await groupStore.deleteGroup(groupId);
+    await groupStore.deleteGroup(groupToDelete.value);
     successMessage.value = "Grup eliminat correctament";
+    showDeleteModal.value = false;
     setTimeout(() => {
       successMessage.value = "";
     }, 3000);
   } catch (error) {
     errorMessage.value = "Hi ha hagut un error al eliminar el grup";
-    setTimeout(() => {
-      errorMessage.value = "";
-    }, 3000);
-  }
-};
-
-const handleAddStudentToGroup = async (groupId, studentId) => {
-  try {
-    await groupStore.addStudentsToGroup(groupId, studentId);
-    successMessage.value = "Alumne afegit al grup amb èxit";
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
-  } catch (error) {
-    errorMessage.value = "Hi ha hagut un error al afegir l'alumne al grup";
-    setTimeout(() => {
-      errorMessage.value = "";
-    }, 3000);
-  }
-};
-
-const handleRemoveStudentFromGroup = async (groupId, studentId) => {
-  try {
-    await groupStore.removeStudentFromGroup(groupId, studentId);
-    successMessage.value = "Alumne eliminat del grup amb èxit";
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
-  } catch (error) {
-    errorMessage.value = "Hi ha hagut un error al eliminar l'alumne del grup";
+    showDeleteModal.value = false;
     setTimeout(() => {
       errorMessage.value = "";
     }, 3000);
@@ -76,6 +55,37 @@ const handleRemoveStudentFromGroup = async (groupId, studentId) => {
 <template>
   <div class="min-h-screen bg-gray-50">
     <DashboardNavTeacher />
+
+    <!-- Pop Up de confirmación -->
+    <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Fondo difuminado -->
+      <div 
+        class="fixed inset-0 bg-white/50 backdrop-blur-sm"
+        @click.self="showDeleteModal = false"
+      ></div>
+      
+      <!-- Contenido del modal -->
+      <div class="relative bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-gray-200">
+        <h3 class="text-lg font-semibold mb-4 text-gray-900">Confirmar eliminació</h3>
+        <p class="mb-6 text-gray-600">
+          Estàs segur que vols eliminar el grup <strong>"{{ modalTitle }}"</strong>?
+        </p>
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="showDeleteModal = false"
+            class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors font-medium"
+          >
+            Cancel·lar
+          </button>
+          <button
+            @click="handleDeleteGroup"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header Section -->
@@ -228,7 +238,7 @@ const handleRemoveStudentFromGroup = async (groupId, studentId) => {
                     </button>
 
                     <button
-                      @click="handleDeleteGroup(group.id)"
+                      @click="confirmDelete(group.id, group.name)"
                       class="p-2 text-red-500 hover:text-red-700 transition-colors"
                     >
                       <svg
