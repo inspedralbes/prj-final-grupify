@@ -9,6 +9,8 @@ const props = defineProps({
   title: String,
   description: String,
   context: String,
+  teacher_id: Number,
+  is_global: Boolean,
 });
 
 const emit = defineEmits([
@@ -91,6 +93,8 @@ const handleSave = async () => {
     title: props.title,
     description: props.description,
     questions: localQuestions.value,
+    teacher_id: props.teacher_id,
+    is_global: false,
   };
 
   // console.log('Datos que se enviarán:', JSON.stringify(formData, null, 2)); // Verifica la estructura del objeto

@@ -12,8 +12,10 @@ class FormService
         return DB::transaction(function () use ($formData) {
             $form = Form::create([
                 'title' => $formData['title'],
+                'teacher_id' => $formData['teacher_id'],
                 'description' => $formData['description'] ?? null,
                 'status' => true,
+                'is_global' => false,
             ]);
 
             foreach ($formData['questions'] as $questionData) {

@@ -7,6 +7,9 @@ import {
 } from "@heroicons/vue/24/outline";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
+const authStore = useAuthStore();
+const user = authStore.user;
+const teacherId = ref(user.id); 
 const router = useRouter();
 const searchQuery = ref("");
 const selectedDivision = ref("all");
@@ -20,9 +23,9 @@ const showToast = ref(false);
 
 onMounted(async () => {
   try {
-    const response = await fetch("http://localhost:8000/api/forms", {
+    const response = await fetch(`http://localhost:8000/api/forms?teacher_id=${teacherId.value}`, {
       method: "GET",
-      headers: { Accept: "application/json" },
+      headers: { Accept: "application/json" }
     });
     if (!response.ok) throw new Error("Error obteniendo los datos.");
     forms.value = await response.json();
