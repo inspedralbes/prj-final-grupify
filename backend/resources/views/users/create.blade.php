@@ -46,14 +46,26 @@
         </div>
 
         <!-- Subject Assignment (Only for Teachers) -->
-        <div class="form-group" id="subject-group" style="display: none;">
-            <label for="subject">Assignatura:</label>
-            <select name="subject_id" id="subject" class="form-control">
-                <option value="">Selecciona una assignatura </option>
+        <div class="mb-3" id="subject-group" style="display: none;">
+            <label class="form-label"><strong>Asignaturas:</strong></label>
+            <div class="form-check-container border rounded p-3 bg-light">
                 @foreach ($subjects as $subject)
-                    <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                    <div class="form-check">
+                        <input 
+                            type="checkbox" 
+                            class="form-check-input" 
+                            id="subject_{{ $subject->id }}" 
+                            name="subjects[]" 
+                            value="{{ $subject->id }}">
+                        <label 
+                            class="form-check-label" 
+                            for="subject_{{ $subject->id }}" 
+                            style="margin-left: 8px;">
+                            {{ $subject->name }}
+                        </label>
+                    </div>
                 @endforeach
-            </select>
+            </div>
         </div>
 
 
