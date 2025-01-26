@@ -1,18 +1,14 @@
 <script setup>
 import { EyeIcon } from "@heroicons/vue/24/outline";
+import { useStudentsStore } from "@/stores/studentsStore";
 
 const studentsStore = useStudentsStore();
-onMounted(() => {
-  // Llamar a la API al montar el componente
-  studentsStore.fetchStudents();
-});
-
 const router = useRouter();
 
-const viewProfile = studentId => {
+const viewProfile = (studentId) => {
   router.push(`/professor/studentProfile/${studentId}`);
 };
-// Declara la prop 'student' en este componente
+
 defineProps({
   student: {
     type: Object,
@@ -25,16 +21,23 @@ defineProps({
   <tr :key="student.id" class="border-b hover:bg-gray-50">
     <td class="py-4">
       <div class="flex items-center space-x-3">
-        <div
-          class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"
-        >
-          {{
-            student.name
-              .split(" ")
-              .map(n => n[0])
-              .join("")
-              .toUpperCase()
-          }}
+        <div class="relative">
+          <div
+            class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"
+          >
+            {{
+              student.name
+                .split(" ")
+                .map(n => n[0])
+                .join("")
+                .toUpperCase()
+            }}
+          </div>
+          <!-- Indicador de estado online/offline -->
+          <div
+            class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
+            :class="studentsStore.isStudentOnline(student.id) ? 'bg-green-500' : 'bg-gray-400'"
+          ></div>
         </div>
         <span>{{ student.name }}</span>
         <span>{{ student.last_name }}</span>
@@ -45,7 +48,6 @@ defineProps({
 
     <td>
       <div class="flex space-x-2">
-        <!-- Botón con ícono de ojo -->
         <button
           class="p-1 hover:text-primary"
           @click.stop="viewProfile(student.id)"
@@ -54,7 +56,7 @@ defineProps({
         </button>
       </div>
     </td>
-    <!-- Estado -->
+    
     <td>
       <span
         class="px-3 py-1 rounded-full text-white text-sm font-medium"

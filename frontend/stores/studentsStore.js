@@ -2,9 +2,10 @@ import { defineStore } from "pinia";
 
 export const useStudentsStore = defineStore("students", {
   state: () => ({
-    students: [], // Listado de estudiantes
-    loading: false, // Estado de carga
-    error: null, // Manejo de errores
+    students: [],
+    loading: false,
+    error: null,
+    onlineStudents: new Set(), // IDs de estudiantes conectados
   }),
   actions: {
     async fetchStudents(force = false) {
@@ -72,10 +73,16 @@ export const useStudentsStore = defineStore("students", {
       // console.log('Estudiante encontrado:', found);
       return found;
     },
+    setUserOnline(userId) {
+      this.onlineStudents.add(userId);
+    },
+    setUserOffline(userId) {
+      this.onlineStudents.delete(userId);
+    },
   },
   getters: {
-    studentCount: state => {
-      return state.students.length;
+    isStudentOnline: (state) => (studentId) => {
+      return state.onlineStudents.has(studentId);
     },
   },
 });

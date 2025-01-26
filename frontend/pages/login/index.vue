@@ -8,6 +8,7 @@ const successMessage = ref("");
 
 // Router y rutas
 const route = useRoute();
+const { $socket } = useNuxtApp();
 
 // Mensaje de registro exitoso
 onMounted(() => {
@@ -50,6 +51,14 @@ const gestioSubmit = async e => {
     localStorage.setItem("role", response.role);
     localStorage.setItem("user", JSON.stringify(response.user));
 
+    // Conexión inmediata del socket después del login
+    if (!$socket.connected) {
+      $socket.connect();
+    }
+
+    // Registrar usuario en el socket
+    $socket.emit("register_user", response.user.id);
+
     // Redirección basada en roles
     const dashboardRoutes = {
       admin: "/admin/dashboard",
@@ -86,15 +95,8 @@ const gestioSubmit = async e => {
           </div>
 
           <!-- Campos del formulario -->
-          <LoginTextInput
-            v-model="email"
-            placeholder="Email"
-            :has-msg-error="msgError && !email"
-          />
-          <LoginPasswordInput
-            v-model="password"
-            :has-msg-error="msgError && !password"
-          />
+          <LoginTextInput v-model="email" placeholder="Email" :has-msg-error="msgError && !email" />
+          <LoginPasswordInput v-model="password" :has-msg-error="msgError && !password" />
 
           <!-- Enlace para recuperar contraseña -->
           <div class="forgot-password">
@@ -117,10 +119,7 @@ const gestioSubmit = async e => {
           <div class="register-link">
             <p>
               No tens un compte?
-              <a
-                class="cursor-pointer font-bold"
-                @click.prevent="navigateTo('/register')"
-              >
+              <a class="cursor-pointer font-bold" @click.prevent="navigateTo('/register')">
                 Registrar-se
               </a>
             </p>
@@ -147,9 +146,8 @@ html {
 }
 
 .login-container {
-  min-height: calc(
-    100vh - 80px
-  ); /* Resta la altura del navbar (ajusta si es necesario) */
+  min-height: calc(100vh - 80px);
+  /* Resta la altura del navbar (ajusta si es necesario) */
   display: flex;
   align-items: center;
   justify-content: center;
