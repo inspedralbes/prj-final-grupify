@@ -1,24 +1,54 @@
-const http = require('http');
+const express = require('express');
+const { createServer } = require('node:http');
+const { Server } = require('socket.io');
 
-const server = http.createServer((req, res) => {
-  // Configurar la respuesta HTTP
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  
-  // Responder a todas las solicitudes con un mensaje simple
-  res.end('Servidor Node.js funcionando en el puerto 5000!\n');
+const app = express();
+const server = createServer(app);
+
+// Configuración de CORS y Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
 });
 
-// Especificar el puerto y manejar errores
-server.listen(5000, '0.0.0.0', () => {
-  console.log('Servidor corriendo en http://localhost:5000/');
+// Almacén de conexiones
+const activeConnections = new Map();
+
+io.on('connection', (socket) => {
+  console.log('Usuario conectado:', socket.id);
+
+  socket.on('register_role', (role) => {
+    activeConnections.set(socket.id, { role });
+    console.log(`Rol registrado: ${role} (${socket.id})`);
+  });
+
+  socket.on('notificacion', (data) => {
+    const connection = activeConnections.get(socket.id);
+    
+    if (connection?.role === 'profesor') {
+      activeConnections.forEach((value, key) => {
+        if (value.role === 'alumno') {
+          io.to(key).emit('nueva-notificacion', {
+            ...data,
+            timestamp: new Date().toISOString()
+          });
+        }
+      });
+      console.log('Notificación enviada a alumnos');
+    }
+  });
+
+  socket.on('disconnect', () => {
+    activeConnections.delete(socket.id);
+    console.log('Usuario desconectado:', socket.id);
+  });
 });
 
-// Manejar errores del servidor
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error('Error: El puerto 5000 ya está en uso');
-  } else {
-    console.error('Error al iniciar el servidor:', error);
-  }
+server.listen(5000, () => {
+  console.log('🚀 Servidor Socket.IO escuchando en puerto 5000');
 });
