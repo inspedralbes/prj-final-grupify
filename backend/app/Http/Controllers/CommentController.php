@@ -27,10 +27,12 @@ class CommentController extends Controller
         $comment = Comment::create([
             'teacher_id' => $request->teacher_id,
             'content' => $request->content,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // Relacionar los estudiantes con el comentario (en la tabla intermedia)
-        $comment->students()->attach($request->student_id);
+        // Relacionar los estudiantes con el comentario (en la tabla intermedia) y agregar timestamps
+        $comment->students()->attach($request->student_id, ['created_at' => now(), 'updated_at' => now()]);
 
         return response()->json(['message' => 'Comentario creado exitosamente', 'comment' => $comment], 201);
     }
