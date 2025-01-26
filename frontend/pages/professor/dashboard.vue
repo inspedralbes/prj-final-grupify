@@ -1,5 +1,9 @@
 <script setup>
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+
 const userData = ref(null);
+const router = useRouter();
 
 // Definimos los items del menú
 const menuItems = [
@@ -20,7 +24,7 @@ const menuItems = [
   },
   {
     title: "Sociograma",
-    icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-2.83-.48-5.08-2.73-5.56-5.56H5v-2h1.44c.48-2.83 2.73-5.08 5.56-5.56V5h2v1.44c2.83.48 5.08 2.73 5.56 5.56H19v2h-1.44c-.48 2.83-2.73 5.08-5.56 5.56V19h-2v-1.07zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z",
+    icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-2.83-.48-5.08-2.73-5.56-5.56H5v-2h1.44c.48-2.83 2.73-5.08 5.56-5.56V5h2v1.44c2.83.48 5.08 2.73 5.56 5.56H19v2h-1.44c-.48 2.83-2.73-5.08-5.56-5.56V19h-2v-1.07zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z",
     route: "/professor/sociograma",
   },
   {
@@ -35,13 +39,14 @@ onMounted(() => {
   const storedUser = localStorage.getItem("user");
   if (storedUser) {
     userData.value = JSON.parse(storedUser);
+    console.log("User data loaded:", userData.value); 
   }
 });
 
 // Función de logout
 const logout = () => {
   localStorage.removeItem("user");
-  navigateTo("/professor/tancar-sessio");
+  router.push("/professor/tancar-sessio");
 };
 </script>
 
@@ -89,11 +94,31 @@ const logout = () => {
               alt="Avatar"
               class="w-24 h-24 rounded-full object-cover mb-4"
             />
-            <!-- Información del profesor -->
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">
-              Benvingut, {{ userData.name }} {{ userData.last_name }}!
-            </h1>
-            <p class="text-gray-600">{{ userData.email }}</p>
+              <!-- Información del profesor -->
+  <h1 class="text-3xl font-bold text-gray-800 mb-2">
+    Benvingut, {{ userData.name }} {{ userData.last_name }}!
+  </h1>
+  <p class="text-gray-600">{{ userData.email }}</p>
+
+<!-- Materias que imparte -->
+<div v-if="userData.subjects && userData.subjects.length > 0" class="mt-4 flex items-center">
+  
+  <div class="flex flex-wrap gap-4">
+    <span 
+      v-for="subject in userData.subjects" 
+      :key="subject.id" 
+      class="text-[#00ADEC] font-normal text-xl"
+    >
+      {{ subject.name }}
+    </span>
+  </div>
+</div>
+
+
+
+            <p v-else class="text-gray-500 mt-4">
+              No tens assignatures assignades.
+            </p>
           </div>
         </div>
       </div>
@@ -132,12 +157,6 @@ const logout = () => {
 </template>
 
 <style scoped>
-.dashboard-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 .text-primary {
   color: #00adec;
 }
