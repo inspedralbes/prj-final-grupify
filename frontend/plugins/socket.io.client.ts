@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 
 export default defineNuxtPlugin((nuxtApp) => {
   const socket = io('http://localhost:5000', {
-    autoConnect: false,
+    autoConnect: true,
     withCredentials: true,
     transports: ['websocket', 'polling']
   });
