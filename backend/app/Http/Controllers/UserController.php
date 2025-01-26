@@ -125,6 +125,7 @@ class UserController extends Controller
              'image' => 'nullable|string|max:255', // Imagen opcional
              'courses' => 'nullable|array', // Asegúrate de que esto sea un array
              'divisions' => 'nullable|array', // Divisiones son opcionales
+             'subjects' => 'nullable|array', // Materias (opcional)
          ]);
      
          // Si la validación falla, retorna errores
@@ -152,7 +153,11 @@ class UserController extends Controller
      
          // Crear el usuario en la base de datos
          $user = User::create($userData);
-     
+         
+         // Si el usuario es Profesor (ID = 1), asociar materias
+        if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
+            $user->subjects()->sync($request->subjects); // Relación con subjects
+        }
          // Si el rol es Alumno (ID = 2) o Profesor (ID = 1), asociar cursos y divisiones
          if (in_array($request->role_id, [1, 2])) {
              // Validar y asociar los cursos si el usuario es Profesor o Alumno
@@ -172,9 +177,9 @@ class UserController extends Controller
          }
      
          // Si la solicitud es JSON, devolver el usuario recién creado
-         if ($request->wantsJson()) {
-             return response()->json($user, 201);
-         }
+        if ($request->wantsJson()) {
+            return response()->json($user->load(['courses', 'subjects']), 201);
+        }
      
          // Si la solicitud es HTML, redirigir con mensaje de éxito
          return redirect()->route('users.index')->with('success', 'User created successfully');
