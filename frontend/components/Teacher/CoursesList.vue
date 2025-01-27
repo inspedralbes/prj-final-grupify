@@ -1,26 +1,26 @@
 <script setup>
-// Usar store
-import { useCoursesStore } from "~/stores/coursesStore"; // No olvides importar tu store
-import { onMounted, ref } from 'vue';
+import { ref, defineProps } from 'vue'; 
+import { EyeIcon } from "@heroicons/vue/24/outline";
+import CoursesListItem from './CoursesListItem.vue'; 
 
-// Crear un estado local para manejar los cursos y su carga
-const coursesStore = useCoursesStore();
-const courses = ref([]); // Inicializa courses como un arreglo vacío
-const isLoading = ref(true); // Indicador de carga
+const router = useRouter();
+const viewProfile = (courseId) => {
+  if (!courseId) return;
+  router.push(`/professor/courseProfile/${courseId}`);
+};
 
-// Llamar a la API al montar el componente
-onMounted(async () => {
-  await coursesStore.fetchCourses();
-  courses.value = coursesStore.courses || []; // Guarda los cursos cuando se obtienen
-  isLoading.value = false;
-});
-
-defineProps({
+// Propiedades del componente (Recibes el array de cursos de los padres)
+const props = defineProps({
   courses: {
-    type: Array,  // Debería ser un Array, no Object, ya que courses es un array en tu store
+    type: Array,
     required: true,
+    default: () => [],
   },
 });
+console.log('Cursos recibidos en props:', props.courses);
+
+// Definir estado de carga
+const isLoading = ref(false);  // 'isLoading' ahora está definido correctamente
 </script>
 
 <template>
@@ -36,8 +36,9 @@ defineProps({
           </tr>
         </thead>
         <tbody>
-          <CourseListItem
-            v-for="course in courses" 
+          <!-- Por cada curso, pasar a CoursesListItem -->
+          <CoursesListItem
+            v-for="course in props.courses" 
             :key="course.id"
             :course="course"
           />
@@ -46,7 +47,7 @@ defineProps({
     </div>
 
     <!-- Mensaje cuando no hay cursos -->
-    <div v-if="!isLoading && courses.length === 0" class="text-center py-8 text-gray-500">
+    <div v-if="!isLoading && props.courses.length === 0" class="text-center py-8 text-gray-500">
       No s'han trobat cursos amb els filtres seleccionats
     </div>
 

@@ -1,14 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useCoursesStore } from '~/stores/coursesStore'; 
+import { useCourseSearch } from '~/composables/useCourseSearch';
 import CoursesFilters from '~/components/Teacher/CoursesFilters.vue';
 import DashboardNavTeacher from '~/components/Teacher/DashboardNavTeacher.vue';
 import CoursesList from '~/components/Teacher/CoursesList.vue';
 
-// Definir los estados para los filtros
-const searchQuery = ref('');
-const selectedCourse = ref(null);
-const selectedDivision = ref(null);
 const error = ref(null);
 const isLoading = ref(true);
 
@@ -28,16 +25,7 @@ onMounted(async () => {
 
 // Computed para acceder a los cursos cargados
 const courses = computed(() => coursesStore.courses || []);
-
-// Computed para filtrar los cursos basados en la búsqueda y las selecciones
-const filteredCourses = computed(() => {
-  return courses.value.filter(course => {
-    const matchesQuery = course.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchesCourse = selectedCourse.value ? course.id === selectedCourse.value : true;
-    const matchesDivision = selectedDivision.value ? course.divisions.some(division => division.id === selectedDivision.value) : true;
-    return matchesQuery && matchesCourse && matchesDivision;
-  });
-});
+const { searchQuery, selectedCourse, selectedDivision, filteredCourses } = useCourseSearch(courses);
 </script>
 
 <template>
@@ -74,10 +62,13 @@ const filteredCourses = computed(() => {
         <!-- Filtros -->
         <div class="bg-white rounded-lg shadow-sm p-6">
           <CoursesFilters
-            v-model:search-query="searchQuery"
-            v-model:selected-course="selectedCourse"
-            v-model:selected-division="selectedDivision"
+            v-model:searchQuery="searchQuery"
+            v-model:selectedCourse="selectedCourse"
+            v-model:selectedDivision="selectedDivision"
           />
+          <!-- Debug -->
+          <!-- <pre>{{ filteredCourses }}</pre> -->
+
         </div>
 
         <!-- Lista de cursos -->
@@ -96,7 +87,7 @@ const filteredCourses = computed(() => {
           </div>
 
           <CoursesList
-            :Courses="filteredCourses"
+            :courses="filteredCourses"
             class="divide-y divide-gray-200"
           />
         </div>
