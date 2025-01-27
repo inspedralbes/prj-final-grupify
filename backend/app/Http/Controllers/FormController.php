@@ -129,7 +129,11 @@ class FormController extends Controller
             'questions.*.options.*.value' => 'nullable|integer',
             'teacher_id' => 'nullable|exists:users,id',
             'is_global' => 'nullable|boolean',
+            'date_limit' => 'required|date',
+            'time_limit' => 'nullable|date_format:H:i',
         ]);
+
+        Log::info('Validated data: ' . json_encode($validatedData));
 
         $form = $this->formService->createForm($validatedData);
 
