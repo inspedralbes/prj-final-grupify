@@ -60,9 +60,9 @@ defineProps({
     <td>
       <span
         class="px-3 py-1 rounded-full text-white text-sm font-medium"
-        :class="student.active ? 'bg-green-500' : 'bg-red-500'"
+        :class="student.status === 1 ? 'bg-green-500' : 'bg-red-500'"
       >
-        {{ student.active ? "Actiu" : "Inactiu" }}
+        {{ student.status === 1 ? "Actiu" : "Inactiu" }}
       </span>
     </td>
   </tr>

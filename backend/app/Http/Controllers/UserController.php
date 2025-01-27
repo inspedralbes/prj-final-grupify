@@ -59,6 +59,30 @@ class UserController extends Controller
         ], 200);
     }
 
+    public function updateStatus(Request $request, $id)
+    {
+        // Validar el estado
+        $validated = $request->validate([
+            'status' => 'required|in:0,1', // solo acepta 0 o 1
+        ]);
+
+        // Buscar el usuario
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        // Actualizar el estado
+        $user->status = $validated['status'];
+        $user->save();
+
+        return response()->json($user, 200);
+    }
+
+
+
+
     public function index()
     {
         $users = User::all();

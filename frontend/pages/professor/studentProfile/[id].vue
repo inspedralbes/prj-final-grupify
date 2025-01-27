@@ -2,6 +2,7 @@
 import { useRoute } from "vue-router";
 import { onMounted, ref, nextTick } from "vue";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
+import { useStudentsStore } from "@/stores/studentsStore"; // Asegúrate de tener esta store configurada correctamente
 
 const route = useRoute();
 const studentsStore = useStudentsStore();
@@ -29,42 +30,92 @@ if (storedUser) {
   }
 }
 
+
+
 // Función para confirmar la baja
-const handleBaja = () => {
+const handleBaja = async () => {
   if (!selectedReason.value) {
     alert("Selecciona un motiu per donar de baixa.");
     return;
   }
 
-  // Cambiar el estado del estudiante a inactivo
-  student.value.active = false;
-  studentsStore.updateStudent({
-    ...student.value,
-    active: false,
-    reason: selectedReason.value, // Guardar motivo seleccionado (si necesario)
-  });
+  try {
+    // Enviar el estado actualizado al backend
+    const response = await fetch(`http://localhost:8000/api/user/${student.value.id}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        status: 0,  // 0 para inactivo
+      }),
+    });
 
-  // Cerrar el modal y reiniciar el motivo
-  showBajaModal.value = false;
-  selectedReason.value = "";
+    if (!response.ok) {
+      throw new Error("Error al actualizar el estado del estudiante.");
+    }
+
+    // Cambiar el estado localmente después de la respuesta
+    student.value.status = 0;
+
+    // Actualizar el estado en la tienda si es necesario
+    studentsStore.updateStudent({
+      ...student.value,
+      status: 0,
+      reason: selectedReason.value,  // Guardar motivo si necesario
+    });
+
+    // Cerrar el modal y reiniciar el motivo
+    showBajaModal.value = false;
+    selectedReason.value = "";
+  } catch (err) {
+    console.error(err);
+    alert("Hubo un error al cambiar el estado del estudiante.");
+  }
 };
+
 
 // Función para activar nuevamente al estudiante
-const handleAlta = () => {
-  // Cambiar el estado del estudiante a activo
-  student.value.active = true;
-  studentsStore.updateStudent({
-    ...student.value,
-    active: true,
-    reason: null, // El motivo no es necesario al reactivar
-  });
+const handleAlta = async () => {
+  try {
+    // Enviar el estado actualizado al backend
+    const response = await fetch(`http://localhost:8000/api/user/${student.value.id}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        status: 1,  // 1 para activo
+      }),
+    });
 
-  // Reiniciar cualquier selección previa de motivo y ocultar el modal
-  showBajaModal.value = false;
-  selectedReason.value = "";
+    if (!response.ok) {
+      throw new Error("Error al actualizar el estado del estudiante.");
+    }
+
+    // Cambiar el estado localmente después de la respuesta
+    student.value.status = 1;
+
+    // Actualizar el estado en la tienda si es necesario
+    studentsStore.updateStudent({
+      ...student.value,
+      status: 1,
+    });
+
+    // Reiniciar cualquier selección previa de motivo y ocultar el modal
+    showBajaModal.value = false;
+    selectedReason.value = "";
+  } catch (err) {
+    console.error(err);
+    alert("Hubo un error al cambiar el estado del estudiante.");
+  }
 };
 
+
+
+
 onMounted(async () => {
+  
   try {
     if (!studentsStore.students.length) {
       await studentsStore.fetchStudents();
@@ -279,16 +330,16 @@ const cancelEdit = () => {
               <div class="flex items-center space-x-4">
                 <span
                   :class="
-                    student.active
+                    student.status
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   "
                   class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                 >
-                  {{ student.active ? "Actiu" : "Inactiu" }}
+                  {{ student.status ? "Actiu" : "Inactiu" }}
                 </span>
                 <button
-                  v-if="student.active"
+                  v-if="student.status"
                   @click="showBajaModal = true"
                   class="group relative px-5 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:bg-red-600 hover:shadow-lg"
                 >

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
 {
     Schema::table('users', function (Blueprint $table) {
-        $table->string('status')->nullable(); // O cualquier otro tipo de columna que necesites
+        $table->integer('status')->default(1);  
     });
 }
 
