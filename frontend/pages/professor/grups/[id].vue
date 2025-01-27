@@ -13,6 +13,10 @@ const isRemoving = ref(false);
 const isLoadingMembers = ref(true); 
 const errorMessage = ref("");
 const successMessage = ref("");
+const comments = ref("");
+const logDate = ref(new Date().toISOString().split("T")[0]);
+const logEntries = ref({}); // Almacena las entradas de la bitácora por integrante
+const isBitacoraActive = ref(false); // Estado inicial del botón (apagado)
 
 onMounted(async () => {
   try {
@@ -83,6 +87,16 @@ const handleRemoveStudent = async (studentId) => {
       errorMessage.value = "";
     }, 3000);
   }
+};
+
+const saveGroup = () => {
+  console.log({
+    groupId: group.value.id,
+    members: group.value.members,
+    comments: comments.value,
+    logEntries: logEntries.value,
+    logDate: logDate.value
+  });
 };
 </script>
 
@@ -290,6 +304,81 @@ const handleRemoveStudent = async (studentId) => {
           </div>
         </div>
       </div>
+
+      <!-- Sección de Comentarios -->
+      <div class="mt-6 bg-white rounded-xl shadow-sm p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Comentaris</h2>
+        <textarea
+          v-model="comments"
+          rows="8"
+          class="w-full p-3 border rounded resize-none focus:ring-2 focus:ring-[rgb(0,173,238)] focus:border-transparent"
+          placeholder="Afegir comentaris..."
+        ></textarea>
+      </div>
+
+      <!-- Bitácora -->
+      <div class="mt-6 bg-white rounded-xl shadow-sm p-6">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-semibold text-gray-800">Bitácora del Grup</h2>
+    <div class="flex items-center">
+      <button
+        @click="isBitacoraActive = !isBitacoraActive"
+        :class="{
+          'bg-[rgb(0,173,238)]': isBitacoraActive,
+          'bg-gray-200': !isBitacoraActive
+        }"
+        class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
+      >
+        <span
+          :class="{
+            'translate-x-6': isBitacoraActive,
+            'translate-x-1': !isBitacoraActive
+          }"
+          class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
+        ></span>
+      </button>
+    </div>
+  </div>
+  <div v-if="isBitacoraActive" class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="bg-[rgb(0,173,238)] text-white">
+          <th class="border px-4 py-2">Data</th>
+          <th
+            v-for="(member, index) in group?.members"
+            :key="member.id"
+            class="border px-4 py-2"
+          >
+            {{ member.name }} {{ member.last_name }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="border px-4 py-2 text-center">
+            <input
+              type="date"
+              v-model="logDate"
+              class="w-full p-1 border rounded"
+            />
+          </td>
+          <td
+            v-for="(member, index) in group?.members"
+            :key="member.id"
+            class="border px-4 py-2 text-center"
+          >
+            <input
+              type="text"
+              v-model="logEntries[member.id]"
+              class="w-full p-1 border rounded"
+              placeholder="Comentario..."
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
     </div>
   </div>
 </template>
