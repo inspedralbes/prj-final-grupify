@@ -1,6 +1,7 @@
 <script setup>
 import { EyeIcon } from "@heroicons/vue/24/outline";
 import { useStudentsStore } from "@/stores/studentsStore";
+import { useRouter } from "vue-router";
 
 const studentsStore = useStudentsStore();
 const router = useRouter();
@@ -30,7 +31,7 @@ defineProps({
               student.name
                 .split(" ")
                 .map(n => n[0])
-                .join("")
+                .join(" ")
                 .toUpperCase()
             }}
           </div>
@@ -42,8 +43,7 @@ defineProps({
         </div>
         <div>
           <span class="block text-sm font-medium text-gray-900">
-            {{ student.name }}
-            {{ student.last_name }}
+            {{ student.name }} {{ student.last_name }}
           </span>
         </div>
       </div>
@@ -58,7 +58,7 @@ defineProps({
           'bg-red-100 text-red-800': student.status === 0
         }"
       >
-        {{ student.status === 1 ? "Actiu" : "Inactiu" }}
+        {{ student.status === 1 ? "actiu" : "inactiu" }}
       </span>
     </td>
 

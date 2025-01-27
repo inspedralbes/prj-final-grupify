@@ -329,23 +329,25 @@ const cancelEdit = () => {
               <h3 class="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Estat</h3>
               <div class="flex items-center space-x-4">
                 <span
-                  :class="
-                    student.status
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  "
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                >
-                  {{ student.status ? "Actiu" : "Inactiu" }}
-                </span>
+                    :class="{
+                      'bg-green-100 text-green-800 px-4 py-2 inline-flex text-base leading-6 font-semibold rounded-full':
+                        student.status,
+                      'bg-red-100 text-red-800 px-4 py-2 inline-flex text-base leading-6 font-semibold rounded-full':
+                        !student.status,
+                    }"
+                  >
+                    {{ student.status ? "Actiu" : "Inactiu" }}
+                  </span>
+
                 <button
                   v-if="student.status"
                   @click="showBajaModal = true"
-                  class="group relative px-5 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:bg-red-600 hover:shadow-lg"
+                  class="group relative px-5 py-2 bg-red-500 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 hover:bg-red-600 hover:shadow-lg"
                 >
                   <span class="relative z-10">Donar de Baixa</span>
                   <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
                 </button>
+
                 <button
                   v-else
                   @click="handleAlta"
