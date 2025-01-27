@@ -50,24 +50,24 @@ class CourseController extends Controller
      * )
      */
     public function store(Request $request)
-{
-    if ($request->is('api/*')) {
+    {
+        if ($request->is('api/*')) {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
+
+            $course = Course::create($validatedData);
+
+            return response()->json($course, 201);
+        }
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
-        $course = Course::create($validatedData);
-
-        return response()->json($course, 201);
+        Course::create($validatedData);
+        return redirect()->route('courses.index')->with('success', 'Curso creado exitosamente');
     }
-
-    $validatedData = $request->validate([
-        'name' => 'required|string|max:255',
-    ]);
-
-    Course::create($validatedData);
-    return redirect()->route('courses.index')->with('success', 'Curso creado exitosamente');
-}
 
 
     /**
@@ -174,5 +174,22 @@ class CourseController extends Controller
         }
         return redirect()->route('courses.index')->with('success', 'Curso eliminado exitosamente');
     }
+    //obtenir els cursos amb les divisions
+    public function getCoursesWithDivisions()
+    {
+        $courses = Course::with('divisions')->get()->map(function ($course) {
+            return [
+                'id' => $course->id,
+                'name' => $course->name,
+                'divisions' => $course->divisions->map(function ($division) {
+                    return [
+                        'id' => $division->id,
+                        'name' => $division->division,
+                    ];
+                }),
+            ];
+        });
 
+        return response()->json($courses, 200);
+    }
 }

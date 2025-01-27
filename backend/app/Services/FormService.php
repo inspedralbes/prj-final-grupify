@@ -4,11 +4,13 @@ namespace App\Services;
 
 use App\Models\Form;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class FormService
 {
     public function createForm(array $formData): Form
     {
+
         return DB::transaction(function () use ($formData) {
             $form = Form::create([
                 'title' => $formData['title'],
@@ -16,6 +18,8 @@ class FormService
                 'description' => $formData['description'] ?? null,
                 'status' => true,
                 'is_global' => false,
+                'date_limit' => $formData['date_limit'],
+                'time_limit' => $formData['time_limit'],
             ]);
 
             foreach ($formData['questions'] as $questionData) {

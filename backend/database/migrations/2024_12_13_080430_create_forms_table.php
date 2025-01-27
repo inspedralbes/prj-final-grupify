@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('status')->default(1);
             $table->boolean('is_global')->default(false);
             $table->date('date_limit')->nullable();
+            $table->time('time_limit')->nullable();
             $table->timestamps();
         });
     }

@@ -13,6 +13,8 @@ class Form extends Model
         'status',
         'teacher_id',
         'is_global',
+        'date_limit',
+        'time_limit',
     ];
 
     public function teacher()

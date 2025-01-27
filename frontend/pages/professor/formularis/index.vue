@@ -181,6 +181,11 @@ const handleFormAssigned = assignments => {
                   Data
                 </th>
                 <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Time
+                </th>
+                <th
                   class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
                   Accions
@@ -212,7 +217,10 @@ const handleFormAssigned = assignments => {
                   {{ form.responses_count }}
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500">
-                  {{ new Date(form.created_at).toLocaleDateString() }}
+                  {{ form.date_limit }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500">
+                  {{ form.time_limit }}
                 </td>
                 <td class="px-6 py-4 text-right text-sm font-medium">
                   <div class="flex justify-end space-x-3">

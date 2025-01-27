@@ -32,6 +32,8 @@ Route::middleware('api')->resource('courses', CourseController::class);
 
 Route::resource('roles', RoleController::class);
 Route::resource('courses', CourseController::class);
+Route::get('/courses-with-divisions', [CourseController::class, 'getCoursesWithDivisions']);
+
 Route::resource('subjects', SubjectController::class);
 Route::resource('groups', GroupController::class)->middleware('auth:sanctum');
 
