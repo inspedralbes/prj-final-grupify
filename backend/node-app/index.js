@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const app = express();
 const server = createServer(app);
 
+// Configuración de CORS y Socket.IO
 const io = new Server(server, {
   cors: {
     origin: 'http://localhost:3000',
@@ -15,29 +16,36 @@ const io = new Server(server, {
   transports: ['websocket', 'polling']
 });
 
-// Almacén de usuarios conectados: { userId: socketId }
-const onlineUsers = new Map();
+// Almacén de conexiones
+const activeConnections = new Map();
 
 io.on('connection', (socket) => {
   console.log('Usuario conectado:', socket.id);
 
-  // Registrar usuario autenticado
-  socket.on('register_user', (userId) => {
-    onlineUsers.set(userId, socket.id);
-    console.log(`Usuario registrado: ${userId}`);
-    io.emit('user_online', userId); // Notificar a todos
+  socket.on('register_role', (role) => {
+    activeConnections.set(socket.id, { role });
+    console.log(`Rol registrado: ${role} (${socket.id})`);
+  });
+
+  socket.on('notificacion', (data) => {
+    const connection = activeConnections.get(socket.id);
+    
+    if (connection?.role === 'profesor') {
+      activeConnections.forEach((value, key) => {
+        if (value.role === 'alumno') {
+          io.to(key).emit('nueva-notificacion', {
+            ...data,
+            timestamp: new Date().toISOString()
+          });
+        }
+      });
+      console.log('Notificación enviada a alumnos');
+    }
   });
 
   socket.on('disconnect', () => {
-    // Encontrar y eliminar el usuario desconectado
-    const entries = Array.from(onlineUsers.entries());
-    const [userId] = entries.find(([_, sid]) => sid === socket.id) || [];
-    
-    if (userId) {
-      onlineUsers.delete(userId);
-      io.emit('user_offline', userId); // Notificar a todos
-      console.log(`Usuario desconectado: ${userId}`);
-    }
+    activeConnections.delete(socket.id);
+    console.log('Usuario desconectado:', socket.id);
   });
 });
 
