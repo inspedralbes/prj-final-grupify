@@ -1,15 +1,8 @@
 <script setup>
-import { ref, defineProps } from 'vue'; 
-import { EyeIcon } from "@heroicons/vue/24/outline";
+import { defineProps } from 'vue'; 
 import CoursesListItem from './CoursesListItem.vue'; 
 
-const router = useRouter();
-const viewProfile = (courseId) => {
-  if (!courseId) return;
-  router.push(`/professor/courseProfile/${courseId}`);
-};
-
-// Propiedades del componente (Recibes el array de cursos de los padres)
+// Propiedades del componente (Recibe la lista de cursos)
 const props = defineProps({
   courses: {
     type: Array,
@@ -17,10 +10,6 @@ const props = defineProps({
     default: () => [],
   },
 });
-console.log('Cursos recibidos en props:', props.courses);
-
-// Definir estado de carga
-const isLoading = ref(false);  // 'isLoading' ahora está definido correctamente
 </script>
 
 <template>
@@ -36,7 +25,7 @@ const isLoading = ref(false);  // 'isLoading' ahora está definido correctamente
           </tr>
         </thead>
         <tbody>
-          <!-- Por cada curso, pasar a CoursesListItem -->
+          <!-- Por cada curso, pasa a CoursesListItem -->
           <CoursesListItem
             v-for="course in props.courses" 
             :key="course.id"
@@ -47,13 +36,8 @@ const isLoading = ref(false);  // 'isLoading' ahora está definido correctamente
     </div>
 
     <!-- Mensaje cuando no hay cursos -->
-    <div v-if="!isLoading && props.courses.length === 0" class="text-center py-8 text-gray-500">
+    <div v-if="props.courses.length === 0" class="text-center py-8 text-gray-500">
       No s'han trobat cursos amb els filtres seleccionats
-    </div>
-
-    <!-- Indicador de carga -->
-    <div v-if="isLoading" class="text-center py-8 text-gray-500">
-      Carregant cursos...
     </div>
   </div>
 </template>

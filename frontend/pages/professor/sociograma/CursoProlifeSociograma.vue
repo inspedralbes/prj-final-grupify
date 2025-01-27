@@ -1,1 +1,3 @@
-<template><h1>hola</h1></template>
+<template>
+<h1>sociograma prolife</h1>
+</template>

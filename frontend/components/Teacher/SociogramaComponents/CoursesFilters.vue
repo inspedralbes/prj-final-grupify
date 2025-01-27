@@ -37,7 +37,6 @@ defineEmits([
           <option value="3">3º ESO</option>
           <option value="4">4º ESO</option>
           <option value="5">BATXILLERAT</option>
-          <option value="6">BATXILLERAT</option>
         </select>
         <!-- Filtro de división -->
         <select

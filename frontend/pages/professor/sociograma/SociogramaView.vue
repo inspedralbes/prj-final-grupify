@@ -2,9 +2,9 @@
 import { ref, computed, onMounted } from 'vue';
 import { useCoursesStore } from '~/stores/coursesStore'; 
 import { useCourseSearch } from '~/composables/useCourseSearch';
-import CoursesFilters from '~/components/Teacher/CoursesFilters.vue';
+import CoursesFilters from '~/components/Teacher/SociogramaComponents/CoursesFilters.vue';
 import DashboardNavTeacher from '~/components/Teacher/DashboardNavTeacher.vue';
-import CoursesList from '~/components/Teacher/CoursesList.vue';
+import CoursesList from '~/components/Teacher/SociogramaComponents/CoursesList.vue';
 
 const error = ref(null);
 const isLoading = ref(true);
@@ -25,6 +25,7 @@ onMounted(async () => {
 
 // Computed para acceder a los cursos cargados
 const courses = computed(() => coursesStore.courses || []);
+
 const { searchQuery, selectedCourse, selectedDivision, filteredCourses } = useCourseSearch(courses);
 </script>
 
@@ -66,9 +67,6 @@ const { searchQuery, selectedCourse, selectedDivision, filteredCourses } = useCo
             v-model:selectedCourse="selectedCourse"
             v-model:selectedDivision="selectedDivision"
           />
-          <!-- Debug -->
-          <!-- <pre>{{ filteredCourses }}</pre> -->
-
         </div>
 
         <!-- Lista de cursos -->
@@ -97,5 +95,5 @@ const { searchQuery, selectedCourse, selectedDivision, filteredCourses } = useCo
 </template>
 
 <style scoped>
-/* Puedes agregar estilos aquí */
+/* Estilos personalizables */
 </style>
