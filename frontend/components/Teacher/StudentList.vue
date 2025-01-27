@@ -22,14 +22,16 @@ defineProps({
       <table class="w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left py-3">Nom</th>
-            <th class="text-left py-3">Curs</th>
-            <th class="text-left py-3">Classe</th>
-            <th class="text-left py-3">Fitxa</th>
-            <th class="text-left py-3">Estat</th>
+            <!-- Encabezados con estilos de fuente pequeña y texto gris -->
+            <th class="text-left py-3 text-xs text-gray-500 uppercase">Nom</th>
+            <th class="text-left py-3 text-xs text-gray-500 uppercase">Estat</th>
+            <th class="text-left py-3 text-xs text-gray-500 uppercase">Curs</th>
+            <th class="text-left py-3 text-xs text-gray-500 uppercase">Classe</th>
+            <th class="text-left py-3 text-xs text-gray-500 uppercase">Fitxa</th>
           </tr>
         </thead>
         <tbody>
+          <!-- Se mantiene el componente TeacherStudentListItem para cada estudiante -->
           <TeacherStudentListItem
             v-for="student in students"
             :key="student.id"

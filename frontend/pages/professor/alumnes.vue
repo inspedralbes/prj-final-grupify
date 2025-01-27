@@ -61,26 +61,27 @@ const { searchQuery, selectedCourse, selectedDivision, filteredStudents } =
           />
         </div>
 
-        <!-- Lista de estudiantes -->
-        <div class="bg-white rounded-lg shadow-sm">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h2 class="text-lg font-medium text-gray-900">
-                Llistat d'estudiants
-              </h2>
-              <span
-                class="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded-full"
-              >
-                {{ filteredStudents.length }} estudiants
-              </span>
+                    <!-- Lista de estudiantes -->
+          <div class="bg-white rounded-lg shadow-sm">
+            <div class="p-6 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <!-- Título con la tipografía de la tabla -->
+                <h2 class="text-sm text-gray-500 uppercase">
+                  Llistat d'estudiants
+                </h2>
+                <!-- Contador de estudiantes con tipografía coherente -->
+                <span class="px-3 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
+                  {{ filteredStudents.length }} estudiants
+                </span>
+              </div>
             </div>
+
+            <TeacherStudentList
+              :students="filteredStudents"
+              class="divide-y divide-gray-200"
+            />
           </div>
 
-          <TeacherStudentList
-            :students="filteredStudents"
-            class="divide-y divide-gray-200"
-          />
-        </div>
       </div>
     </main>
   </div>

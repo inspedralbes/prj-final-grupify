@@ -19,7 +19,8 @@ defineProps({
 
 <template>
   <tr :key="student.id" class="border-b hover:bg-gray-50">
-    <td class="py-4">
+    <!-- Columna: NOM -->
+    <td class="py-4 px-6">
       <div class="flex items-center space-x-3">
         <div class="relative">
           <div
@@ -39,31 +40,49 @@ defineProps({
             :class="studentsStore.isStudentOnline(student.id) ? 'bg-green-500' : 'bg-gray-400'"
           ></div>
         </div>
-        <span>{{ student.name }}</span>
-        <span>{{ student.last_name }}</span>
+        <div>
+          <span class="block text-sm font-medium text-gray-900">
+            {{ student.name }}
+            {{ student.last_name }}
+          </span>
+        </div>
       </div>
     </td>
-    <td>{{ student.course }}</td>
-    <td>{{ student.division }}</td>
 
-    <td>
-      <div class="flex space-x-2">
+    <!-- Columna: ESTAT -->
+    <td class="py-4 px-6">
+      <span
+        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+        :class="{
+          'bg-green-100 text-green-800': student.status === 1,
+          'bg-red-100 text-red-800': student.status === 0
+        }"
+      >
+        {{ student.status === 1 ? "Actiu" : "Inactiu" }}
+      </span>
+    </td>
+
+    <!-- Columna: CURS -->
+    <td class="py-4 px-6 text-sm text-gray-500">
+      {{ student.course }}
+    </td>
+
+    <!-- Columna: CLASSE -->
+    <td class="py-4 px-6 text-sm text-gray-500">
+      {{ student.division }}
+    </td>
+
+    <!-- Columna: FITXA -->
+    <td class="py-4 px-6 text-right">
+      <div class="flex space-x-2 justify-end">
         <button
           class="p-1 hover:text-primary"
           @click.stop="viewProfile(student.id)"
+          title="Ver perfil"
         >
           <EyeIcon class="w-5 h-5" />
         </button>
       </div>
-    </td>
-    
-    <td>
-      <span
-        class="px-3 py-1 rounded-full text-white text-sm font-medium"
-        :class="student.status === 1 ? 'bg-green-500' : 'bg-red-500'"
-      >
-        {{ student.status === 1 ? "Actiu" : "Inactiu" }}
-      </span>
     </td>
   </tr>
 </template>
