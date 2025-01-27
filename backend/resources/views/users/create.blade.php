@@ -51,15 +51,15 @@
             <div class="form-check-container border rounded p-3 bg-light">
                 @foreach ($subjects as $subject)
                     <div class="form-check">
-                        <input 
-                            type="checkbox" 
-                            class="form-check-input" 
-                            id="subject_{{ $subject->id }}" 
-                            name="subjects[]" 
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            id="subject_{{ $subject->id }}"
+                            name="subjects[]"
                             value="{{ $subject->id }}">
-                        <label 
-                            class="form-check-label" 
-                            for="subject_{{ $subject->id }}" 
+                        <label
+                            class="form-check-label"
+                            for="subject_{{ $subject->id }}"
                             style="margin-left: 8px;">
                             {{ $subject->name }}
                         </label>
@@ -93,7 +93,7 @@
         </div>
         </div>
 
-        
+
 
         <button type="submit" class="btn btn-primary mt-3">Crear Usuari</button>
     </form>
@@ -121,11 +121,13 @@
 
         if (selectedRole === 1) { // Rol de "Profesor"
             subjectGroup.style.display = 'block';
+            studentFields.style.display = 'block';
+            divisionGroup.style.display = 'block';
         } else if (selectedRole === 2) { // Rol de "Alumno"
             studentFields.style.display = 'block';
             divisionGroup.style.display = 'block'; // Mostrar divisiones cuando el rol es "Alumno"
         }
-        console.log("Rol seleccionado:", selectedRole);
+        // console.log("Rol seleccionado:", selectedRole);
     });
 });
 
