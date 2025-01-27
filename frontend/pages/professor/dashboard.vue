@@ -25,7 +25,7 @@ const menuItems = [
   {
     title: "Sociograma",
     icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-2.83-.48-5.08-2.73-5.56-5.56H5v-2h1.44c.48-2.83 2.73-5.08 5.56-5.56V5h2v1.44c2.83.48 5.08 2.73 5.56 5.56H19v2h-1.44c-.48 2.83-2.73-5.08-5.56-5.56V19h-2v-1.07zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z",
-    route: "/professor/sociograma",
+    route: "/professor/sociograma/SociogramaView",
   },
   {
     title: "Chat IA",
