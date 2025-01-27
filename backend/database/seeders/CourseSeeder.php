@@ -28,11 +28,7 @@ class CourseSeeder extends Seeder
         ]);
 
         Course::create([
-            'name' => '1 BACHILLERATO',
-        ]);
-
-        Course::create([
-            'name' => '2 BACHILLERATO'
+            'name' => 'BACHILLERATO',
         ]);
     }
 }
