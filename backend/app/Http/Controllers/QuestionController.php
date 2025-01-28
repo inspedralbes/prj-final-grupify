@@ -45,7 +45,7 @@ class QuestionController extends Controller
         if ($request->is('api/*')) {
             return response()->json($questions);
         }
-
+        
         // Si la solicitud es web, mostrar las preguntas en la vista 'questions.blade.php'
         return view('questions', compact('questions'));
     }
@@ -117,8 +117,8 @@ class QuestionController extends Controller
     {
         // Validación de los datos recibidos
         $validatedData = $request->validate([
-            'question' => 'required|string|max:255',
-            //'form_id' => 'required|integer|exists:forms,id',  // Relación con el formulario
+            'title' => 'required|string|max:255',
+            'form_id' => 'required|integer|exists:forms,id',  // Relación con el formulario
         ]);
 
         // Llamar al servicio para crear la nueva pregunta
@@ -170,7 +170,8 @@ class QuestionController extends Controller
     {
         // Validación de los datos recibidos
         $validatedData = $request->validate([
-            'question' => 'sometimes|required|string|max:255',
+            'title' => 'sometimes|required|string|max:255',
+            'form_id' => 'sometimes|required|integer|exists:forms,id',
         ]);
 
         // Actualizar la pregunta utilizando el servicio
@@ -218,6 +219,6 @@ class QuestionController extends Controller
         }
 
         // Redirigir a la lista de preguntas con un mensaje de éxito
-        return redirect()->route('questions.index')->with('success', 'Pregunta eliminada correctamente');
+        return redirect()->route('questions.index')->with('success', 'Pregunta eliminada correctament');
     }
 }
