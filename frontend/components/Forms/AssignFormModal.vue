@@ -13,31 +13,101 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue", "assigned"]);
 const formAssignmentsStore = useFormAssignmentsStore();
 
+//VARIABLE LOCALSE
 const dueDate = ref(null);
 const students = ref([]);
 const selectedStudents = ref([]);
+const courses = ref([]); 
+const divisions = ref([]); 
+const selectedCourse = ref(null); 
+const selectedDivision = ref(null); 
 
-onMounted(async () => {
+const assignFormToCourseAndDivision = async () => {
+
+  if (!selectedCourse.value || !selectedDivision.value) {
+    alert("Por favor, selecciona un curso y una división antes de asignar el formulario.");
+    return;
+  }
+
+  // Recoger los datos del formulario
+  const selectedCourseId = selectedCourse.value;
+  const selectedDivisionId = selectedDivision.value;
+  const formId = props.form.id;
+  // console.log(selectedCourseId, selectedDivisionId, formId);
+
   try {
-    const response = await fetch("http://localhost:8000/api/users", {
-      method: "GET",
+    
+    const response = await fetch('http://localhost:8000/api/forms/assign-to-course-division', {
+      method: 'POST',
       headers: {
-        Accept: "application/json",
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem("auth_token")}`, 
       },
+      body: JSON.stringify({
+        course_id: selectedCourseId,
+        division_id: selectedDivisionId,
+        form_id: formId,
+      }),
     });
 
-    if (!response.ok) {
-      throw new Error("Error obteniendo los datos.");
-    }
+    if (response.ok) {
+      const data = await response.json();
+      // console.log('Formulario asignado correctamente', data);
+      emit("assigned", data); 
+      emit("update:modelValue", false);
 
-    students.value = await response.json();
+    } else {
+      const errorData = await response.json();
+      console.error('Error al asignar formulario:', errorData.message);
+      alert(errorData.message || 'Hubo un error al asignar el formulario');
+    }
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error en la petición:', error);
+    alert('Hubo un error al realizar la solicitud');
+  }
+};
+
+// Cargar todos los cursos al montar el componente
+onMounted(async () => {
+  try {
+    const response = await fetch("http://localhost:8000/api/courses"); 
+    if (!response.ok) throw new Error("Error al cargar los cursos");
+
+    const data = await response.json();
+    courses.value = data; 
+  } catch (error) {
+    console.error("Error al cargar los cursos:", error);
   }
 });
 
+// Manejar la selección de un curso
+const fetchDivisions = async () => {
+  if (!selectedCourse.value) {
+    divisions.value = []; 
+    return;
+  }
+
+  try {
+  
+    const response = await fetch(`http://localhost:8000/api/course-divisions?course_id=${selectedCourse.value}`);
+    if (!response.ok) throw new Error("Error al cargar las divisiones");
+
+    const data = await response.json();
+    if (data.divisions) {
+      divisions.value = data.divisions; 
+    } else {
+      divisions.value = []; 
+      console.error(data.message || 'No se encontraron divisiones');
+    }
+  } catch (error) {
+    console.error("Error al cargar las divisiones:", error);
+  }
+};
+
+// Asignar formulario a los estudiantes seleccionados
 const assignForm = () => {
-  const studentsToAssign = students.value.filter(s =>
+  const studentsToAssign = students.value.filter((s) =>
     selectedStudents.value.includes(s.id)
   );
   const assignments = formAssignmentsStore.assignFormToStudents(
@@ -50,8 +120,14 @@ const assignForm = () => {
   emit("update:modelValue", false);
 };
 
+// Cerrar el modal y reiniciar los filtros
 const close = () => {
   emit("update:modelValue", false);
+  selectedCourse.value = null; // Reiniciar curso seleccionado
+  selectedDivision.value = null; // Reiniciar división seleccionada
+  divisions.value = []; // Limpiar divisiones
+  dueDate.value = null; // Reiniciar la fecha límite si es necesario
+  selectedStudents.value = []; // Limpiar estudiantes seleccionados
 };
 </script>
 
@@ -59,16 +135,10 @@ const close = () => {
   <div v-if="props.modelValue" class="fixed inset-0 z-50 overflow-y-auto">
     <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
 
-    <div
-      class="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0"
-    >
+    <div class="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0">
       <div
-        class="relative transform rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
-      >
-        <button
-          class="absolute right-4 top-4 text-gray-400 hover:text-gray-500"
-          @click="close"
-        >
+        class="relative transform rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <button class="absolute right-4 top-4 text-gray-400 hover:text-gray-500" @click="close">
           <XMarkIcon class="h-6 w-6" />
         </button>
 
@@ -78,54 +148,42 @@ const close = () => {
           </h3>
 
           <div class="space-y-4">
+            <!-- Selector de cursos -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
-                Data límit (opcional)
+                Seleccionar Curso
               </label>
-              <input
-                v-model="dueDate"
-                type="date"
-                class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+              <select v-model="selectedCourse" @change="fetchDivisions"
+                class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
+                <option value="" disabled selected>Selecciona un curso</option>
+                <option v-for="course in courses" :key="course.id" :value="course.id">
+                  {{ course.name }}
+                </option>
+              </select>
             </div>
 
-            <div>
+            <!-- Selector de divisiones -->
+            <div v-if="divisions.length > 0">
               <label class="block text-sm font-medium text-gray-700 mb-1">
-                Estudiants ({{ selectedStudents.length }} seleccionats)
+                Seleccionar División
               </label>
-              <div class="max-h-60 overflow-y-auto border rounded-md p-2">
-                <div
-                  v-for="student in students.filter(f => f.role_id === 2)"
-                  :key="student.id_student"
-                  class="flex items-center space-x-2 p-2 hover:bg-gray-50"
-                >
-                  <input
-                    :id="'student-' + student.id"
-                    v-model="selectedStudents"
-                    type="checkbox"
-                    :value="student.id"
-                    class="rounded text-primary focus:ring-primary"
-                  />
-                  <label :for="'student-' + student.id">{{
-                    student.name
-                  }}</label>
-                </div>
-              </div>
+              <select v-model="selectedDivision"
+                class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
+                <option value="" disabled selected>Selecciona una división</option>
+                <option v-for="division in divisions" :key="division.id" :value="division.id">
+                  {{ division.division }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
 
         <div class="mt-5 sm:mt-6 flex justify-end space-x-3">
-          <button
-            class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800"
-            @click="close"
-          >
+          <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800" @click="close">
             Cancelar
           </button>
-          <button
-            class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90"
-            @click="assignForm"
-          >
+          <button class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90"
+            @click="assignFormToCourseAndDivision">
             Assignar Formulari
           </button>
         </div>

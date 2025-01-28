@@ -21,24 +21,63 @@ use App\Models\User;
  */
 class FormController extends Controller
 {
-    public function updateFormStatus(Request $request, $formId)
+    public function assignFormToCourseAndDivision(Request $request)
 {
-    $form = Form::find($formId);
-
-    if (is_null($form)) {
-        return response()->json(['message' => 'Formulario no encontrado'], 404);
-    }
-
+    // Validar los datos
     $validated = $request->validate([
-        'status' => 'required|in:0,1',  // 0 = desactivado, 1 = activo
+        'course_id' => 'required|exists:courses,id',
+        'division_id' => 'required|exists:divisions,id',
+        'form_id' => 'required|exists:forms,id',
     ]);
 
-    // Actualizar el estado del formulario
-    $form->status = $validated['status'];
-    $form->save();
+    $courseId = $validated['course_id'];
+    $divisionId = $validated['division_id'];
+    $formId = $validated['form_id'];
 
-    return response()->json(['message' => 'Estado del formulario actualizado correctamente']);
+    // Obtener los usuarios que están en ese curso y división
+    $users = User::whereHas('divisions', function ($query) use ($courseId, $divisionId) {
+        $query->where('course_id', $courseId)
+            ->where('division_id', $divisionId);
+    })->get();
+
+    if ($users->isEmpty()) {
+        return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);
+    }
+
+    // Asignar el formulario a los usuarios encontrados
+    foreach ($users as $user) {
+        // Comprobamos si ya está asignado para evitar duplicados
+        if (!$user->forms()->where('form_id', $formId)->exists()) {
+            $user->forms()->attach($formId, [
+                'course_id' => $courseId,
+                'division_id' => $divisionId,
+            ]);
+        }
+    }
+
+    return response()->json(['message' => 'Formulario asignado correctamente a los usuarios.'], 200);
 }
+
+
+
+    public function updateFormStatus(Request $request, $formId)
+    {
+        $form = Form::find($formId);
+
+        if (is_null($form)) {
+            return response()->json(['message' => 'Formulario no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:0,1',  // 0 = desactivado, 1 = activo
+        ]);
+
+        // Actualizar el estado del formulario
+        $form->status = $validated['status'];
+        $form->save();
+
+        return response()->json(['message' => 'Estado del formulario actualizado correctamente']);
+    }
 
 
 
@@ -189,34 +228,34 @@ class FormController extends Controller
      * )
      */
 
-     public function index(Request $request)
-     {
-         // Obtener el teacher_id del usuario autenticado o de la solicitud
-         $teacherId = $request->input('teacher_id');
+    public function index(Request $request)
+    {
+        // Obtener el teacher_id del usuario autenticado o de la solicitud
+        $teacherId = $request->input('teacher_id');
 
-         // Comienza la consulta para obtener los formularios
-         $query = Form::with('questions.answers'); // Incluye preguntas y respuestas
+        // Comienza la consulta para obtener los formularios
+        $query = Form::with('questions.answers'); // Incluye preguntas y respuestas
 
-         // Filtros:
-         // 1. Filtrar por teacher_id si se pasa en la solicitud
-         if ($teacherId) {
-             $query->where('teacher_id', $teacherId);
-         }
+        // Filtros:
+        // 1. Filtrar por teacher_id si se pasa en la solicitud
+        if ($teacherId) {
+            $query->where('teacher_id', $teacherId);
+        }
 
-         // 2. Incluir también los formularios donde is_global es 1
-         $query->orWhere('is_global', 1);
+        // 2. Incluir también los formularios donde is_global es 1
+        $query->orWhere('is_global', 1);
 
-         // Obtener los formularios filtrados
-         $forms = $query->get();
+        // Obtener los formularios filtrados
+        $forms = $query->get();
 
-         // Verificar si la solicitud espera una respuesta JSON
-         if ($request->expectsJson()) {
-             return response()->json($forms, 200);
-         }
+        // Verificar si la solicitud espera una respuesta JSON
+        if ($request->expectsJson()) {
+            return response()->json($forms, 200);
+        }
 
-         // Si no es una solicitud JSON, se devuelve la vista
-         return view('forms', compact('forms'));
-     }
+        // Si no es una solicitud JSON, se devuelve la vista
+        return view('forms', compact('forms'));
+    }
 
 
 

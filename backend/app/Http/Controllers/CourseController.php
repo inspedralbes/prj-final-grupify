@@ -4,9 +4,41 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
+use App\Models\Division;
 
 class CourseController extends Controller
 {
+    public function getDivisionsByCourse(Request $request)
+    {
+        // Validar que el 'course_id' se proporcione y exista
+        $validated = $request->validate([
+            'course_id' => 'required|integer|exists:courses,id',
+        ]);
+
+        $courseId = $validated['course_id'];
+
+        // Filtrar divisiones relacionadas al curso específico usando la tabla intermedia
+        $divisions = Division::whereIn('id', function ($query) use ($courseId) {
+            $query->select('division_id')
+                ->from('course_division')
+                ->where('course_id', $courseId);
+        })->get(['id', 'division']); // Seleccionar solo columnas necesarias
+
+        // Validar si existen divisiones relacionadas
+        if ($divisions->isEmpty()) {
+            return response()->json(['message' => 'No divisions found for the specified course'], 404);
+        }
+
+        // Respuesta con las divisiones relacionadas
+        return response()->json([
+            'course_id' => $courseId,
+            'divisions' => $divisions,
+        ], 200);
+    }
+
+
+
+
     /**
      * @OA\Get(
      *     path="/api/courses",
@@ -184,7 +216,7 @@ class CourseController extends Controller
                 'divisions' => $course->divisions->map(function ($division) {
                     return [
                         'id' => $division->id,
-                        'name' => $division->division,
+                        'name' => $division->division, // Suponiendo que el nombre de la división está en 'division'
                     ];
                 }),
             ];
