@@ -34,12 +34,15 @@ export const useCoursesStore = defineStore('courses', {
         // Transformamos la respuesta para separar divisiones como cursos individuales
         const transformedCourses = [];
         data.forEach(course => {
-          course.divisions.forEach(division => {
+          // Obtener todas las divisiones a partir de los valores del objeto 'divisions'
+          const divisionsArray = Object.values(course.divisions);  // Convierte el objeto de divisiones en un array
+
+          divisionsArray.forEach(division => {
             transformedCourses.push({
               courseId: course.id,       // ID del curso principal
               courseName: course.name,   // Nombre del curso
               division: division,       // División como un objeto separado
-              active: course.active,     // esto es provisional porque no esta en backend 
+              active: course.active,     // Esto es provisional porque no está en backend 
             });
           });
         });
