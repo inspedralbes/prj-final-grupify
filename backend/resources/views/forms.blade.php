@@ -64,7 +64,7 @@
                                         <form action="{{ route('forms.destroy', $form->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Estàs segur de voler eliminar aquest formulari?')">
+                                            <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="fas fa-trash-alt me-1"></i> Eliminar
                                             </button>
                                         </form>
