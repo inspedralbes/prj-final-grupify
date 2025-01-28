@@ -22,7 +22,8 @@ class CourseUserSeeder extends Seeder
 
         // Obtener todos los cursos y divisiones disponibles
         $courses = Course::all();
-        $divisions = Division::all();
+        $divisionsESO = Division::whereIn('id', [3, 4, 5,6,7])->get(); // Divisiones ESO A, B, C, D, E
+        $divisionsBachillerato = Division::whereIn('id', [1, 2])->get(); // Divisiones Bachillerato 1, 2
 
         // Arrays para insertar relaciones en course_user y course_division_user
         $courseUsers = [];
@@ -31,7 +32,15 @@ class CourseUserSeeder extends Seeder
         // Asignar curso y división aleatoria a los estudiantes
         foreach ($students as $student) {
             $randomCourse = $courses->random(); // Curso aleatorio
-            $randomDivision = $divisions->random(); // División aleatoria
+
+            // Si el curso es de ESO (1, 2, 3, 4), asignar divisiones A, B, C, D, E
+            if ($randomCourse->id <= 4) {
+                $randomDivision = $divisionsESO->random(); // División aleatoria de ESO (A, B, C, D, E)
+            }
+            // Si el curso es de Bachillerato (5, 6, ...), asignar divisiones 1 y 2
+            else {
+                $randomDivision = $divisionsBachillerato->random(); // División aleatoria de Bachillerato (1, 2)
+            }
 
             // Crear relación en course_user
             $courseUsers[] = [
@@ -54,7 +63,15 @@ class CourseUserSeeder extends Seeder
         // Asignar cursos a los profesores (sin divisiones)
         foreach ($teachers as $teacher) {
             $randomCourse = $courses->random(); // Curso aleatorio
-            $randomDivision = $divisions->random(); // División aleatoria
+
+            // Si el curso es de ESO (1, 2, 3, 4), asignar divisiones A, B, C, D, E
+            if ($randomCourse->id <= 4) {
+                $randomDivision = $divisionsESO->random(); // División aleatoria de ESO
+            }
+            // Si el curso es de Bachillerato (5, 6, ...), asignar divisiones 1 y 2
+            else {
+                $randomDivision = $divisionsBachillerato->random(); // División aleatoria de Bachillerato
+            }
 
             // Crear relación en course_user para el profesor
             $courseUsers[] = [
