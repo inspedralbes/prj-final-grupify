@@ -84,6 +84,12 @@ Route::get('/forms/{formId}/responded-users', [SociogramRelationshipController::
 //RUTA PARA OBTENER RESPUSTA DE UN USUARIO DEL SOCIOGRAMA
 Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
 
+//RUTA PARA OBETENER DIVISIONES SEGUN COURSE
+Route::get('/course-divisions', [CourseController::class, 'getDivisionsByCourse']);
+
+//RUTA PARA ASIGNAR FORMULARIO SEGUN CURSO Y DIVISION
+Route::post('/forms/assign-to-course-division', [FormController::class, 'assignFormToCourseAndDivision']);
+
 
 
 
