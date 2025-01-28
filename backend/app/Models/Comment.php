@@ -21,4 +21,8 @@ class Comment extends Model
     {
         return $this->belongsToMany(User::class, 'comment_user', 'comment_id', 'student_id');
     }
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'comments_groups', 'comment_id', 'id_group');
+    }
 }
