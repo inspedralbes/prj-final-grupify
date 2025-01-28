@@ -17,6 +17,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SociogramRelationshipController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CourseDivisionUserController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
@@ -33,6 +34,8 @@ Route::middleware('api')->resource('courses', CourseController::class);
 Route::resource('roles', RoleController::class);
 Route::resource('courses', CourseController::class);
 Route::get('/courses-with-divisions', [CourseController::class, 'getCoursesWithDivisions']);
+Route::apiResource('course-division-user', CourseDivisionUserController::class);
+
 
 Route::resource('subjects', SubjectController::class);
 Route::resource('groups', GroupController::class)->middleware('auth:sanctum');

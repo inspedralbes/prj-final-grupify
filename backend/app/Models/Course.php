@@ -12,8 +12,9 @@ class Course extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->hasManyThrough(User::class, CourseDivisionUser::class, 'course_id', 'id', 'id', 'user_id');
     }
+
 
     public function subjects()
     {
@@ -22,7 +23,9 @@ class Course extends Model
 
     public function divisions()
     {
-        return $this->belongsToMany(Division::class,'course_division','course_id', 'division_id');
+        return $this->belongsToMany(Division::class, 'course_division_user', 'course_id', 'division_id')
+            ->withPivot('user_id')
+            ->withTimestamps();
     }
 
     public function forms()
