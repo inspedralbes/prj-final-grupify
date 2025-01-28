@@ -77,6 +77,7 @@ Route::get('/forms/{formId}/responded-users', [SociogramRelationshipController::
 Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
 
 
+Route::get('/courses-with-divisions', [CourseController::class, 'getCoursesWithDivisions']);
 
 
 Route::get('/roles', [RoleController::class, 'index']);

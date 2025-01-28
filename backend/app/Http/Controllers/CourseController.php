@@ -7,6 +7,24 @@ use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
+    public function getCoursesWithDivisions()
+    {
+        $courses = Course::with('divisions')->get()->map(function ($course) {
+            return [
+                'id' => $course->id,
+                'name' => $course->name,
+                'divisions' => $course->divisions->map(function ($division) {
+                    return [
+                        'id' => $division->id,
+                        'name' => $division->division,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($courses, 200);
+    }
+
     /**
      * @OA\Get(
      *     path="/api/courses",
