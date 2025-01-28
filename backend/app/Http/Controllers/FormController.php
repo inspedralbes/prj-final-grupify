@@ -213,7 +213,7 @@ class FormController extends Controller
          if ($request->expectsJson()) {
              return response()->json($forms, 200);
          }
-
+         $forms = Form::all();
          // Si no es una solicitud JSON, se devuelve la vista
          return view('forms', compact('forms'));
      }
