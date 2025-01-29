@@ -32,7 +32,7 @@ onMounted(async () => {
     errorMessage.value = "Error al cargar los datos. Inténtalo de nuevo más tarde.";
   } finally {
     isLoadingMembers.value = false;
-    isLoadingComments.value = false; // Deja de cargar comentarios cuando se termine
+    isLoadingComments.value = false;
   }
 });
 
@@ -42,14 +42,29 @@ const group = computed(() =>
   groupStore.groups.find(g => g.id === parseInt(route.params.id))
 );
 
-// Sincroniza el textarea con el store de comentarios
-const handleAddComment = async (newComment) => {
+// Añade comentarios del grupo
+const handleAddComment = async () => {
+  if (!newComment.value.trim()) {
+    errorMessage.value = "El comentario no puede estar vacío.";
+    return;
+  }
+
   try {
-    await commentsStore.addCommentToGroup(group.value.id, newComment);
+    const commentData = {
+      teacher_id: 1, // ID del profesor (deberías obtenerlo dinámicamente)
+      content: newComment.value,
+    };
+
+    await commentsStore.addCommentToGroup(group.value.id, commentData);
     successMessage.value = "Comentario añadido con éxito";
     newComment.value = ""; // Limpia el campo después de añadir
   } catch (error) {
     errorMessage.value = "Hubo un error al añadir el comentario";
+  } finally {
+    setTimeout(() => {
+      successMessage.value = "";
+      errorMessage.value = "";
+    }, 3000);
   }
 };
 

@@ -1,7 +1,7 @@
 // store/commentStore.js
 import { defineStore } from "pinia";
 
-export const useCommentStore = defineStore("comments", {
+export const useCommentStore = defineStore("comment", {
   state: () => ({
     comments: [], // Almacenamos los comentarios de un grupo
   }),
@@ -44,18 +44,20 @@ export const useCommentStore = defineStore("comments", {
               "Content-Type": "application/json",
               Accept: "application/json",
             },
-            body: JSON.stringify({ comment: commentData }),
+            body: JSON.stringify(commentData),
           }
         );
-
+    
         if (!response.ok) {
-          throw new Error("Error adding comment");
+          const errorData = await response.json(); // Obtener detalles del error
+          console.error("Error response from server:", errorData);
+          throw new Error(errorData.message || "Error adding comment");
         }
-
+    
         const newComment = await response.json();
-        this.comments.push(newComment); // Agregamos el comentario a la lista
+        this.comments.push(newComment.comment);
         return newComment;
-
+    
       } catch (error) {
         console.error("Error adding comment:", error);
         throw error;

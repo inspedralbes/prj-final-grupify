@@ -117,10 +117,10 @@ class CommentController extends Controller
         return response()->json(['message' => 'Comentario eliminado exitosamente']);
     }
 
-    public function addCommentToGroup(Request $request, $id_group)
+    public function addCommentToGroup(Request $request, $idGroup)
 {
     // Validar que el grupo exista
-    $group = Group::findOrFail($id_group);
+    $group = Group::findOrFail($idGroup);
 
     // Validar los datos de entrada
     $request->validate([

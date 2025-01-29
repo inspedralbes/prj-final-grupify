@@ -176,5 +176,6 @@ Route::prefix('comments')->group(function () {
 Route::get('groups/{idGroup}/comments', [CommentController::class, 'getCommentsForGroup']);
 
 // Crear un comentario asociado a un grupo
-Route::post('/groups/{id_group}/comments', [CommentController::class, 'addCommentToGroup']);
-
+Route::post('/groups/{idGroup}/comments', [CommentController::class, 'addCommentToGroup']);
+Route::put('/groups/{idGroup}/comments/{commentId}', [CommentController::class, 'updateCommentInGroup']);
+Route::delete('/groups/{idGroup}/comments/{commentId}', [CommentController::class, 'deleteCommentFromGroup']);
