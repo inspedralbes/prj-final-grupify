@@ -1,11 +1,17 @@
 <script setup>
 import { useRouter } from "vue-router";
+import { EyeIcon } from "@heroicons/vue/24/outline";
+import CoursesListItem from './CoursesListItem.vue'; 
 
-// Función para navegar al perfil del curso
+const coursesStore = useCoursesStore();
 const router = useRouter();
-const viewProfile = (courseId) => {
+const viewProfile = (courseId) => { 
+  coursesStore.setSelectedCourse({
+    courseName: course.courseName,
+    divisionName: course.division.name,
+  });
   if (!courseId) return;
-  router.push(`/professor/courseProfile/${courseId}`); //cambiarlo!!!
+  router.push(`/professor/sociograma/sociogramaProlife/${courseId}`); 
 };
 
 // Definir las props del componente

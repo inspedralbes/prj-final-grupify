@@ -2,9 +2,9 @@ import { defineStore } from "pinia";
 
 export const useStudentsStore = defineStore("students", {
   state: () => ({
-    students: [], 
-    loading: false, 
-    error: null, 
+    students: [],
+    loading: false,
+    error: null,
     onlineStudents: new Set(), // IDs de estudiantes conectados
   }),
   actions: {
@@ -26,24 +26,26 @@ export const useStudentsStore = defineStore("students", {
         const data = await response.json();
 
         if (!Array.isArray(data)) {
-          throw new Error("La respuesta de la API no tiene el formato esperado.");
+          throw new Error(
+            "La respuesta de la API no tiene el formato esperado."
+          );
         }
 
-        this.students = data.map((student) => ({
+        this.students = data.map(student => ({
           ...student,
-          status: student.status ?? 1, 
+          status: student.status ?? 1,
         }));
       } catch (error) {
         this.error = `Error al cargar estudiantes: ${error.message}`;
         console.error("Error fetching students:", error);
       } finally {
-        this.loading = false; 
+        this.loading = false;
       }
     },
 
     updateStudent(updatedStudent) {
       const studentIndex = this.students.findIndex(
-        (student) => student.id === updatedStudent.id
+        student => student.id === updatedStudent.id
       );
       if (studentIndex !== -1) {
         this.students.splice(studentIndex, 1, updatedStudent); // Reactividad
@@ -53,9 +55,9 @@ export const useStudentsStore = defineStore("students", {
     },
 
     toggleActive(studentId) {
-      const student = this.students.find((s) => s.id === studentId);
+      const student = this.students.find(s => s.id === studentId);
       if (student) {
-        student.status = student.status === 1 ? 0 : 1; 
+        student.status = student.status === 1 ? 0 : 1;
       } else {
         console.warn(`Estudiante con ID ${studentId} no encontrado.`);
       }
@@ -63,12 +65,12 @@ export const useStudentsStore = defineStore("students", {
 
     // Elimina un estudiante de la lista
     removeStudent(studentId) {
-      this.students = this.students.filter((student) => student.id !== studentId);
+      this.students = this.students.filter(student => student.id !== studentId);
     },
 
     // Busca un estudiante por ID
     getStudentById(id) {
-      return this.students.find((student) => student.id === Number(id));
+      return this.students.find(student => student.id === Number(id));
     },
 
     // Marca a un estudiante como conectado
@@ -83,8 +85,14 @@ export const useStudentsStore = defineStore("students", {
   },
   getters: {
     // Verifica si un estudiante está en línea
-    isStudentOnline: (state) => (studentId) => {
+    isStudentOnline: state => studentId => {
       return state.onlineStudents.has(studentId);
     },
+  },
+    getStudentsByCourseAndDivision(courseName, divisionName) {
+      return this.students.filter(
+       student =>
+        student.course === courseName && student.division === divisionName
+    );
   },
 });
