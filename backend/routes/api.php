@@ -171,3 +171,10 @@ Route::prefix('comments')->group(function () {
     // Obtener los comentarios hechos por un profesor
     Route::get('/teachers/{teacherId}', [CommentController::class, 'getCommentsByTeacher']);
 });
+
+// Obtener comentarios de un grupo
+Route::get('groups/{idGroup}/comments', [CommentController::class, 'getCommentsForGroup']);
+
+// Crear un comentario asociado a un grupo
+Route::post('/groups/{id_group}/comments', [CommentController::class, 'addCommentToGroup']);
+

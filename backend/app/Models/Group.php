@@ -30,4 +30,8 @@ class Group extends Model
     {
         return $this->belongsToMany(Division::class, 'group_division', 'id_group', 'id_division');
     }
+    public function comments()
+    {
+        return $this->belongsToMany(Comment::class, 'comments_groups', 'id_group', 'comment_id');
+    }
 }

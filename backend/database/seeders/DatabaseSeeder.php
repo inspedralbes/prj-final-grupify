@@ -42,6 +42,7 @@ class DatabaseSeeder extends Seeder
             SociogramRelationshipSeeder::class,
             CommentSeeder::class,
             CommentUserSeeder::class,
+            CommentsGroupsSeeder::class,
             CourseDivisionSeeder::class,
         ]);
     }
