@@ -138,77 +138,71 @@ class UserController extends Controller
 
 
      public function store(Request $request)
-     {
-         // Validación base para todos los usuarios
-         $validator = Validator::make($request->all(), [
-             'name' => 'required|string|max:255',
-             'last_name' => 'required|string|max:255',
-             'email' => 'required|string|email|max:255|unique:users',
-             'password' => 'required|string|min:8',
-             'role_id' => 'required|exists:roles,id',
-             'image' => 'nullable|string|max:255', // Imagen opcional
-             'courses' => 'nullable|array', // Asegúrate de que esto sea un array
-             'divisions' => 'nullable|array', // Divisiones son opcionales
-             'subjects' => 'nullable|array', // Materias (opcional)
-         ]);
-     
-         // Si la validación falla, retorna errores
-         if ($validator->fails()) {
-             if ($request->wantsJson()) {
-                 return response()->json($validator->errors(), 400);
-             } else {
-                 return redirect()->back()->withErrors($validator)->withInput();
-             }
-         }
-     
-         // Crear los datos base del usuario
-         $userData = [
-             'name' => $request->name,
-             'last_name' => $request->last_name,
-             'email' => $request->email,
-             'password' => bcrypt($request->password),
-             'role_id' => $request->role_id,
-         ];
-     
-         // Si se ha proporcionado una imagen, agregarla a los datos del usuario
-         if ($request->has('image')) {
-             $userData['image'] = $request->image;
-         }
-     
-         // Crear el usuario en la base de datos
-         $user = User::create($userData);
-         
-         // Si el usuario es Profesor (ID = 1), asociar materias
-        if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
-            $user->subjects()->sync($request->subjects); // Relación con subjects
-        }
-         // Si el rol es Alumno (ID = 2) o Profesor (ID = 1), asociar cursos y divisiones
-         if (in_array($request->role_id, [1, 2])) {
-             // Validar y asociar los cursos si el usuario es Profesor o Alumno
-             if ($request->has('courses') && count($request->courses) > 0) {
-                 $user->courses()->sync($request->courses);
-             }
-     
-             // Si el usuario es Alumno, asociar divisiones a los cursos seleccionados
-             if ($request->role_id == 2 && $request->has('divisions') && count($request->divisions) > 0) {
-                 foreach ($request->courses as $courseId) {
-                     $course = Course::find($courseId);
-                     if ($course) {
-                         $course->divisions()->sync($request->divisions);
-                     }
-                 }
-             }
-         }
-     
-         // Si la solicitud es JSON, devolver el usuario recién creado
+{
+    // Validación base para todos los usuarios
+    $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8',
+        'role_id' => 'required|exists:roles,id',
+        'image' => 'nullable|string|max:255', // Imagen opcional
+        'courses' => 'nullable|array', 
+        'divisions' => 'nullable|array', 
+        'subjects' => 'nullable|array',
+    ]);
+
+    // Si la validación falla, retorna errores
+    if ($validator->fails()) {
         if ($request->wantsJson()) {
-            return response()->json($user->load(['courses', 'subjects']), 201);
+            return response()->json($validator->errors(), 400);
+        } else {
+            return redirect()->back()->withErrors($validator)->withInput();
         }
-     
-         // Si la solicitud es HTML, redirigir con mensaje de éxito
-         return redirect()->route('users.index')->with('success', 'User created successfully');
-     }
-     
+    }
+
+    // Crear el usuario
+    $user = User::create([
+        'name' => $request->name,
+        'last_name' => $request->last_name,
+        'email' => $request->email,
+        'password' => bcrypt($request->password),
+        'role_id' => $request->role_id,
+        'image' => $request->image ?? null,
+    ]);
+
+     // Si se ha proporcionado una imagen, agregarla a los datos del usuario
+     if ($request->has('image')) {
+        $userData['image'] = $request->image;
+    }
+
+    // Si el usuario es Profesor (ID = 1), asociar materias
+    if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
+        $user->subjects()->sync($request->subjects);
+    }
+
+    // Si el usuario es Alumno (ID = 2), asociar curso y división en CourseDivisionUser
+    if ($request->role_id == 2 && $request->has('courses') && count($request->courses) > 0) {
+        foreach ($request->courses as $courseId) {
+            if ($request->has('divisions') && count($request->divisions) > 0) {
+                foreach ($request->divisions as $divisionId) {
+                    \App\Models\CourseDivisionUser::create([
+                        'course_id' => $courseId,
+                        'division_id' => $divisionId,
+                        'user_id' => $user->id,
+                    ]);
+                }
+            }
+        }
+    }
+
+    if ($request->wantsJson()) {
+        return response()->json($user->load(['courses', 'subjects']), 201);
+    }
+
+    return redirect()->route('users.index')->with('success', 'User created successfully');
+}
+
 
 
 
