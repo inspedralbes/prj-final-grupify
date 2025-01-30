@@ -18,31 +18,62 @@ const isLoadingComments = ref(true);
 const errorMessage = ref("");
 const successMessage = ref("");
 const newComment = ref("");
-//const comments = ref("");
 const logDate = ref(new Date().toISOString().split("T")[0]);
-const logEntries = ref({}); // Almacena las entradas de la bitácora por integrante
-const isBitacoraActive = ref(false); // Estado inicial del botón (apagado)
+const logEntries = ref({});
+const isBitacoraActive = ref(false); 
+const isCommentsOpen = ref(false); 
+
+// Estado para el modal de confirmación
+const showDeleteModal = ref(false);
+const itemToDelete = ref(null); // Puede ser un miembro o un comentario
+const modalTitle = ref("");
+const deleteType = ref(""); // 'member' o 'comment'
+
+// Función para abrir el modal de confirmación
+const confirmDelete = (type, item, title) => {
+  deleteType.value = type;
+  itemToDelete.value = item;
+  modalTitle.value = title;
+  showDeleteModal.value = true;
+};
+
+// Función para manejar la eliminación
+const handleDelete = async () => {
+  try {
+    if (deleteType.value === 'member') {
+      await handleRemoveStudent(itemToDelete.value);
+    } else if (deleteType.value === 'comment') {
+      await handleDeleteComment(itemToDelete.value);
+    }
+    successMessage.value = "Elemento eliminado correctamente";
+  } catch (error) {
+    errorMessage.value = "Hubo un error al eliminar el elemento";
+  } finally {
+    showDeleteModal.value = false;
+    setTimeout(() => {
+      successMessage.value = "";
+      errorMessage.value = "";
+    }, 3000);
+  }
+};
 
 onMounted(async () => {
   try {
     await Promise.all([studentsStore.fetchStudents(), groupStore.fetchGroups()]);
-    await commentsStore.fetchComments(route.params.id); // Cargar los comentarios del grupo
+    await commentsStore.fetchComments(route.params.id);
   } catch (error) {
     console.error("Error loading data:", error);
-    errorMessage.value = "Error al cargar los datos. Inténtalo de nuevo más tarde.";
   } finally {
     isLoadingMembers.value = false;
     isLoadingComments.value = false;
   }
 });
 
-
 const students = computed(() => studentsStore.students);
 const group = computed(() =>
   groupStore.groups.find(g => g.id === parseInt(route.params.id))
 );
 
-// Añade comentarios del grupo
 const handleAddComment = async () => {
   if (!newComment.value.trim()) {
     errorMessage.value = "El comentario no puede estar vacío.";
@@ -76,7 +107,6 @@ const handleDeleteComment = async (commentId) => {
     errorMessage.value = "Hubo un error al eliminar el comentario";
   }
 };
-
 
 const availableStudents = computed(() => {
   const memberIds = group.value?.members?.map(m => m.id) || [];
@@ -137,7 +167,7 @@ const saveGroup = () => {
   console.log({
     groupId: group.value.id,
     members: group.value.members,
-    comments: commentsStore.comments, // Usar el estado del store para los comentarios
+    comments: commentsStore.comments,
     logEntries: logEntries.value,
     logDate: logDate.value
   });
@@ -147,6 +177,38 @@ const saveGroup = () => {
 <template>
   <div class="min-h-screen bg-gray-50">
     <DashboardNavTeacher />
+
+        <!-- Pop Up de confirmación -->
+        <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Fondo difuminado -->
+      <div 
+        class="fixed inset-0 bg-white/50 backdrop-blur-sm"
+        @click.self="showDeleteModal = false"
+      ></div>
+      
+      <!-- Contenido del modal -->
+      <div class="relative bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl border border-gray-200">
+        <h3 class="text-lg font-semibold mb-4 text-gray-900">Confirmar eliminació</h3>
+        <p class="mb-6 text-gray-600">
+          Estàs segur que vols eliminar {{ deleteType === 'member' ? "l'alumne" : "el comentari" }} 
+          <strong>"{{ modalTitle }}"</strong>?
+        </p>
+        <div class="flex justify-end space-x-3">
+          <button
+            @click="showDeleteModal = false"
+            class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors font-medium"
+          >
+            Cancel·lar
+          </button>
+          <button
+            @click="handleDelete"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div class="max-w-6xl mx-auto px-4 py-8">
       <!-- Header Section with Back Button -->
@@ -264,14 +326,14 @@ const saveGroup = () => {
                   </span>
                 </div>
                 <button
-                  @click="handleRemoveStudent(member.id)"
-                  :disabled="isRemoving"
-                  class="p-2 text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+      @click="confirmDelete('member', member.id, `${member.name} ${member.last_name}`)"
+      :disabled="isRemoving"
+      class="p-2 text-red-500 hover:text-red-700 transition-colors duration-200 disabled:opacity-50"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </button>
               </div>
               <div v-if="!group?.members?.length" class="py-8 text-center text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,52 +346,78 @@ const saveGroup = () => {
         </div>
       </div>
 
-      <!-- Sección de Comentarios -->
+      <!-- Sección de Comentarios (Bitácora) -->
       <div class="mb-8">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Gestió de Comentaris</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Add Comment Section -->
-          <div class="bg-white rounded-xl shadow-sm p-6">
-            <h3 class="text-xl font-semibold text-gray-800 mb-6">
-              Afegir Comentari
-            </h3>
-            <textarea
-              v-model="newComment"
-              class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[rgb(0,173,238)] focus:border-[rgb(0,173,238)]"
-              placeholder="Escriu un comentari"
-            ></textarea>
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Comentaris & Bitácora</h2>
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-gray-800">Comentaris del Grup</h3>
             <button
-              @click="handleAddComment(newComment)"
-              class="w-full mt-4 px-6 py-3 rounded-lg bg-[rgb(0,173,238)] text-white hover:bg-[rgb(0,153,218)] transition-colors"
+              @click="isCommentsOpen = !isCommentsOpen"
+              :class="{
+                'bg-[rgb(0,173,238)]': isCommentsOpen,
+                'bg-gray-200': !isCommentsOpen
+              }"
+              class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
             >
-              Afegir Comentari
+              <span
+                :class="{
+                  'translate-x-6': isCommentsOpen,
+                  'translate-x-1': !isCommentsOpen
+                }"
+                class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
+              ></span>
             </button>
           </div>
 
-          <!-- Comments List -->
-          <div class="bg-white rounded-xl shadow-sm p-6">
-            <h3 class="text-xl font-semibold text-gray-800 mb-6">
-              Comentaris
-            </h3>
-            <div v-if="isLoadingComments" class="py-8 text-center text-gray-500">
-              <p>Cargando comentarios...</p>
+          <!-- Contenido de la bitácora de comentarios -->
+          <div v-if="isCommentsOpen">
+            <!-- Add Comment Section -->
+            <div class="mb-6">
+              <textarea
+                v-model="newComment"
+                class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[rgb(0,173,238)] focus:border-[rgb(0,173,238)]"
+                placeholder="Escriu un comentari"
+              ></textarea>
+              <button
+                @click="handleAddComment(newComment)"
+                class="w-full mt-4 px-6 py-3 rounded-lg bg-[rgb(0,173,238)] text-white hover:bg-[rgb(0,153,218)] transition-colors"
+              >
+                Afegir Comentari
+              </button>
             </div>
-            <div v-else>
-              <ul>
-                <li
-                  v-for="comment in commentsStore.comments"
-                  :key="comment.id"
-                  class="p-4 bg-gray-100 rounded-lg mb-2 flex justify-between items-center"
-                >
-                  <p class="text-gray-700">{{ comment.content }}</p>
-                  <button
-                    @click="handleDeleteComment(comment.id)"
-                    class="text-red-500 hover:text-red-700 transition-colors"
+
+            <!-- Comments List -->
+            <div>
+              <h3 class="text-xl font-semibold text-gray-800 mb-6">
+                Comentaris
+              </h3>
+              <div v-if="isLoadingComments" class="py-8 text-center text-gray-500">
+                <p>Cargando comentarios...</p>
+              </div>
+              <div v-else>
+                <ul>
+                  <li
+                    v-for="comment in commentsStore.comments"
+                    :key="comment.id"
+                    class="p-4 bg-gray-100 rounded-lg mb-2 flex justify-between items-center"
                   >
-                    Eliminar
-                  </button>
-                </li>
-              </ul>
+                    <p class="text-gray-700">{{ comment.content }}</p>
+
+                    <button
+      @click="confirmDelete('comment', comment.id, comment.content)"
+      :disabled="isRemoving"
+      class="text-red-500 hover:text-red-700 transition-colors"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </button>
+
+
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
