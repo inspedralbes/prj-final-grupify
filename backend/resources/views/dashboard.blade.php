@@ -109,18 +109,6 @@
             </a>
         </div>
 
-        <!-- Respuestas -->
-        <div class="col-md-4 col-lg-4">
-            <a href="{{ route('answers.index') }}" class="text-decoration-none">
-                <div class="card h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="fas fa-comment-dots fa-2x mb-3" style="color: var(--primary-color)"></i>
-                        <h5 class="card-title">Respostes</h5>
-                    </div>
-                </div>
-            </a>
-        </div>
-
     </div>
 </div>
 @endsection
