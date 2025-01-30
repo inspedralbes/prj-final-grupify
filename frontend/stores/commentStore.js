@@ -65,7 +65,7 @@ export const useCommentStore = defineStore("comment", {
     },
 
     // Eliminar un comentario de un grupo
-    async deleteComment(idGroup, commentId) {
+    async deleteCommentFromGroup(idGroup, commentId) {
       try {
         const token = localStorage.getItem("auth_token");
         const response = await fetch(
@@ -80,13 +80,13 @@ export const useCommentStore = defineStore("comment", {
         );
 
         if (!response.ok) {
-          throw new Error("Error deleting comment");
+          throw new Error("Error deleting comment from group");
         }
 
         // Eliminar el comentario del estado local
         this.comments = this.comments.filter(comment => comment.id !== commentId);
       } catch (error) {
-        console.error("Error deleting comment:", error);
+        console.error("Error deleting comment from group:", error);
         throw error;
       }
     },

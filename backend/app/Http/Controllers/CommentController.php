@@ -117,15 +117,14 @@ class CommentController extends Controller
         return response()->json(['message' => 'Comentario eliminado exitosamente']);
     }
 
+    // Crear un comentario a un GRUPO
     public function addCommentToGroup(Request $request, $idGroup)
 {
-    // Validar que el grupo exista
     $group = Group::findOrFail($idGroup);
 
-    // Validar los datos de entrada
     $request->validate([
-        'teacher_id' => 'required|exists:users,id,role_id,1', // ID del profesor
-        'content' => 'required|string|max:1000', // Contenido del comentario
+        'teacher_id' => 'required|exists:users,id,role_id,1', 
+        'content' => 'required|string|max:1000', 
     ]);
 
     // Crear el comentario
@@ -148,4 +147,24 @@ class CommentController extends Controller
     ]);
 }
 
+// Eliminar un comentario de un GRUPO
+public function deleteCommentFromGroup($idGroup, $commentId)
+{
+    $group = Group::findOrFail($idGroup);
+
+    $comment = Comment::findOrFail($commentId);
+
+    // Verificar si el comentario pertenece al grupo
+    if (!$group->comments()->where('comment_id', $commentId)->exists()) {
+        return response()->json(['message' => 'El comentario no pertenece a este grupo'], 404);
+    }
+
+    // Desvincular el comentario del grupo
+    $group->comments()->detach($commentId);
+
+    // Eliminar el comentario de la base de datos
+    $comment->delete();
+
+    return response()->json(['message' => 'Comentario eliminado del grupo exitosamente']);
+}
 }

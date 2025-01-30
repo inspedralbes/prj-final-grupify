@@ -70,7 +70,7 @@ const handleAddComment = async () => {
 
 const handleDeleteComment = async (commentId) => {
   try {
-    await commentsStore.deleteComment(group.value.id, commentId);
+    await commentsStore.deleteCommentFromGroup(group.value.id, commentId);
     successMessage.value = "Comentario eliminado con éxito";
   } catch (error) {
     errorMessage.value = "Hubo un error al eliminar el comentario";
