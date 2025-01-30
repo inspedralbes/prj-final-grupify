@@ -22,13 +22,13 @@ onMounted(async () => {
 
         await coursesStore.fetchCourses();
         course.value = coursesStore.courses.find(c => c.classId == classId.value);
-
+        console.log('course:', course.value);
         if (!course.value) throw new Error('Curso no encontrado');
 
         await studentsStore.fetchStudents();
-
+        console.log('studentsStore.students:', studentsStore.students);
         students.value = studentsStore.students.filter(student =>
-            student.course === course.value.courseId && student.division === course.value.division.id
+            student.course === course.value.courseName && student.division === course.value.division.name
         );
 
     } catch (err) {
