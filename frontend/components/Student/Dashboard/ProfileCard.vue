@@ -5,8 +5,8 @@ const userData = ref({
   last_name: "",
   email: "",
   image: "",
-  course: "",
-  division: "",
+  course_id: "",  // Ahora usarás `course_id`
+  division_id: "", // Ahora usarás `division_id`
 });
 
 onMounted(() => {
@@ -18,8 +18,8 @@ onMounted(() => {
       last_name: user.last_name,
       email: user.email,
       image: user.image,
-      course: user.courses?.[0]?.name || "Sin Curso",
-      division: user.courses?.[0]?.divisions?.[0]?.division || "Sin División",
+      course_id: user.course_id || "Sin Curso",  // Asignamos `course_id` directamente
+      division_id: user.division_id || "Sin División",  // Asignamos `division_id` directamente
     };
   }
 });
@@ -83,7 +83,7 @@ onMounted(() => {
       </h2>
       <p class="text-gray-500 text-sm">{{ userData.email }}</p>
       <p class="text-gray-500 text-sm">
-        Curs: {{ userData.course }} {{ userData.division }}
+      <!--  Curso: {{ userData.course_id }} | División: {{ userData.division_id }}-->
       </p>
     </div>
   </div>
