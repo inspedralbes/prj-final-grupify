@@ -24,7 +24,7 @@ class UserController extends Controller
      * )
      */
 
-     //Este método se encargará de asociar el usuario con el curso y la división
+    //Este método se encargará de asociar el usuario con el curso y la división
     public function assignCourseAndDivision(Request $request, $userId)
     {
         $validator = Validator::make($request->all(), [
@@ -120,21 +120,21 @@ class UserController extends Controller
      * )
      */
 
-     public function create()
-     {
-         // Obtener todos los cursos y divisiones disponibles
+    public function create()
+    {
+        // Obtener todos los cursos y divisiones disponibles
         $courses = Course::all();
         $divisions = Division::all();
-        $roles = Role::all(); 
-        $subjects = Subject::all(); 
-        
+        $roles = Role::all();
+        $subjects = Subject::all();
 
-         // Obtener los roles disponibles
-         $roles = Role::all();
 
-         // Pasar los datos a la vista
-         return view('users.create', compact('courses', 'divisions', 'roles','subjects'));
-     }
+        // Obtener los roles disponibles
+        $roles = Role::all();
+
+        // Pasar los datos a la vista
+        return view('users.create', compact('courses', 'divisions', 'roles', 'subjects'));
+    }
 
 
      public function store(Request $request)
@@ -249,7 +249,7 @@ class UserController extends Controller
                 'division' => $firstCourse?->divisions->first()?->division ?? 'Sin División',
             ], 200);
         }
-    
+
         return response()->json($user, 200); // Para otros roles, devuelve los datos directamente
 
         if (request()->wantsJson()) {
@@ -376,23 +376,30 @@ class UserController extends Controller
 
     public function getStudents()
     {
-        $students = User::where('role_id', 2) // Obtener solo estudiantes
-            ->with(['courses.divisions']) // Cargar cursos y sus divisiones
+        // Obtener todos los estudiantes con sus cursos y divisiones asociados
+        $students = User::where('role_id', 2) // Suponiendo que el ID '2' corresponde a los estudiantes
+            ->with(['courseDivisions.course', 'courseDivisions.division']) // Cargar las relaciones de cursos y divisiones
             ->get();
 
-        $formatted = $students->map(function ($student) {
-            $firstCourse = $student->courses->first();
-            return [
-                'id' => $student->id,
-                'name' => $student->name,
-                'last_name' => $student->last_name,
-                'email' => $student->email,
-                'course' => $firstCourse?->name ?? 'Sin Curso', // Usamos "?" para manejar nulos
-                'division' => $firstCourse?->divisions->first()?->division ?? 'Sin División',
-            ];
-        });
-        return response()->json($formatted);
+        // Transformar los estudiantes y sus datos
+        $studentsData = $students->map(function ($student) {
+            // Para cada estudiante, recorremos sus divisiones y cursos
+            return $student->courseDivisions->map(function ($courseDivision) use ($student) {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'last_name' => $student->last_name,
+                    'email' => $student->email,
+                    'course' => $courseDivision->pivot->course_id,
+                    'division' => $courseDivision->pivot->division_id ?? 'Sin División',
+                    'course_division_id' => $courseDivision->pivot->id,
+                ];
+            });
+        })->flatten(1); // Aplanamos los resultados de todos los estudiantes con sus cursos
+
+        return response()->json($studentsData);
     }
+
 
     public function getTeachers()
     {

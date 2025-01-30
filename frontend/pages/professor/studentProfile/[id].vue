@@ -10,7 +10,7 @@ const student = ref(null);
 const isLoading = ref(true);
 const error = ref(null);
 const studentId = route.params.id;
-const storedUser = localStorage.getItem("user");
+const storedUser = localStorage.getItem("user"); // Obtener el usuario almacenado en localStorage
 // Estado para manejar el modal de "Donar de Baixa" y los motivos seleccionados
 const showBajaModal = ref(false);
 const selectedReason = ref("");

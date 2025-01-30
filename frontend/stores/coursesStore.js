@@ -1,24 +1,26 @@
-import { defineStore } from 'pinia';
+import { defineStore } from "pinia";
 
-export const useCoursesStore = defineStore('courses', {
+export const useCoursesStore = defineStore("courses", {
   state: () => ({
-    courses: [],        
-    loading: false,     
-    error: null,       
+    courses: [],
+    loading: false,
+    error: null,
     onlinecourses: new Set(),
   }),
 
   actions: {
     async fetchCourses(force = false) {
       if (!force && this.courses.length > 0) {
-        return; 
+        return;
       }
 
       this.loading = true;
       this.error = null;
 
       try {
-        const response = await fetch('http://localhost:8000/api/courses-with-divisions');
+        const response = await fetch(
+          "http://localhost:8000/api/courses-with-divisions"
+        );
 
         if (!response.ok) {
           throw new Error(`Error al obtener cursos: ${response.statusText}`);
@@ -28,28 +30,30 @@ export const useCoursesStore = defineStore('courses', {
 
         // Validamos que la respuesta sea un array
         if (!Array.isArray(data)) {
-          throw new Error("La respuesta de la API no tiene el formato esperado.");
+          throw new Error(
+            "La respuesta de la API no tiene el formato esperado."
+          );
         }
 
         // Transformamos la respuesta para separar divisiones como cursos individuales
-        const transformedCourses = [];
-        data.forEach(course => {
-          course.divisions.forEach(division => {
-            transformedCourses.push({
-              courseId: course.id,       // ID del curso principal
-              courseName: course.name,   // Nombre del curso
-              division: division,       // División como un objeto separado
-              active: course.active,     // esto es provisional porque no esta en backend 
-            });
-          });
-        });
+        const transformedCourses = data.flatMap(course =>
+          Object.values(course.divisions).map(division => ({
+            classId: course.id * 1000 + division.id,
+            courseId: course.id,
+            courseName: course.name,
+            division: {
+              id: division.id,
+              name: division.name,
+            },
+            active: course.active ?? false,
+          }))
+        );
 
         // Asignamos los cursos transformados al estado 'courses'
         this.courses = transformedCourses;
-
       } catch (error) {
         this.error = `Error al cargar los cursos: ${error.message}`;
-        console.error('Error al cargar los cursos:', error);
+        console.error("Error al cargar los cursos:", error);
       } finally {
         this.loading = false;
       }
@@ -84,6 +88,9 @@ export const useCoursesStore = defineStore('courses', {
 
     hasError() {
       return this.error !== null; // Getter para verificar si hubo un error
+    },
+    getCourseByClassId: state => classId => {
+      return state.courses.find(course => course.class_id === Number(classId));
     },
   },
 });

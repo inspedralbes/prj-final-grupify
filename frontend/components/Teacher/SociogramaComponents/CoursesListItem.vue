@@ -1,11 +1,17 @@
 <script setup>
 import { useRouter } from "vue-router";
+import { EyeIcon } from "@heroicons/vue/24/outline";
+import { useCoursesStore } from "@/stores/coursesStore"; 
 
-// Función para navegar al perfil del curso
 const router = useRouter();
-const viewProfile = (courseId) => {
-  if (!courseId) return;
-  router.push(`/professor/courseProfile/${courseId}`); //cambiarlo!!!
+const coursesStore = useCoursesStore();
+
+// Función para redirigir con courseId
+const viewProfile = (course) => { 
+  if (!course) return;
+  router.push({
+    path: `/professor/sociograma/sociogramaProlife/${course.classId}`,
+  });
 };
 
 // Definir las props del componente
@@ -32,7 +38,7 @@ defineProps({
       </span>
     </td>
     <td class="py-4">
-      <button class="p-1 hover:text-primary" @click="viewProfile(course.courseId)">
+      <button class="p-1 hover:text-primary" @click="viewProfile(course)">
         <EyeIcon class="w-5 h-5" />
       </button>
     </td>

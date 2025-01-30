@@ -210,10 +210,24 @@ class CourseController extends Controller
     public function getCoursesWithDivisions()
     {
         $courses = Course::with('divisions')->get()->map(function ($course) {
+            // Filtrar las divisiones de los cursos de ESO (1-4 ESO)
+            if ($course->id >= 1 && $course->id <= 4) {
+                // Divisiones únicas para ESO (A, B, C, D, E)
+                $divisions = $course->divisions->whereIn('division', ['A', 'B', 'C', 'D', 'E'])->unique('division');
+            }
+            // Filtrar las divisiones para el curso de Bachillerato (5)
+            elseif ($course->id == 5) {
+                // Divisiones solo 1 y 2 para Bachillerato
+                $divisions = $course->divisions->whereIn('division', ['1', '2'])->unique('division');
+            } else {
+                $divisions = [];
+            }
+
+            // Mapear los resultados para devolver solo los datos necesarios
             return [
                 'id' => $course->id,
                 'name' => $course->name,
-                'divisions' => $course->divisions->map(function ($division) {
+                'divisions' => $divisions->map(function ($division) {
                     return [
                         'id' => $division->id,
                         'name' => $division->division, // Suponiendo que el nombre de la división está en 'division'
@@ -222,6 +236,7 @@ class CourseController extends Controller
             ];
         });
 
+        // Retornar la respuesta en formato JSON
         return response()->json($courses, 200);
     }
 }
