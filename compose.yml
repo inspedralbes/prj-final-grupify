@@ -7,7 +7,7 @@ services:
         condition: any
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nuxt-app.rule=Host(`basebrutt.com`, `www.basebrutt.com`)"
+      - "traefik.http.routers.nuxt-app.rule=Host(`grupify.cat`, `www.grupify.cat`)"
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
     environment:
       NODE_ENV: production
@@ -17,7 +17,7 @@ services:
   traefik:
     image: traefik:v2.10
     command:
-      - "--api.insecure=true"
+      - "--api.insecure=false"
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
@@ -38,7 +38,7 @@ services:
     image: ghcr.io/adriapedralbes/backend:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.laravel-app.rule=Host(`api.basebrutt.com`)"
+      - "traefik.http.routers.laravel-app.rule=Host(`api.grupify.cat`)"
       - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
     env_file:
       - ./backend/.env
@@ -55,9 +55,13 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_DATABASE: gestioeduca
-      MYSQL_USER: user
-      MYSQL_PASSWORD: user
-      MYSQL_ROOT_PASSWORD: adria123
+      MYSQL_USER_FILE: /run/secrets/mysql_user
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+    secrets:
+      - mysql_user
+      - mysql_password
+      - mysql_root_password
     volumes:
       - db_data:/var/lib/mysql
     deploy:
@@ -71,7 +75,7 @@ services:
     image: ghcr.io/adriapedralbes/nodejs:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.node-app.rule=Host(`node.basebrutt.com`)"
+      - "traefik.http.routers.node-app.rule=Host(`node.grupify.cat`)"
       - "traefik.http.services.node-app.loadbalancer.server.port=5000"
     environment:
       NODE_ENV: production
@@ -86,7 +90,7 @@ services:
     image: adminer:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.adminer.rule=Host(`adminer.basebrutt.com`)"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.grupify.cat`)"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
     environment:
       - ADMINER_DEFAULT_SERVER=db
@@ -105,4 +109,12 @@ volumes:
 networks:
   app-network:
     driver: overlay
+
+secrets:
+  mysql_user:
+    file: ./docker-secrets/mysql_user.txt
+  mysql_password:
+    file: ./docker-secrets/mysql_password.txt
+  mysql_root_password:
+    file: ./docker-secrets/mysql_root_password.txt
 
