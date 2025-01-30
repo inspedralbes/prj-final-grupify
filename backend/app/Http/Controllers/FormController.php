@@ -248,14 +248,14 @@ class FormController extends Controller
         // Obtener los formularios filtrados
         $forms = $query->get();
 
-        // Verificar si la solicitud espera una respuesta JSON
-        if ($request->expectsJson()) {
-            return response()->json($forms, 200);
-        }
-
-        // Si no es una solicitud JSON, se devuelve la vista
-        return view('forms', compact('forms'));
-    }
+         // Verificar si la solicitud espera una respuesta JSON
+         if ($request->expectsJson()) {
+             return response()->json($forms, 200);
+         }
+         $forms = Form::all();
+         // Si no es una solicitud JSON, se devuelve la vista
+         return view('forms', compact('forms'));
+     }
 
 
 
