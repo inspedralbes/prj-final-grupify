@@ -38,6 +38,31 @@
             </select>
         </div>
 
+        <!-- Si el usuario es un estudiante, mostrar cursos y divisiones -->
+        @if($user->role_id == 2)
+            <div class="form-group mb-3">
+                <label for="course_id">Curso</label>
+                <select name="course_id" id="course_id" class="form-control">
+                    @foreach($courses as $course)
+                        <option value="{{ $course->id }}" {{ $user->courses->contains($course->id) ? 'selected' : '' }}>
+                            {{ $course->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="division_id">División</label>
+                <select name="division_id" id="division_id" class="form-control">
+                    @foreach($divisions as $division)
+                        <option value="{{ $division->id }}" {{ $user->courses->first()?->divisions->contains($division->id) ? 'selected' : '' }}>
+                            {{ $division->division }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+
         <button type="submit" class="btn btn-primary mt-3 w-100">Actualitzar</button>
     </form>
     <a href="{{ route('users.index') }}" class="btn btn-primary mt-3 w-100">Tornar a la Llista d'Usuaris</a>

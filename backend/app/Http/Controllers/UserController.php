@@ -293,16 +293,15 @@ class UserController extends Controller
      * )
      */
 
-    public function edit($id)
-    {
-        $user = User::findOrFail($id); // Obtener el usuario por ID
-        $roles = Role::all(); // Obtener todos los roles
-        return view('users.edit', [
-            'user' => $user,
-            'roles' => $roles
-        ]);
-        // Pasar las variables a la vista
-    }
+     public function edit($id)
+     {
+         $user = User::findOrFail($id); 
+         $roles = Role::all();
+         $courses = Course::all();
+         $divisions = Division::all();
+     
+         return view('users.edit', compact('user', 'roles', 'courses', 'divisions'));
+     }
 
 
 
@@ -319,7 +318,9 @@ class UserController extends Controller
             'last_name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
             'role_id' => 'sometimes|required|exists:roles,id',
-            'image' => 'sometimes|required|string|max:255'
+            'image' => 'sometimes|required|string|max:255',
+            'course_id' => 'nullable|exists:courses,id',
+            'division_id' => 'nullable|exists:divisions,id'
         ]);
 
         if ($validator->fails()) {
@@ -330,15 +331,21 @@ class UserController extends Controller
             }
         }
 
-        $user->update($request->all());
+        $user->update($request->only(['name', 'last_name', 'email', 'role_id', 'image']));
 
-        if ($request->wantsJson()) {
-            return response()->json($user, 200);
-        }
+    // Si el usuario es estudiante, actualizar su curso y división en course_division_user
+    if ($user->role_id == 2 && $request->has('course_id') && $request->has('division_id')) {
+        \App\Models\CourseDivisionUser::where('user_id', $user->id)->delete(); // Eliminar asignaciones previas
 
-        return redirect()->route('users.index', $user->id)->with('success', 'User updated successfully');
+        \App\Models\CourseDivisionUser::create([
+            'user_id' => $user->id,
+            'course_id' => $request->course_id,
+            'division_id' => $request->division_id,
+        ]);
     }
 
+    return redirect()->route('users.index')->with('success', 'User updated successfully');
+}
     /**
      * @OA\Delete(
      *     path="/api/users/{id}",
