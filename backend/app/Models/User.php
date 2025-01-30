@@ -76,7 +76,7 @@ class User extends Authenticatable
     public function courseDivisions()
     {
         return $this->belongsToMany(CourseDivision::class, 'course_division_user', 'user_id', 'division_id')
-            ->withPivot('course_id')
+            ->withPivot('course_id', 'division_id', 'id')
             ->withTimestamps();
     }
 }

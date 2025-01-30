@@ -1,17 +1,17 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { EyeIcon } from "@heroicons/vue/24/outline";
-import CoursesListItem from './CoursesListItem.vue'; 
+import { useCoursesStore } from "@/stores/coursesStore"; 
 
-const coursesStore = useCoursesStore();
 const router = useRouter();
-const viewProfile = (courseId) => { 
-  coursesStore.setSelectedCourse({
-    courseName: course.courseName,
-    divisionName: course.division.name,
+const coursesStore = useCoursesStore();
+
+// Función para redirigir con courseId
+const viewProfile = (course) => { 
+  if (!course) return;
+  router.push({
+    path: `/professor/sociograma/sociogramaProlife/${course.classId}`,
   });
-  if (!courseId) return;
-  router.push(`/professor/sociograma/sociogramaProlife/${courseId}`); 
 };
 
 // Definir las props del componente
@@ -38,7 +38,7 @@ defineProps({
       </span>
     </td>
     <td class="py-4">
-      <button class="p-1 hover:text-primary" @click="viewProfile(course.courseId)">
+      <button class="p-1 hover:text-primary" @click="viewProfile(course)">
         <EyeIcon class="w-5 h-5" />
       </button>
     </td>

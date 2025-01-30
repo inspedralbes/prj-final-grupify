@@ -24,7 +24,7 @@ class UserController extends Controller
      * )
      */
 
-     //Este método se encargará de asociar el usuario con el curso y la división
+    //Este método se encargará de asociar el usuario con el curso y la división
     public function assignCourseAndDivision(Request $request, $userId)
     {
         $validator = Validator::make($request->all(), [
@@ -120,95 +120,95 @@ class UserController extends Controller
      * )
      */
 
-     public function create()
-     {
-         // Obtener todos los cursos y divisiones disponibles
+    public function create()
+    {
+        // Obtener todos los cursos y divisiones disponibles
         $courses = Course::all();
         $divisions = Division::all();
-        $roles = Role::all(); 
-        $subjects = Subject::all(); 
-        
-
-         // Obtener los roles disponibles
-         $roles = Role::all();
-
-         // Pasar los datos a la vista
-         return view('users.create', compact('courses', 'divisions', 'roles','subjects'));
-     }
+        $roles = Role::all();
+        $subjects = Subject::all();
 
 
-     public function store(Request $request)
-     {
-         // Validación base para todos los usuarios
-         $validator = Validator::make($request->all(), [
-             'name' => 'required|string|max:255',
-             'last_name' => 'required|string|max:255',
-             'email' => 'required|string|email|max:255|unique:users',
-             'password' => 'required|string|min:8',
-             'role_id' => 'required|exists:roles,id',
-             'image' => 'nullable|string|max:255', // Imagen opcional
-             'courses' => 'nullable|array', // Asegúrate de que esto sea un array
-             'divisions' => 'nullable|array', // Divisiones son opcionales
-             'subjects' => 'nullable|array', // Materias (opcional)
-         ]);
-     
-         // Si la validación falla, retorna errores
-         if ($validator->fails()) {
-             if ($request->wantsJson()) {
-                 return response()->json($validator->errors(), 400);
-             } else {
-                 return redirect()->back()->withErrors($validator)->withInput();
-             }
-         }
-     
-         // Crear los datos base del usuario
-         $userData = [
-             'name' => $request->name,
-             'last_name' => $request->last_name,
-             'email' => $request->email,
-             'password' => bcrypt($request->password),
-             'role_id' => $request->role_id,
-         ];
-     
-         // Si se ha proporcionado una imagen, agregarla a los datos del usuario
-         if ($request->has('image')) {
-             $userData['image'] = $request->image;
-         }
-     
-         // Crear el usuario en la base de datos
-         $user = User::create($userData);
-         
-         // Si el usuario es Profesor (ID = 1), asociar materias
+        // Obtener los roles disponibles
+        $roles = Role::all();
+
+        // Pasar los datos a la vista
+        return view('users.create', compact('courses', 'divisions', 'roles', 'subjects'));
+    }
+
+
+    public function store(Request $request)
+    {
+        // Validación base para todos los usuarios
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role_id' => 'required|exists:roles,id',
+            'image' => 'nullable|string|max:255', // Imagen opcional
+            'courses' => 'nullable|array', // Asegúrate de que esto sea un array
+            'divisions' => 'nullable|array', // Divisiones son opcionales
+            'subjects' => 'nullable|array', // Materias (opcional)
+        ]);
+
+        // Si la validación falla, retorna errores
+        if ($validator->fails()) {
+            if ($request->wantsJson()) {
+                return response()->json($validator->errors(), 400);
+            } else {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+        }
+
+        // Crear los datos base del usuario
+        $userData = [
+            'name' => $request->name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'role_id' => $request->role_id,
+        ];
+
+        // Si se ha proporcionado una imagen, agregarla a los datos del usuario
+        if ($request->has('image')) {
+            $userData['image'] = $request->image;
+        }
+
+        // Crear el usuario en la base de datos
+        $user = User::create($userData);
+
+        // Si el usuario es Profesor (ID = 1), asociar materias
         if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
             $user->subjects()->sync($request->subjects); // Relación con subjects
         }
-         // Si el rol es Alumno (ID = 2) o Profesor (ID = 1), asociar cursos y divisiones
-         if (in_array($request->role_id, [1, 2])) {
-             // Validar y asociar los cursos si el usuario es Profesor o Alumno
-             if ($request->has('courses') && count($request->courses) > 0) {
-                 $user->courses()->sync($request->courses);
-             }
-     
-             // Si el usuario es Alumno, asociar divisiones a los cursos seleccionados
-             if ($request->role_id == 2 && $request->has('divisions') && count($request->divisions) > 0) {
-                 foreach ($request->courses as $courseId) {
-                     $course = Course::find($courseId);
-                     if ($course) {
-                         $course->divisions()->sync($request->divisions);
-                     }
-                 }
-             }
-         }
-     
-         // Si la solicitud es JSON, devolver el usuario recién creado
+        // Si el rol es Alumno (ID = 2) o Profesor (ID = 1), asociar cursos y divisiones
+        if (in_array($request->role_id, [1, 2])) {
+            // Validar y asociar los cursos si el usuario es Profesor o Alumno
+            if ($request->has('courses') && count($request->courses) > 0) {
+                $user->courses()->sync($request->courses);
+            }
+
+            // Si el usuario es Alumno, asociar divisiones a los cursos seleccionados
+            if ($request->role_id == 2 && $request->has('divisions') && count($request->divisions) > 0) {
+                foreach ($request->courses as $courseId) {
+                    $course = Course::find($courseId);
+                    if ($course) {
+                        $course->divisions()->sync($request->divisions);
+                    }
+                }
+            }
+        }
+
+        // Si la solicitud es JSON, devolver el usuario recién creado
         if ($request->wantsJson()) {
             return response()->json($user->load(['courses', 'subjects']), 201);
         }
-     
-         // Si la solicitud es HTML, redirigir con mensaje de éxito
-         return redirect()->route('users.index')->with('success', 'User created successfully');
-     }
-     
+
+        // Si la solicitud es HTML, redirigir con mensaje de éxito
+        return redirect()->route('users.index')->with('success', 'User created successfully');
+    }
+
 
 
 
@@ -255,7 +255,7 @@ class UserController extends Controller
                 'division' => $firstCourse?->divisions->first()?->division ?? 'Sin División',
             ], 200);
         }
-    
+
         return response()->json($user, 200); // Para otros roles, devuelve los datos directamente
 
         if (request()->wantsJson()) {
@@ -382,23 +382,30 @@ class UserController extends Controller
 
     public function getStudents()
     {
-        $students = User::where('role_id', 2) // Obtener solo estudiantes
-            ->with(['courses.divisions']) // Cargar cursos y sus divisiones
+        // Obtener todos los estudiantes con sus cursos y divisiones asociados
+        $students = User::where('role_id', 2) // Suponiendo que el ID '2' corresponde a los estudiantes
+            ->with(['courseDivisions.course', 'courseDivisions.division']) // Cargar las relaciones de cursos y divisiones
             ->get();
 
-        $formatted = $students->map(function ($student) {
-            $firstCourse = $student->courses->first();
-            return [
-                'id' => $student->id,
-                'name' => $student->name,
-                'last_name' => $student->last_name,
-                'email' => $student->email,
-                'course' => $firstCourse?->name ?? 'Sin Curso', // Usamos "?" para manejar nulos
-                'division' => $firstCourse?->divisions->first()?->division ?? 'Sin División',
-            ];
-        });
-        return response()->json($formatted);
+        // Transformar los estudiantes y sus datos
+        $studentsData = $students->map(function ($student) {
+            // Para cada estudiante, recorremos sus divisiones y cursos
+            return $student->courseDivisions->map(function ($courseDivision) use ($student) {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'last_name' => $student->last_name,
+                    'email' => $student->email,
+                    'course' => $courseDivision->pivot->course_id,
+                    'division' => $courseDivision->pivot->division_id ?? 'Sin División',
+                    'course_division_id' => $courseDivision->pivot->id,
+                ];
+            });
+        })->flatten(1); // Aplanamos los resultados de todos los estudiantes con sus cursos
+
+        return response()->json($studentsData);
     }
+
 
     public function getTeachers()
     {

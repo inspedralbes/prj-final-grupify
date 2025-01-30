@@ -42,7 +42,6 @@ export const useStudentsStore = defineStore("students", {
         this.loading = false;
       }
     },
-
     updateStudent(updatedStudent) {
       const studentIndex = this.students.findIndex(
         student => student.id === updatedStudent.id
@@ -89,9 +88,9 @@ export const useStudentsStore = defineStore("students", {
       return state.onlineStudents.has(studentId);
     },
   },
-    getStudentsByCourseAndDivision(courseName, divisionName) {
-      return this.students.filter(
-       student =>
+  getStudentsByCourseAndDivision(courseName, divisionName) {
+    return this.students.filter(
+      student =>
         student.course === courseName && student.division === divisionName
     );
   },
