@@ -72,19 +72,14 @@ class GroupController extends Controller
      */
     public function store(Request $request)
     {
+        // Validación básica sin roles
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'number_of_students' => 'required|integer',
         ]);
 
-        $group = Group::create($validated);
-
-        if ($request->expectsJson()) {
-            return response()->json($group, 201);
-        }
-
-        return redirect()->route('groups.index')->with('success', 'Grupo creado correctamente');
+        return Group::create($validated);
     }
 
     /**
@@ -111,10 +106,12 @@ class GroupController extends Controller
      */
     public function show($id)
     {
-        $group = Group::find($id);
-        if (!$group) {
-            return response()->json(['message' => 'Grupo no encontrado'], 404);
-        }
+        $group = Group::with('users')->find($id);
+        if (!$group) return response()->json(['message' => 'Grupo no encontrado'], 404);
+
+        // Renombrar users a members para consistencia
+        $group->members = $group->users;
+        unset($group->users);
 
         return response()->json($group);
     }
@@ -199,21 +196,22 @@ class GroupController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        $group = Group::find($id);
-        if (!$group) {
-            if ($request->expectsJson()) {
-                return response()->json(['message' => 'Grupo no encontrado'], 404);
-            }
-            return redirect()->route('groups.index')->with('error', 'Grupo no encontrado');
+        try {
+            $group = Group::findOrFail($id);
+
+            // Eliminar relaciones en la tabla pivot
+            $group->users()->detach();
+
+            // Eliminar el grupo
+            $group->delete();
+
+            return response()->json(['message' => 'Grupo eliminado correctamente'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Grupo no encontrado'], 404);
+        } catch (\Exception $e) {
+            \Log::error("Error eliminando grupo: " . $e->getMessage());
+            return response()->json(['message' => 'Error interno del servidor'], 500);
         }
-
-        $group->delete();
-
-        if ($request->expectsJson()) {
-            return response()->json(['message' => 'Grupo eliminado']);
-        }
-
-        return redirect()->route('groups.index')->with('success', 'Grupo eliminado correctamente');
     }
 
     public function getMembers($id)

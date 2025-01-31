@@ -9,31 +9,20 @@ export const useGroupStore = defineStore("groups", {
     async fetchGroups() {
       try {
         const authStore = useAuthStore();
-        if (!authStore.token) throw new Error("No hay token disponible");
+        const token = authStore.token;
 
         const response = await $fetch("http://localhost:8000/api/groups", {
           headers: {
-            Authorization: `Bearer ${authStore.token}`,
+            Authorization: `Bearer ${token}`, 
             "Content-Type": "application/json",
             Accept: "application/json",
-          },
+          }
         });
 
-        this.groups = response;
-
-        // Cargar miembros
-        const memberPromises = this.groups.map(async (group) => {
-          const members = await $fetch(`/api/groups/${group.id}/members`, {
-            headers: {
-              Authorization: `Bearer ${authStore.token}`,
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          });
-          group.members = members;
-        });
-
-        await Promise.all(memberPromises);
+        this.groups = response.map(group => ({
+          ...group,
+          users: group.users || []
+        }));
 
       } catch (error) {
         console.error("Error fetching groups:", error);
@@ -43,7 +32,9 @@ export const useGroupStore = defineStore("groups", {
 
     async addStudentsToGroup(groupId, studentIds) {
       try {
-        const token = localStorage.getItem("auth_token");
+        const authStore = useAuthStore();
+        const token = authStore.token;
+
         const response = await fetch(
           `http://localhost:8000/api/groups/${groupId}/addStudentsToGroup`,
           {
@@ -57,21 +48,18 @@ export const useGroupStore = defineStore("groups", {
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Error adding students to group");
-        }
+        if (!response.ok) throw new Error("Error añadiendo estudiantes");
+        return await response.json();
 
-        const data = await response.json();
-        return data;
       } catch (error) {
-        console.error("Error adding students to group:", error);
+        console.error("Error:", error);
         throw error;
       }
     },
 
     async removeStudentFromGroup(groupId, studentId) {
       try {
-        const token = localStorage.getItem("auth_token");
+        const token = useAuthStore().token; // Using token from the store
         const response = await fetch(
           `http://localhost:8000/api/groups/${groupId}/removeStudentFromGroup`,
           {
@@ -91,10 +79,11 @@ export const useGroupStore = defineStore("groups", {
 
         const data = await response.json();
 
-        // Actualizar el número de estudiantes en el grupo en el store
+        // Update the number of students in the group and remove the student from local state
         const group = this.groups.find(group => group.id === groupId);
         if (group) {
           group.number_of_students = data.number_of_students;
+          group.members = group.members.filter(member => member.id !== studentId); // Remove student from members
         }
 
       } catch (error) {
@@ -102,34 +91,37 @@ export const useGroupStore = defineStore("groups", {
         throw error;
       }
     },
+
     async deleteGroup(groupId) {
       try {
-        const token = localStorage.getItem("auth_token");
+        const authStore = useAuthStore(); // <-- Añadir esto
+        const token = authStore.token;    // <-- Obtener el token del store
+
         const response = await fetch(
           `http://localhost:8000/api/groups/${groupId}`,
           {
             method: "DELETE",
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${token}`, // Token actualizado
               "Content-Type": "application/json",
               Accept: "application/json",
             },
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Error deleting group");
-        }
+        if (!response.ok) throw new Error("Error eliminando el grupo");
+        return await response.json();
 
-        // Actualizar la lista de grupos después de eliminar uno
       } catch (error) {
-        console.error("Error deleting group:", error);
+        console.error("Error:", error);
         throw error;
       }
     },
     async createGroup(groupData) {
       try {
-        const token = localStorage.getItem("auth_token");
+        const authStore = useAuthStore();
+        const token = authStore.token;
+
         const response = await fetch("http://localhost:8000/api/groups", {
           method: "POST",
           headers: {
@@ -140,16 +132,13 @@ export const useGroupStore = defineStore("groups", {
           body: JSON.stringify(groupData),
         });
 
-        if (!response.ok) {
-          throw new Error("Error creating group");
-        }
+        if (!response.ok) throw new Error("Error creando el grupo");
+        return await response.json();
 
-        const data = await response.json();
-        return data;
       } catch (error) {
-        console.error("Error creating group:", error);
+        console.error("Error:", error);
         throw error;
       }
-    },
+    }
   },
 });

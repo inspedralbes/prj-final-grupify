@@ -1,5 +1,5 @@
 <script setup>
-const clientId = '1025572623897-qvms38f9tt7je63tfgluvomnfv9uibbr.apps.googleusercontent.com'; // Reemplazar con tu client ID real
+const clientId = '1025572623897-qvms38f9tt7je63tfgluvomnfv9uibbr.apps.googleusercontent.com';
 const authStore = useAuthStore();
 
 const loadGoogleScript = async () => {
@@ -16,6 +16,7 @@ const loadGoogleScript = async () => {
 };
 
 const handleGoogleResponse = (response) => {
+  //console.log(response.credential); Ver el token JWT de Google
   const userData = parseJwt(response.credential);
   sendToBackend(userData);
 };
@@ -52,7 +53,6 @@ const sendToBackend = async (userData) => {
       body: postData,
     });
 
-    // CAMBIA ESTO:
     authStore.setAuth(token, user);
     await navigateTo('/alumne/dashboard');
   } catch (error) {

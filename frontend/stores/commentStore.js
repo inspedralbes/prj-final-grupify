@@ -1,28 +1,25 @@
-// store/commentStore.js
 import { defineStore } from "pinia";
+import { useAuthStore } from "@/stores/auth";
 
 export const useCommentStore = defineStore("comment", {
   state: () => ({
-    comments: [], // Almacenamos los comentarios de un grupo
+    comments: [],
   }),
   actions: {
-    // Obtener los comentarios de un grupo
     async fetchComments(idGroup) {
       try {
-        const token = localStorage.getItem("auth_token");
+        const authStore = useAuthStore();
         const response = await fetch(`http://localhost:8000/api/groups/${idGroup}/comments`, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authStore.token}`,
             "Content-Type": "application/json",
             Accept: "application/json",
           },
         });
 
-        if (!response.ok) {
-          throw new Error("Error fetching comments");
-        }
-
+        if (!response.ok) throw new Error("Error fetching comments");
+        
         const data = await response.json();
         this.comments = data.comments;
 
@@ -32,16 +29,15 @@ export const useCommentStore = defineStore("comment", {
       }
     },
 
-    // Crear un nuevo comentario para un grupo
     async addCommentToGroup(idGroup, commentData) {
       try {
-        const token = localStorage.getItem("auth_token");
+        const authStore = useAuthStore();
         const response = await fetch(
           `http://localhost:8000/api/groups/${idGroup}/comments`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${authStore.token}`,
               "Content-Type": "application/json",
               Accept: "application/json",
             },
@@ -50,8 +46,7 @@ export const useCommentStore = defineStore("comment", {
         );
 
         if (!response.ok) {
-          const errorData = await response.json(); // Obtener detalles del error
-          console.error("Error response from server:", errorData);
+          const errorData = await response.json();
           throw new Error(errorData.message || "Error adding comment");
         }
 
@@ -65,27 +60,23 @@ export const useCommentStore = defineStore("comment", {
       }
     },
 
-    // Eliminar un comentario de un grupo
     async deleteCommentFromGroup(idGroup, commentId) {
       try {
-        const token = localStorage.getItem("auth_token");
+        const authStore = useAuthStore();
         const response = await fetch(
           `http://localhost:8000/api/groups/${idGroup}/comments/${commentId}`,
           {
             method: "DELETE",
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${authStore.token}`,
               "Content-Type": "application/json",
               Accept: "application/json",
             },
           }
         );
 
-        if (!response.ok) {
-          throw new Error("Error deleting comment from group");
-        }
+        if (!response.ok) throw new Error("Error deleting comment from group");
 
-        // Eliminar el comentario del estado local
         this.comments = this.comments.filter(comment => comment.id !== commentId);
       } catch (error) {
         console.error("Error deleting comment from group:", error);

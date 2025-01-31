@@ -4,7 +4,7 @@ export const useAuthStore = defineStore("auth", {
   state: () => ({
     token: localStorage.getItem("token") || null,
     user: JSON.parse(localStorage.getItem("user")) || null,
-    isAuthenticated: !!localStorage.getItem("token"), // Verifica si hay token
+    isAuthenticated: !!localStorage.getItem("token"),
   }),
 
   actions: {
@@ -50,7 +50,7 @@ export const useAuthStore = defineStore("auth", {
     // Cierra la sesión
     async logout() {
       try {
-        const token = this.token; // Guarda el token antes de eliminarlo
+        const token = this.token;
         if (token) {
           await $fetch('http://localhost:8000/api/logout', {
             method: 'POST',
