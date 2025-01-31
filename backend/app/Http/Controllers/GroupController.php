@@ -28,17 +28,22 @@ class GroupController extends Controller
 
     public function index(Request $request)
     {
-        // Cargar todos los grupos con sus usuarios (integrantes)
-        $groups = Group::with('users')->get();
+        try {
+            $groups = Group::with('users')->get();
 
-        // Verificar si la solicitud es API
-        if ($request->expectsJson()) {
-            return response()->json($groups, 200);
+            // Si la solicitud es AJAX o espera JSON, devuelve JSON
+            if ($request->expectsJson()) {
+                return response()->json($groups);
+            }
+
+            // Si no, devuelve la vista
+            return view('groups', compact('groups'));
+        } catch (\Exception $e) {
+            \Log::error("Error fetching groups: " . $e->getMessage());
+            return response()->json(['message' => 'Error interno del servidor'], 500);
         }
-
-        // Para la vista
-        return view('groups', compact('groups'));
     }
+
 
 
     /**
@@ -262,104 +267,103 @@ class GroupController extends Controller
      * )
      */
     public function addStudentsToGroup(Request $request, $groupId)
-{
-    try {
-        // Validar los IDs de los estudiantes
+    {
+        try {
+            // Validar los IDs de los estudiantes
+            $validated = $request->validate([
+                'student_ids' => 'required|array|min:1',
+                'student_ids.*' => 'integer|exists:users,id', // Asegurar que los IDs sean enteros y existan
+            ]);
+
+            // Buscar el grupo
+            $group = Group::findOrFail($groupId);
+
+            // Obtener IDs de estudiantes ya asignados
+            $existingIds = $group->users()->pluck('users.id')->toArray();
+
+            // Filtrar IDs nuevos
+            $newIds = array_diff($validated['student_ids'], $existingIds);
+
+            // Asociar nuevos estudiantes
+            if (!empty($newIds)) {
+                $group->users()->attach($newIds);
+            }
+
+            // Actualizar número de estudiantes
+            $group->number_of_students = $group->users()->count();
+            $group->save();
+
+            return response()->json([
+                'message' => 'Estudiantes agregados correctamente',
+                'added_students' => $newIds
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Grupo no encontrado'], 404);
+        } catch (\Exception $e) {
+            \Log::error("Error en addStudentsToGroup: " . $e->getMessage());
+            return response()->json(['message' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/groups/{groupId}/removeStudentFromGroup",
+     *     summary="Eliminar un estudiante de un grupo",
+     *     tags={"Groups"},
+     *     @OA\Parameter(
+     *         name="groupId",
+     *         in="path",
+     *         required=true,
+     *         description="ID del grupo",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"student_id"},
+     *             @OA\Property(property="student_id", type="integer", example=1)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Estudiante eliminado correctamente del grupo"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Grupo no encontrado"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación"
+     *     )
+     * )
+     */
+
+    public function removeStudentFromGroup(Request $request, $groupId)
+    {
+        // Validar el ID del estudiante
         $validated = $request->validate([
-            'student_ids' => 'required|array|min:1',
-            'student_ids.*' => 'integer|exists:users,id', // Asegurar que los IDs sean enteros y existan
+            'student_id' => 'required|integer|exists:users,id',
         ]);
 
         // Buscar el grupo
-        $group = Group::findOrFail($groupId);
+        $group = Group::find($groupId);
 
-        // Obtener IDs de estudiantes ya asignados
-        $existingIds = $group->users()->pluck('users.id')->toArray();
-
-        // Filtrar IDs nuevos
-        $newIds = array_diff($validated['student_ids'], $existingIds);
-
-        // Asociar nuevos estudiantes
-        if (!empty($newIds)) {
-            $group->users()->attach($newIds);
+        if (!$group) {
+            return response()->json(['message' => 'Grupo no encontrado'], 404);
         }
 
-        // Actualizar número de estudiantes
+        // Eliminar la relación entre el estudiante y el grupo
+        $group->users()->detach($validated['student_id']);
+
+        // Actualizar el número de estudiantes en el grupo
         $group->number_of_students = $group->users()->count();
         $group->save();
 
         return response()->json([
-            'message' => 'Estudiantes agregados correctamente',
-            'added_students' => $newIds
+            'message' => 'Estudiante eliminado correctamente del grupo.',
+            'removed_student_id' => $validated['student_id'],
+            'number_of_students' => $group->number_of_students
         ], 200);
-
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-        return response()->json(['message' => 'Grupo no encontrado'], 404);
-    } catch (\Exception $e) {
-        \Log::error("Error en addStudentsToGroup: " . $e->getMessage());
-        return response()->json(['message' => 'Error interno del servidor'], 500);
     }
-}
-
-    /**
- * @OA\Delete(
- *     path="/api/groups/{groupId}/removeStudentFromGroup",
- *     summary="Eliminar un estudiante de un grupo",
- *     tags={"Groups"},
- *     @OA\Parameter(
- *         name="groupId",
- *         in="path",
- *         required=true,
- *         description="ID del grupo",
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             required={"student_id"},
- *             @OA\Property(property="student_id", type="integer", example=1)
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Estudiante eliminado correctamente del grupo"
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Grupo no encontrado"
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación"
- *     )
- * )
- */
-
- public function removeStudentFromGroup(Request $request, $groupId)
-{
-    // Validar el ID del estudiante
-    $validated = $request->validate([
-        'student_id' => 'required|integer|exists:users,id', 
-    ]);
-
-    // Buscar el grupo
-    $group = Group::find($groupId);
-
-    if (!$group) {
-        return response()->json(['message' => 'Grupo no encontrado'], 404);
-    }
-
-    // Eliminar la relación entre el estudiante y el grupo
-    $group->users()->detach($validated['student_id']);
-
-    // Actualizar el número de estudiantes en el grupo
-    $group->number_of_students = $group->users()->count(); 
-    $group->save(); 
-
-    return response()->json([
-        'message' => 'Estudiante eliminado correctamente del grupo.',
-        'removed_student_id' => $validated['student_id'],
-        'number_of_students' => $group->number_of_students 
-    ], 200);
-}
 }

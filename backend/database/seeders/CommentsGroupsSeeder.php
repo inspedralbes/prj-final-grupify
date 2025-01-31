@@ -32,7 +32,7 @@ class CommentsGroupsSeeder extends Seeder
             foreach ((array) $randomGroups as $group) {
                 $data[] = [
                     'comment_id' => $comment,
-                    'id_group' => $group,
+                    'group_id' => $group,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

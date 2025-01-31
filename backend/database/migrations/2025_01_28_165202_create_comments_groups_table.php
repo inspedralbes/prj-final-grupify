@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('comments_groups', function (Blueprint $table) {
             $table->id();
             $table->foreignId('comment_id')->constrained('comments')->onDelete('cascade');
-            $table->foreignId('id_group')->constrained('groups')->onDelete('cascade');
+            $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
             $table->timestamps();
         });
     }

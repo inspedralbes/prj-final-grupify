@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class RegisteredUserController extends Controller
 {
@@ -80,6 +82,99 @@ class RegisteredUserController extends Controller
             return response()->json([
                 'message' => 'Error en el registre',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/google-login",
+     *     summary="Login/Registro con Google",
+     *     tags={"Authentication"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "google_id", "name"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="google_id", type="string", example="google_123456"),
+     *             @OA\Property(property="name", type="string", example="John Doe"),
+     *             @OA\Property(property="last_name", type="string", example="Doe"),
+     *             @OA\Property(property="image", type="string", example="https://example.com/avatar.jpg")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login exitoso",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."),
+     *             @OA\Property(property="user", type="object", ref="#/components/schemas/User")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error de validación"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor"
+     *     )
+     * )
+     */
+    public function googleLogin(Request $request)
+    {
+        try {
+            // Validación de campos
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'google_id' => 'required|string',
+                'name' => 'required|string',
+                'last_name' => 'nullable|string',
+                'image' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors' => $validator->errors(),
+                ], 400);
+            }
+
+            // Buscar o crear usuario
+            $user = User::where('email', $request->email)
+                ->orWhere('google_id', $request->google_id)
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $request->name,
+                    'last_name' => $request->last_name ?? '',
+                    'email' => $request->email,
+                    'google_id' => $request->google_id,
+                    'image' => $request->image,
+                    'password' => bcrypt(Str::random(16)), // Contraseña aleatoria
+                    'role_id' => 2, // Rol por defecto
+                ]);
+            } else {
+                $user->update([
+                    'name' => $request->name,
+                    'last_name' => $request->last_name ?? $user->last_name,
+                    'google_id' => $request->google_id,
+                    'image' => $request->image,
+                ]);
+            }
+
+            // Generar token
+            $token = $user->createToken('GroupifyToken')->plainTextToken;
+
+            return response()->json([
+                'token' => $token,
+                'user' => $user,
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Google Login Error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Internal Server Error',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

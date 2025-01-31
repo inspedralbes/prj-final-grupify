@@ -18,7 +18,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
-
+        'google_id'
     ];
 
     protected $hidden = [
@@ -58,7 +58,7 @@ class User extends Authenticatable
 
     public function groups()
     {
-        return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'id_group');
+        return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'group_id');
     }
 
     public function forms()

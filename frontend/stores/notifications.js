@@ -21,7 +21,7 @@ export const useNotificationStore = defineStore('notifications', {
           `/api/notifications/student/${userId}`,
           {
             headers: {
-              Authorization: `Bearer ${useCookie('auth_token').value}`,
+              Authorization: `Bearer ${useAuthStore().token}`,
             }
           }
         );

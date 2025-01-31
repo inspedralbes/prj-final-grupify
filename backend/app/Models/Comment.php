@@ -23,6 +23,6 @@ class Comment extends Model
     }
     public function groups()
     {
-        return $this->belongsToMany(Group::class, 'comments_groups', 'comment_id', 'id_group');
+        return $this->belongsToMany(Group::class, 'comments_groups', 'comment_id', 'group_id');
     }
 }

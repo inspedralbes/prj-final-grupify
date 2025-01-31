@@ -23,12 +23,11 @@ Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 
-
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-dashboard', [DashboardController::class, 'adminDashboard']);
 Route::middleware(['auth:sanctum', 'role:teacher'])->get('/teacher-dashboard', [DashboardController::class, 'teacherDashboard']);
 Route::middleware(['auth:sanctum', 'role:student'])->get('/student-dashboard', [DashboardController::class, 'studentDashboard']);
 
-//asegurará que la solicitud sea procesada como una solicitud de la API
+// Asegurará que la solicitud sea procesada como una solicitud de la API
 Route::middleware('api')->resource('courses', CourseController::class);
 
 Route::resource('roles', RoleController::class);
@@ -36,11 +35,9 @@ Route::resource('courses', CourseController::class);
 Route::get('/courses-with-divisions', [CourseController::class, 'getCoursesWithDivisions']);
 Route::apiResource('course-division-user', CourseDivisionUserController::class);
 
-
 Route::resource('subjects', SubjectController::class);
-Route::resource('groups', GroupController::class)->middleware('auth:sanctum');
 
-//CRUD USERSS
+// CRUD USERS
 Route::resource('users', UserController::class)->names([
     'index' => 'users.index',
     'create' => 'users.create',
@@ -54,61 +51,56 @@ Route::resource('users', UserController::class)->names([
 // Ruta para obtener los cursos de un usuario
 Route::get('/users/{id}/courses', [UserController::class, 'getUserCourses']);
 
-//RUTA PARA GUARDAR FORUMALIO EN BBDD
+// RUTA PARA GUARDAR FORMULARIO EN BBDD
 Route::post('forms-save', [FormController::class, 'storeFormWithQuestions']);
 
-//RUTA PARA ASIGNAR FORMULARIO A USUARIO
+// RUTA PARA ASIGNAR FORMULARIO A USUARIO
 Route::post('/assign-form-to-user', [FormController::class, 'assignFormToUser']);
 
-//RUTA PARA OBTENER FORMULARIOS DE USUARIO
+// RUTA PARA OBTENER FORMULARIOS DE USUARIO
 Route::get('/forms/user/{userId}', [FormController::class, 'getFormsByUserId']);
 
-//RUTA PARA OBTENER PREGUNTAS con DE UN FORMULARIO
+// RUTA PARA OBTENER PREGUNTAS CON RESPUESTAS DE UN FORMULARIO
 Route::get('/forms/{formId}/questions-and-answers', [FormController::class, 'getQuestions']);
-
 
 Route::post('/forms/{formId}/submit-responses', [AnswerController::class, 'submitResponses']);
 
-//RUTA PARA ACTUALIZAR ESTADO DE FORMULARIO
+// RUTA PARA ACTUALIZAR ESTADO DE FORMULARIO
 Route::patch('/forms/{formId}/status', [FormController::class, 'updateFormStatus']);
 
-//RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO UN FORMULARIO
+// RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO UN FORMULARIO
 Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm']);
 
-//RUTA PARA OBETENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
+// RUTA PARA OBTENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
 Route::get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
 
-//RUTA PARA OBETENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
+// RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
 Route::get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
 
-//RUTA PARA OBTENER RESPUSTA DE UN USUARIO DEL SOCIOGRAMA
+// RUTA PARA OBTENER RESPUESTA DE UN USUARIO DEL SOCIOGRAMA
 Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
 
-//RUTA PARA OBETENER DIVISIONES SEGUN COURSE
+// RUTA PARA OBTENER DIVISIONES SEGUN COURSE
 Route::get('/course-divisions', [CourseController::class, 'getDivisionsByCourse']);
 
-//RUTA PARA ASIGNAR FORMULARIO SEGUN CURSO Y DIVISION
+// RUTA PARA ASIGNAR FORMULARIO SEGUN CURSO Y DIVISION
 Route::post('/forms/assign-to-course-division', [FormController::class, 'assignFormToCourseAndDivision']);
 
-
-
-
 Route::get('/roles', [RoleController::class, 'index']);
-
 
 Route::resource('divisions', DivisionController::class);
 Route::resource('forms', FormController::class);
 Route::resource('questions', QuestionController::class);
 Route::resource('answers', AnswerController::class);
 
-// ruta para pedir todas las preguntas y respuestas de un formulario
+// Ruta para pedir todas las preguntas y respuestas de un formulario
 Route::get('forms/{formId}/questions', [FormController::class, 'getQuestionsAndAnswers']);
-//ruta para obtener los datos de un estudiante (curso, division)
+
+// Ruta para obtener los datos de un estudiante (curso, division)
 Route::get('/get-students', [UserController::class, 'getStudents']);
-//ruta para obtener los datos de un profesor (curso, division)
+
+// Ruta para obtener los datos de un profesor (curso, division)
 Route::get('/get-teachers', [UserController::class, 'getTeachers']);
-
-
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 Route::post('/register', [RegisteredUserController::class, 'store']);
@@ -127,23 +119,21 @@ Route::post('forms-save', [FormController::class, 'storeFormWithQuestions']);
 Route::get('forms/{formId}/questions', [FormController::class, 'getQuestionsAndAnswers']);
 Route::post('forms/{formId}/submit-answers', [AnswerController::class, 'storeMultipleAnswers']);
 Route::get('forms/{id}', [FormController::class, 'show']);
-Route::get('groups/{id}/members', [GroupController::class, 'getMembers']);
 
 // CRUD para preguntas y respuestas
 Route::resource('questions', QuestionController::class);
 Route::resource('answers', AnswerController::class);
-Route::resource('groups', GroupController::class);
 
-Route::resource('groups', GroupController::class)->only(['index'])->middleware('auth:sanctum');
-
-// Para los demás métodos de la ruta GRUPO
-Route::post('/groups/{id}/addStudentsToGroup', [GroupController::class, 'addStudentsToGroup']);
-Route::put('/groups/{id}', [GroupController::class, 'update']);
-Route::delete('/groups/{groupId}/removeStudentFromGroup', [GroupController::class, 'removeStudentFromGroup']);
-Route::post('/groups', [GroupController::class, 'store']);
-Route::post('/api/users/{userId}/assign-course-division', [UserController::class, 'assignCourseAndDivision']);
-Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
-
+// Rutas para grupos con autenticación Sanctum
+Route::middleware('auth:sanctum')->group(function () {
+    Route::resource('groups', GroupController::class);
+    Route::get('groups/{id}/members', [GroupController::class, 'getMembers']);
+    Route::post('/groups/{id}/addStudentsToGroup', [GroupController::class, 'addStudentsToGroup']);
+    Route::put('/groups/{id}', [GroupController::class, 'update']);
+    Route::delete('/groups/{groupId}/removeStudentFromGroup', [GroupController::class, 'removeStudentFromGroup']);
+    Route::post('/groups', [GroupController::class, 'store']);
+    Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
+});
 
 // Rutas para relaciones sociométricas
 Route::prefix('sociogram-relationships')->group(function () {
@@ -154,7 +144,7 @@ Route::prefix('sociogram-relationships')->group(function () {
     Route::delete('/{id}', [SociogramRelationshipController::class, 'destroy']); // Eliminar una relación específica
 });
 
-// rutas para los comentarios:
+// Rutas para los comentarios
 Route::prefix('comments')->group(function () {
     // Crear un comentario
     Route::post('/', [CommentController::class, 'store']);
@@ -179,3 +169,6 @@ Route::get('groups/{idGroup}/comments', [CommentController::class, 'getCommentsF
 Route::post('/groups/{idGroup}/comments', [CommentController::class, 'addCommentToGroup']);
 Route::put('/groups/{idGroup}/comments/{commentId}', [CommentController::class, 'updateCommentInGroup']);
 Route::delete('/groups/{idGroup}/comments/{commentId}', [CommentController::class, 'deleteCommentFromGroup']);
+
+// Google
+Route::post('/google-login', [RegisteredUserController::class, 'googleLogin']);

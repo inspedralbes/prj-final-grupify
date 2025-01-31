@@ -14,16 +14,16 @@ class GroupDivisionSeeder extends Seeder
     {
         // Definir las asociaciones entre grupos y divisiones
         $groupDivisionData = [
-            ['id_group' => 1, 'division_id' => 1],
-            ['id_group' => 1, 'division_id' => 3],
-            ['id_group' => 2, 'division_id' => 2],
-            ['id_group' => 2, 'division_id' => 4],
-            ['id_group' => 3, 'division_id' => 5],
-            ['id_group' => 4, 'division_id' => 6],
-            ['id_group' => 5, 'division_id' => 7],
-            ['id_group' => 5, 'division_id' => 3],
-            ['id_group' => 6, 'division_id' => 1],
-            ['id_group' => 6, 'division_id' => 2],
+            ['group_id' => 1, 'division_id' => 1],
+            ['group_id' => 1, 'division_id' => 3],
+            ['group_id' => 2, 'division_id' => 2],
+            ['group_id' => 2, 'division_id' => 4],
+            ['group_id' => 3, 'division_id' => 5],
+            ['group_id' => 4, 'division_id' => 6],
+            ['group_id' => 5, 'division_id' => 7],
+            ['group_id' => 5, 'division_id' => 3],
+            ['group_id' => 6, 'division_id' => 1],
+            ['group_id' => 6, 'division_id' => 2],
         ];
 
         // Insertar las asociaciones en la tabla intermedia

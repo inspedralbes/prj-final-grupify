@@ -1,48 +1,40 @@
 import { defineStore } from "pinia";
+import { useAuthStore } from "~/stores/auth";
 
 export const useGroupStore = defineStore("groups", {
   state: () => ({
-    groups: [], 
+    groups: [],
   }),
   actions: {
     async fetchGroups() {
       try {
-        const token = localStorage.getItem("auth_token");
-        const response = await fetch("http://localhost:8000/api/groups", {
-          method: "GET",
+        const authStore = useAuthStore();
+        if (!authStore.token) throw new Error("No hay token disponible");
+
+        const response = await $fetch("http://localhost:8000/api/groups", {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authStore.token}`,
+            "Content-Type": "application/json",
             Accept: "application/json",
           },
         });
 
-        if (!response.ok) {
-          throw new Error("Error fetching groups");
-        }
+        this.groups = response;
 
-        const data = await response.json();
-        this.groups = data;
-
-        // Cargar los miembros de todos los grupos en paralelo
+        // Cargar miembros
         const memberPromises = this.groups.map(async (group) => {
-          const membersResponse = await fetch(
-            `http://localhost:8000/api/groups/${group.id}/members`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json",
-              },
-            }
-          );
-
-          if (membersResponse.ok) {
-            const membersData = await membersResponse.json();
-            group.members = membersData;
-          }
+          const members = await $fetch(`/api/groups/${group.id}/members`, {
+            headers: {
+              Authorization: `Bearer ${authStore.token}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          });
+          group.members = members;
         });
 
         await Promise.all(memberPromises);
+
       } catch (error) {
         console.error("Error fetching groups:", error);
         throw error;
@@ -119,6 +111,7 @@ export const useGroupStore = defineStore("groups", {
             method: "DELETE",
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
               Accept: "application/json",
             },
           }

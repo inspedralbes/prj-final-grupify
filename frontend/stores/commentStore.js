@@ -14,6 +14,7 @@ export const useCommentStore = defineStore("comment", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
             Accept: "application/json",
           },
         });
@@ -47,17 +48,17 @@ export const useCommentStore = defineStore("comment", {
             body: JSON.stringify(commentData),
           }
         );
-    
+
         if (!response.ok) {
           const errorData = await response.json(); // Obtener detalles del error
           console.error("Error response from server:", errorData);
           throw new Error(errorData.message || "Error adding comment");
         }
-    
+
         const newComment = await response.json();
         this.comments.push(newComment.comment);
         return newComment;
-    
+
       } catch (error) {
         console.error("Error adding comment:", error);
         throw error;
@@ -74,6 +75,7 @@ export const useCommentStore = defineStore("comment", {
             method: "DELETE",
             headers: {
               Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
               Accept: "application/json",
             },
           }

@@ -1,64 +1,89 @@
 <script setup>
-import { googleAuthCodeLogin } from "vue3-google-login";
+const clientId = '1025572623897-qvms38f9tt7je63tfgluvomnfv9uibbr.apps.googleusercontent.com'; // Reemplazar con tu client ID real
+const authStore = useAuthStore();
 
-const userData = ref(null);
+const loadGoogleScript = async () => {
+  if (window.google?.accounts?.id) return;
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
 
-// Función para gestionar el login de Google
-const gestioGoogleLogin = async () => {
+const handleGoogleResponse = (response) => {
+  const userData = parseJwt(response.credential);
+  sendToBackend(userData);
+};
+
+const parseJwt = (token) => {
   try {
-    const response = await googleAuthCodeLogin();
-
-    // Intercambia el código de autorización por un token de acceso
-    const tokenResponse = await $fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        code: response.code,
-        client_id: googleClientId,
-        client_secret: googleClientSecret,
-        redirect_uri: window.location.origin,
-        grant_type: "authorization_code",
-      }),
-    });
-
-    const { access_token } = tokenResponse;
-
-    // Obtén la información del usuario con el token de acceso
-    const userInfo = await $fetch(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      {
-        headers: { Authorization: `Bearer ${access_token}` },
-      }
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
     );
-
-    userData.value = userInfo;
-
-    // Comprueba que el correo pertenece al dominio permitido
-    if (!userData.value.email?.endsWith("@inspedralbes.cat")) {
-      throw new Error("Només es permet l'accés amb comptes @inspedralbes.cat");
-    }
-
-    // Almacena los datos del usuario en el almacenamiento local
-    localStorage.setItem("user", JSON.stringify(userData.value));
-
-    // Redirige al panel de control
-    navigateTo("/dashboard");
-  } catch (error) {
-    console.error("Error al iniciar sessió amb Google:", error);
-    alert(error.message || "Error al iniciar sessió amb Google");
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error parsing JWT:', e);
+    return null;
   }
 };
+
+const sendToBackend = async (userData) => {
+  const postData = {
+    email: userData.email,
+    google_id: userData.sub,
+    name: userData.given_name,
+    last_name: userData.family_name || '',
+    image: userData.picture,
+  };
+
+  try {
+    const { token, user } = await $fetch('http://localhost:8000/api/google-login', {
+      method: 'POST',
+      body: postData,
+    });
+
+    // CAMBIA ESTO:
+    authStore.setAuth(token, user);
+    await navigateTo('/alumne/dashboard');
+  } catch (error) {
+    console.error('Error en el login:', error);
+  }
+};
+
+const gestioGoogleLogin = () => {
+  if (!window.google?.accounts?.id) {
+    console.error('Google script no cargado');
+    return;
+  }
+  window.google.accounts.id.prompt();
+};
+
+onMounted(async () => {
+  try {
+    await loadGoogleScript();
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleGoogleResponse,
+    });
+  } catch (error) {
+    console.error('Error cargando Google Script:', error);
+  }
+});
 </script>
 
 <template>
   <div class="social-login">
-    <button
-      class="social-button"
-      aria-label="Entra amb Google"
-      @click="gestioGoogleLogin"
-    >
+    <button class="social-button" aria-label="Entra amb Google" @click="gestioGoogleLogin">
       <img src="/icons/google.svg" alt="Google icon" />
       <span>Google / @inspedralbes.cat</span>
     </button>

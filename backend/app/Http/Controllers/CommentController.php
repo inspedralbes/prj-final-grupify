@@ -17,7 +17,7 @@ class CommentController extends Controller
         $validator = Validator::make($request->all(), [
             'teacher_id' => 'required|exists:users,id,role_id,1', // Asegura que el teacher_id sea un profesor
             'student_id' => 'required|exists:users,id,role_id,2', // Asegura que student_id sea un alumno
-            'id_group' => 'nullable|exists:groups,id', // Asegura que group_id sea un grupo válido (opcional)
+            'group_id' => 'nullable|exists:groups,id', // Asegura que group_id sea un grupo válido (opcional)
             'content' => 'nullable|string|max:1000',
         ]);
 
@@ -38,9 +38,9 @@ class CommentController extends Controller
             $comment->students()->attach($request->student_id, ['created_at' => now(), 'updated_at' => now()]);
         }
 
-        // Relacionar el comentario con un grupo si se proporciona id_group
-        if ($request->has('id_group')) {
-            $comment->groups()->attach($request->id_group, ['created_at' => now(), 'updated_at' => now()]);
+        // Relacionar el comentario con un grupo si se proporciona group_id
+        if ($request->has('group_id')) {
+            $comment->groups()->attach($request->group_id, ['created_at' => now(), 'updated_at' => now()]);
         }
 
         // Respuesta
@@ -49,7 +49,7 @@ class CommentController extends Controller
             'comment' => $comment,
             'related_to' => [
                 'student' => $request->has('student_id') ? $request->student_id : null,
-                'group' => $request->has('id_group') ? $request->id_group : null,
+                'group' => $request->has('group_id') ? $request->group_id : null,
             ]
         ], 201);
         }

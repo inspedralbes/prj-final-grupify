@@ -9,7 +9,17 @@
 </template>
 
 <script setup>
+const authStore = useAuthStore();
+
 definePageMeta({
   layout: "alumnes",
+  middleware: ['auth']
+});
+
+// Verificar autenticación al entrar
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    await authStore.checkAuth();
+  }
 });
 </script>

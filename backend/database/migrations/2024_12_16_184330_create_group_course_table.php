@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('group_course', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_group')->references('id')->on('groups')->onDelete('cascade');
+            $table->foreignId('group_id')->references('id')->on('groups')->onDelete('cascade');
             $table->foreignId('course_id')->references('id')->on('courses')->onDelete('cascade');
             $table->timestamps();
         });

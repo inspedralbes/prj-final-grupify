@@ -293,15 +293,15 @@ class UserController extends Controller
      * )
      */
 
-     public function edit($id)
-     {
-         $user = User::findOrFail($id); 
-         $roles = Role::all();
-         $courses = Course::all();
-         $divisions = Division::all();
-     
-         return view('users.edit', compact('user', 'roles', 'courses', 'divisions'));
-     }
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        $roles = Role::all();
+        $courses = Course::all();
+        $divisions = Division::all();
+
+        return view('users.edit', compact('user', 'roles', 'courses', 'divisions'));
+    }
 
 
 
@@ -333,19 +333,19 @@ class UserController extends Controller
 
         $user->update($request->only(['name', 'last_name', 'email', 'role_id', 'image']));
 
-    // Si el usuario es estudiante, actualizar su curso y división en course_division_user
-    if ($user->role_id == 2 && $request->has('course_id') && $request->has('division_id')) {
-        \App\Models\CourseDivisionUser::where('user_id', $user->id)->delete(); // Eliminar asignaciones previas
+        // Si el usuario es estudiante, actualizar su curso y división en course_division_user
+        if ($user->role_id == 2 && $request->has('course_id') && $request->has('division_id')) {
+            \App\Models\CourseDivisionUser::where('user_id', $user->id)->delete(); // Eliminar asignaciones previas
 
-        \App\Models\CourseDivisionUser::create([
-            'user_id' => $user->id,
-            'course_id' => $request->course_id,
-            'division_id' => $request->division_id,
-        ]);
+            \App\Models\CourseDivisionUser::create([
+                'user_id' => $user->id,
+                'course_id' => $request->course_id,
+                'division_id' => $request->division_id,
+            ]);
+        }
+
+        return redirect()->route('users.index')->with('success', 'User updated successfully');
     }
-
-    return redirect()->route('users.index')->with('success', 'User updated successfully');
-}
     /**
      * @OA\Delete(
      *     path="/api/users/{id}",
@@ -384,7 +384,7 @@ class UserController extends Controller
     public function getStudents()
     {
         $students = User::where('role_id', 2)
-            ->with(['courses', 'divisions']) 
+            ->with(['courses', 'divisions'])
             ->get();
 
         $formatted = $students->map(function ($student) {
@@ -420,5 +420,12 @@ class UserController extends Controller
             ];
         });
         return response()->json($formatted);
+    }
+
+    public function getAuthenticatedUser(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user(),
+        ]);
     }
 }

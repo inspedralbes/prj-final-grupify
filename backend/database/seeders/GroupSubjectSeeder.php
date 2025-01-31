@@ -14,16 +14,16 @@ class GroupSubjectSeeder extends Seeder
     {
         // Datos de ejemplo para group_subject
         $groupSubjects = [
-            ['id_group' => 1, 'subject_id' => 1],
-            ['id_group' => 1, 'subject_id' => 2],
-            ['id_group' => 1, 'subject_id' => 3],
-            ['id_group' => 2, 'subject_id' => 1],
-            ['id_group' => 2, 'subject_id' => 4],
-            ['id_group' => 3, 'subject_id' => 2],
-            ['id_group' => 3, 'subject_id' => 3],
-            ['id_group' => 4, 'subject_id' => 5],
-            ['id_group' => 5, 'subject_id' => 4],
-            ['id_group' => 5, 'subject_id' => 5],
+            ['group_id' => 1, 'subject_id' => 1],
+            ['group_id' => 1, 'subject_id' => 2],
+            ['group_id' => 1, 'subject_id' => 3],
+            ['group_id' => 2, 'subject_id' => 1],
+            ['group_id' => 2, 'subject_id' => 4],
+            ['group_id' => 3, 'subject_id' => 2],
+            ['group_id' => 3, 'subject_id' => 3],
+            ['group_id' => 4, 'subject_id' => 5],
+            ['group_id' => 5, 'subject_id' => 4],
+            ['group_id' => 5, 'subject_id' => 5],
         ];
 
         // Agregar timestamps automáticamente

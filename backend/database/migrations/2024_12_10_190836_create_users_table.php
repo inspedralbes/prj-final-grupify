@@ -16,7 +16,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('image')->nullable();
                 $table->string('name');
-                $table->string('last_name'); // Nuevo campo agregado
+                $table->string('last_name')->nullable();
                 $table->string('email')->unique();
                 $table->string('password');
                 $table->timestamp('email_verified_at')->nullable();

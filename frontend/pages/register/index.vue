@@ -1,5 +1,10 @@
 <script setup>
+import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore();
+const router = useRouter();
 
 const name = ref("");
 const last_name = ref("");
@@ -8,9 +13,8 @@ const password = ref("");
 const confirmPassword = ref("");
 const isLoading = ref(false);
 const msgError = ref("");
-const router = useRouter();
 
-// Valida el formulari
+// Valida el formulario antes de enviarlo
 const validateForm = () => {
   if (!name.value) {
     msgError.value = "El nom és obligatori";
@@ -36,7 +40,7 @@ const validateForm = () => {
 };
 
 // Enviar el formulario de registro
-const gestioSubmit = async e => {
+const gestioSubmit = async (e) => {
   e.preventDefault();
   msgError.value = "";
 
@@ -76,7 +80,7 @@ const gestioSubmit = async e => {
 
     console.log("Usuari registrat!", data);
 
-    // fer login després de registrar-se
+    // Iniciar sesión automáticamente después del registro
     const loginResponse = await fetch("http://localhost:8000/api/login", {
       method: "POST",
       headers: {
@@ -89,29 +93,33 @@ const gestioSubmit = async e => {
       }),
     });
 
-    const loginData = await loginResponse.json();
-
     if (!loginResponse.ok) {
-      msgError.value = loginData.message || "Error en el login automàtic";
+      const errorData = await loginResponse.json();
+      msgError.value = errorData.message || "Error en el login automàtic";
       throw new Error(msgError.value);
     }
 
-    // Desar token i dades del usuari en localStorage
-    localStorage.setItem("auth_token", loginData.token);
-    localStorage.setItem("role", loginData.role);
-    localStorage.setItem("user", JSON.stringify(loginData.user));
+    // Obtener datos del usuario autenticado
+    const loginData = await loginResponse.json();
+
+    if (!loginData.token || !loginData.user) {
+      throw new Error("La API no ha retornat un token o usuari vàlid.");
+    }
+
+    // Guardar los datos en Pinia
+    authStore.setAuth(loginData.token, loginData.user);
 
     // Redirigir al dashboard alumne
     router.push("/alumne/dashboard");
+
   } catch (err) {
-    msgError.value =
-      err.message ||
-      "No s'ha pogut registrar l'usuari. Si us plau, torna-ho a provar.";
+    msgError.value = err.message || "No s'ha pogut registrar l'usuari.";
   } finally {
     isLoading.value = false;
   }
 };
 </script>
+
 
 <template>
   <div class="login-container">
@@ -122,30 +130,12 @@ const gestioSubmit = async e => {
       </div>
 
       <form class="login-form" @submit="gestioSubmit">
-        <LoginTextInput
-          v-model="name"
-          placeholder="Nom "
-          :has-msg-error="msgError && !name"
-        />
-        <LoginTextInput
-          v-model="last_name"
-          placeholder="Cognom "
-          :has-msg-error="msgError && !last_name"
-        />
-        <LoginTextInput
-          v-model="email"
-          placeholder="Correu electrònic"
-          :has-msg-error="msgError && !email"
-        />
-        <LoginPasswordInput
-          v-model="password"
-          :has-msg-error="msgError && !password"
-        />
-        <LoginPasswordInput
-          v-model="confirmPassword"
-          :has-msg-error="msgError && !confirmPassword"
-          placeholder="Confirma la contrasenya"
-        />
+        <LoginTextInput v-model="name" placeholder="Nom " :has-msg-error="msgError && !name" />
+        <LoginTextInput v-model="last_name" placeholder="Cognom " :has-msg-error="msgError && !last_name" />
+        <LoginTextInput v-model="email" placeholder="Correu electrònic" :has-msg-error="msgError && !email" />
+        <LoginPasswordInput v-model="password" :has-msg-error="msgError && !password" />
+        <LoginPasswordInput v-model="confirmPassword" :has-msg-error="msgError && !confirmPassword"
+          placeholder="Confirma la contrasenya" />
 
         <button type="submit" class="sign-in-button" :disabled="isLoading">
           {{ isLoading ? "Registrant..." : "Registrar-se" }}

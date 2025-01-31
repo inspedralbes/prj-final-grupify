@@ -1,4 +1,8 @@
 <script setup>
+import { useAuthStore } from "~/stores/auth";
+
+const authStore = useAuthStore();
+
 // Estado reactivo
 const email = ref("");
 const password = ref("");
@@ -31,7 +35,7 @@ const validateForm = () => {
 };
 
 // Enviar formulario de inicio de sesión
-const gestioSubmit = async e => {
+const gestioSubmit = async (e) => {
   e.preventDefault();
   msgError.value = "";
   successMessage.value = "";
@@ -46,20 +50,18 @@ const gestioSubmit = async e => {
       body: { email: email.value, password: password.value },
     });
 
-    // Guardar datos en localStorage
-    localStorage.setItem("auth_token", response.token);
-    localStorage.setItem("role", response.role);
-    localStorage.setItem("user", JSON.stringify(response.user));
+    // Usar el store para guardar la autenticación
+    authStore.setAuth(response.token, response.user);
 
     // Conexión inmediata del socket después del login
     if (!$socket.connected) {
       $socket.connect();
     }
 
-    // Registrar usuario en el socket
-    $socket.emit("register_user", response.user.id);
+    // Registrar usuario en el socket usando el ID del store
+    $socket.emit("register_user", authStore.user.id);
 
-    // Redirección basada en roles
+    // Redirección basada en roles usando la respuesta del servidor
     const dashboardRoutes = {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
@@ -67,8 +69,7 @@ const gestioSubmit = async e => {
     };
     navigateTo(dashboardRoutes[response.role] || "/");
   } catch (err) {
-    msgError.value =
-      "Credencials incorrectes. Si us plau, torna-ho a intentar.";
+    msgError.value = "Credencials incorrectes. Si us plau, torna-ho a intentar.";
   } finally {
     isLoading.value = false;
   }
