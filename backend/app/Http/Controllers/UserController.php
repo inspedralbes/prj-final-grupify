@@ -383,25 +383,23 @@ class UserController extends Controller
 
     public function getStudents()
     {
-        $students = User::where('role_id', 2) // Obtener solo estudiantes
-            ->with(['courses.divisions']) // Cargar cursos y sus divisiones
+        $students = User::where('role_id', 2)
+            ->with(['courses', 'divisions']) 
             ->get();
 
         $formatted = $students->map(function ($student) {
-            $firstCourse = $student->courses->first();
             return [
                 'id' => $student->id,
                 'name' => $student->name,
                 'last_name' => $student->last_name,
                 'email' => $student->email,
-                'course' => $firstCourse?->name ?? 'Sin Curso', // Usamos "?" para manejar nulos
-                'division' => $firstCourse?->divisions->first()?->division ?? 'Sin División',
+                'course' => optional($student->courses->first())->name ?? 'Sin Curso', // Obtiene el primer curso o 'Sin Curso'
+                'division' => optional($student->divisions->first())->division ?? 'Sin División', // Obtiene la primera división o 'Sin División'
             ];
         });
+
         return response()->json($formatted);
     }
-
-
 
 
     public function getTeachers()
