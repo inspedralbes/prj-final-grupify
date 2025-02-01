@@ -1,13 +1,11 @@
 <script setup>
 import { EyeIcon } from "@heroicons/vue/24/outline";
 import { useStudentsStore } from "@/stores/studentsStore";
-import { useRouter } from "vue-router";
 
 const studentsStore = useStudentsStore();
-const router = useRouter();
 
 const viewProfile = (studentId) => {
-  router.push(`/professor/studentProfile/${studentId}`);
+  navigateTo(`/professor/studentProfile/${studentId}`);
 };
 
 defineProps({
@@ -34,12 +32,7 @@ defineProps({
                 .join(" ")
                 .toUpperCase()
             }}
-          </div>
-          <!-- Indicador de estado online/offline -->
-          <div
-            class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
-            :class="studentsStore.isStudentOnline(student.id) ? 'bg-green-500' : 'bg-gray-400'"
-          ></div>
+          </div>          
         </div>
         <div>
           <span class="block text-sm font-medium text-gray-900">

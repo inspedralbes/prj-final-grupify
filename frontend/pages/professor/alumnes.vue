@@ -4,24 +4,12 @@ import { useStudentsStore } from "@/stores/studentsStore";
 import DashboardNavTeacher from "~/components/Teacher/DashboardNavTeacher.vue";
 
 const studentsStore = useStudentsStore();
-const { $socket } = useNuxtApp();
 const isLoading = ref(true);
 
 onMounted(async () => {
   await studentsStore.fetchStudents();
-  setupSocketListeners();
   isLoading.value = false;
 });
-
-const setupSocketListeners = () => {
-  $socket.on('user_online', (userId) => {
-    studentsStore.setUserOnline(userId);
-  });
-
-  $socket.on('user_offline', (userId) => {
-    studentsStore.setUserOffline(userId);
-  });
-};
 
 const students = computed(() => studentsStore.students || []);
 const { searchQuery, selectedCourse, selectedDivision, filteredStudents } =
