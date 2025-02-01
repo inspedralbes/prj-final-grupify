@@ -38,6 +38,8 @@ export default {
     async handleLogout() {
       try {
         await this.authStore.logout();
+        // Redirigir a la página de login y recargar
+        window.location.href = '/login';  // Redirige a la página de login
       } catch (error) {
         console.error('Error cerrando sesión:', error);
         alert("Error al cerrar sesión. Intenta nuevamente.");

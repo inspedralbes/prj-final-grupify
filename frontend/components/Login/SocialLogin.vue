@@ -55,7 +55,9 @@ const sendToBackend = async (userData) => {
     });
 
     authStore.setAuth(token, user);
-    await navigateTo('/alumne/dashboard');
+
+    // Redirigir con recarga completa
+    window.location.href = '/alumne/dashboard'; // Asegúrate que la ruta sea correcta
   } catch (error) {
     console.error('Error en el login:', error);
   }
