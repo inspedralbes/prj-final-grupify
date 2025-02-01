@@ -3,6 +3,7 @@
     <StudentDashboardProfileCard />
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <StudentDashboardFormsCard />
+      <StudentDashboardNotificationsCard />
     </div>
   </div>
 </template>

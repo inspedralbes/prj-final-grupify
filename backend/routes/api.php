@@ -18,6 +18,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SociogramRelationshipController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseDivisionUserController;
+use App\Http\Controllers\UserNotificationController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
@@ -172,3 +173,9 @@ Route::delete('/groups/{idGroup}/comments/{commentId}', [CommentController::clas
 
 // Google
 Route::post('/google-login', [RegisteredUserController::class, 'googleLogin']);
+
+// Rutas para las notificaciones
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/notifications', [UserNotificationController::class, 'index']);
+    Route::post('/notifications', [UserNotificationController::class, 'store']);
+});
