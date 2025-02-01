@@ -12,6 +12,7 @@ const successMessage = ref("");
 
 // Router y rutas
 const route = useRoute();
+const { $socket } = useNuxtApp();
 
 // Mensaje de registro exitoso
 onMounted(() => {
@@ -52,13 +53,28 @@ const gestioSubmit = async (e) => {
     // Usar el store para guardar la autenticación
     authStore.setAuth(response.token, response.user);
 
+    // Conexión inmediata del socket después del login
+    if (!$socket.connected) {
+      $socket.connect();
+    }
+
+    // Registrar usuario en el socket
+    $socket.emit("register_user", response.user.id);
+
     // Redirección basada en roles usando la respuesta del servidor
     const dashboardRoutes = {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumno: "/alumne/dashboard",
     };
-    navigateTo(dashboardRoutes[response.role] || "/");
+
+    // Para el rol "alumno", usaremos window.location para recargar la página
+    if (response.role === "alumno") {
+      window.location.href = dashboardRoutes.alumno;  // Redirige al dashboard de alumno y recarga la página
+    } else {
+      // Para los demás roles, usamos navigateTo sin recargar la página
+      navigateTo(dashboardRoutes[response.role] || "/");
+    }
   } catch (err) {
     msgError.value = "Credencials incorrectes. Si us plau, torna-ho a intentar.";
   } finally {

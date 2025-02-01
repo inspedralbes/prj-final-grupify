@@ -35,6 +35,8 @@ export const useStudentsStore = defineStore("students", {
           ...student,
           status: student.status ?? 1,
         }));
+
+        
       } catch (error) {
         this.error = `Error al cargar estudiantes: ${error.message}`;
         console.error("Error fetching students:", error);
@@ -57,6 +59,7 @@ export const useStudentsStore = defineStore("students", {
       const student = this.students.find(s => s.id === studentId);
       if (student) {
         student.status = student.status === 1 ? 0 : 1;
+        student.active = !student.active;
       } else {
         console.warn(`Estudiante con ID ${studentId} no encontrado.`);
       }
