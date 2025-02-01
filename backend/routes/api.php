@@ -86,6 +86,9 @@ Route::get('/course-divisions', [CourseController::class, 'getDivisionsByCourse'
 
 // RUTA PARA ASIGNAR FORMULARIO SEGUN CURSO Y DIVISION
 Route::post('/forms/assign-to-course-division', [FormController::class, 'assignFormToCourseAndDivision']);
+//RUTA PARA VER SI UN FORMULARIO ESTA CONTESTADO POR TODOS LOS ALUMNOS DE UNA CLASE
+Route::get('/check-form-completion/{course_id}/{division_id}/{form_id}', [FormController::class, 'checkClassFormCompletion']);
+
 
 Route::get('/roles', [RoleController::class, 'index']);
 

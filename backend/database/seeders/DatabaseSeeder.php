@@ -6,6 +6,7 @@ use App\Models\Answer;
 use App\Models\Comment;
 use App\Models\Course;
 use App\Models\Division;
+use App\Models\Form;
 use App\Models\Group;
 use App\Models\Question;
 use Illuminate\Database\Seeder;
@@ -43,6 +44,7 @@ class DatabaseSeeder extends Seeder
             CommentSeeder::class,
             CommentUserSeeder::class,
             CommentsGroupsSeeder::class,
+            FormUserSeeder::class,
             CourseDivisionSeeder::class,
         ]);
     }
