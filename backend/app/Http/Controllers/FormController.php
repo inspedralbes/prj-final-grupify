@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Services\FormService;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
-
+use Illuminate\Support\Facades\DB;
 
 /**
  * @OA\Tag(
@@ -22,41 +22,41 @@ use App\Models\User;
 class FormController extends Controller
 {
     public function assignFormToCourseAndDivision(Request $request)
-{
-    // Validar los datos
-    $validated = $request->validate([
-        'course_id' => 'required|exists:courses,id',
-        'division_id' => 'required|exists:divisions,id',
-        'form_id' => 'required|exists:forms,id',
-    ]);
+    {
+        // Validar los datos
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'division_id' => 'required|exists:divisions,id',
+            'form_id' => 'required|exists:forms,id',
+        ]);
 
-    $courseId = $validated['course_id'];
-    $divisionId = $validated['division_id'];
-    $formId = $validated['form_id'];
+        $courseId = $validated['course_id'];
+        $divisionId = $validated['division_id'];
+        $formId = $validated['form_id'];
 
-    // Obtener los usuarios que están en ese curso y división
-    $users = User::whereHas('divisions', function ($query) use ($courseId, $divisionId) {
-        $query->where('course_id', $courseId)
-            ->where('division_id', $divisionId);
-    })->get();
+        // Obtener los usuarios que están en ese curso y división
+        $users = User::whereHas('divisions', function ($query) use ($courseId, $divisionId) {
+            $query->where('course_id', $courseId)
+                ->where('division_id', $divisionId);
+        })->get();
 
-    if ($users->isEmpty()) {
-        return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);
-    }
-
-    // Asignar el formulario a los usuarios encontrados
-    foreach ($users as $user) {
-        // Comprobamos si ya está asignado para evitar duplicados
-        if (!$user->forms()->where('form_id', $formId)->exists()) {
-            $user->forms()->attach($formId, [
-                'course_id' => $courseId,
-                'division_id' => $divisionId,
-            ]);
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);
         }
-    }
 
-    return response()->json(['message' => 'Formulario asignado correctamente a los usuarios.'], 200);
-}
+        // Asignar el formulario a los usuarios encontrados
+        foreach ($users as $user) {
+            // Comprobamos si ya está asignado para evitar duplicados
+            if (!$user->forms()->where('form_id', $formId)->exists()) {
+                $user->forms()->attach($formId, [
+                    'course_id' => $courseId,
+                    'division_id' => $divisionId,
+                ]);
+            }
+        }
+
+        return response()->json(['message' => 'Formulario asignado correctamente a los usuarios.'], 200);
+    }
 
 
 
@@ -178,7 +178,32 @@ class FormController extends Controller
 
         return response()->json(['form' => $form], 201);
     }
+    //verificar si el formulario esta completo (contestado por todos los alumnos de una clase)
+    public function checkClassFormCompletion($course_id, $division_id, $form_id)
+    {
+        // Contar el total de estudiantes de la clase
+        $studentsCount = DB::table('course_division_user')
+            ->join('users', 'course_division_user.user_id', '=', 'users.id')
+            ->where('course_division_user.course_id', $course_id)
+            ->where('course_division_user.division_id', $division_id)
+            ->where('users.role_id', 2)  // Filtrar solo estudiantes
+            ->count();
+        // Contar cuántos estudiantes de esa clase han respondido el formulario
+        $answeredCount = DB::table('form_user')
+            ->where('form_user.form_id', $form_id)
+            ->where('form_user.course_id', $course_id)
+            ->where('form_user.division_id', $division_id)
+            ->where('form_user.answered', 1)
+            ->count();
+        // Agregamos logs para verificar los conteos
+        // Log::info('Total de estudiantes:', ['studentsCount' => $studentsCount]);
+        // Log::info('Total de estudiantes que respondieron:', ['answeredCount' => $answeredCount]);       
 
+        return response()->json([
+            //esta completo si el total alumnos de una clase es igual al total de alumnos que respondieron
+            'all_answered' => $studentsCount === $answeredCount
+        ]);
+    }
 
 
     /**
@@ -248,14 +273,14 @@ class FormController extends Controller
         // Obtener los formularios filtrados
         $forms = $query->get();
 
-         // Verificar si la solicitud espera una respuesta JSON
-         if ($request->expectsJson()) {
-             return response()->json($forms, 200);
-         }
-         $forms = Form::all();
-         // Si no es una solicitud JSON, se devuelve la vista
-         return view('forms', compact('forms'));
-     }
+        // Verificar si la solicitud espera una respuesta JSON
+        if ($request->expectsJson()) {
+            return response()->json($forms, 200);
+        }
+        $forms = Form::all();
+        // Si no es una solicitud JSON, se devuelve la vista
+        return view('forms', compact('forms'));
+    }
 
 
 
