@@ -5,11 +5,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["/assets/css/main.css"],
   ssr: false,
-  runtimeConfig:{
-    googleClientId: process.env.GOOGLE_CLIENT_ID,
+  runtimeConfig: {
     public: {
+      googleClientId: process.env.GOOGLE_CLIENT_ID,
       apiBaseUrl: process.env.API_BASE_URL,
-    }
+    },
   },
   googleSignIn: {
     clientId: process.env.GOOGLE_CLIENT_ID,

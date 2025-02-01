@@ -1,5 +1,6 @@
 <script setup>
-const clientId = '1025572623897-qvms38f9tt7je63tfgluvomnfv9uibbr.apps.googleusercontent.com';
+const config = useRuntimeConfig();
+const clientId = config.public.googleClientId;
 const authStore = useAuthStore();
 
 const loadGoogleScript = async () => {

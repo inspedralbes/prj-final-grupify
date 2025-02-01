@@ -12,7 +12,6 @@ const successMessage = ref("");
 
 // Router y rutas
 const route = useRoute();
-const { $socket } = useNuxtApp();
 
 // Mensaje de registro exitoso
 onMounted(() => {
@@ -52,14 +51,6 @@ const gestioSubmit = async (e) => {
 
     // Usar el store para guardar la autenticación
     authStore.setAuth(response.token, response.user);
-
-    // Conexión inmediata del socket después del login
-    if (!$socket.connected) {
-      $socket.connect();
-    }
-
-    // Registrar usuario en el socket usando el ID del store
-    $socket.emit("register_user", authStore.user.id);
 
     // Redirección basada en roles usando la respuesta del servidor
     const dashboardRoutes = {
