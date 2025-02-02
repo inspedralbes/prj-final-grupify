@@ -86,5 +86,8 @@ class User extends Authenticatable
             ->withPivot('division_id')
             ->withTimestamps();
     }
-    
+    public function courseDivisionUsers()
+    {
+        return $this->hasMany(CourseDivisionUser::class, 'user_id');
+    }
 }
