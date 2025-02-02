@@ -14,16 +14,16 @@ class GroupCourseSeeder extends Seeder
     {
         // Datos de ejemplo para group_course
         $groupCourses = [
-            ['id_group' => 1, 'course_id' => 1],
-            ['id_group' => 1, 'course_id' => 2],
-            ['id_group' => 2, 'course_id' => 3],
-            ['id_group' => 2, 'course_id' => 1],
-            ['id_group' => 3, 'course_id' => 2],
-            ['id_group' => 3, 'course_id' => 4],
-            ['id_group' => 4, 'course_id' => 3],
-            ['id_group' => 4, 'course_id' => 5],
-            ['id_group' => 5, 'course_id' => 4],
-            ['id_group' => 5, 'course_id' => 5],
+            ['group_id' => 1, 'course_id' => 1],
+            ['group_id' => 1, 'course_id' => 2],
+            ['group_id' => 2, 'course_id' => 3],
+            ['group_id' => 2, 'course_id' => 1],
+            ['group_id' => 3, 'course_id' => 2],
+            ['group_id' => 3, 'course_id' => 4],
+            ['group_id' => 4, 'course_id' => 3],
+            ['group_id' => 4, 'course_id' => 5],
+            ['group_id' => 5, 'course_id' => 4],
+            ['group_id' => 5, 'course_id' => 5],
         ];
 
         // Agregar timestamps automáticamente

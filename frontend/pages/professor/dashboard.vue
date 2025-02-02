@@ -1,7 +1,10 @@
 <script setup>
-const userData = ref(null);
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
-// Definimos los items del menú
+const userData = ref(null);
+const router = useRouter();
+
 const menuItems = [
   {
     title: "Gestió de Alumnes",
@@ -20,13 +23,18 @@ const menuItems = [
   },
   {
     title: "Sociograma",
-    icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-2.83-.48-5.08-2.73-5.56-5.56H5v-2h1.44c.48-2.83 2.73-5.08 5.56-5.56V5h2v1.44c2.83.48 5.08 2.73 5.56 5.56H19v2h-1.44c-.48 2.83-2.73 5.08-5.56 5.56V19h-2v-1.07zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z",
-    route: "/professor/sociograma",
+    icon: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-2.83-.48-5.08-2.73-5.56-5.56H5v-2h1.44c.48-2.83 2.73-5.08 5.56-5.56V5h2v1.44c2.83.48 5.08 2.73 5.56 5.56H19v2h-1.44c-.48 2.83-2.73-5.08-5.56-5.56V19h-2v-1.07zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z",
+    route: "/professor/sociograma/SociogramaView",
   },
   {
     title: "Chat IA",
     icon: "M8.5 2a1 1 0 000 2h2.086a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2H7a2 2 0 01-2-2V4a2 2 0 012-2h1.5z",
     route: "/professor/assistent",
+  },
+  {
+    title: "Notificaciones",
+    icon: "M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6V9a6 6 0 10-12 0v7a2 2 0 01-2 2h16a2 2 0 01-2-2zm-6-13a4 4 0 014 4h-8a4 4 0 014-4z",
+    route: "/professor/notificacions",
   },
 ];
 
@@ -35,51 +43,87 @@ onMounted(() => {
   const storedUser = localStorage.getItem("user");
   if (storedUser) {
     userData.value = JSON.parse(storedUser);
+    console.log("User data loaded:", userData.value); 
   }
 });
 
 // Función de logout
 const logout = () => {
   localStorage.removeItem("user");
-  navigateTo("/professor/tancar-sessio");
+  router.push("/professor/tancar-sessio");
 };
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 p-6">
-    <!-- Navbar -->
-    <div class="bg-[#00ADEC] text-white p-5 flex justify-between items-center">
-      <h1 class="text-3xl font-bold ml-4">Panell Professor</h1>
-      <button
-        class="flex items-center gap-2 px-4 py-2 hover:bg-white/10 rounded-lg transition-colors duration-200 underline hover:no-underline"
-        @click="logout"
-      >
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
+  <div class="min-h-screen bg-gray-100">
+    <!-- Navbar envolvente azul -->
+    <div class="bg-[#00ADEC] text-white p-6">
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <!-- Título -->
+        <h1 class="text-3xl font-bold">Panell Professor</h1>
+
+        <!-- Botón de logout -->
+        <button
+          class="flex items-center gap-2 px-4 py-2 hover:bg-white/10 rounded-lg transition-colors duration-200 underline hover:no-underline"
+          @click="logout"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-          />
-        </svg>
-        <span>Logout</span>
-      </button>
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          <span>Tancar sessió</span>
+        </button>
+      </div>
     </div>
 
+    <!-- Contenido principal -->
     <div class="max-w-7xl mx-auto mt-6">
       <!-- Welcome Section -->
       <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
         <div v-if="userData" class="text-center">
-          <h1 class="text-3xl font-bold text-gray-800 mb-4">
-            Benvingut, {{ userData.name }} {{ userData.last_name }}!
-          </h1>
-          <p class="text-gray-600">{{ userData.email }}</p>
+          <div class="flex flex-col items-center">
+            <!-- Avatar -->
+            <img
+              :src="userData.image || 'https://via.placeholder.com/150'"
+              alt="Avatar"
+              class="w-24 h-24 rounded-full object-cover mb-4"
+            />
+              <!-- Información del profesor -->
+  <h1 class="text-3xl font-bold text-gray-800 mb-2">
+    Benvingut, {{ userData.name }} {{ userData.last_name }}!
+  </h1>
+  <p class="text-gray-600">{{ userData.email }}</p>
+
+<!-- Materias que imparte -->
+<div v-if="userData.subjects && userData.subjects.length > 0" class="mt-4 flex items-center">
+  
+  <div class="flex flex-wrap gap-4">
+    <span 
+      v-for="subject in userData.subjects" 
+      :key="subject.id" 
+      class="text-[#00ADEC] font-normal text-xl"
+    >
+      {{ subject.name }}
+    </span>
+  </div>
+</div>
+
+
+
+            <p v-else class="text-gray-500 mt-4">
+              No tens assignatures assignades.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -117,12 +161,6 @@ const logout = () => {
 </template>
 
 <style scoped>
-.dashboard-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 .text-primary {
   color: #00adec;
 }

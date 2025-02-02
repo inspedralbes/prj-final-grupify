@@ -26,62 +26,26 @@
 </template>
 
 <script>
+import { useAuthStore } from '~/stores/auth';
+
 export default {
   name: "TancarSessio",
+  setup() {
+    const authStore = useAuthStore();
+    return { authStore };
+  },
   methods: {
     async handleLogout() {
       try {
-        const authToken = localStorage.getItem("auth_token");
-
-        if (!authToken) {
-          console.warn(
-            "No hay token de autenticación disponible. Se redirigirá al inicio de sesión."
-          );
-          this.$router.push("/login");
-          return;
-        }
-
-        // Solicitud para cerrar sesión
-        const response = await fetch("http://localhost:8000/api/logout", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Error al cerrar sesión. Intenta nuevamente."
-          );
-        }
-
-        // Limpieza del almacenamiento local
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("user");
-
-        // Redirección al login
-        if (this.$router) {
-          this.$router.push("/login");
-        } else {
-          window.location.href = "/login";
-        }
-
-        // console.log('Sesión cerrada correctamente');
+        await this.authStore.logout();
+        // Redirigir a la página de login y recargar
+        window.location.href = '/login';  // Redirige a la página de login
       } catch (error) {
-        console.error(
-          "Error cerrando sesión:",
-          error.message || "Error desconocido."
-        );
-        alert(
-          error.message ||
-            "Ocurrió un error desconocido al cerrar sesión. Intenta nuevamente."
-        );
+        console.error('Error cerrando sesión:', error);
+        alert("Error al cerrar sesión. Intenta nuevamente.");
       }
-    },
-  },
+    }
+  }
 };
 </script>
 

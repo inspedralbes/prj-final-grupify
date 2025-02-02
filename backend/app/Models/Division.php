@@ -12,7 +12,9 @@ class Division extends Model
 
     public function courses()
     {
-        return $this->belongsToMany(Course::class, 'course_division', 'division_id', 'course_id');
+        return $this->belongsToMany(Course::class, 'course_division_user', 'division_id', 'course_id')
+            ->withPivot('user_id')
+            ->withTimestamps();
     }
 
     public function forms()
@@ -22,7 +24,9 @@ class Division extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class, 'course_division_user', 'division_id', 'user_id')
+            ->withPivot('course_id')
+            ->withTimestamps();
     }
     public function groups()
     {

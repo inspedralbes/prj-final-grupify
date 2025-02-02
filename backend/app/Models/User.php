@@ -18,7 +18,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
-
+        'google_id'
     ];
 
     protected $hidden = [
@@ -42,7 +42,7 @@ class User extends Authenticatable
 
     public function subjects()
     {
-        return $this->belongsToMany(Subject::class);
+        return $this->belongsToMany(Subject::class, 'subject_user', 'user_id', 'subject_id');
     }
 
     public function answers()
@@ -51,19 +51,43 @@ class User extends Authenticatable
     }
     public function divisions()
     {
-        return $this->belongsToMany(Division::class);
+        return $this->belongsToMany(Division::class, 'course_division_user', 'user_id', 'division_id')
+            ->withPivot('course_id')
+            ->withTimestamps();
     }
 
     public function groups()
     {
-        return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'id_group');
+        return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'group_id');
     }
+
     public function forms()
     {
         return $this->belongsToMany(Form::class, 'form_user', 'user_id', 'form_id')
-                    ->withPivot('answered')  // Incluimos el campo 'answered' de la tabla intermedia
-                    ->withTimestamps();
+            ->withPivot('answered', 'course_id', 'division_id')
+            ->withTimestamps();
     }
 
 
+
+    public function teacherComments()
+    {
+        return $this->hasMany(Comment::class, 'teacher_id');
+    }
+
+    public function studentComments()
+    {
+        return $this->belongsToMany(Comment::class, 'comment_user', 'student_id', 'comment_id');
+    }
+
+    public function courseDivisions()
+    {
+        return $this->belongsToMany(Course::class, 'course_division_user', 'user_id', 'course_id')
+            ->withPivot('division_id')
+            ->withTimestamps();
+    }
+    public function courseDivisionUsers()
+    {
+        return $this->hasMany(CourseDivisionUser::class, 'user_id');
+    }
 }

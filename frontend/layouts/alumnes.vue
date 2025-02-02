@@ -6,11 +6,13 @@
       :class="[
         'bg-primary text-white transition-all duration-300',
         isMenuOpen ? 'w-64' : 'w-16',
-        'lg:w-64'
+        'lg:w-64',
       ]"
     >
       <!-- Encabezado del menú -->
-      <div class="flex items-center justify-between p-4 border-b border-white/20">
+      <div
+        class="flex items-center justify-between p-4 border-b border-white/20"
+      >
         <h1 v-if="isMenuOpen" class="text-xl font-bold">Panell Estudiant</h1>
         <!-- Botón de menú móvil -->
         <button
@@ -66,42 +68,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted } from "vue";
 import {
   HomeIcon,
   UserGroupIcon,
   DocumentTextIcon,
   PowerIcon,
-} from '@heroicons/vue/24/outline'
+} from "@heroicons/vue/24/outline";
 
 // Elementos del menú
 const menuItems = [
-  { name: 'Dashboard', path: '/alumne/dashboard', icon: HomeIcon },
-  { name: 'Grups', path: '/alumne/grups', icon: UserGroupIcon },
-  { name: 'Formularis', path: '/alumne/formularis', icon: DocumentTextIcon },
-  { name: 'Log out', path: '/alumne/tancar-sessio', icon: PowerIcon }
-]
+  { name: "Dashboard", path: "/alumne/dashboard", icon: HomeIcon },
+  { name: "Grups", path: "/alumne/grups", icon: UserGroupIcon },
+  { name: "Formularis", path: "/alumne/formularis", icon: DocumentTextIcon },
+  { name: "Tancar la sessió", path: "/alumne/tancar-sessio", icon: PowerIcon },
+];
 
-const isMenuOpen = ref(true)
+const isMenuOpen = ref(true);
 
 const handleResize = () => {
   if (window.innerWidth < 1024) {
-    isMenuOpen.value = false
+    isMenuOpen.value = false;
   } else {
-    isMenuOpen.value = true
+    isMenuOpen.value = true;
   }
-}
+};
 
 onMounted(() => {
-  handleResize()
-  window.addEventListener('resize', handleResize)
-})
+  handleResize();
+  window.addEventListener("resize", handleResize);
+});
 
 // Alternar el estado del menú
 const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value
-}
+  isMenuOpen.value = !isMenuOpen.value;
+};
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

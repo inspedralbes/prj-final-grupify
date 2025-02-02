@@ -11,14 +11,24 @@ class Form extends Model
         'title',
         'description',
         'status',
-        'division'
+        'teacher_id',
+        'is_global',
+        'date_limit',
+        'time_limit',
     ];
 
-    public function course() {
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function course()
+    {
         return $this->belongsToMany(User::class, 'course_user', 'form_id', 'user_id');
     }
 
-    public function divisions(){
+    public function divisions()
+    {
         return $this->belongsToMany(Division::class, 'division_form', 'form_id', 'division_id');
     }
 
@@ -28,11 +38,11 @@ class Form extends Model
     }
 
     public function users()
-{
-    return $this->belongsToMany(User::class, 'form_user', 'form_id', 'user_id')
-                ->withPivot('answered') // Incluir el campo 'answered' de la tabla intermedia
-                ->withTimestamps();
-}
+    {
+        return $this->belongsToMany(User::class, 'form_user', 'form_id', 'user_id')
+                    ->withPivot('answered', 'course_id', 'division_id')
+                    ->withTimestamps();
+    }
 
 
     public function answers()

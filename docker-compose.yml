@@ -12,6 +12,8 @@ services:
       MYSQL_PASSWORD: user
     ports:
       - "3306:3306"
+    networks:
+      - app-network
 
   adminer:
     image: adminer
@@ -21,6 +23,18 @@ services:
       - db
     ports:
       - "9090:8080"
+    networks:
+      - app-network
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
 
   backend:
     build:
@@ -34,8 +48,54 @@ services:
     working_dir: /var/www/
     depends_on:
       - db
+      - redis
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: gestioeduca
+      DB_USERNAME: user
+      DB_PASSWORD: user
+      REDIS_HOST: redis
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+    networks:
+      - app-network
     command: bash -c "chmod +x entrypoint.sh && ./entrypoint.sh"
-    #command: bash -c "composer install && php artisan key:generate && php artisan migrate && php artisan serve --host=0.0.0.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  queue-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: laravel-queue
+    volumes:
+      - ./backend:/var/www/
+    working_dir: /var/www/
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: gestioeduca
+      DB_USERNAME: user
+      DB_PASSWORD: user
+      REDIS_HOST: redis
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+    networks:
+      - app-network
+    command: php artisan queue:work redis --tries=3 --timeout=90
 
   frontend:
     build: 
@@ -50,6 +110,8 @@ services:
       - NODE_ENV=development
     restart: unless-stopped
     command: sh -c "npm install && npm run dev -- --host"
+    networks:
+      - app-network
 
   nodejs:
     image: node:18
@@ -64,8 +126,15 @@ services:
       - NODE_ENV=development
     depends_on:
       - db
+    expose:
+      - "5000"
+    networks:
+      - app-network
 
-
-# Persistencia
 volumes:
   mysql_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge

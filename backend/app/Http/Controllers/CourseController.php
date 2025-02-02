@@ -4,9 +4,41 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
+use App\Models\Division;
 
 class CourseController extends Controller
 {
+    public function getDivisionsByCourse(Request $request)
+    {
+        // Validar que el 'course_id' se proporcione y exista
+        $validated = $request->validate([
+            'course_id' => 'required|integer|exists:courses,id',
+        ]);
+
+        $courseId = $validated['course_id'];
+
+        // Filtrar divisiones relacionadas al curso específico usando la tabla intermedia
+        $divisions = Division::whereIn('id', function ($query) use ($courseId) {
+            $query->select('division_id')
+                ->from('course_division')
+                ->where('course_id', $courseId);
+        })->get(['id', 'division']); // Seleccionar solo columnas necesarias
+
+        // Validar si existen divisiones relacionadas
+        if ($divisions->isEmpty()) {
+            return response()->json(['message' => 'No divisions found for the specified course'], 404);
+        }
+
+        // Respuesta con las divisiones relacionadas
+        return response()->json([
+            'course_id' => $courseId,
+            'divisions' => $divisions,
+        ], 200);
+    }
+
+
+
+
     /**
      * @OA\Get(
      *     path="/api/courses",
@@ -50,24 +82,24 @@ class CourseController extends Controller
      * )
      */
     public function store(Request $request)
-{
-    if ($request->is('api/*')) {
+    {
+        if ($request->is('api/*')) {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
+
+            $course = Course::create($validatedData);
+
+            return response()->json($course, 201);
+        }
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
         ]);
 
-        $course = Course::create($validatedData);
-
-        return response()->json($course, 201);
+        Course::create($validatedData);
+        return redirect()->route('courses.index')->with('success', 'Curso creado exitosamente');
     }
-
-    $validatedData = $request->validate([
-        'name' => 'required|string|max:255',
-    ]);
-
-    Course::create($validatedData);
-    return redirect()->route('courses.index')->with('success', 'Curso creado exitosamente');
-}
 
 
     /**
@@ -174,5 +206,37 @@ class CourseController extends Controller
         }
         return redirect()->route('courses.index')->with('success', 'Curso eliminado exitosamente');
     }
+    //obtenir els cursos amb les divisions
+    public function getCoursesWithDivisions()
+    {
+        $courses = Course::with('divisions')->get()->map(function ($course) {
+            // Filtrar las divisiones de los cursos de ESO (1-4 ESO)
+            if ($course->id >= 1 && $course->id <= 4) {
+                // Divisiones únicas para ESO (A, B, C, D, E)
+                $divisions = $course->divisions->whereIn('division', ['A', 'B', 'C', 'D', 'E'])->unique('division');
+            }
+            // Filtrar las divisiones para el curso de Bachillerato (5)
+            elseif ($course->id == 5) {
+                // Divisiones solo 1 y 2 para Bachillerato
+                $divisions = $course->divisions->whereIn('division', ['1', '2'])->unique('division');
+            } else {
+                $divisions = [];
+            }
 
+            // Mapear los resultados para devolver solo los datos necesarios
+            return [
+                'id' => $course->id,
+                'name' => $course->name,
+                'divisions' => $divisions->map(function ($division) {
+                    return [
+                        'id' => $division->id,
+                        'name' => $division->division, // Suponiendo que el nombre de la división está en 'division'
+                    ];
+                }),
+            ];
+        });
+
+        // Retornar la respuesta en formato JSON
+        return response()->json($courses, 200);
+    }
 }

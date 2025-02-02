@@ -16,18 +16,22 @@ class Group extends Model
     ];
     public function users()
     {
-        return $this->belongsToMany(User::class, 'group_user', 'id_group', 'user_id');
+        return $this->belongsToMany(User::class, 'group_user', 'group_id', 'user_id');
     }
     public function subjects()
     {
-        return $this->belongsToMany(Subject::class, 'group_subject', 'id_group', 'id_subject');
+        return $this->belongsToMany(Subject::class, 'group_subject', 'group_id', 'id_subject');
     }
     public function courses()
     {
-        return $this->belongsToMany(Course::class, 'group_course', 'id_group', 'id_course');
+        return $this->belongsToMany(Course::class, 'group_course', 'group_id', 'id_course');
     }
     public function divisions()
     {
-        return $this->belongsToMany(Division::class, 'group_division', 'id_group', 'id_division');
+        return $this->belongsToMany(Division::class, 'group_division', 'group_id', 'id_division');
+    }
+    public function comments()
+    {
+        return $this->belongsToMany(Comment::class, 'comments_groups', 'group_id', 'comment_id');
     }
 }

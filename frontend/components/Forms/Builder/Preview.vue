@@ -9,6 +9,8 @@ const props = defineProps({
   title: String,
   description: String,
   context: String,
+  teacher_id: Number,
+  is_global: Boolean,
 });
 
 const emit = defineEmits([
@@ -22,6 +24,8 @@ const visibleQuestions = ref([]);
 const loadingQuestionId = ref(null);
 const showEditorModal = ref(false);
 const selectedQuestion = ref(null);
+const dateLimit = ref(null);
+const timeLimit = ref(null);
 const { content: titleContent, typeMessage: typeTitle } = useTypingEffect(50);
 const { content: descriptionContent, typeMessage: typeDescription } =
   useTypingEffect(30);
@@ -91,8 +95,13 @@ const handleSave = async () => {
     title: props.title,
     description: props.description,
     questions: localQuestions.value,
+    teacher_id: props.teacher_id,
+    is_global: false,
+    date_limit: dateLimit.value,
+    time_limit: timeLimit.value,
   };
-
+  console.log(formData);
+  // console.log(dateLimit.value);
   // console.log('Datos que se enviarán:', JSON.stringify(formData, null, 2)); // Verifica la estructura del objeto
 
   try {
@@ -161,6 +170,12 @@ function showToastMessage(message, type = "success-toast") {
 </script>
 
 <template>
+  <div>
+    <label for="date"> Afegir data límit </label>
+    <input type="date" v-model="dateLimit" name="date">
+    <label for="time">Agefir temps limit</label>
+    <input type="time" v-model="timeLimit">
+  </div>
   <div>
     <!-- Toast mensaje -->
     <div v-if="showToast" :class="toastType" class="toast">

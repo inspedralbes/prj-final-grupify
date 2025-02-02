@@ -62,34 +62,32 @@ import { useAuthStore } from "@/stores/auth";
 
 const authStore = useAuthStore();
 const forms = ref([]);
-const user = authStore.user;
-const userId = user.id;
+const userId = computed(() => authStore.user?.id);
 
-const loadFormsByUserId = async userId => {
+const loadFormsByUserId = async () => {
+  if (!userId.value) return;
+  
   try {
-    const response = await fetch(
-      `http://localhost:8000/api/forms/user/${userId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          Accept: "application/json",
-        },
+    const response = await $fetch(`http://localhost:8000/api/forms/user/${userId.value}`, {
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
       }
-    );
-
-    if (!response.ok) {
-      throw new Error("Error obteniendo los formularios del usuario.");
-    }
-
-    forms.value = await response.json();
+    });
+    
+    forms.value = response;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error obteniendo formularios:", error);
   }
 };
 
+// Observar cambios en el userId
+watch(userId, (newVal) => {
+  if (newVal) loadFormsByUserId();
+});
+
+// Cargar inicialmente
 onMounted(() => {
-  loadFormsByUserId(userId);
+  if (userId.value) loadFormsByUserId();
 });
 
 // Filtrar solo los formularios con answered === 0
@@ -100,9 +98,9 @@ const filteredForms = computed(() => {
 // Manejador del clic en el formulario
 const handleFormClick = formId => {
   if (formId === 2) {
-    navigateTo(`/formCecs/${formId}`); // Redirige a la ruta /formCecs si el formId es 2
+    navigateTo(`/alumne/cesc/${formId}`); // Redirige a la ruta del cesc si el formId es 2
   } else if (formId === 3) {
-    navigateTo(`/sociogram`); // Redirige a /sociogram si el formId es 3
+    navigateTo(`/alumne/sociograma`); // Redirige a /sociogram si el formId es 3
   } else {
     navigateTo(`/alumne/forms/${formId}`); // Redirige a la ruta correspondiente para cualquier otro formId
   }

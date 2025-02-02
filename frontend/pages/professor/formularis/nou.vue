@@ -1,29 +1,13 @@
 <script setup>
 import { regenerateQuestion } from "@/components/utils/aiQuestions";
-
+const authStore = useAuthStore();
+const user = authStore.user;
+const teacherId = ref(user.id); 
 const questions = ref([]);
 const formTitle = ref("");
 const formDescription = ref("");
 const formContext = ref("");
 const showAssignModal = ref(false);
-
-const students = ref([
-  {
-    id: 1,
-    name: "Ana García",
-    course: "1º ESO",
-  },
-  {
-    id: 2,
-    name: "Carlos Rodríguez",
-    course: "2º ESO",
-  },
-  {
-    id: 3,
-    name: "Laura Martínez",
-    course: "1º ESO",
-  },
-]);
 
 const goBack = () => {
   navigateTo("/professor/formularis");
@@ -72,7 +56,7 @@ const saveForm = () => {
     title: formTitle.value,
     description: formDescription.value,
     questions: questions.value,
-    division: "active",
+    teacher_id: teacherId.value, 
     responses: 0,
     createdAt: new Date().toISOString(),
   };
@@ -81,6 +65,7 @@ const saveForm = () => {
   alert("Formulari guardat correctament");
   navigateTo("/professor/formularis");
 };
+
 
 const handleSendForm = () => {
   if (!formTitle.value || !questions.value.length) {
@@ -134,6 +119,7 @@ const handleFormAssigned = assignments => {
             :title="formTitle"
             :description="formDescription"
             :context="formContext"
+            :teacher_id="teacherId"
             @edit-question="handleEditQuestion"
             @regenerate-question="handleRegenerateQuestion"
             @save="saveForm"

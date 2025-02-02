@@ -38,8 +38,6 @@ class CourseDivisionSeeder extends Seeder
             ['course_id' => 4, 'division_id' => 7],
             ['course_id' => 5, 'division_id' => 1],
             ['course_id' => 5, 'division_id' => 2],
-            ['course_id' => 6, 'division_id' => 1],
-            ['course_id' => 6, 'division_id' => 2],
         ];
 
         // Paso 3: Inserta los registros sin duplicados y con timestamps

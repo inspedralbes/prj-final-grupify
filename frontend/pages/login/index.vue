@@ -1,4 +1,8 @@
 <script setup>
+import { useAuthStore } from "~/stores/auth";
+
+const authStore = useAuthStore();
+
 // Estado reactivo
 const email = ref("");
 const password = ref("");
@@ -8,6 +12,7 @@ const successMessage = ref("");
 
 // Router y rutas
 const route = useRoute();
+const { $socket } = useNuxtApp();
 
 // Mensaje de registro exitoso
 onMounted(() => {
@@ -30,7 +35,7 @@ const validateForm = () => {
 };
 
 // Enviar formulario de inicio de sesión
-const gestioSubmit = async e => {
+const gestioSubmit = async (e) => {
   e.preventDefault();
   msgError.value = "";
   successMessage.value = "";
@@ -45,21 +50,33 @@ const gestioSubmit = async e => {
       body: { email: email.value, password: password.value },
     });
 
-    // Guardar datos en localStorage
-    localStorage.setItem("auth_token", response.token);
-    localStorage.setItem("role", response.role);
-    localStorage.setItem("user", JSON.stringify(response.user));
+    // Usar el store para guardar la autenticación
+    authStore.setAuth(response.token, response.user);
 
-    // Redirección basada en roles
+    // Conexión inmediata del socket después del login
+    if (!$socket.connected) {
+      $socket.connect();
+    }
+
+    // Registrar usuario en el socket
+    $socket.emit("register_user", response.user.id);
+
+    // Redirección basada en roles usando la respuesta del servidor
     const dashboardRoutes = {
-      admin: "/dashboardAdmin",
+      admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumno: "/alumne/dashboard",
     };
-    navigateTo(dashboardRoutes[response.role] || "/");
+
+    // Para el rol "alumno", usaremos window.location para recargar la página
+    if (response.role === "alumno") {
+      window.location.href = dashboardRoutes.alumno;  // Redirige al dashboard de alumno y recarga la página
+    } else {
+      // Para los demás roles, usamos navigateTo sin recargar la página
+      navigateTo(dashboardRoutes[response.role] || "/");
+    }
   } catch (err) {
-    msgError.value =
-      "Credencials incorrectes. Si us plau, torna-ho a intentar.";
+    msgError.value = "Credencials incorrectes. Si us plau, torna-ho a intentar.";
   } finally {
     isLoading.value = false;
   }
@@ -86,15 +103,8 @@ const gestioSubmit = async e => {
           </div>
 
           <!-- Campos del formulario -->
-          <LoginTextInput
-            v-model="email"
-            placeholder="Email"
-            :has-msg-error="msgError && !email"
-          />
-          <LoginPasswordInput
-            v-model="password"
-            :has-msg-error="msgError && !password"
-          />
+          <LoginTextInput v-model="email" placeholder="Email" :has-msg-error="msgError && !email" />
+          <LoginPasswordInput v-model="password" :has-msg-error="msgError && !password" />
 
           <!-- Enlace para recuperar contraseña -->
           <div class="forgot-password">
@@ -117,10 +127,7 @@ const gestioSubmit = async e => {
           <div class="register-link">
             <p>
               No tens un compte?
-              <a
-                class="cursor-pointer font-bold"
-                @click.prevent="navigateTo('/register')"
-              >
+              <a class="cursor-pointer font-bold" @click.prevent="navigateTo('/register')">
                 Registrar-se
               </a>
             </p>
@@ -147,9 +154,8 @@ html {
 }
 
 .login-container {
-  min-height: calc(
-    100vh - 80px
-  ); /* Resta la altura del navbar (ajusta si es necesario) */
+  min-height: calc(100vh - 80px);
+  /* Resta la altura del navbar (ajusta si es necesario) */
   display: flex;
   align-items: center;
   justify-content: center;

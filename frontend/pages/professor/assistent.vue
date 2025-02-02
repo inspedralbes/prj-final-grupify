@@ -1,6 +1,7 @@
 <script setup>
 import { useChatStore } from "@/stores/chatStore";
 import { useChat } from "@/composables/useChat";
+import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
 const chatStore = useChatStore();
 const { sendMessage, isLoading, processFile } = useChat();
@@ -25,25 +26,30 @@ const handleFileContent = async content => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
-    <!-- Sidebar -->
-    <div class="w-80 h-screen flex-shrink-0">
-      <TeacherAssistantChatSidebar />
-    </div>
+  <div class="min-h-screen bg-gray-50 flex flex-col">
+    <!-- Barra de navegación -->
+    <DashboardNavTeacher />
 
-    <!-- Main Chat Area -->
-    <div class="flex-1 h-screen flex flex-col bg-white">
-      <TeacherAssistantChatHeader />
-      <TeacherAssistantMessageList
-        :messages="chatStore.currentChat?.messages || []"
-        :is-loading="isLoading"
-      />
-      <div class="border-t border-gray-100 py-4">
-        <TeacherAssistantMessageInput
+    <div class="flex flex-1">
+      <!-- Sidebar -->
+      <div class="w-80 h-full flex-shrink-0">
+        <TeacherAssistantChatSidebar />
+      </div>
+
+      <!-- Área principal de chat -->
+      <div class="flex-1 h-screen flex flex-col bg-white">
+        <TeacherAssistantChatHeader />
+        <TeacherAssistantMessageList
+          :messages="chatStore.currentChat?.messages || []"
           :is-loading="isLoading"
-          @send="handleSend"
-          @file-processed="handleFileContent"
         />
+        <div class="border-t border-gray-100 py-4">
+          <TeacherAssistantMessageInput
+            :is-loading="isLoading"
+            @send="handleSend"
+            @file-processed="handleFileContent"
+          />
+        </div>
       </div>
     </div>
   </div>

@@ -38,7 +38,7 @@
         <div class="form-group">
             <label for="role">Rol:</label>
             <select name="role_id" id="role" class="form-control" required>
-                <option value="">Select a role</option>
+                <option value="">Selecciona un rol</option>
                 @foreach ($roles as $role)
                     <option value="{{ $role->id }}">{{ $role->name }}</option>
                 @endforeach
@@ -46,14 +46,26 @@
         </div>
 
         <!-- Subject Assignment (Only for Teachers) -->
-        <div class="form-group" id="subject-group" style="display: none;">
-            <label for="subject">Assignatura:</label>
-            <select name="subject_id" id="subject" class="form-control">
-                <option value="">Select a subject</option>
+        <div class="mb-3" id="subject-group" style="display: none;">
+            <label class="form-label"><strong>Asignaturas:</strong></label>
+            <div class="form-check-container border rounded p-3 bg-light">
                 @foreach ($subjects as $subject)
-                    <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                    <div class="form-check">
+                        <input 
+                            type="checkbox" 
+                            class="form-check-input" 
+                            id="subject_{{ $subject->id }}" 
+                            name="subjects[]" 
+                            value="{{ $subject->id }}">
+                        <label 
+                            class="form-check-label" 
+                            for="subject_{{ $subject->id }}" 
+                            style="margin-left: 8px;">
+                            {{ $subject->name }}
+                        </label>
+                    </div>
                 @endforeach
-            </select>
+            </div>
         </div>
 
 
@@ -62,7 +74,7 @@
             <div class="form-group">
                 <label for="course">Curs:</label>
                 <select name="courses[]" id="course" class="form-control" multiple>
-                <option value="">Select a course</option>
+                <option value="">Selecciona un curs</option>
                     @foreach ($courses as $course)
                         <option value="{{ $course->id }}">{{ $course->name }}</option>
                     @endforeach
