@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import StudentProfile from "@/components/Students/StudentProfile.vue";
+
 import { useStudentsStore } from "@/stores/studentsStore";
 
 const route = useRoute();
@@ -64,8 +64,6 @@ onMounted(async () => {
     </div>
 
     <!-- Mostrar el perfil del estudiante si se encontró -->
-    <div v-if="student" class="space-y-6">
-      <StudentProfile :student="student" />
-    </div>
+
   </div>
 </template>
