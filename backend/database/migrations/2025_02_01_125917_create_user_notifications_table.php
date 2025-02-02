@@ -13,6 +13,8 @@ class CreateUserNotificationsTable extends Migration
             $table->unsignedBigInteger('teacher_id'); // El creador de la notificación
             $table->string('title');
             $table->text('body');
+            $table->timestamp('scheduled_at')->nullable();
+            $table->string('status')->default('pending');
             $table->timestamps();
 
             // Relación con el usuario (profesor)
