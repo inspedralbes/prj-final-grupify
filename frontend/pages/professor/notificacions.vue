@@ -3,7 +3,6 @@
     <div class="bg-white p-6 rounded-lg shadow-md relative">
       <h1 class="text-2xl font-bold mb-4">Enviar Notificació</h1>
       
-      <!-- Formulario -->
       <form @submit.prevent="prepararEnvio">
         <div class="mb-4">
           <label class="block text-gray-700 mb-2">Títol</label>
@@ -26,16 +25,34 @@
             required
           ></textarea>
         </div>
+
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2">
+            <input
+              type="checkbox"
+              v-model="isScheduled"
+              class="mr-2"
+            />
+            Programar enviament
+          </label>
+          
+          <input
+            v-if="isScheduled"
+            v-model="form.scheduled_at"
+            type="datetime-local"
+            class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            :min="minDateTime"
+          />
+        </div>
         
         <button
           type="submit"
           class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
-          Enviar notificació
+          {{ isScheduled ? 'Programar notificació' : 'Enviar notificació' }}
         </button>
       </form>
 
-      <!-- Mensaje d'èxit o error -->
       <div v-if="message" class="mt-4 text-green-600">
         {{ message }}
       </div>
@@ -44,7 +61,6 @@
       </div>
     </div>
 
-    <!-- Modal de confirmació per enviar -->
     <div 
       v-if="showConfirmModal" 
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
@@ -56,9 +72,12 @@
         </div>
         <div class="mb-4">
           <p class="text-sm text-gray-600"><strong>Missatge:</strong></p>
-          <pre class="bg-gray-100 p-4 rounded whitespace-pre-wrap break-words text-sm">
-{{ form.body }}
-          </pre>
+          <pre class="bg-gray-100 p-4 rounded whitespace-pre-wrap break-words text-sm">{{ form.body }}</pre>
+        </div>
+        <div v-if="isScheduled" class="mb-4">
+          <p class="text-sm text-gray-600">
+            <strong>Data programada:</strong> {{ formatDateTime(form.scheduled_at) }}
+          </p>
         </div>
         <div class="flex justify-end gap-2">
           <button
@@ -80,55 +99,75 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
+const isScheduled = ref(false)
 
-// Form amb els camps "title" i "body"
 const form = ref({
   title: '',
-  body: ''
+  body: '',
+  scheduled_at: ''
 })
 
-// Variables per mostrar missatges i errors
 const message = ref('')
 const error = ref('')
-
-// Variable per controlar la visualització del modal de confirmació
 const showConfirmModal = ref(false)
 
-/**
- * Funció que prepara l'enviament. Comprova que els camps no estiguin buits i mostra el modal.
- */
+const minDateTime = computed(() => {
+  const now = new Date()
+  now.setMinutes(now.getMinutes() + 5) // Mínimo 5 minutos en el futuro
+  return now.toISOString().slice(0, 16)
+})
+
+function formatDateTime(dateString) {
+  if (!dateString) return ''
+  return new Date(dateString).toLocaleString('ca-ES', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
+}
+
 function prepararEnvio() {
   if (!form.value.title.trim() || !form.value.body.trim()) return
+  if (isScheduled.value && !form.value.scheduled_at) {
+    error.value = 'Si vols programar la notificació, has de seleccionar una data'
+    return
+  }
   showConfirmModal.value = true
 }
 
-/**
- * Funció que, en confirmar, envia la notificació utilitzant la lògica actual amb Laravel.
- */
 async function confirmarEnvio() {
   showConfirmModal.value = false
-  // Reiniciem els missatges
   message.value = ''
   error.value = ''
 
+  const formData = {
+    ...form.value
+  }
+
+  if (!isScheduled.value) {
+    delete formData.scheduled_at
+  }
+
   try {
-    // Es realitza la crida a la API de Laravel
     const response = await $fetch('http://localhost:8000/api/notifications', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authStore.token}`,
         Accept: 'application/json'
       },
-      body: form.value
+      body: formData
     })
-    message.value = response.message || 'Notificació enviada correctament'
-    // Netejar el formulari
-    form.value.title = ''
-    form.value.body = ''
+    
+    message.value = response.message
+    form.value = {
+      title: '',
+      body: '',
+      scheduled_at: ''
+    }
+    isScheduled.value = false
   } catch (err) {
     error.value = err.data?.errors 
       ? Object.values(err.data.errors).flat().join(', ')
@@ -142,6 +181,7 @@ async function confirmarEnvio() {
   min-height: calc(100vh - 128px);
   padding: 2rem 1rem;
 }
+
 pre {
   max-width: 100%;
   overflow-x: auto;
