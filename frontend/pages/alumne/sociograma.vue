@@ -200,7 +200,7 @@ const handleFinish = async () => {
 
     // Enviar los datos al backend
     const response = await fetch(
-      "http://localhost:8000/api/sociogram-relationships",
+      "https://api.grupify.cat/api/sociogram-relationships",
       {
         method: "POST",
         headers: {

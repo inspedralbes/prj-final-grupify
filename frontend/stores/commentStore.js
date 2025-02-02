@@ -9,7 +9,7 @@ export const useCommentStore = defineStore("comment", {
     async fetchComments(idGroup) {
       try {
         const authStore = useAuthStore();
-        const response = await fetch(`http://localhost:8000/api/groups/${idGroup}/comments`, {
+        const response = await fetch(`https://api.grupify.cat/api/groups/${idGroup}/comments`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${authStore.token}`,
@@ -33,7 +33,7 @@ export const useCommentStore = defineStore("comment", {
       try {
         const authStore = useAuthStore();
         const response = await fetch(
-          `http://localhost:8000/api/groups/${idGroup}/comments`,
+          `https://api.grupify.cat/api/groups/${idGroup}/comments`,
           {
             method: "POST",
             headers: {
@@ -64,7 +64,7 @@ export const useCommentStore = defineStore("comment", {
       try {
         const authStore = useAuthStore();
         const response = await fetch(
-          `http://localhost:8000/api/groups/${idGroup}/comments/${commentId}`,
+          `https://api.grupify.cat/api/groups/${idGroup}/comments/${commentId}`,
           {
             method: "DELETE",
             headers: {

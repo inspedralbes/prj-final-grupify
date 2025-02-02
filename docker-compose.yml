@@ -63,7 +63,7 @@ services:
       - app-network
     command: bash -c "chmod +x entrypoint.sh && ./entrypoint.sh"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      test: ["CMD", "curl", "-f", "https://api.grupify.cat"]
       interval: 10s
       timeout: 10s
       retries: 5

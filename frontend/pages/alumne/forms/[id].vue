@@ -31,7 +31,7 @@ onMounted(() => {
 async function fetchFormWithQuestions() {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/forms/${formId}/questions-and-answers`
+      `https://api.grupify.cat/api/forms/${formId}/questions-and-answers`
     );
 
     if (!response.ok) {
@@ -88,7 +88,7 @@ async function submitResponses() {
 
   try {
     const response = await fetch(
-      `http://localhost:8000/api/forms/${formId}/submit-responses`,
+      `https://api.grupify.cat/api/forms/${formId}/submit-responses`,
       {
         method: "POST",
         headers: {

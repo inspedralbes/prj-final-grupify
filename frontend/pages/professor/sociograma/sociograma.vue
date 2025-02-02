@@ -9,7 +9,7 @@ const height = 600;
 const fetchRelationships = async () => {
   try {
     const response = await fetch(
-      "http://localhost:8000/api/sociogram-relationships"
+      "https://api.grupify.cat/api/sociogram-relationships"
     );
     if (!response.ok) throw new Error("Error al obtener las relaciones");
     relationships.value = await response.json();

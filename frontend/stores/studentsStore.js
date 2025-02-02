@@ -17,7 +17,7 @@ export const useStudentsStore = defineStore("students", {
       this.error = null;
 
       try {
-        const response = await fetch("http://localhost:8000/api/get-students");
+        const response = await fetch("https://api.grupify.cat/api/get-students");
 
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);

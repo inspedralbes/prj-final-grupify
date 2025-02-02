@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const socket = io('http://localhost:5000', {
+  const socket = io('https://node.grupify.cat', {
     autoConnect: false,
     withCredentials: true,
     transports: ['websocket', 'polling']

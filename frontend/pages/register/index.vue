@@ -50,7 +50,7 @@ const gestioSubmit = async (e) => {
 
   try {
     // Solicitar registro al servidor
-    const response = await fetch("http://localhost:8000/api/register", {
+    const response = await fetch("https://api.grupify.cat/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -81,7 +81,7 @@ const gestioSubmit = async (e) => {
     console.log("Usuari registrat!", data);
 
     // Iniciar sesión automáticamente después del registro
-    const loginResponse = await fetch("http://localhost:8000/api/login", {
+    const loginResponse = await fetch("https://api.grupify.cat/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

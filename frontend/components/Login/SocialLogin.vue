@@ -49,7 +49,7 @@ const sendToBackend = async (userData) => {
   };
 
   try {
-    const { token, user } = await $fetch('http://localhost:8000/api/google-login', {
+    const { token, user } = await $fetch('https://api.grupify.cat/api/google-login', {
       method: 'POST',
       body: postData,
     });

@@ -58,5 +58,21 @@ show:
 format:
 	docker exec -it $(VUE_CONTAINER) npm run format
 
+rebuild:
+	docker build -t ghcr.io/adriapedralbes/frontend:v1.0 -f ./frontend/Dockerfile.prod ./frontend
+	docker build -t ghcr.io/adriapedralbes/backend:v1.0 -f ./backend/Dockerfile.prod ./backend
+	docker build -t ghcr.io/adriapedralbes/nodejs:v1.0 -f ./backend/node-app/Dockerfile.prod ./backend/node-app
+
+push:
+	docker push ghcr.io/adriapedralbes/frontend:v1.0
+	docker push ghcr.io/adriapedralbes/backend:v1.0
+	docker push ghcr.io/adriapedralbes/nodejs:v1.0
+
+pull:
+	docker pull ghcr.io/adriapedralbes/frontend:v1.0
+	docker pull ghcr.io/adriapedralbes/backend:v1.0
+	docker pull ghcr.io/adriapedralbes/nodejs:v1.0
+
+
 
 

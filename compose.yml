@@ -27,7 +27,7 @@ services:
       - app-network
 
   nuxt-app:
-    image: ghcr.io/adriapedralbes/frontend:latest
+    image: ghcr.io/adriapedralbes/frontend:v1.0
     deploy:
       replicas: 1
       restart_policy:
@@ -44,7 +44,7 @@ services:
       - app-network
 
   laravel-app:
-    image: ghcr.io/adriapedralbes/backend:latest
+    image: ghcr.io/adriapedralbes/backend:v1.0
     deploy:
       replicas: 1
       restart_policy:
@@ -70,7 +70,7 @@ services:
       - app-network
 
   queue-worker:
-    image: ghcr.io/adriapedralbes/backend:latest
+    image: ghcr.io/adriapedralbes/backend:v1.0
     deploy:
       replicas: 1
       restart_policy:
@@ -92,7 +92,7 @@ services:
 
 
   node-app:
-    image: ghcr.io/adriapedralbes/nodejs:latest
+    image: ghcr.io/adriapedralbes/nodejs:v1.0
     deploy:
       replicas: 1
       restart_policy:

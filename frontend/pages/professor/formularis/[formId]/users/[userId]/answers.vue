@@ -157,7 +157,7 @@ const navigateBack = () => {
 const fetchAnswers = async (formId, userId) => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/forms/${formId}/users/${userId}/answers`,
+      `https://api.grupify.cat/api/forms/${formId}/users/${userId}/answers`,
       {
         method: "GET",
         headers: {
@@ -207,7 +207,7 @@ const fetchAnswers = async (formId, userId) => {
 const fetchAnswersSociogram = async (formId, userId) => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/forms/${formId}/users/${userId}/relationships`,
+      `https://api.grupify.cat/api/forms/${formId}/users/${userId}/relationships`,
       {
         method: "GET",
         headers: {

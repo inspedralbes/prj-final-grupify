@@ -19,10 +19,10 @@ export default {
       const token = localStorage.getItem("auth_token");
       if (token) {
         // Redirigir a la URL externa (el backend)
-        window.location.href = "http://localhost:8000/dashboard";
+        window.location.href = "https://api.grupify.cat/dashboard";
       } else {
         // Si no está autenticado, redirige a login o alguna otra URL
-        window.location.href = "http://localhost:8000/login";
+        window.location.href = "https://api.grupify.cat/login";
       }
     },
   },

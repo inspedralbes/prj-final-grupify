@@ -45,7 +45,7 @@ const userId = user.id;
 const loadFormsByUserId = async userId => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/forms/user/${userId}`,
+      `https://api.grupify.cat/api/forms/user/${userId}`,
       {
         method: "GET",
         headers: {

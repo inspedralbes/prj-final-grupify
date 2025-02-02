@@ -18,7 +18,7 @@ export const useAuthStore = defineStore("auth", {
     // Verifica si el token es válido
     async checkAuth() {
       try {
-        const response = await $fetch('http://localhost:8000/api/user', {
+        const response = await $fetch('https://api.grupify.cat/api/user', {
           headers: {
             Authorization: `Bearer ${this.token}`,
             Accept: 'application/json',
@@ -52,7 +52,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const token = this.token;
         if (token) {
-          await $fetch('http://localhost:8000/api/logout', {
+          await $fetch('https://api.grupify.cat/api/logout', {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,

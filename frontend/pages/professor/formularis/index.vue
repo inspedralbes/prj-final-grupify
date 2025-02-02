@@ -23,7 +23,7 @@ const showToast = ref(false);
 
 onMounted(async () => {
   try {
-    const response = await fetch(`http://localhost:8000/api/forms?teacher_id=${teacherId.value}`, {
+    const response = await fetch(`https://api.grupify.cat/api/forms?teacher_id=${teacherId.value}`, {
       method: "GET",
       headers: { Accept: "application/json" }
     });
@@ -37,7 +37,7 @@ onMounted(async () => {
 const updateFormStatus = async (formId, newStatus) => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/forms/${formId}/status`,
+      `https://api.grupify.cat/api/forms/${formId}/status`,
       {
         method: "PATCH",
         headers: {

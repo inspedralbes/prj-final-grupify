@@ -19,7 +19,7 @@ export const useCoursesStore = defineStore("courses", {
 
       try {
         const response = await fetch(
-          "http://localhost:8000/api/courses-with-divisions"
+          "https://api.grupify.cat/api/courses-with-divisions"
         );
 
         if (!response.ok) {

@@ -11,7 +11,7 @@ export const useGroupStore = defineStore("groups", {
         const authStore = useAuthStore();
         const token = authStore.token;
 
-        const response = await $fetch("http://localhost:8000/api/groups", {
+        const response = await $fetch("https://api.grupify.cat/api/groups", {
           headers: {
             Authorization: `Bearer ${token}`, 
             "Content-Type": "application/json",
@@ -36,7 +36,7 @@ export const useGroupStore = defineStore("groups", {
         const token = authStore.token;
 
         const response = await fetch(
-          `http://localhost:8000/api/groups/${groupId}/addStudentsToGroup`,
+          `https://api.grupify.cat/api/groups/${groupId}/addStudentsToGroup`,
           {
             method: "POST",
             headers: {
@@ -61,7 +61,7 @@ export const useGroupStore = defineStore("groups", {
       try {
         const token = useAuthStore().token; // Using token from the store
         const response = await fetch(
-          `http://localhost:8000/api/groups/${groupId}/removeStudentFromGroup`,
+          `https://api.grupify.cat/api/groups/${groupId}/removeStudentFromGroup`,
           {
             method: "DELETE",
             headers: {
@@ -98,7 +98,7 @@ export const useGroupStore = defineStore("groups", {
         const token = authStore.token;    // <-- Obtener el token del store
 
         const response = await fetch(
-          `http://localhost:8000/api/groups/${groupId}`,
+          `https://api.grupify.cat/api/groups/${groupId}`,
           {
             method: "DELETE",
             headers: {
@@ -122,7 +122,7 @@ export const useGroupStore = defineStore("groups", {
         const authStore = useAuthStore();
         const token = authStore.token;
 
-        const response = await fetch("http://localhost:8000/api/groups", {
+        const response = await fetch("https://api.grupify.cat/api/groups", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

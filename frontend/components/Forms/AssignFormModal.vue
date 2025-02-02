@@ -37,7 +37,7 @@ const assignFormToCourseAndDivision = async () => {
 
   try {
     
-    const response = await fetch('http://localhost:8000/api/forms/assign-to-course-division', {
+    const response = await fetch('https://api.grupify.cat/api/forms/assign-to-course-division', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ const assignFormToCourseAndDivision = async () => {
 // Cargar todos los cursos al montar el componente
 onMounted(async () => {
   try {
-    const response = await fetch("http://localhost:8000/api/courses"); 
+    const response = await fetch("https://api.grupify.cat/api/courses"); 
     if (!response.ok) throw new Error("Error al cargar los cursos");
 
     const data = await response.json();
@@ -90,7 +90,7 @@ const fetchDivisions = async () => {
 
   try {
   
-    const response = await fetch(`http://localhost:8000/api/course-divisions?course_id=${selectedCourse.value}`);
+    const response = await fetch(`https://api.grupify.cat/api/course-divisions?course_id=${selectedCourse.value}`);
     if (!response.ok) throw new Error("Error al cargar las divisiones");
 
     const data = await response.json();

@@ -34,7 +34,7 @@ const checkFormCompletion = async (course) => {
 
   try {
     const response = await fetch(
-      `http://localhost:8000/api/check-form-completion/${course.courseId}/${course.division.id}/3`
+      `https://api.grupify.cat/api/check-form-completion/${course.courseId}/${course.division.id}/3`
     );
     
     console.log("Respuesta de la API:", response);
