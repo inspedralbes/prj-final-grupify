@@ -6,6 +6,7 @@ use App\Models\UserNotification;
 use App\Jobs\ProcessScheduledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class UserNotificationController extends Controller
 {
@@ -15,10 +16,10 @@ class UserNotificationController extends Controller
         // aquellas sin fecha programada, o cuya fecha programada ya pasó.
         $notifications = UserNotification::where(function ($query) {
             $query->whereNull('scheduled_at')
-                  ->orWhere('scheduled_at', '<=', now());
+                ->orWhere('scheduled_at', '<=', now());
         })
-        ->orderBy('created_at', 'desc')
-        ->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return response()->json([
             'notifications' => $notifications,
@@ -60,5 +61,20 @@ class UserNotificationController extends Controller
             'message'      => $request->scheduled_at ? 'Notificación programada correctamente' : 'Notificación enviada correctamente',
             'notification' => $notification,
         ], 201);
+    }
+
+    public function teacherNotifications(Request $request)
+    {
+        $teacher = Auth::user();
+
+        // Obtiene solo las notificaciones enviadas por el profesor autenticado
+        $notifications = UserNotification::where('teacher_id', $teacher->id)
+            ->where('status', 'sent')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'notifications' => $notifications,
+        ], 200);
     }
 }
