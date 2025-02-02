@@ -46,6 +46,7 @@ export const useCoursesStore = defineStore("courses", {
               name: division.name,
             },
             active: course.active ?? false,
+            sociograma_available: false,
           }))
         );
 
