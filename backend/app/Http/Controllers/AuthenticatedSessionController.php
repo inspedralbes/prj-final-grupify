@@ -64,6 +64,10 @@ class AuthenticatedSessionController extends Controller
         $course_id = $courseDivision ? $courseDivision->pivot->course_id : null;
         $division_id = $courseDivision ? $courseDivision->pivot->division_id : null;
 
+
+        Mail::to($user->email)->send(new LoginNotificationMail($user));
+
+
         // Preparar la respuesta con los campos que deseas
         return response()->json([
             'token' => $token,

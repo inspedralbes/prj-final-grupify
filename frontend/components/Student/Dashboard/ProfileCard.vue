@@ -45,7 +45,7 @@
       </h2>
       <p class="text-gray-500 text-sm">{{ userData.email }}</p>
       <p class="text-gray-500 text-sm">
-        Curso: {{ userData.course_id }} | División: {{ userData.division_id }}
+        Curs: {{ userData.course_name }} {{ userData.division_name }}
       </p>
     </div>
   </div>
@@ -61,9 +61,34 @@ const userData = ref({
   last_name: "",
   email: "",
   image: "",
-  course_id: "",
-  division_id: "",
+  course_name: "",
+  division_name: "",
 });
+
+// Datos de cursos y divisiones (simulados o obtenidos de una API)
+const courses = [
+  { id: 1, name: "1 ESO" },
+  { id: 2, name: "2 ESO" },
+  { id: 3, name: "3 ESO" },
+  { id: 4, name: "4 ESO" },
+  { id: 5, name: "BATXILLERAT" },
+];
+
+const divisions = [
+  { id: 1, division: "1" },
+  { id: 2, division: "2" },
+  { id: 3, division: "A" },
+  { id: 4, division: "B" },
+  { id: 5, division: "C" },
+  { id: 6, division: "D" },
+  { id: 7, division: "E" },
+];
+
+// Función para obtener el nombre del curso o división basado en el ID
+const getNameById = (id, data) => {
+  const item = data.find((item) => item.id === id);
+  return item ? item.name || item.division : "Sense dades";
+};
 
 onMounted(() => {
   const user = authStore.user;
@@ -74,8 +99,8 @@ onMounted(() => {
       last_name: user.last_name,
       email: user.email,
       image: user.image,
-      course_id: user.course_id || "Sin Curso",
-      division_id: user.division_id || "Sin División",
+      course_name: getNameById(user.course_id, courses),
+      division_name: getNameById(user.division_id, divisions),
     };
   }
 });

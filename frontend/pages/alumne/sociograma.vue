@@ -13,28 +13,50 @@ import { useStudentsStore } from "@/stores/studentsStore";
 
 const router = useRouter();
 const studentsStore = useStudentsStore();
-const students = ref([]);
 const errorMessage = ref(""); // Estado para el mensaje de error
 const successMessage = ref(""); // Estado para el mensaje de éxito
 const loggedStudentId = ref(null);
+const course = ref(''); // Curso seleccionado
+const division = ref(''); // División seleccionada
+
+// Excluir al estudiante logueado de la lista
+const students = ref([]);
 
 onMounted(async () => {
   // Obtén el ID del estudiante logueado
   loggedStudentId.value = getLoggedStudentId();
-  // console.log("ID del estudiante logueado:", loggedStudentId.value);
+  console.log("ID del estudiante logueado:", loggedStudentId.value);
+
   if (!loggedStudentId.value) {
     // Si no hay usuario logueado, mostrar error y redirigir o detener ejecución
     errorMessage.value =
       "Por favor, inicie sesión antes de completar el cuestionario.";
     return;
   }
-  if (studentsStore.studentCount === 0) {
+
+  if (studentsStore.students.length === 0) {
     await studentsStore.fetchStudents();
   }
-  // Excluir al estudiante logueado de la lista
-  students.value = studentsStore.students.filter(
-    student => student.id !== loggedStudentId.value
-  );
+
+  // Obtener los datos del estudiante logueado
+  const loggedStudent = studentsStore.getStudentById(loggedStudentId.value);
+  if (loggedStudent) {
+    course.value = loggedStudent.course;
+    division.value = loggedStudent.division;
+    console.log("Curso y división del estudiante logueado:", course.value, division.value);
+
+    // Filtrar estudiantes que coincidan con el curso y la división del estudiante logueado
+    students.value = studentsStore.students.filter(
+      student =>
+        student.course === course.value &&
+        student.division === division.value &&
+        student.id !== loggedStudentId.value
+    );
+    console.log("Estudiantes después del filtro:", students.value);
+  } else {
+    errorMessage.value = "No se encontraron los datos del estudiante logueado.";
+    return;
+  }
 });
 
 // Definimos las secciones del cuestionario

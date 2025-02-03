@@ -12,12 +12,12 @@ class UserNotificationController extends Controller
 {
     public function index(Request $request)
     {
-        // Solo se muestran notificaciones que ya han sido enviadas o
-        // aquellas sin fecha programada, o cuya fecha programada ya pasó.
-        $notifications = UserNotification::where(function ($query) {
-            $query->whereNull('scheduled_at')
-                ->orWhere('scheduled_at', '<=', now());
-        })
+        // Mostrar solo notificaciones ENVIADAS (status = 'sent')
+        $notifications = UserNotification::where('status', 'sent')
+            ->where(function ($query) {
+                $query->whereNull('scheduled_at')
+                    ->orWhere('scheduled_at', '<=', now());
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -67,14 +67,34 @@ class UserNotificationController extends Controller
     {
         $teacher = Auth::user();
 
-        // Obtiene solo las notificaciones enviadas por el profesor autenticado
+        // Obtener todas las notificaciones del profesor (incluyendo pendientes y canceladas)
         $notifications = UserNotification::where('teacher_id', $teacher->id)
-            ->where('status', 'sent')
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
             'notifications' => $notifications,
         ], 200);
+    }
+
+    public function destroy($id)
+    {
+        $notification = UserNotification::findOrFail($id);
+        $teacher = Auth::user();
+
+        // Verificar que la notificación pertenece al profesor
+        if ($notification->teacher_id !== $teacher->id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        // Solo se pueden cancelar notificaciones pendientes
+        if ($notification->status !== 'pending') {
+            return response()->json(['message' => 'Solo se pueden cancelar notificaciones programadas pendientes'], 400);
+        }
+
+        // Marcar como cancelada
+        $notification->update(['status' => 'canceled']);
+
+        return response()->json(['message' => 'Notificación cancelada correctamente'], 200);
     }
 }
