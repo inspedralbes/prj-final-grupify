@@ -55,17 +55,22 @@ services:
       - "traefik.http.routers.laravel-app.entrypoints=websecure"
       - "traefik.http.routers.laravel-app.tls.certresolver=myresolver"
       - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
-    # Puedes incluir variables de entorno adicionales o leer un archivo env si lo requieres
     environment:
       DB_CONNECTION: mysql
-      DB_HOST: db
+      DB_HOST_FILE: /run/secrets/db_host
       DB_PORT: 3306
-      DB_DATABASE: gestioeduca
-      DB_USERNAME: user
-      DB_PASSWORD: user
-      REDIS_HOST: redis
+      DB_DATABASE_FILE: /run/secrets/db_database
+      DB_USERNAME_FILE: /run/secrets/mysql_user
+      DB_PASSWORD_FILE: /run/secrets/mysql_password
+      REDIS_HOST_FILE: /run/secrets/redis_host
       REDIS_PASSWORD: null
-      REDIS_PORT: 6379
+      REDIS_PORT_FILE: /run/secrets/redis_port
+    secrets:
+      - db_database
+      - mysql_user
+      - mysql_password
+      - redis_host
+      - redis_port
     networks:
       - app-network
 
@@ -79,14 +84,21 @@ services:
       sh -c "chmod +x ./wait-for-mysql.sh && ./wait-for-mysql.sh db:3306 -- php artisan queue:work redis --tries=3 --timeout=90"
     environment:
       DB_CONNECTION: mysql
-      DB_HOST: db
+      DB_HOST_FILE: /run/secrets/db_host
       DB_PORT: 3306
-      DB_DATABASE: gestioeduca
-      DB_USERNAME: user
-      DB_PASSWORD: user
-      REDIS_HOST: redis
+      DB_DATABASE_FILE: /run/secrets/db_database
+      DB_USERNAME_FILE: /run/secrets/mysql_user
+      DB_PASSWORD_FILE: /run/secrets/mysql_password
+      REDIS_HOST_FILE: /run/secrets/redis_host
       REDIS_PASSWORD: null
-      REDIS_PORT: 6379
+      REDIS_PORT_FILE: /run/secrets/redis_port
+    secrets:
+      - db_host
+      - db_database
+      - mysql_user
+      - mysql_password
+      - redis_host
+      - redis_port
     networks:
       - app-network
 
@@ -128,11 +140,12 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: gestioeduca
+      MYSQL_DATABASE: /run/secrets/db_database
       MYSQL_USER_FILE: /run/secrets/mysql_user
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
     secrets:
+      - db_database
       - mysql_user
       - mysql_password
       - mysql_root_password
@@ -174,3 +187,11 @@ secrets:
     file: ./docker-secrets/mysql_password.txt
   mysql_root_password:
     file: ./docker-secrets/mysql_root_password.txt
+  db_database:
+    file: ./docker-secrets/db_database.txt
+  redis_host:
+    file: ./docker-secrets/redis_host.txt
+  redis_port:
+    file: ./docker-secrets/redis_port.txt
+  db_host:
+    file: ./docker-secrets/db_host.txt
