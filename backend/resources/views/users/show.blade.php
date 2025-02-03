@@ -30,6 +30,18 @@
                 <label for="updated_at"><strong>Actualitzat el:</strong></label>
                 <p>{{ $user->updated_at }}</p>
             </div>
+
+            <!-- Mostrar Curso y División si el usuario tiene asignados -->
+                    <div class="form-group mb-3">
+            <label for="course"><strong>Curs:</strong></label>
+            <p>{{ $user->courses->first()?->name ?? 'Sense curs assignat' }}</p>
+        </div>
+        <div class="form-group mb-3">
+            <label for="division"><strong>Divisió:</strong></label>
+            <p>{{ $user->courses->first()?->divisions->first()?->division ?? 'Sense divisió assignada' }}</p>
+        </div>
+
+
         </div>
     </div>
     <a href="{{ route('users.index') }}" class="btn btn-primary w-100 mt-3">Tornar a la Llista d'Usuaris</a>
