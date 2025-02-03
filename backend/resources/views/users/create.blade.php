@@ -25,7 +25,12 @@
 
         <div class="form-group">
             <label for="password">Contrasenya:</label>
-            <input type="password" class="form-control" id="password" name="password" required>
+            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
+            @error('password')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
 
@@ -150,4 +155,24 @@ document.addEventListener('DOMContentLoaded', function() {
     roleSelect.dispatchEvent(new Event('change'));
 });
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const errorDiv = document.createElement('div');
+        errorDiv.classList.add('invalid-feedback');
+        passwordInput.parentNode.appendChild(errorDiv);
+
+        passwordInput.addEventListener('input', function () {
+            if (passwordInput.value.length < 8) {
+                passwordInput.classList.add('is-invalid');
+                errorDiv.textContent = 'La contrasenya ha de tenir almenys 8 caràcters.';
+            } else {
+                passwordInput.classList.remove('is-invalid');
+                errorDiv.textContent = '';
+            }
+        });
+    });
+</script>
+
 @endsection
