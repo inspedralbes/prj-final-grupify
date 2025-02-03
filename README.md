@@ -1,4 +1,4 @@
-# Groupify
+# Grupify
 **Integrants del projecte:**
 Aleiram Minaya, Lucas Benitez, Araceli Pacheco, Joselyn Ninahuaman, Adrià Estévez.
 - Un projecte de gestió de grups dins dels centres educatius per evitar el risc d'exclusió/bullying. Fem servir eines com Taiga per la gestió de treball en grup amb metodología SCRUM <!--i sistema per generar grups automátics, INSERTAR AQUI ENLACE TAIGA, figma/penpot, URL PRODUCCIÓ, estado actual del proyecto-->
@@ -7,7 +7,7 @@ Aleiram Minaya, Lucas Benitez, Araceli Pacheco, Joselyn Ninahuaman, Adrià Esté
 
 1. **Clona el projecte**
     ```bash
-    git clone https://github.com/inspedralbes/DAWTR2GX_g10_gestioeduca.git
+    git clone https://github.com/inspedralbes/prj-final-grupify.git
 ## 🚀 Requisits
 
 Abans de començar, assegura't de tenir instal·lat el següent component:
@@ -58,9 +58,9 @@ Proporcionem informació sobre:
 # 📂 Estructura del projecte
 El projecte està dividit en dos directoris principals:
 
-- **Back/:** Conté el codi i els serveis per al backend (laravel / nodejs).
-- **Back/node-app:** Conte el nodejs dins del back
-- **Front/:** Conté el codi i els serveis per al frontend.
+- **Backend/:** Conté el codi i els serveis per al backend (laravel / nodejs).
+- **Backend/node-app:** Conte el nodejs dins del back
+- **Frontend/:** Conté el codi i els serveis per al frontend.
 
 # Convenciones para los Commits
 chore: Cambios menores que no afectan el código de producción, como actualizaciones de dependencias o tareas de mantenimiento.
