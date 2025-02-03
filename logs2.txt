@@ -1,0 +1,1 @@
+grupify_traefik.0.i459pia20s2v@www.grupify.com    | [90m2025-02-02T16:59:02Z[0m [31mERR[0m [36merror=[0m[31m[1m"error while adding rule Host(`grupify.cat`, `www.grupify.cat`): error while adding rule Host: unexpected number of parameters; got 2, expected one of [1]"[0m[0m [36mentryPointName=[0mwebsecure [36mrouterName=[0mnuxt-app@docker
