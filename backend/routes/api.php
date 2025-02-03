@@ -182,4 +182,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [UserNotificationController::class, 'index']);
     Route::post('/notifications', [UserNotificationController::class, 'store']);
     Route::get('/teacher-notifications', [UserNotificationController::class, 'teacherNotifications']);
+    Route::delete('/notifications/{id}', [UserNotificationController::class, 'destroy']);
 });

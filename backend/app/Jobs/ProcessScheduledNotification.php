@@ -33,10 +33,11 @@ class ProcessScheduledNotification implements ShouldQueue
      */
     public function handle()
     {
-        // Aquí puedes agregar la lógica para enviar la notificación,
-        // como enviar un email, una push notification, etc.
+        // Solo procesar si la notificación sigue pendiente
+        if ($this->notification->status === 'pending') {
+            // Lógica de envío aquí...
 
-        // Una vez procesada la notificación, se actualiza el estado a "sent"
-        $this->notification->update(['status' => 'sent']);
+            $this->notification->update(['status' => 'sent']);
+        }
     }
 }
