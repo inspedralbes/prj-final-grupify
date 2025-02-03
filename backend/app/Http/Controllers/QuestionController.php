@@ -41,13 +41,14 @@ class QuestionController extends Controller
         // Obtener todas las preguntas
         $questions = $this->questionService->getAllQuestions();
 
+        $forms = \App\Models\Form::all();
         // Si la solicitud es una API, devolver las preguntas como JSON
         if ($request->is('api/*')) {
             return response()->json($questions);
         }
         
         // Si la solicitud es web, mostrar las preguntas en la vista 'questions.blade.php'
-        return view('questions', compact('questions'));
+        return view('questions', compact('questions','forms'));
     }
 
     /**
