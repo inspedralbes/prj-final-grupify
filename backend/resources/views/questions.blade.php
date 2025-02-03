@@ -53,21 +53,23 @@
                                 <tr>
                                     <td>{{ $question->id }}</td>
                                     <td>{{ $question->title }}</td>
-                                    <td>{{ $question->form_id }}</td>
+                                    <td>{{ $question->form->title }}</td>
                                     <td class="text-end">
-                                        <!-- Botó Editar -->
-                                        <a href="{{ route('questions.index', ['edit' => $question->id]) }}" class="btn btn-warning btn-sm me-2">
-                                            <i class="fas fa-edit me-1"></i> Editar
-                                        </a>
+                                        <div class="d-flex justify-content-end align-items-center">
+                                            <!-- Botó Editar -->
+                                            <a href="{{ route('questions.index', ['edit' => $question->id]) }}" class="btn btn-warning btn-sm me-2">
+                                                <i class="fas fa-edit me-1"></i> Editar
+                                            </a>
 
-                                        <!-- Formulari Eliminar -->
-                                        <form action="{{ route('questions.destroy', $question->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" >
-                                                <i class="fas fa-trash-alt me-1"></i> Eliminar
-                                            </button>
-                                        </form>
+                                            <!-- Formulari Eliminar -->
+                                            <form action="{{ route('questions.destroy', $question->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-trash-alt me-1"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -100,7 +102,17 @@
 
                         <div class="mb-3">
                             <label for="form_id" class="form-label">Formulari</label>
-                            <input type="number" name="form_id" id="form_id" class="form-control" value="{{ isset($_GET['edit']) ? $questions->firstWhere('id', $_GET['edit'])->form_id : '' }}" required>
+                            <select name="form_id" id="form_id" class="form-control" required>
+                                <option value="" disabled {{ isset($_GET['edit']) && !$questions->firstWhere('id', $_GET['edit'])->form_id ? 'selected' : '' }}>
+                                    Selecciona un formulari
+                                </option>
+                                @foreach ($forms as $form)
+                                    <option value="{{ $form->id }}" 
+                                        {{ isset($_GET['edit']) && $questions->firstWhere('id', $_GET['edit'])->form_id == $form->id ? 'selected' : '' }}>
+                                        {{ $form->title }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="d-grid">

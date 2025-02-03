@@ -53,7 +53,7 @@
                                 <tr>
                                     <td>{{ $form->id }}</td>
                                     <td>{{ $form->title }}</td>
-                                    <td>{{ $form->teacher_id ?? 'Global' }}</td>
+                                    <td>{{ $form->teacher->name ?? 'Global' }}</td>
                                     <td class="text-end">
                                         <!-- Botó Editar -->
                                         <a href="{{ route('forms.index', ['edit' => $form->id]) }}" class="btn btn-warning btn-sm me-2">
@@ -96,11 +96,6 @@
                         <div class="mb-3">
                             <label for="title" class="form-label">Títol</label>
                             <input type="text" name="title" id="title" class="form-control" value="{{ isset($_GET['edit']) ? $forms->firstWhere('id', $_GET['edit'])->title : '' }}" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="teacher_id" class="form-label">Professor (ID)</label>
-                            <input type="number" name="teacher_id" id="teacher_id" class="form-control" value="{{ isset($_GET['edit']) ? $forms->firstWhere('id', $_GET['edit'])->teacher_id : '' }}" placeholder="Deixa-ho buit per global">
                         </div>
 
                         <div class="mb-3">
