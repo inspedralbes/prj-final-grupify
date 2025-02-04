@@ -183,9 +183,10 @@ class SociogramRelationshipController extends Controller
     //ver relaciones para hacer el sociograma
     public function getRelationships()
     {
-        $relationships = SociogramRelationship::with(['user', 'peer']) // Relacionar 'user' y 'peer' con el modelo de Sociogram
+        $relationships = SociogramRelationship::with(['user', 'peer', 'question'])
             ->get()
-            ->groupBy('relationship_type'); // Agrupar relaciones por tipo
+            ->makeHidden(['user', 'peer', 'question']) // Ocultar las relaciones
+            ->groupBy('relationship_type');
 
         return response()->json($relationships);
     }

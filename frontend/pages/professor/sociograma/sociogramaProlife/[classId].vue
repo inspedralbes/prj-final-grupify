@@ -1,8 +1,9 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useCoursesStore } from "~/stores/coursesStore";
 import { useStudentsStore } from "~/stores/studentsStore";
+import { useRelationshipsStore } from "~/stores/relationships";
 import Relations from "@/components/Teacher/SociogramaComponents/Relations.vue";
 import Roles from "@/components/Teacher/SociogramaComponents/Roles.vue";
 import Skills from "@/components/Teacher/SociogramaComponents/Skills.vue";
@@ -15,16 +16,13 @@ const isLoading = ref(true);
 const students = ref([]);
 const course = ref(null);
 const activeComponent = ref("");
-const relationships = ref([]);
-const filteredRelationships = ref([]);
-
+const coursesStore = useCoursesStore();
+const studentsStore = useStudentsStore();
+const relationshipsStore = useRelationshipsStore();
 classId.value = route.params.classId;
 
 onMounted(async () => {
   try {
-    const coursesStore = useCoursesStore();
-    const studentsStore = useStudentsStore();
-
     if (!classId.value) throw new Error("classId no encontrado");
 
     await coursesStore.fetchCourses();
@@ -38,8 +36,7 @@ onMounted(async () => {
         student.division === course.value.division.name
     );
 
-    await fetchRelationships();
-    filterRelationships();
+    await relationshipsStore.fetchRelationships();
   } catch (err) {
     console.error("Error al cargar los datos:", err);
     error.value = "Error al cargar los datos";
@@ -48,25 +45,15 @@ onMounted(async () => {
   }
 });
 
-const fetchRelationships = async () => {
-  try {
-    const response = await fetch("http://localhost:8000/api/sociogram-relationships");
-    if (!response.ok) throw new Error("Error al obtener las relaciones");
-    relationships.value = await response.json();
-  } catch (error) {
-    console.error("Error al cargar las relaciones:", error);
+const filteredRelationships = computed(() => {
+  if (course.value) {
+    return relationshipsStore.getRelationshipsByCourseAndDivision(
+      course.value.courseName,
+      course.value.division.name
+    ).value;
   }
-};
-
-const filterRelationships = () => {
-  const studentIds = students.value.map(student => student.id);
-  filteredRelationships.value = relationships.value.filter(rel =>
-    studentIds.includes(rel.user_id) &&
-    studentIds.includes(rel.peer_id) &&
-    (rel.question_id === 15 || rel.question_id === 16)
-  );
-  //console.log("Relaciones filtradas (solo estudiantes de la clase):", filteredRelationships.value);
-};
+  return [];
+});
 
 const toggleComponent = (component) => {
   activeComponent.value = activeComponent.value === component ? "" : component;
