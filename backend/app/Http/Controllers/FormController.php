@@ -12,7 +12,8 @@ use App\Services\FormService;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\FormAssignedMail;
 /**
  * @OA\Tag(
  *     name="Forms",
@@ -29,35 +30,36 @@ class FormController extends Controller
             'division_id' => 'required|exists:divisions,id',
             'form_id' => 'required|exists:forms,id',
         ]);
-
+    
         $courseId = $validated['course_id'];
         $divisionId = $validated['division_id'];
         $formId = $validated['form_id'];
-
-        // Obtener los usuarios que están en ese curso y división
+    
         $users = User::whereHas('divisions', function ($query) use ($courseId, $divisionId) {
             $query->where('course_id', $courseId)
-                ->where('division_id', $divisionId);
+                  ->where('division_id', $divisionId);
         })->get();
-
+    
         if ($users->isEmpty()) {
             return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);
         }
-
-        // Asignar el formulario a los usuarios encontrados
+    
+        $form = Form::find($formId);
+    
         foreach ($users as $user) {
-            // Comprobamos si ya está asignado para evitar duplicados
             if (!$user->forms()->where('form_id', $formId)->exists()) {
                 $user->forms()->attach($formId, [
                     'course_id' => $courseId,
                     'division_id' => $divisionId,
                 ]);
+    
+                // Enviar correo al usuario
+                Mail::to($user->email)->send(new FormAssignedMail($form, $user));
             }
         }
-
-        return response()->json(['message' => 'Formulario asignado correctamente a los usuarios.'], 200);
+    
+        return response()->json(['message' => 'Formulario asignado y notificación enviada correctamente.'], 200);
     }
-
 
 
     public function updateFormStatus(Request $request, $formId)
