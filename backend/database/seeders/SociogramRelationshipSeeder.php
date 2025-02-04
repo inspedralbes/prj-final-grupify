@@ -11,33 +11,63 @@ class SociogramRelationshipSeeder extends Seeder
 {
     public function run()
     {
-        // Crear una instancia de Faker para generar datos falsos
         $faker = Faker::create();
 
-        // Obtener usuarios con role_id_id = 2
-        $users = User::where('role_id', 2)->get();
+        // Obtener combinaciones únicas de curso y división
+        $classGroups = DB::table('course_division_user')
+            ->select('course_id', 'division_id')
+            ->distinct()
+            ->get();
 
-        // Crear relaciones entre esos usuarios (por ejemplo, 10 registros por cada usuario)
-        foreach ($users as $user) {
-            for ($i = 0; $i < 7; $i++) {
-                // Elegir un peer_id aleatorio que no sea el mismo que user_id
-                $peer = $faker->randomElement($users->pluck('id')->toArray());
-                
-                // Asegurar que el peer_id no sea igual al user_id
-                while ($peer == $user->id) {
-                    $peer = $faker->randomElement($users->pluck('id')->toArray());
+        // Iterar sobre cada grupo de clase
+        foreach ($classGroups as $group) {
+            // Obtener estudiantes de la misma clase
+            $students = User::where('role_id', 2)
+                ->whereIn('id', function ($query) use ($group) {
+                    $query->select('user_id')
+                        ->from('course_division_user')
+                        ->where('course_id', $group->course_id)
+                        ->where('division_id', $group->division_id);
+                })
+                ->get();
+
+            // Generar relaciones para cada estudiante con sus compañeros de clase
+            foreach ($students as $user) {
+                $peers = $students->where('id', '!=', $user->id)->pluck('id')->toArray();
+
+                if (count($peers) >= 6) {
+                    // Seleccionar 3 compañeros únicos para la pregunta 15
+                    $positivePeers = $faker->randomElements($peers, 3);
+
+                    // Seleccionar 3 compañeros diferentes para la pregunta 16
+                    $remainingPeers = array_diff($peers, $positivePeers);
+                    $negativePeers = $faker->randomElements($remainingPeers, 3);
+
+                    // Insertar relaciones positivas para la pregunta 15
+                    foreach ($positivePeers as $peerId) {
+                        DB::table('sociogram_relationships')->insert([
+                            'user_id' => $user->id,
+                            'peer_id' => $peerId,
+                            'question_id' => 15,
+                            'relationship_type' => 'positive',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+
+                    // Insertar relaciones negativas para la pregunta 16
+                    foreach ($negativePeers as $peerId) {
+                        DB::table('sociogram_relationships')->insert([
+                            'user_id' => $user->id,
+                            'peer_id' => $peerId,
+                            'question_id' => 16,
+                            'relationship_type' => 'negative',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
                 }
-
-                // Crear una relación en la tabla sociogram_relationships para cada usuario
-                DB::table('sociogram_relationships')->insert([
-                    'user_id' => $user->id,  // ID del usuario que responde
-                    'peer_id' => $peer,  // ID de un compañero aleatorio con role_id_id = 2
-                    'question_id' => 15 + $i, // ID de la pregunta incrementando en cada vuelta del bucle
-                    'relationship_type' => $i < 3 ? 'negative' : 'positive', // Solo 3 relaciones negativas, las demás positivas
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
             }
         }
     }
-}
+} 
