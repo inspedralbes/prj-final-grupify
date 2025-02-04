@@ -69,30 +69,18 @@ push:
 	docker push ghcr.io/adriapedralbes/backend:${TAG}
 	docker push ghcr.io/adriapedralbes/nodejs:${TAG}
 
-pull:
-	docker pull ghcr.io/adriapedralbes/frontend:${TAG}
-	docker pull ghcr.io/adriapedralbes/backend:${TAG}
-	docker pull ghcr.io/adriapedralbes/nodejs:${TAG}
-
 allprod:
 	make rebuild
 	make push
-	make pull
-	docker service rm grupify_adminer grupify_db grupify_laravel-app grupify_node-app grupify_nuxt-app grupify_traefik grupify_redis grupify_queue-worker
-	docker stack deploy -c compose.yml grupify
 
 frontprod:
 	docker build -t ghcr.io/adriapedralbes/frontend:${TAG} -f ./frontend/Dockerfile.prod ./frontend
 	docker push ghcr.io/adriapedralbes/frontend:${TAG}
-	docker service rm grupify_nuxt-app
-	docker stack deploy -c compose.yml grupify
 
 backprod:
 	docker build -t ghcr.io/adriapedralbes/backend:${TAG} -f ./backend/Dockerfile.prod ./backend
 	docker push ghcr.io/adriapedralbes/backend:${TAG}
 	docker build -t ghcr.io/adriapedralbes/nodejs:${TAG} -f ./backend/node-app/Dockerfile.prod ./backend/node-app
-	docker service rm grupify_laravel-app grupify_node-app grupify_queue-worker
-	docker stack deploy -c compose.yml grupify
 
 
 
