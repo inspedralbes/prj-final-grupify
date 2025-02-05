@@ -68,8 +68,6 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-
-
     public function teacherComments()
     {
         return $this->hasMany(Comment::class, 'teacher_id');
@@ -90,4 +88,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(CourseDivisionUser::class, 'user_id');
     }
+    public function bitacoras()
+    {
+        return $this->belongsToMany(Bitacora::class, 'bitacora_user', 'user_id', 'bitacora_id')->withTimestamps();
+    }
+
 }

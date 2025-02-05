@@ -19,6 +19,7 @@ use App\Http\Controllers\SociogramRelationshipController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseDivisionUserController;
 use App\Http\Controllers\UserNotificationController;
+use App\Http\Controllers\BitacoraController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
@@ -184,3 +185,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/teacher-notifications', [UserNotificationController::class, 'teacherNotifications']);
     Route::delete('/notifications/{id}', [UserNotificationController::class, 'destroy']);
 });
+
+// Rutas para las bitácoras
+Route::prefix('bitacoras')->group(function () {
+    Route::get('/', [BitacoraController::class, 'index']); 
+    Route::post('/', [BitacoraController::class, 'store']);
+    Route::get('/{id}', [BitacoraController::class, 'show']);
+    Route::put('/{id}', [BitacoraController::class, 'update']);
+    Route::delete('/{id}', [BitacoraController::class, 'destroy']);
+});
+
+Route::get('groups/{groupId}/miembros', [BitacoraController::class, 'getMiembros']);
