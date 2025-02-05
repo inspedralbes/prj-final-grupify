@@ -129,41 +129,49 @@ class QuestionSeeder extends Seeder
         Question::create([
             'form_id' => $form4->id,
             'title' => 'Compleixo amb els terminis i responsabilitats assignades sense necessitat de recordatoris.',
+            'type' => 'rating',
         ]);
 
         Question::create([
             'form_id' => $form4->id,
             'title' => 'Em comunico de manera efectiva amb els companys de l’equip i contribueixo a l’assoliment dels objectius grupals.',
+            'type' => 'rating',
         ]);
 
         Question::create([
             'form_id' => $form4->id,
             'title' => 'Organitzo i prioritzo bé les meves tasques per evitar l’estrès de l’última hora.',
+            'type' => 'rating',
         ]);
 
         Question::create([
             'form_id' => $form4->id,
             'title' => 'Escolto activament als altres i m’asseguro d’expressar les meves idees de manera clara i respectuosa.',
+            'type' => 'rating',
         ]);
 
         Question::create([
             'form_id' => $form4->id,
             'title' => 'M’adapto fàcilment a canvis inesperats en la feina o en els projectes.',
+            'type' => 'rating',
         ]);
 
         Question::create([
             'form_id' => $form4->id,
             'title' => 'Assumeixo la responsabilitat dels projectes i guio els altres quan és necessari.',
+            'type' => 'rating',
         ]);
 
         Question::create([
             'form_id' => $form4->id,
             'title' => 'Proporciono solucions creatives o idees innovadores quan m’enfronto a un problema.',
+            'type' => 'rating',
         ]);
 
         Question::create([
             'form_id' => $form4->id,
             'title' => 'Tinc la iniciativa i començo tasques o projectes sense esperar que em donin instruccions.',
+            'type' => 'rating',
         ]); 
         
     }
