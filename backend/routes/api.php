@@ -19,6 +19,7 @@ use App\Http\Controllers\SociogramRelationshipController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseDivisionUserController;
 use App\Http\Controllers\UserNotificationController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\BitacoraController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
@@ -184,6 +185,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications', [UserNotificationController::class, 'store']);
     Route::get('/teacher-notifications', [UserNotificationController::class, 'teacherNotifications']);
     Route::delete('/notifications/{id}', [UserNotificationController::class, 'destroy']);
+
+    // Rutas para las suscripciones push
+    Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store']);
+    Route::delete('/push-subscriptions', [PushSubscriptionController::class, 'destroy']);
 });
 
 // Rutas para las bitácoras
