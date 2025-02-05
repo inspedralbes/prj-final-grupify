@@ -24,4 +24,8 @@ class Bitacora extends Model
     {
         return $this->belongsToMany(User::class, 'bitacora_user', 'bitacora_id', 'user_id')->withTimestamps();
     }
+    public function notes()
+    {
+        return $this->hasMany(BitacoraNote::class);
+    }
 }
