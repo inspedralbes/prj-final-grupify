@@ -36,7 +36,7 @@ function formatDate(dateStr) {
 
 async function fetchNotifications() {
   try {
-    const data = await $fetch('https://api.grupify.cat/api/notifications', {
+    const data = await $fetch('http://localhost:8000/api/notifications', {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
         Accept: 'application/json'
