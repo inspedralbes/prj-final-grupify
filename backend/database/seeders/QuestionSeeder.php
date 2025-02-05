@@ -14,8 +14,10 @@ class QuestionSeeder extends Seeder
         $form1 = Form::find(1); // Formulario con ID 1
         $form2 = Form::find(2); // Formulario con ID 2
         $form3 = Form::find(3); // Formulario con ID 3
+        $form4 = Form::find(4); // Formulario con ID 4
 
-        if (!$form1 || !$form2 || !$form3) {
+
+        if (!$form1 || !$form2 || !$form3 || !$form4) {
             throw new \Exception('Uno o más formularios no se encontraron en la base de datos.');
         }
 
@@ -122,5 +124,47 @@ class QuestionSeeder extends Seeder
             'form_id' => $form3->id,
             'title' => '¿Con quién no has trabajado anteriormente?',
         ]);
+
+    // Inserta preguntas asociadas al formulario de autoevaluación (form_id = 4)
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'Compleixo amb els terminis i responsabilitats assignades sense necessitat de recordatoris.',
+        ]);
+
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'Em comunico de manera efectiva amb els companys de l’equip i contribueixo a l’assoliment dels objectius grupals.',
+        ]);
+
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'Organitzo i prioritzo bé les meves tasques per evitar l’estrès de l’última hora.',
+        ]);
+
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'Escolto activament als altres i m’asseguro d’expressar les meves idees de manera clara i respectuosa.',
+        ]);
+
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'M’adapto fàcilment a canvis inesperats en la feina o en els projectes.',
+        ]);
+
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'Assumeixo la responsabilitat dels projectes i guio els altres quan és necessari.',
+        ]);
+
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'Proporciono solucions creatives o idees innovadores quan m’enfronto a un problema.',
+        ]);
+
+        Question::create([
+            'form_id' => $form4->id,
+            'title' => 'Tinc la iniciativa i començo tasques o projectes sense esperar que em donin instruccions.',
+        ]); 
+        
     }
 }
