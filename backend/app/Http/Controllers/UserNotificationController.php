@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\UserNotification;
 use App\Jobs\ProcessScheduledNotification;
-use App\Jobs\ProcessPushNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +16,7 @@ class UserNotificationController extends Controller
         $notifications = UserNotification::where('status', 'sent')
             ->where(function ($query) {
                 $query->whereNull('scheduled_at')
-                      ->orWhere('scheduled_at', '<=', now());
+                    ->orWhere('scheduled_at', '<=', now());
             })
             ->orderBy('created_at', 'desc')
             ->get();
@@ -56,9 +55,6 @@ class UserNotificationController extends Controller
         if ($request->scheduled_at) {
             ProcessScheduledNotification::dispatch($notification)
                 ->delay($notification->scheduled_at);
-        } else {
-            // Enviar notificación push de inmediato a los suscritos
-            ProcessPushNotification::dispatch($notification);
         }
 
         return response()->json([
