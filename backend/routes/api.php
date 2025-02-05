@@ -194,5 +194,3 @@ Route::prefix('bitacoras')->group(function () {
     Route::put('/{id}', [BitacoraController::class, 'update']);
     Route::delete('/{id}', [BitacoraController::class, 'destroy']);
 });
-
-Route::get('groups/{groupId}/miembros', [BitacoraController::class, 'getMiembros']);

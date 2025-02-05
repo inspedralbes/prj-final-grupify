@@ -106,16 +106,4 @@ class BitacoraController extends Controller
         return redirect()->route('bitacoras.index')->with('success', 'Bitácora eliminada exitosamente.');
     }
 
-    // En BitacoraController.php
-    public function getMiembros($groupId)
-{
-    $group = Group::with('users')->find($groupId);
-
-    if ($group) {
-        return response()->json($group->users);
-    }
-
-    return response()->json(['error' => 'Grupo no encontrado'], 404);
-}
-
 }
