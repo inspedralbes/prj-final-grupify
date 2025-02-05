@@ -34,5 +34,13 @@ class FormSeeder extends Seeder
                 'is_global' => true,
             ]);
         }
+
+        if (!Form::where('title', 'Formulari d’Autoavaluació')->exists()) {
+            Form::create([
+                'title' => 'Formulari d’Autoavaluació',
+                'description' => 'Avaluació personal del rendiment acadèmic.',
+                'is_global' => true,
+            ]);
+        }
     }
 }
