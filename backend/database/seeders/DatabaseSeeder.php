@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             CommentsGroupsSeeder::class,
             FormUserSeeder::class,
             CourseDivisionSeeder::class,
+            BitacoraSeeder::class,
         ]);
     }
 }
