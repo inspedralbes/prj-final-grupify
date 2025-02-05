@@ -185,8 +185,7 @@ class SociogramRelationshipController extends Controller
     {
         $relationships = SociogramRelationship::with(['user', 'peer', 'question'])
             ->get()
-            ->makeHidden(['user', 'peer', 'question']) // Ocultar las relaciones
-            ->groupBy('relationship_type');
+            ->makeHidden(['user', 'peer', 'question']);
 
         return response()->json($relationships);
     }

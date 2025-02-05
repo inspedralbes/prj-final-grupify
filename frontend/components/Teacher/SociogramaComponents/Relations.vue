@@ -10,15 +10,27 @@ const props = defineProps({
     required: true,
   },
 });
-
+console.log("esto recibo", props.relationships);
 const userPositions = ref({});
 
 // Obtener lista de usuarios únicos
 const uniqueUsers = computed(() => {
   const usersMap = new Map();
   props.relationships.forEach(rel => {
-    usersMap.set(rel.user.id, rel.user);
-    usersMap.set(rel.peer.id, rel.peer);
+    if (rel.user_id && rel.user_name && rel.user_last_name) {
+      usersMap.set(rel.user_id, {
+        id: rel.user_id,
+        name: rel.user_name,
+        last_name: rel.user_last_name,
+      });
+    }
+    if (rel.peer_id && rel.peer_name && rel.peer_last_name) {
+      usersMap.set(rel.peer_id, {
+        id: rel.peer_id,
+        name: rel.peer_name,
+        last_name: rel.peer_last_name,
+      });
+    }
   });
   return Array.from(usersMap.values());
 });
@@ -51,88 +63,69 @@ const getUserPositionStyle = (userId, index, total) => {
 </script>
 
 <template>
-  
-    <div class="max-w-6xl mx-auto px-4 py-8">
-      <div class="bg-[#F9FAFB] rounded-xl shadow-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">
-          Relacions a Classe
-        </h1>
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="bg-[#F9FAFB] rounded-xl shadow-lg p-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">
+        Relacions a Classe
+      </h1>
 
+      <div
+        class="relative w-full bg-[#F9FAFB] rounded-lg p-4"
+        :style="{
+          height: `${height}px`,
+          width: `${width}px`,
+          margin: '0 auto',
+        }"
+      >
+        <!-- Nodes -->
         <div
-          class="relative w-full bg-[#F9FAFB] rounded-lg p-4"
-          :style="{
-            height: `${height}px`,
-            width: `${width}px`,
-            margin: '0 auto',
-          }"
+          v-for="(user, index) in uniqueUsers"
+          :key="user.id"
+          class="absolute flex items-center justify-center bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+          :style="[
+            getUserPositionStyle(user.id, index, uniqueUsers.length),
+            { width: '70px', height: '70px', zIndex: 1 },
+          ]"
         >
-          <!-- Nodes -->
-          <div
-            v-for="(user, index) in uniqueUsers"
-            :key="user.id"
-            class="absolute flex items-center justify-center bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-            :style="[
-              getUserPositionStyle(user.id, index, uniqueUsers.length),
-              { width: '70px', height: '70px', zIndex: 1 },
-            ]"
-          >
-            <span class="text-sm font-medium leading-tight p-1">
-              {{ user.name }} {{ user.last_name }}
-            </span>
-          </div>
-
-          <div
-            v-for="(relationship, index) in relationships"
-            :key="`peer-${relationship.id}`"
-            class="absolute flex items-center justify-center bg-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-            :style="[
-              getUserPositionStyle(
-                relationship.peer.id,
-                index,
-                relationships.length
-              ),
-              { width: '70px', height: '70px', zIndex: 1 },
-            ]"
-          >
-            <span class="text-sm font-medium leading-tight p-1">
-              {{ relationship.peer.name }} {{ relationship.peer.last_name }}
-            </span>
-          </div>
-
-          <!-- Relationship lines -->
-          <svg class="absolute top-0 left-0 w-full h-full" style="z-index: 0">
-            <defs>
-              <marker
-                id="arrowhead"
-                markerWidth="10"
-                markerHeight="10"
-                refX="5"
-                refY="5"
-                orient="auto"
-              >
-                <polygon points="0 0, 10 5, 0 10" fill="currentColor" />
-              </marker>
-            </defs>
-            <line
-              v-for="relationship in relationships"
-              :key="relationship.id"
-              :x1="getUserPosition(relationship.user.id).x"
-              :y1="getUserPosition(relationship.user.id).y"
-              :x2="getUserPosition(relationship.peer.id).x"
-              :y2="getUserPosition(relationship.peer.id).y"
-              :stroke="
-                relationship.relationship_type === 'positive'
-                  ? '#10B981'
-                  : '#EF4444'
-              "
-              stroke-width="2"
-              marker-end="url(#arrowhead)"
-              class="relationship-line"
-            />
-          </svg>
+          <span class="text-sm font-medium leading-tight p-1">
+            {{ user.name }} {{ user.last_name }}
+          </span>
         </div>
+
+        <!-- Relationship lines -->
+        <svg class="absolute top-0 left-0 w-full h-full" style="z-index: 0">
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="10"
+              markerHeight="10"
+              refX="5"
+              refY="5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 5, 0 10" fill="currentColor" />
+            </marker>
+          </defs>
+          <line
+            v-for="relationship in relationships"
+            :key="relationship.id"
+            :x1="getUserPosition(relationship.user_id).x"
+            :y1="getUserPosition(relationship.user_id).y"
+            :x2="getUserPosition(relationship.peer_id).x"
+            :y2="getUserPosition(relationship.peer_id).y"
+            :stroke="
+              relationship.relationship_type === 'positive'
+                ? '#10B981'
+                : '#EF4444'
+            "
+            stroke-width="2"
+            marker-end="url(#arrowhead)"
+            class="relationship-line"
+          />
+        </svg>
       </div>
     </div>
+  </div>
 </template>
 
 <style scoped>

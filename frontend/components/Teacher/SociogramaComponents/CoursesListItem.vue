@@ -25,7 +25,7 @@ const viewProfile = (course) => {
 
 
 const checkFormCompletion = async (course) => {
-  console.log("Llamando a checkFormCompletion con el curso:", course);
+  // console.log("Llamando a checkFormCompletion con el curso:", course);
 
   if (!course) {
     console.error("No se ha pasado un curso válido");
@@ -37,14 +37,14 @@ const checkFormCompletion = async (course) => {
       `http://localhost:8000/api/check-form-completion/${course.courseId}/${course.division.id}/3`
     );
     
-    console.log("Respuesta de la API:", response);
+    // console.log("Respuesta de la API:", response);
 
     if (!response.ok) {
       throw new Error('Error al obtener los datos');
     }
 
     const data = await response.json();
-    console.log("Datos de la respuesta:", data);
+    // console.log("Datos de la respuesta:", data);
 
     // Si all_answered es true, asignamos sociograma_available a true
     if (data.all_answered) {
