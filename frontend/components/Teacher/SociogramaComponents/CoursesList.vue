@@ -20,7 +20,6 @@ const props = defineProps({
           <tr class="border-b">
             <th class="text-left py-3">Curs</th>
             <th class="text-left py-3">Divisió</th>
-            <th class="text-left py-3">Estat</th>
             <th class="text-left py-3">Resultats</th>
           </tr>
         </thead>
