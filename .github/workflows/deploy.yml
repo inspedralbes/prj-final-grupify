@@ -53,10 +53,21 @@ jobs:
           docker push ghcr.io/adriapedralbes/nodejs:latest
 
   deploy:
-    name: Desplegar a Producción
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Transferir compose.yml al servidor
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_KEY }}
+          source: "compose.yml"
+          target: "/home/adria/compose.yml"
+
       - name: Conexión SSH y despliegue del stack
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -65,8 +76,10 @@ jobs:
           key: ${{ secrets.PRODUCTION_KEY }}
           script: |
             docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" -p "${{ secrets.GHCR_TOKEN }}"
+            
             docker pull ghcr.io/adriapedralbes/frontend:latest
             docker pull ghcr.io/adriapedralbes/backend:latest
             docker pull ghcr.io/adriapedralbes/nodejs:latest
-            # Despliega o actualiza el stack
-            docker stack deploy -c /home/adria/projectefinal/prj-final-grupify/compose.yml grupify-ghactions --with-registry-auth
+            
+            # Desplegar el stack usando el archivo transferido
+            docker stack deploy -c /home/adria/compose.yml grupify-ghactions --with-registry-auth
