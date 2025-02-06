@@ -37,8 +37,7 @@ class BitacoraNotesSeeder extends Seeder
                             'user_id' => $user->id,
                             'title' => "Nota $i del usuario {$user->name}",
                             'content' => "Esta es la nota número $i creada por {$user->name} para el grupo {$group->name}. " .
-                                       "Contenido de ejemplo generado para propósitos de prueba. " .
-                                       "Fecha de creación: " . now()->toDateTimeString(),
+                                        "Contenido de ejemplo generado para propósitos de prueba. " ,
                         ]);
                     }
                 }
