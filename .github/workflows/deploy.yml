@@ -67,7 +67,7 @@ jobs:
           key: ${{ secrets.PRODUCTION_KEY }}
           source: |
             compose.yml
-            docker-secrets/
+            ./docker-secrets/
           target: "/root/deploy/"
 
       - name: Conexión SSH y despliegue del stack
