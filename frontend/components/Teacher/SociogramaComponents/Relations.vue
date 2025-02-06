@@ -8,9 +8,11 @@ const props = defineProps({
   relationships: {
     type: Array,
     required: true,
+    default: () => [],
   },
 });
-console.log("esto recibo", props.relationships);
+
+// console.log("esto recibo en relations", props.relationships);
 const userPositions = ref({});
 
 // Obtener lista de usuarios únicos
@@ -64,13 +66,11 @@ const getUserPositionStyle = (userId, index, total) => {
 
 <template>
   <div class="max-w-6xl mx-auto px-4 py-8">
-    <div class="bg-[#F9FAFB] rounded-xl shadow-lg p-6">
-      <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">
-        Relacions a Classe
-      </h1>
-
+    <div
+      class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-8 border border-gray-100"
+    >
       <div
-        class="relative w-full bg-[#F9FAFB] rounded-lg p-4"
+        class="relative w-full bg-white rounded-xl p-6 border border-gray-100"
         :style="{
           height: `${height}px`,
           width: `${width}px`,
@@ -81,13 +81,18 @@ const getUserPositionStyle = (userId, index, total) => {
         <div
           v-for="(user, index) in uniqueUsers"
           :key="user.id"
-          class="absolute flex items-center justify-center bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+          class="absolute flex items-center justify-center text-white rounded-full shadow-md transition-all duration-300 cursor-pointer group"
           :style="[
             getUserPositionStyle(user.id, index, uniqueUsers.length),
-            { width: '70px', height: '70px', zIndex: 1 },
+            { width: '80px', height: '80px', zIndex: 1 },
           ]"
         >
-          <span class="text-sm font-medium leading-tight p-1">
+          <div
+            class="absolute w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-blue-700 group-hover:from-blue-600 group-hover:to-blue-800 transition-all duration-300 opacity-90 group-hover:opacity-100 group-hover:scale-110"
+          ></div>
+          <span
+            class="relative text-sm font-medium leading-tight p-2 text-center"
+          >
             {{ user.name }} {{ user.last_name }}
           </span>
         </div>
@@ -96,14 +101,24 @@ const getUserPositionStyle = (userId, index, total) => {
         <svg class="absolute top-0 left-0 w-full h-full" style="z-index: 0">
           <defs>
             <marker
-              id="arrowhead"
+              id="arrowhead-positive"
               markerWidth="10"
               markerHeight="10"
-              refX="5"
+              refX="8"
               refY="5"
               orient="auto"
             >
-              <polygon points="0 0, 10 5, 0 10" fill="currentColor" />
+              <polygon points="0 0, 10 5, 0 10" class="fill-emerald-500" />
+            </marker>
+            <marker
+              id="arrowhead-negative"
+              markerWidth="10"
+              markerHeight="10"
+              refX="8"
+              refY="5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 5, 0 10" class="fill-rose-500" />
             </marker>
           </defs>
           <line
@@ -118,9 +133,19 @@ const getUserPositionStyle = (userId, index, total) => {
                 ? '#10B981'
                 : '#EF4444'
             "
-            stroke-width="2"
-            marker-end="url(#arrowhead)"
-            class="relationship-line"
+            :marker-end="
+              relationship.relationship_type === 'positive'
+                ? 'url(#arrowhead-positive)'
+                : 'url(#arrowhead-negative)'
+            "
+            stroke-width="2.5"
+            class="relationship-line transition-all duration-300 hover:stroke-[3px]"
+            :class="{
+              'opacity-80 hover:opacity-100': true,
+              'stroke-emerald-500':
+                relationship.relationship_type === 'positive',
+              'stroke-rose-500': relationship.relationship_type === 'negative',
+            }"
           />
         </svg>
       </div>
