@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Conexión SSH y despliegue del stack
-        uses: appleboy/ssh-action@v0.11.0
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USER }}
@@ -69,4 +69,4 @@ jobs:
             docker pull ghcr.io/adriapedralbes/backend:latest
             docker pull ghcr.io/adriapedralbes/nodejs:latest
             # Despliega o actualiza el stack
-            docker stack deploy -c compose.yml grupify-ghactions
+            docker stack deploy -c compose.yml grupify-ghactions --with-registry-auth
