@@ -197,7 +197,7 @@ public function getAverageRating($questionId)
             'responses' => 'required|array',
             'responses.*.question_id' => 'required|integer|exists:questions,id',
             'responses.*.answer' => 'required',
-            'responses.*.answer_type' => 'required|in:string,number,boolean,array,object,multiple,checkbox,,rating',
+            'responses.*.answer_type' => 'required|in:string,number,boolean,array,object,multiple,checkbox,rating',
         ]);
 
         if ($validator->fails()) {
@@ -212,13 +212,14 @@ public function getAverageRating($questionId)
             Log::info('Guardando respuesta:', $response);
 
             Answer::create([
-                'user_id' => $userId,
-                'form_id' => $formId,
-                'question_id' => $response['question_id'],
-                'answer' => $response['answer_type'] === 'rating' ? null : $this->formatAnswer($response), // Dejar `answer` en null si es rating
-                'rating' => $response['answer_type'] === 'rating' ? (int) $response['answer'] : null, // Guardar rating en el campo `rating`
-                'answer_type' => $response['answer_type'],
+                'user_id' => $userId,  // Se usa el userId que vino en la solicitud
+                'form_id' => $formId,  // ID del formulario que vino en la URL
+                'question_id' => $response['question_id'],  // ID de la pregunta
+                'answer' => $response['answer_type'] === 'rating' ? '' : $this->formatAnswer($response),  // Asignar vacío o el valor formateado para 'answer'
+                'rating' => $response['answer_type'] === 'rating' ? (int) $response['answer'] : null,  // Guardar el valor de rating si es una respuesta 'rating'
+                'answer_type' => $response['answer_type'],  // Guardamos el tipo de respuesta
             ]);
+            
             
         }
 

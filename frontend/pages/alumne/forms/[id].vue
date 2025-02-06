@@ -87,7 +87,7 @@ async function submitResponses() {
       };
     })
     .filter(response => response !== null);
-
+    console.log('Datos enviados al backend:', formattedResponses);
   try {
     const response = await fetch(
       `http://localhost:8000/api/forms/${formId}/submit-responses`,
