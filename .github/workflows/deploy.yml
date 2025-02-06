@@ -59,23 +59,29 @@ jobs:
       - name: Checkout del código
         uses: actions/checkout@v3
 
-      - name: Configurar Docker Context para servidor remoto
-        run: |
-          docker context create production \
-            --docker "host=ssh://${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }}" \
-            --description "Contexto remoto para producción"
-          docker context use production
+      - name: Transferir archivos al servidor
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_KEY }}
+          source: |
+            compose.yml
+            docker-secrets/
+          target: "/root/deploy/"
 
-      - name: Desplegar el stack usando Docker Context
-        env:
-          DOCKER_CONTEXT: production
-        run: |
-          docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" -p "${{ secrets.GHCR_TOKEN }}"
-          
-          # Actualizar imágenes
-          docker pull ghcr.io/adriapedralbes/frontend:latest
-          docker pull ghcr.io/adriapedralbes/backend:latest
-          docker pull ghcr.io/adriapedralbes/nodejs:latest
-          
-          # Desplegar el stack
-          docker stack deploy -c compose.yml grupify-ghactions --with-registry-auth
+      - name: Conexión SSH y despliegue del stack
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_KEY }}
+          script: |
+            docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" -p "${{ secrets.GHCR_TOKEN }}"
+            
+            docker pull ghcr.io/adriapedralbes/frontend:latest
+            docker pull ghcr.io/adriapedralbes/backend:latest
+            docker pull ghcr.io/adriapedralbes/nodejs:latest
+            
+            # Desplegar el stack usando el archivo transferido
+            docker stack deploy -c /root/deploy/compose.yml grupify-ghactions --with-registry-auth
