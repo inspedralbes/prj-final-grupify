@@ -66,11 +66,11 @@ services:
       REDIS_PASSWORD: null
       REDIS_PORT_FILE: /run/secrets/redis_port
     secrets:
-      - db_database
-      - mysql_user
-      - mysql_password
-      - redis_host
-      - redis_port
+      - grupify_db_database
+      - grupify_mysql_user
+      - grupify_mysql_password
+      - grupify_redis_host
+      - grupify_redis_port
     networks:
       - app-network
 
@@ -126,10 +126,10 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
     secrets:
-      - db_database
-      - mysql_user
-      - mysql_password
-      - mysql_root_password
+      - grupify_db_database
+      - grupify_mysql_user
+      - grupify_mysql_password
+      - grupify_mysql_root_password
     volumes:
       - db_data:/var/lib/mysql
     deploy:
