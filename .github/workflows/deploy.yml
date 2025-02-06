@@ -66,7 +66,7 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_KEY }}
           source: "compose.yml"
-          target: "/home/adria/compose.yml"
+          target: "/root/compose.yml"
 
       - name: Conexión SSH y despliegue del stack
         uses: appleboy/ssh-action@v0.1.7
@@ -82,4 +82,4 @@ jobs:
             docker pull ghcr.io/adriapedralbes/nodejs:latest
             
             # Desplegar el stack usando el archivo transferido
-            docker stack deploy -c /home/adria/compose.yml grupify-ghactions --with-registry-auth
+            docker stack deploy -c /root/compose.yml grupify-ghactions --with-registry-auth
