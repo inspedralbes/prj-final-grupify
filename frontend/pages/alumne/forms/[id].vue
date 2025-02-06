@@ -2,7 +2,7 @@
 import Toast from "@/components/common/Toast.vue";
 
 const route = useRoute();
-const formId = route.params.id; // Obtenemos el ID del formulario desde la ruta
+const formId = route.params.id; // Obtener el ID del formulario desde la ruta
 const questions = ref([]);
 const responses = ref({}); // Objeto para almacenar las respuestas del usuario
 const authStore = useAuthStore();
@@ -27,7 +27,7 @@ onMounted(() => {
   fetchFormWithQuestions();
 });
 
-// Función para hacer la solicitud Fetch al backend
+// Función para obtener preguntas desde el backend
 async function fetchFormWithQuestions() {
   try {
     const response = await fetch(
@@ -39,12 +39,17 @@ async function fetchFormWithQuestions() {
     }
 
     const formData = await response.json();
+    
+    console.log("Datos recibidos de la API:", formData); // Debug
+
+    questions.value = []; // Limpiar preguntas antes de asignarlas
     questions.value = formData;
 
-    // Inicializar las respuestas para cada pregunta con un objeto que contenga "value" y "type"
+    // Inicializar respuestas
+    responses.value = {};
     questions.value.forEach(question => {
       responses.value[question.id] = {
-        value: Array.isArray(question.options) ? [] : "", // Para 'checkbox' y 'multiple', lo inicializamos como array vacío
+        value: question.type === "checkbox" ? [] : "", // Para checkboxes, array vacío
         type: question.type,
       };
     });
@@ -54,37 +59,34 @@ async function fetchFormWithQuestions() {
   }
 }
 
-// Función para manejar el envío de respuestas
+// Función para enviar respuestas al backend
 async function submitResponses() {
   const formattedResponses = Object.keys(responses.value)
     .map(questionId => {
       const response = responses.value[questionId];
 
-      // Convertir questionId a número si es una cadena
       const questionIdAsNumber = parseInt(questionId, 10);
 
-      // Verificar que el valor de la respuesta no esté vacío para campos requeridos
       if (
         response.value === undefined ||
         response.value === null ||
         (Array.isArray(response.value) && response.value.length === 0)
       ) {
-        return null; // Devolver null para esta respuesta si no se completó
+        return null;
       }
 
-      // Verificar que el tipo de respuesta sea correcto
       let answer_type = response.type;
       if (answer_type === "text") {
         answer_type = "string";
       }
 
       return {
-        question_id: questionIdAsNumber, // Asegúrate de enviar un número
+        question_id: questionIdAsNumber,
         answer: response.value,
         answer_type,
       };
     })
-    .filter(response => response !== null); // Filtrar las respuestas vacías
+    .filter(response => response !== null);
 
   try {
     const response = await fetch(
@@ -113,6 +115,18 @@ async function submitResponses() {
     triggerToast("Hubo un problema al enviar las respuestas.", "error");
   }
 }
+
+// Función para obtener etiquetas académicas en rating
+function getRatingLabel(n) {
+  const labels = {
+    1: "Deficiente",
+    2: "Insuficiente",
+    3: "Regular",
+    4: "Notable",
+    5: "Excelente"
+  };
+  return labels[n] || "";
+}
 </script>
 
 <template>
@@ -129,7 +143,7 @@ async function submitResponses() {
         <h3 class="text-lg font-semibold">{{ question.title }}</h3>
         <p class="text-sm text-gray-500">{{ question.placeholder }}</p>
 
-        <!-- Manejo de diferentes tipos de preguntas -->
+        <!-- Pregunta tipo "text" -->
         <div v-if="question.type === 'text'">
           <input
             v-model="responses[question.id].value"
@@ -139,6 +153,7 @@ async function submitResponses() {
           />
         </div>
 
+        <!-- Pregunta tipo "multiple" -->
         <div v-if="question.type === 'multiple'">
           <div v-for="option in question.options" :key="option.id" class="mt-2">
             <label class="flex items-center">
@@ -154,6 +169,7 @@ async function submitResponses() {
           </div>
         </div>
 
+        <!-- Pregunta tipo "checkbox" -->
         <div v-if="question.type === 'checkbox'">
           <div v-for="option in question.options" :key="option.id" class="mt-2">
             <label class="flex items-center">
@@ -169,6 +185,7 @@ async function submitResponses() {
           </div>
         </div>
 
+        <!-- Pregunta tipo "number" -->
         <div v-if="question.type === 'number'">
           <input
             v-model="responses[question.id].value"
@@ -177,23 +194,36 @@ async function submitResponses() {
             :placeholder="question.placeholder"
           />
         </div>
+
+        <!-- Pregunta tipo "rating" con números del 1 al 5 -->
+        <div v-if="question.type === 'rating'">
+          <div class="grid grid-cols-5 gap-2 mt-2 text-sm text-center">
+            <label
+              v-for="n in 5"
+              :key="n"
+              class="cursor-pointer border rounded-lg px-3 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200"
+              :class="{ 'bg-blue-500 text-white': responses[question.id].value === n }"
+            >
+              <input
+                type="radio"
+                v-model="responses[question.id].value"
+                :value="n"
+                :name="'question-' + question.id"
+                class="hidden"
+              />
+              <div class="font-semibold">{{ n }}</div>
+              <div class="text-xs text-gray-500">{{ getRatingLabel(n) }}</div>
+            </label>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <div>
-      <button
-        class="mt-4 bg-primary text-white px-4 py-2 rounded"
-        @click="submitResponses"
-      >
-        Enviar respuestas
-      </button>
-    </div>
+    <button class="mt-4 bg-primary text-white px-4 py-2 rounded" @click="submitResponses">
+      Enviar respuestas
+    </button>
 
-    <!-- Toast -->
     <Toast v-if="showToast" :message="toastMessage" :type="toastType" />
   </div>
 </template>
-
-<style scoped>
-/* Estilos adicionales si es necesario */
-</style>
