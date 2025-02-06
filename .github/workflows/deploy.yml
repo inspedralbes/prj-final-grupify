@@ -69,4 +69,4 @@ jobs:
             docker pull ghcr.io/adriapedralbes/backend:latest
             docker pull ghcr.io/adriapedralbes/nodejs:latest
             # Despliega o actualiza el stack
-            docker stack deploy -c compose.yml grupify-ghactions --with-registry-auth
+            docker stack deploy -c /home/adria/projectefinal/prj-final-grupify/compose.yml grupify-ghactions --with-registry-auth
