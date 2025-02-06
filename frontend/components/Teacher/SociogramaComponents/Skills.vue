@@ -22,18 +22,6 @@ const getSkillColor = value => {
 
 <template>
   <div class="space-y-8">
-    <!-- Header -->
-    <div class="text-center mb-8">
-      <h1
-        class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ADEC] to-[#0080C0]"
-      >
-        Competències dels Estudiants
-      </h1>
-      <div
-        class="h-1 w-32 bg-gradient-to-r from-[#00ADEC] to-[#0080C0] mx-auto rounded-full mt-2"
-      ></div>
-    </div>
-
     <!-- Skills Content -->
     <div
       v-if="props.filteredSkills.length > 0"

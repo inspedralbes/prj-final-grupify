@@ -69,6 +69,15 @@ const filteredSkills = computed(() => {
   }
   return [];
 });
+const filteredRoles = computed(() => {
+  if (course.value) {
+    return relationshipsStore.getRolesByCourseAndDivision(
+      course.value.courseName,
+      course.value.division.name
+    ).value;
+  }
+  return [];
+});
 const toggleComponent = component => {
   activeComponent.value = activeComponent.value === component ? "" : component;
 };
@@ -255,21 +264,14 @@ const toggleComponent = component => {
 
         <!-- Enhanced Component Display -->
         <div class="mt-8">
-          <TransitionGroup name="fade" >
+          <TransitionGroup name="fade">
             <div
               v-if="activeComponent === 'relations'"
               key="relations"
               class="animate-fade-in"
             >
               <div v-if="activeComponent === 'relations'">
-                <p
-                  v-if="
-                    !filteredRelationships || filteredRelationships.length === 0
-                  "
-                >
-                  No hi ha gràfic de relacions disponible
-                </p>
-                <Relations v-else :relationships="filteredRelationships" />
+                <Relations :relationships="filteredRelationships" />
               </div>
             </div>
             <div
@@ -277,7 +279,7 @@ const toggleComponent = component => {
               key="roles"
               class="animate-fade-in"
             >
-              <Roles />
+              <Roles :filteredRoles="filteredRoles" />
             </div>
             <div
               v-else-if="activeComponent === 'skills'"

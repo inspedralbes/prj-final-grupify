@@ -69,6 +69,7 @@ const getUserPositionStyle = (userId, index, total) => {
     <div
       class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-8 border border-gray-100"
     >
+      <!-- Main container -->
       <div
         class="relative w-full bg-white rounded-xl p-6 border border-gray-100"
         :style="{
@@ -77,22 +78,38 @@ const getUserPositionStyle = (userId, index, total) => {
           margin: '0 auto',
         }"
       >
+        <!-- Empty State when no users -->
+        <div v-if="uniqueUsers.length === 0" class="bg-white rounded-3xl shadow-xl p-12 text-center transform transition-all duration-500 hover:shadow-2xl backdrop-blur-sm bg-opacity-90">
+          <svg
+            class="w-20 h-20 mx-auto text-gray-400 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p class="text-xl text-gray-600 font-medium">
+            No hi ha dades de relacions disponibles
+          </p>
+        </div>
+
         <!-- Nodes -->
         <div
+          v-if="uniqueUsers.length > 0"
           v-for="(user, index) in uniqueUsers"
           :key="user.id"
           class="absolute flex items-center justify-center text-white rounded-full shadow-md transition-all duration-300 cursor-pointer group"
-          :style="[
-            getUserPositionStyle(user.id, index, uniqueUsers.length),
-            { width: '80px', height: '80px', zIndex: 1 },
-          ]"
+          :style="[getUserPositionStyle(user.id, index, uniqueUsers.length), { width: '80px', height: '80px', zIndex: 1 }]"
         >
           <div
             class="absolute w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-blue-700 group-hover:from-blue-600 group-hover:to-blue-800 transition-all duration-300 opacity-90 group-hover:opacity-100 group-hover:scale-110"
           ></div>
-          <span
-            class="relative text-sm font-medium leading-tight p-2 text-center"
-          >
+          <span class="relative text-sm font-medium leading-tight p-2 text-center">
             {{ user.name }} {{ user.last_name }}
           </span>
         </div>
@@ -152,6 +169,7 @@ const getUserPositionStyle = (userId, index, total) => {
     </div>
   </div>
 </template>
+
 
 <style scoped>
 .relationship-line {
