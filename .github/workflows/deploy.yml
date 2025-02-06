@@ -1,0 +1,72 @@
+name: Despliegue a Producción
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    name: Construir y Publicar Imágenes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Build de la imagen del frontend
+        run: |
+          docker build -t ghcr.io/adriapedralbes/frontend:${{ github.sha }} -f ./frontend/Dockerfile.prod ./frontend
+      
+      - name: Build de la imagen del backend
+        run: |
+          docker build -t ghcr.io/adriapedralbes/backend:${{ github.sha }} -f ./backend/Dockerfile.prod ./backend
+
+      - name: Build de la imagen de NodeJS
+        run: |
+          docker build -t ghcr.io/adriapedralbes/nodejs:${{ github.sha }} -f ./backend/node-app/Dockerfile.prod ./backend/node-app
+
+      - name: Iniciar sesión en GHCR
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+      - name: Push imagen del frontend
+        run: docker push ghcr.io/adriapedralbes/frontend:${{ github.sha }}
+
+      - name: Push imagen del backend
+        run: docker push ghcr.io/adriapedralbes/backend:${{ github.sha }}
+
+      - name: Push imagen de NodeJS
+        run: docker push ghcr.io/adriapedralbes/nodejs:${{ github.sha }}
+
+      - name: Tag y Push "latest" para frontend
+        run: |
+          docker tag ghcr.io/adriapedralbes/frontend:${{ github.sha }} ghcr.io/adriapedralbes/frontend:latest
+          docker push ghcr.io/adriapedralbes/frontend:latest
+
+      - name: Tag y Push "latest" para backend
+        run: |
+          docker tag ghcr.io/adriapedralbes/backend:${{ github.sha }} ghcr.io/adriapedralbes/backend:latest
+          docker push ghcr.io/adriapedralbes/backend:latest
+
+      - name: Tag y Push "latest" para nodejs
+        run: |
+          docker tag ghcr.io/adriapedralbes/nodejs:${{ github.sha }} ghcr.io/adriapedralbes/nodejs:latest
+          docker push ghcr.io/adriapedralbes/nodejs:latest
+
+  deploy:
+    name: Desplegar a Producción
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conexión SSH y despliegue del stack
+        uses: appleboy/ssh-action@v0.11.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_KEY }}
+          script: |
+            # Actualiza las imágenes (asegúrate de que en tu archivo docker-compose.yml uses etiquetas "latest" o variables)
+            docker pull ghcr.io/adriapedralbes/frontend:latest
+            docker pull ghcr.io/adriapedralbes/backend:latest
+            docker pull ghcr.io/adriapedralbes/nodejs:latest
+            # Despliega o actualiza el stack
+            docker stack deploy -c compose.yml grupify-ghactions
