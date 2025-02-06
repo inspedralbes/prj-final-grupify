@@ -26,21 +26,38 @@ class BitacoraNoteController extends Controller
     /**
      * Almacenar una nueva nota.
      */
-    public function store(Request $request)
+    public function store(Request $request, $bitacora_id)
     {
-        $validated = $request->validate([
-            'bitacora_id' => 'required|exists:bitacoras,id',
-            'user_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-        ]);
+        try {
+            // Validar los datos de entrada
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'user_id' => 'required|exists:users,id',
+            ]);
 
-        $note = BitacoraNote::create($validated);
+            // Crear la nueva nota
+            $note = new BitacoraNote();
+            $note->bitacora_id = $bitacora_id;
+            $note->user_id = $validated['user_id'];
+            $note->title = $validated['title'];
+            $note->content = $validated['content'];
+            $note->save();
 
-        return response()->json([
-            'message' => 'Nota creada exitosamente',
-            'note' => $note->load('user:id,name,last_name')
-        ], 201);
+            // Cargar la relación con el usuario para la respuesta
+            $note->load('user:id,name,last_name');
+
+            // Retornar la respuesta
+            return response()->json([
+                'message' => 'Nota creada exitosamente',
+                'note' => $note
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al crear la nota',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
