@@ -18,6 +18,8 @@ const reasons = ["Falta de assistència", "Baixa voluntària", "Altres motius"];
 const comments = ref([]);
 const newComment = ref(""); // Ensure newComment is defined
 const editingComment = ref(null); // Ensure editingComment is defined
+const isFormVisible = ref(false);
+
 
 let teacherId = null;
 
@@ -242,6 +244,7 @@ const cancelEdit = () => {
 </script>
 
 <template>
+  
   <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <DashboardNavTeacher />
 
@@ -402,7 +405,35 @@ const cancelEdit = () => {
           </div>
         </div>
       </div>
+     <!-- Gràfic d'autoavaluació -->
+      <div class="mb-8">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-800">Gràfic d'autoavaluació</h3>
+        <button
+          @click="isFormVisible = !isFormVisible"
+          :class="{
+            'bg-[rgb(0,173,238)]': isFormVisible,
+            'bg-gray-200': !isFormVisible
+          }"
+          class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
+        >
+          <span
+            :class="{
+              'translate-x-6': isFormVisible,
+              'translate-x-1': !isFormVisible
+            }"
+            class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
+          ></span>
+        </button>
+      </div>
+    </div>
 
+    <!-- Contenido desplegable -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mt-4" v-if="isFormVisible">
+      <p class="text-center text-gray-600">El gràfic d'autoavaluació es mostrarà aquí (pero ahora está vacío).</p>
+    </div>
+  </div>
       <!-- Comentarios -->
       <div class="bg-white rounded-2xl shadow-lg p-8 mt-6">
         <h2 class="text-2xl font-bold mb-4 text-gray-800">
