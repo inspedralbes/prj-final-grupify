@@ -58,6 +58,11 @@ jobs:
     steps:
       - name: Checkout del código
         uses: actions/checkout@v3
+      
+      - name: Listar archivos y directorios
+        run: |
+          echo "Lista de archivos:"
+          ls -R
 
       - name: Transferir archivos al servidor
         uses: appleboy/scp-action@v0.1.3
