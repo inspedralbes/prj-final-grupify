@@ -14,6 +14,7 @@ class Answer extends Model
         'form_id',
         'question_id',
         'answer',
+        'rating',
         'answer_type',
     ];
 
