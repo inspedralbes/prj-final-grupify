@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\BitacoraNote;
 use App\Models\Bitacora;
+use App\Models\Group;
 
 class BitacoraNoteController extends Controller
 {
@@ -54,11 +55,14 @@ class BitacoraNoteController extends Controller
     }
 
     /**
-     * Actualizar una nota específica.
-     */
-    public function update(Request $request, $id)
+    * Actualizar una nota específica.
+    */
+
+    public function update(Request $request, $bitacoraId, $id)
     {
-        $note = BitacoraNote::findOrFail($id);
+        $note = BitacoraNote::where('bitacora_id', $bitacoraId)
+                            ->where('id', $id)
+                            ->firstOrFail();
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -76,16 +80,17 @@ class BitacoraNoteController extends Controller
     /**
      * Eliminar una nota específica.
      */
-    public function destroy($id)
+    public function destroy($bitacoraId, $id)
     {
-        $note = BitacoraNote::findOrFail($id);
+        $note = BitacoraNote::where('bitacora_id', $bitacoraId)->find($id);
+
+        if (!$note) {
+            return response()->json(['error' => 'Nota no encontrada'], 404);
+        }
         $note->delete();
 
-        return response()->json([
-            'message' => 'Nota eliminada exitosamente'
-        ]);
+        return response()->json(['message' => 'Nota eliminada correctamente'], 200);
     }
-
     /**
      * Obtener todas las notas de un usuario específico en una bitácora.
      */

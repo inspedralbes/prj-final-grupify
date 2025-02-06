@@ -199,12 +199,8 @@ Route::prefix('bitacoras')->group(function () {
     Route::get('/{bitacoraId}/notes', [BitacoraNoteController::class, 'index']);
     Route::post('/{bitacoraId}/notes', [BitacoraNoteController::class, 'store']);
     Route::get('/{bitacoraId}/notes/{id}', [BitacoraNoteController::class, 'show']);
-    Route::put('/{bitacoraId}/notes/{id}', [BitacoraNoteController::class, 'update']);
-    Route::delete('/{bitacoraId}/notes/{id}', [BitacoraNoteController::class, 'destroy']);
-    
-    // Rutas adicionales para las notas
-    Route::get('/{bitacoraId}/notes/user/{userId}', [BitacoraNoteController::class, 'getUserNotes']);
-    Route::get('/{bitacoraId}/notes/stats', [BitacoraNoteController::class, 'getNoteCountByUser']);
+    Route::put('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'update']);
+    Route::delete('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'destroy']);
 });
 
 Route::get('/bitacoras/{bitacoraId}/user/{userId}/notes', [BitacoraNoteController::class, 'getUserNotes']);
