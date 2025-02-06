@@ -64,6 +64,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.PRODUCTION_KEY }}
 
+      - name: Obtener Host Key del servidor de producción
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
       - name: Configurar Docker Context para servidor remoto
         run: |
           docker context create production \
