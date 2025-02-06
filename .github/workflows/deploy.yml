@@ -64,7 +64,7 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_KEY }}
           script: |
-            # Actualiza las imágenes (asegúrate de que en tu archivo docker-compose.yml uses etiquetas "latest" o variables)
+            docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" -p "${{ secrets.GHCR_TOKEN }}"
             docker pull ghcr.io/adriapedralbes/frontend:latest
             docker pull ghcr.io/adriapedralbes/backend:latest
             docker pull ghcr.io/adriapedralbes/nodejs:latest
