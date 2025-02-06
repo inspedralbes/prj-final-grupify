@@ -86,7 +86,6 @@ services:
     networks:
       - app-network
 
-
   node-app:
     image: ghcr.io/adriapedralbes/nodejs:latest
     deploy:
@@ -166,16 +165,16 @@ networks:
 
 secrets:
   mysql_user:
-    file: ./docker-secrets/mysql_user.txt
+    external: true
   mysql_password:
-    file: ./docker-secrets/mysql_password.txt
+    external: true
   mysql_root_password:
-    file: ./docker-secrets/mysql_root_password.txt
+    external: true
   db_database:
-    file: ./docker-secrets/db_database.txt
+    external: true
   redis_host:
-    file: ./docker-secrets/redis_host.txt
+    external: true
   redis_port:
-    file: ./docker-secrets/redis_port.txt
+    external: true
   db_host:
-    file: ./docker-secrets/db_host.txt
+    external: true
