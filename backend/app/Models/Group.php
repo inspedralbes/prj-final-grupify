@@ -34,4 +34,9 @@ class Group extends Model
     {
         return $this->belongsToMany(Comment::class, 'comments_groups', 'group_id', 'comment_id');
     }
+    public function bitacora()
+    {
+        return $this->hasOne(Bitacora::class);
+    }
+
 }

@@ -14,6 +14,11 @@ services:
       - "3306:3306"
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=root"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   adminer:
     image: adminer
@@ -47,8 +52,20 @@ services:
       - ./backend:/var/www/
     working_dir: /var/www/
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: gestioeduca
+      DB_USERNAME: user
+      DB_PASSWORD: user
+      REDIS_HOST: redis
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
     networks:
       - app-network
     command: bash -c "chmod +x entrypoint.sh && ./entrypoint.sh"
@@ -56,6 +73,7 @@ services:
       test: ["CMD", "curl", "-f", "https://api.grupify.cat"]
       interval: 10s
       timeout: 10s
+      start_period: 120s
       retries: 5
 
   queue-worker:

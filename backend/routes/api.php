@@ -19,6 +19,8 @@ use App\Http\Controllers\SociogramRelationshipController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseDivisionUserController;
 use App\Http\Controllers\UserNotificationController;
+use App\Http\Controllers\BitacoraController;
+use App\Http\Controllers\BitacoraNoteController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
@@ -184,3 +186,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/teacher-notifications', [UserNotificationController::class, 'teacherNotifications']);
     Route::delete('/notifications/{id}', [UserNotificationController::class, 'destroy']);
 });
+
+// Rutas para las bitácoras
+Route::prefix('bitacoras')->group(function () {
+    Route::get('/', [BitacoraController::class, 'index']); 
+    Route::post('/', [BitacoraController::class, 'store']);
+    Route::get('/{id}', [BitacoraController::class, 'show']);
+    Route::put('/{id}', [BitacoraController::class, 'update']);
+    Route::delete('/{id}', [BitacoraController::class, 'destroy']);
+
+    // Rutas para las notas de bitácora
+    Route::get('/{bitacoraId}/notes', [BitacoraNoteController::class, 'index']);
+    Route::post('/{bitacoraId}/notes', [BitacoraNoteController::class, 'store']);
+    Route::get('/{bitacoraId}/notes/{id}', [BitacoraNoteController::class, 'show']);
+    Route::put('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'update']);
+    Route::delete('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'destroy']);
+});
+
+Route::get('/bitacoras/{bitacoraId}/user/{userId}/notes', [BitacoraNoteController::class, 'getUserNotes']);
+Route::get('bitacoras/{groupId}/notes', [BitacoraController::class, 'getNotes']);
+
