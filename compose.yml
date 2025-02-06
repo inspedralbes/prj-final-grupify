@@ -42,7 +42,6 @@ services:
       - google_client_id
     environment:
       NODE_ENV: production
-      GOOGLE_CLIENT_ID_FILE: /run/secrets/google_client_id
     networks:
       - app-network
 
@@ -180,5 +179,3 @@ secrets:
     file: ./docker-secrets/redis_port.txt
   db_host:
     file: ./docker-secrets/db_host.txt
-  google_client_id:
-    file: ./docker-secrets/google_client_id.txt
