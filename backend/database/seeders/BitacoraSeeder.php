@@ -24,15 +24,9 @@ class BitacoraSeeder extends Seeder
                 'description' => 'Descripción general de las actividades del grupo '  . $group->name,
             ]);
 
-            // Obtener los usuarios que pertenecen al grupo
             $users = $group->users; // Relación entre usuarios y grupos
 
-            // Aquí ya no necesitamos la tabla bitacora_user, solo asociamos los usuarios directamente
-            // Puedes agregar la relación entre los usuarios y la bitácora aquí si es necesario
             foreach ($users as $user) {
-                // Relacionar usuarios con la bitácora (si fuera necesario crear alguna tabla intermedia)
-                // $bitacora->users()->attach($user->id); 
-                // Si no es necesario, simplemente se guarda la bitácora sin esta relación directa.
             }
         }
     }
