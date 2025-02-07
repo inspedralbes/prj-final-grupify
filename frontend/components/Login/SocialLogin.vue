@@ -1,7 +1,12 @@
 <script setup>
+import { onMounted } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
+
 const config = useRuntimeConfig();
 const clientId = config.public.googleClientId;
 const authStore = useAuthStore();
+const router = useRouter();
 
 const loadGoogleScript = async () => {
   if (window.google?.accounts?.id) return;
@@ -17,7 +22,7 @@ const loadGoogleScript = async () => {
 };
 
 const handleGoogleResponse = (response) => {
-  //console.log(response.credential); Ver el token JWT de Google
+  // Ver el token JWT de Google
   const userData = parseJwt(response.credential);
   sendToBackend(userData);
 };
@@ -40,6 +45,7 @@ const parseJwt = (token) => {
 };
 
 const sendToBackend = async (userData) => {
+  // Construir el objeto de datos a enviar
   const postData = {
     email: userData.email,
     google_id: userData.sub,
@@ -47,6 +53,14 @@ const sendToBackend = async (userData) => {
     last_name: userData.family_name || '',
     image: userData.picture,
   };
+
+  // Si existe un token de invitación en la URL, lo incluimos en la petición
+  const currentQuery = router.currentRoute.value.query;
+  if (currentQuery.invitation) {
+    postData.invitation_token = currentQuery.invitation;
+  }
+
+  console.log('Datos enviados al backend:', postData); // Para depuración
 
   try {
     const { token, user } = await $fetch('http://localhost:8000/api/google-login', {
@@ -56,8 +70,8 @@ const sendToBackend = async (userData) => {
 
     authStore.setAuth(token, user);
 
-    // Redirigir con recarga completa
-    window.location.href = '/alumne/dashboard'; // Asegúrate que la ruta sea correcta
+    // Redirigir con recarga completa a la ruta correspondiente
+    window.location.href = '/alumne/dashboard';
   } catch (error) {
     console.error('Error en el login:', error);
   }
