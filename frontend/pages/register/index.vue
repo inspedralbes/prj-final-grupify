@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 
@@ -13,8 +13,15 @@ const password = ref("");
 const confirmPassword = ref("");
 const isLoading = ref(false);
 const msgError = ref("");
+const invitationToken = ref(null);
 
-// Valida el formulario antes de enviarlo
+// Extract invitation token from URL on component mount
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  invitationToken.value = urlParams.get('invitation');
+});
+
+// Validate form before submission
 const validateForm = () => {
   if (!name.value) {
     msgError.value = "El nom és obligatori";
@@ -39,7 +46,7 @@ const validateForm = () => {
   return true;
 };
 
-// Enviar el formulario de registro
+// Submit registration form
 const gestioSubmit = async (e) => {
   e.preventDefault();
   msgError.value = "";
@@ -49,26 +56,34 @@ const gestioSubmit = async (e) => {
   isLoading.value = true;
 
   try {
-    // Solicitar registro al servidor
+    // Prepare registration payload
+    const registrationPayload = {
+      name: name.value,
+      last_name: last_name.value,
+      email: email.value,
+      password: password.value,
+      password_confirmation: confirmPassword.value,
+    };
+
+    // Add invitation token if present
+    if (invitationToken.value) {
+      registrationPayload.invitation_token = invitationToken.value;
+    }
+
+    // Registration request
     const response = await fetch("http://localhost:8000/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({
-        name: name.value,
-        last_name: last_name.value,
-        email: email.value,
-        password: password.value,
-        password_confirmation: confirmPassword.value,
-      }),
+      body: JSON.stringify(registrationPayload),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      // Manejar errores de validación
+      // Handle validation errors
       if (data.errors) {
         const errorMessages = Object.values(data.errors).flat();
         msgError.value = errorMessages.join(", ");
@@ -80,7 +95,7 @@ const gestioSubmit = async (e) => {
 
     console.log("Usuari registrat!", data);
 
-    // Iniciar sesión automáticamente después del registro
+    // Automatic login after registration
     const loginResponse = await fetch("http://localhost:8000/api/login", {
       method: "POST",
       headers: {
@@ -99,17 +114,17 @@ const gestioSubmit = async (e) => {
       throw new Error(msgError.value);
     }
 
-    // Obtener datos del usuario autenticado
+    // Get authenticated user data
     const loginData = await loginResponse.json();
 
     if (!loginData.token || !loginData.user) {
       throw new Error("La API no ha retornat un token o usuari vàlid.");
     }
 
-    // Guardar los datos en Pinia
+    // Save data in Pinia store
     authStore.setAuth(loginData.token, loginData.user);
 
-    // Redirigir al dashboard alumne
+    // Redirect to student dashboard
     router.push("/alumne/dashboard");
 
   } catch (err) {
@@ -119,7 +134,6 @@ const gestioSubmit = async (e) => {
   }
 };
 </script>
-
 
 <template>
   <div class="login-container">
@@ -134,8 +148,11 @@ const gestioSubmit = async (e) => {
         <LoginTextInput v-model="last_name" placeholder="Cognom " :has-msg-error="msgError && !last_name" />
         <LoginTextInput v-model="email" placeholder="Correu electrònic" :has-msg-error="msgError && !email" />
         <LoginPasswordInput v-model="password" :has-msg-error="msgError && !password" />
-        <LoginPasswordInput v-model="confirmPassword" :has-msg-error="msgError && !confirmPassword"
-          placeholder="Confirma la contrasenya" />
+        <LoginPasswordInput 
+          v-model="confirmPassword" 
+          :has-msg-error="msgError && !confirmPassword"
+          placeholder="Confirma la contrasenya" 
+        />
 
         <button type="submit" class="sign-in-button" :disabled="isLoading">
           {{ isLoading ? "Registrant..." : "Registrar-se" }}

@@ -21,6 +21,7 @@ use App\Http\Controllers\CourseDivisionUserController;
 use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\BitacoraNoteController;
+use App\Http\Controllers\InvitationController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
@@ -213,3 +214,14 @@ Route::prefix('bitacoras')->group(function () {
 Route::get('/bitacoras/{bitacoraId}/user/{userId}/notes', [BitacoraNoteController::class, 'getUserNotes']);
 Route::get('bitacoras/{groupId}/notes', [BitacoraController::class, 'getNotes']);
 
+// Rutas para las invitaciones
+// Rutas públicas para consultar una invitación (útil en el front para validar el token)
+Route::get('/invitations/{token}', [InvitationController::class, 'show']);
+
+// Rutas protegidas con autenticación (por ejemplo, usando Sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    // Gestión de invitaciones: crear y listar (para el profesor)
+    Route::post('/invitations', [InvitationController::class, 'store']);
+    Route::get('/invitations', [InvitationController::class, 'index']);
+
+});

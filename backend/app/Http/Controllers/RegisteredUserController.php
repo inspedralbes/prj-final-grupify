@@ -10,6 +10,8 @@ use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Models\Invitation;
+use Illuminate\Support\Facades\DB;
 
 class RegisteredUserController extends Controller
 {
@@ -41,161 +43,144 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request)
     {
+        DB::beginTransaction();
         try {
-            // Validación de los datos del formulario
-            $request->validate([
+            // Validate input
+            $validator = Validator::make($request->all(), [
                 'name'              => 'required|string|max:255',
                 'last_name'         => 'required|string|max:255',
-                'email'             => 'required|string|email|max:255|unique:users',
+                'email'             => 'required|string|email|max:255|unique:users,email',
                 'password'          => 'required|string|min:8|confirmed',
+                'invitation_token'  => 'nullable|exists:invitations,token',
             ]);
 
-            // Asignar rol predeterminado (ID 2) si no se proporciona 'role_id'
-            $roleId = $request->role_id ?? 2;
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
 
-            // Definir imagen predeterminada
-            $defaultImage = 'http://localhost:8000/images/default.png'; // Ajusta esta ruta según tu configuración
-
-            // Crear el usuario con los datos del formulario
+            // Create user
             $user = User::create([
                 'name'      => $request->name,
                 'last_name' => $request->last_name,
                 'email'     => $request->email,
                 'password'  => Hash::make($request->password),
-                'role_id'   => $roleId,
-                'image'     => $request->image ?? $defaultImage, // Si no se envía imagen se asigna la predeterminada
+                'role_id'   => $request->role_id ?? 2,
+                'image'     => $request->image ?? 'http://localhost:8000/images/default.png',
             ]);
 
-            // Enviar correo de bienvenida
-            Mail::to($user->email)->send(new WelcomeMail($user));
+            // Find invitation and get course/division
+            $course_id = null;
+            $division_id = null;
 
-            // Crear la asignación en la tabla course_division_user con course_id y division_id en null
+            if ($request->has('invitation_token')) {
+                $invitation = Invitation::where('token', $request->invitation_token)->first();
+
+                if ($invitation) {
+                    $course_id = $invitation->course_id;
+                    $division_id = $invitation->division_id;
+                }
+            }
+
+            // Create course-division-user association
             CourseDivisionUser::create([
                 'user_id'     => $user->id,
-                'course_id'   => null,
-                'division_id' => null,
+                'course_id'   => $course_id,
+                'division_id' => $division_id,
             ]);
 
-            // Crear token de autenticación
-            $token = $user->createToken('Groupify')->plainTextToken;
+            DB::commit();
 
             return response()->json([
-                'message' => 'Usuario registrado correctamente.',
+                'message' => 'User registered successfully',
                 'user'    => $user,
-                'token'   => $token
+                'course_id' => $course_id,
+                'division_id' => $division_id
             ], 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Error de validación',
-                'errors'  => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
-                'message' => 'Error en el registro',
+                'message' => 'Registration failed',
                 'error'   => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/google-login",
-     *     summary="Login/Registro con Google",
-     *     tags={"Authentication"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email", "google_id", "name"},
-     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
-     *             @OA\Property(property="google_id", type="string", example="google_123456"),
-     *             @OA\Property(property="name", type="string", example="Juan"),
-     *             @OA\Property(property="last_name", type="string", example="Pérez"),
-     *             @OA\Property(property="image", type="string", example="https://example.com/avatar.jpg")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Login exitoso",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."),
-     *             @OA\Property(property="user", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Error de validación"
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Error interno del servidor"
-     *     )
-     * )
-     */
     public function googleLogin(Request $request)
     {
+        DB::beginTransaction();
         try {
-            // Validación de los campos recibidos
+            // Validate input
             $validator = Validator::make($request->all(), [
                 'email'     => 'required|email',
                 'google_id' => 'required|string',
                 'name'      => 'required|string',
                 'last_name' => 'nullable|string',
                 'image'     => 'nullable|string',
+                'invitation_token' => 'nullable|exists:invitations,token',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Error de validación',
-                    'errors'  => $validator->errors(),
+                    'message' => 'Validation error',
+                    'errors'  => $validator->errors()
                 ], 400);
             }
 
-            // Definir imagen predeterminada
-            $defaultImage = '/images/default.png';
-
-            // Buscar o crear usuario
-            $user = User::where('email', $request->email)
-                        ->orWhere('google_id', $request->google_id)
-                        ->first();
-
-            if (!$user) {
-                $user = User::create([
+            // Find or create user
+            $user = User::firstOrNew(
+                ['email' => $request->email],
+                [
                     'name'      => $request->name,
                     'last_name' => $request->last_name ?? '',
-                    'email'     => $request->email,
                     'google_id' => $request->google_id,
-                    'image'     => $request->image ?? $defaultImage,
-                    'password'  => bcrypt(Str::random(16)),
+                    'image'     => $request->image ?? '/images/default.png',
+                    'password'  => Hash::make(Str::random(16)),
                     'role_id'   => 2,
-                ]);
+                ]
+            );
 
-                // Crear la asignación en course_division_user
+            // Handle invitation if present
+            $course_id = null;
+            $division_id = null;
+
+            if ($request->has('invitation_token')) {
+                $invitation = Invitation::where('token', $request->invitation_token)->first();
+
+                if ($invitation) {
+                    $course_id = $invitation->course_id;
+                    $division_id = $invitation->division_id;
+                }
+            }
+
+            // Ensure course-division-user association
+            $existingAssociation = CourseDivisionUser::where('user_id', $user->id)->first();
+            if (!$existingAssociation) {
                 CourseDivisionUser::create([
                     'user_id'     => $user->id,
-                    'course_id'   => null,
-                    'division_id' => null,
-                ]);
-            } else {
-                // Actualizar datos del usuario existente
-                $user->update([
-                    'name'      => $request->name,
-                    'last_name' => $request->last_name ?? $user->last_name,
-                    'google_id' => $request->google_id,
-                    'image'     => $request->image ?? $user->image,
+                    'course_id'   => $course_id,
+                    'division_id' => $division_id,
                 ]);
             }
 
-            // Generar token de autenticación
+            // Save or update user
+            $user->save();
+
+            // Generate token
             $token = $user->createToken('GroupifyToken')->plainTextToken;
+
+            DB::commit();
 
             return response()->json([
                 'token' => $token,
                 'user'  => $user,
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Google Login Error: ' . $e->getMessage());
+            DB::rollBack();
             return response()->json([
-                'message' => 'Error interno del servidor',
+                'message' => 'Internal server error',
                 'error'   => $e->getMessage(),
             ], 500);
         }
