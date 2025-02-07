@@ -9,6 +9,7 @@ return new class extends Migration
      */
     public function up()
     {
+        if (!DB::selectOne("SHOW TABLES LIKE 'anonymous_forms'")) {
         DB::statement("
             CREATE VIEW anonymous_forms AS
             SELECT
@@ -20,6 +21,7 @@ return new class extends Migration
                 f.status
             FROM forms f
         ");
+        }
     }
 
     public function down()

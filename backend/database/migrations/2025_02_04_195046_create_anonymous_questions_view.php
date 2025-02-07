@@ -7,7 +7,8 @@ return new class extends Migration
 {
     public function up()
     {
-        DB::statement("
+        if (!DB::selectOne("SHOW TABLES LIKE 'anonymous_questions'")) {
+            DB::statement("
             CREATE VIEW anonymous_questions AS
             SELECT
                 q.id AS real_id,
@@ -17,6 +18,7 @@ return new class extends Migration
                 q.type
             FROM questions q
         ");
+        }
     }
 
     public function down()

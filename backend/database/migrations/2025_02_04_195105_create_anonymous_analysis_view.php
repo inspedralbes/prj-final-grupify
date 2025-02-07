@@ -7,7 +7,8 @@ return new class extends Migration
 {
     public function up()
     {
-        DB::statement("
+        if (!DB::selectOne("SHOW TABLES LIKE 'anonymous_analysis'")) {
+            DB::statement("
             CREATE VIEW anonymous_analysis AS
             SELECT
                 ar.formulario,
@@ -19,6 +20,7 @@ return new class extends Migration
             JOIN anonymous_users au ON ar.usuario = au.anonymous_id
             GROUP BY ar.formulario, ar.pregunta, ar.respuesta, au.curso_id
         ");
+        }
     }
 
     public function down()

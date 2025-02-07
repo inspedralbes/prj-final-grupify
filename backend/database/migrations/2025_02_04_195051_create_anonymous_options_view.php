@@ -7,6 +7,7 @@ return new class extends Migration
 {
     public function up()
     {
+        if (!DB::selectOne("SHOW TABLES LIKE 'anonymous_options'")) {
         DB::statement("
             CREATE VIEW anonymous_options AS
             SELECT
@@ -17,6 +18,7 @@ return new class extends Migration
                 o.value
             FROM options o
         ");
+        }
     }
 
     public function down()

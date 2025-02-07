@@ -7,7 +7,8 @@ return new class extends Migration
 {
     public function up()
     {
-        DB::statement("
+        if (!DB::selectOne("SHOW TABLES LIKE 'anonymous_responses'")) {
+            DB::statement("
             CREATE VIEW anonymous_responses AS
             SELECT
                 a.id AS real_id,
@@ -27,6 +28,7 @@ return new class extends Migration
             LEFT JOIN options o ON JSON_CONTAINS(a.answer, CAST(o.id AS JSON))
             GROUP BY a.id, au.anonymous_id, af.anonymous_id, aq.anonymous_id, a.answer, a.answer_type
         ");
+        }
     }
 
     public function down()

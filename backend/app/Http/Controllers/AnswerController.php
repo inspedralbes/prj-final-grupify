@@ -17,6 +17,52 @@ use App\Models\Form;
  */
 class AnswerController extends Controller
 {
+
+    /**
+     * @OA\Get(
+     *     path="/api/all-responses",
+     *     summary="Obtener todas las respuestas de todos los usuarios",
+     *     tags={"Respostes"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de todas las respuestas obtenida correctamente",
+     *         @OA\JsonContent(type="array", @OA\Items(
+     *             type="object",
+     *             @OA\Property(property="form_id", type="integer", example=1),
+     *             @OA\Property(property="user_id", type="integer", example=2),
+     *             @OA\Property(property="question_id", type="integer", example=3),
+     *             @OA\Property(property="responses", type="array", @OA\Items(type="string"))
+     *         ))
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="No hay respuestas disponibles"
+     *     )
+     * )
+     */
+    public function getAllResponses()
+    {
+        // Obtener todas las respuestas con sus relaciones
+        $answers = Answer::all();
+
+        // Verificar si hay respuestas
+        if ($answers->isEmpty()) {
+            return response()->json(['message' => 'No hay respuestas disponibles'], 404);
+        }
+
+        // Formatear las respuestas
+        $formattedResponses = $answers->map(function ($answer) {
+            return [
+                'form_id' => $answer->form_id,
+                'user_id' => $answer->user_id,
+                'question_id' => $answer->question_id,
+                'responses' => $this->formatAnswer($answer), // Formatear la respuesta según su tipo
+            ];
+        });
+
+        // Devolver las respuestas formateadas
+        return response()->json($formattedResponses, 200);
+    }
     /**
      * @OA\Get(
      *     path="/api/forms/{formId}/users/{userId}/answers",
