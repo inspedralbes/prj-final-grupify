@@ -147,18 +147,24 @@ class RegisteredUserController extends Controller
         try {
             // Validación de campos, incluyendo invitation_token opcional
             $validator = Validator::make($request->all(), [
-                'email'             => 'required|email',
-                'google_id'         => 'required|string',
-                'name'              => 'required|string',
-                'last_name'         => 'nullable|string',
-                'image'             => 'nullable|string',
-                'invitation_token'  => 'nullable|exists:invitations,token',
+                'email' => [
+                    'required',
+                    'email',
+                    'regex:/^[^@]+@inspedralbes\.cat$/i' // Nueva regla de dominio
+                ],
+                'google_id' => 'required|string',
+                'name' => 'required|string',
+                'last_name' => 'nullable|string',
+                'image' => 'nullable|string',
+                'invitation_token' => 'nullable|exists:invitations,token',
+            ], [
+                'email.regex' => 'Solo se permiten correos de @inspedralbes.cat' // Mensaje personalizado
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Validation error',
-                    'errors'  => $validator->errors(),
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors(),
                 ], 400);
             }
 
@@ -167,6 +173,11 @@ class RegisteredUserController extends Controller
                 ->orWhere('google_id', $request->google_id)
                 ->first();
 
+            // Determinar rol basado en el correo
+            $emailLocalPart = explode('@', $request->email)[0];
+            $isStudent = preg_match('/^a\d/i', $emailLocalPart);
+            $role_id = $isStudent ? 2 : 3; // Ajusta los IDs según tus roles
+
             if (!$user) {
                 $user = User::create([
                     'name'      => $request->name,
@@ -174,8 +185,8 @@ class RegisteredUserController extends Controller
                     'email'     => $request->email,
                     'google_id' => $request->google_id,
                     'image'     => $request->image,
-                    'password'  => Hash::make(Str::random(16)), // Contraseña aleatoria
-                    'role_id'   => 2, // Rol por defecto
+                    'password'  => Hash::make(Str::random(16)),
+                    'role_id'   => $role_id, // Rol determinado
                 ]);
             } else {
                 $user->update([
@@ -183,6 +194,7 @@ class RegisteredUserController extends Controller
                     'last_name' => $request->last_name ?? $user->last_name,
                     'google_id' => $request->google_id,
                     'image'     => $request->image,
+                    'role_id'   => $role_id, // Actualizar rol cada login
                 ]);
             }
 
@@ -229,7 +241,7 @@ class RegisteredUserController extends Controller
 
             return response()->json([
                 'token' => $token,
-                'user'  => $user,
+                'user'  => $user, // Incluye role_id para redirección en frontend
             ], 200);
         } catch (\Exception $e) {
             \Log::error('Google Login Error: ' . $e->getMessage());

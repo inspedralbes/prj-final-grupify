@@ -2,11 +2,15 @@
 import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
+import { useToast } from '#imports';
+
+const toast = useToast();
 
 const config = useRuntimeConfig();
 const clientId = config.public.googleClientId;
 const authStore = useAuthStore();
 const router = useRouter();
+const errorMessage = ref('');
 
 const loadGoogleScript = async () => {
   if (window.google?.accounts?.id) return;
@@ -45,6 +49,8 @@ const parseJwt = (token) => {
 };
 
 const sendToBackend = async (userData) => {
+  errorMessage.value = '';
+
   // Construir el objeto de datos a enviar
   const postData = {
     email: userData.email,
@@ -71,9 +77,27 @@ const sendToBackend = async (userData) => {
     authStore.setAuth(token, user);
 
     // Redirigir con recarga completa a la ruta correspondiente
-    window.location.href = '/alumne/dashboard';
+    if (user.role_id === 2) {
+      window.location.href = '/alumne/dashboard';
+    } else {
+      navigateTo('/professor/dashboard');
+    }
   } catch (error) {
     console.error('Error en el login:', error);
+
+    let message = 'Error en el servidor. Por favor, intenta de nuevo más tarde.';
+    if (error.response?.status === 400) {
+      message = error.response.data?.errors?.email[0] || 'Dominio de correo no válido';
+    }
+
+    // Muestra el toast
+    toast.add({
+      title: 'Error',
+      description: message,
+      icon: 'i-heroicons-exclamation-circle', // Icono de error
+      color: 'red', // Color del toast
+      timeout: 5000, // Duración en milisegundos
+    });
   }
 };
 
@@ -100,6 +124,11 @@ onMounted(async () => {
 
 <template>
   <div class="social-login">
+    <!-- Mensaje de error -->
+    <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
     <button class="social-button" aria-label="Entra amb Google" @click="gestioGoogleLogin">
       <img src="/icons/google.svg" alt="Google icon" />
       <span>Google / @inspedralbes.cat</span>
