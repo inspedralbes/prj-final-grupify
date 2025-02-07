@@ -37,20 +37,20 @@
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[rgb(0,173,238)] mx-auto"></div>
     </div>
 
-    <div v-if="store.notes && store.notes.length > 0" class="bg-white rounded-lg shadow-lg">
+    <div v-if="currentGroup && currentGroup.users && currentGroup.users.length > 0" class="bg-white rounded-lg shadow-lg">
       <div class="p-4 bg-[rgb(0,173,238)] text-white rounded-t-lg flex justify-between items-center">
         <h3 class="text-xl font-bold">Notes dels Integrants</h3>
       </div>
 
-      <!-- Excel-like layout -->
+      <!-- Excel de Bitacora -->
       <div class="overflow-x-auto">
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-gray-100">
-              <th v-for="(userNotes, userName) in store.groupedNotes" :key="userName"
+              <th v-for="user in currentGroup.users" :key="user.id"
                 class="p-4 border text-left font-bold text-[rgb(0,173,238)] min-w-[250px]">
                 <div class="flex justify-between items-center">
-                  <span>{{ userName }}</span>
+                  <span>{{ user.name }} {{ user.last_name }}</span>
                   <button @click="store.showCreateNoteModal = true"
                     class="px-4 py-2 bg-[rgb(0,173,238)] text-white rounded-lg hover:bg-[rgb(0,153,218)] transition-colors">
                     Crear Nota
@@ -61,9 +61,9 @@
           </thead>
           <tbody>
             <tr>
-              <td v-for="(userNotes, userName) in store.groupedNotes" :key="userName" class="border p-2 align-top">
+              <td v-for="user in currentGroup.users" :key="user.id" class="border p-2 align-top">
                 <div class="space-y-3">
-                  <div v-for="note in userNotes" :key="note.id"
+                  <div v-for="note in getUserNotes(user.id)" :key="note.id"
                     class="bg-gray-50 p-3 rounded-lg hover:shadow-md transition-shadow">
                     <div class="flex justify-between items-center mb-2">
                       <h4 class="font-semibold text-[rgb(0,173,238)]">{{ note.title }}</h4>
@@ -102,8 +102,8 @@
           <select v-model="store.selectedUserId"
             class="w-full p-2 border rounded-lg focus:border-[rgb(0,173,238)] focus:ring-1 focus:ring-[rgb(0,173,238)]">
             <option value="">Seleccionar usuario</option>
-            <option v-for="(userNotes, userName) in store.groupedNotes" :key="userName" :value="userNotes[0]?.user?.id">
-              {{ userName }}
+            <option v-for="user in currentGroup?.users" :key="user.id" :value="user.id">
+              {{ user.name }} {{ user.last_name }}
             </option>
           </select>
         </div>
@@ -152,7 +152,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, watch, watchEffect, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBitacoraStore } from '@/stores/bitacoraStore'
 import { useGroupStore } from '@/stores/groupStore';
@@ -162,29 +162,43 @@ const store = useBitacoraStore();
 const groupStore = useGroupStore();
 const groupId = route.params.id;
 
-onMounted(async () => {
-  await store.fetchBitacora(groupId)
-  await store.fetchNotes(groupId)
-})
+const currentGroup = computed(() => {
+  return groupStore.groups.find(group => group.id === parseInt(groupId));
+});
 
-// Observar cambios en el grupo
+const getUserNotes = (userId) => {
+  return store.notes.filter(note => note.user_id === userId);
+};
+
+onMounted(async () => {
+  await Promise.all([
+    groupStore.fetchGroups(),
+    store.fetchBitacora(groupId),
+    store.fetchNotes(groupId)
+  ]);
+});
+
 watch(
-  () => groupStore.groups.find(group => group.id === parseInt(groupId)),
-  async (newGroup) => {
-    if (newGroup) {
-      await store.fetchBitacora(groupId);
-      await store.fetchNotes(groupId);
+  () => groupStore.groups,
+  async (newGroups) => {
+    const currentGroup = newGroups.find(group => group.id === parseInt(groupId));
+    if (currentGroup) {
+      await Promise.all([
+        store.fetchBitacora(groupId),
+        store.fetchNotes(groupId)
+      ]);
     }
   },
   { deep: true }
 );
 
-// Observar cambios en las notas
 watchEffect(async () => {
   const group = groupStore.groups.find(group => group.id === parseInt(groupId));
   if (group) {
-    await store.fetchBitacora(groupId); // Actualiza la bitácora cuando cambia el grupo
-    await store.fetchNotes(groupId); // Actualiza las notas cuando cambian los integrantes
+    await Promise.all([
+      store.fetchBitacora(groupId),
+      store.fetchNotes(groupId)
+    ]);
   }
 });
 </script>

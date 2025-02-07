@@ -208,6 +208,7 @@ Route::prefix('bitacoras')->group(function () {
     Route::get('/{bitacoraId}/notes/{id}', [BitacoraNoteController::class, 'show']);
     Route::put('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'update']);
     Route::delete('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'destroy']);
+    Route::delete('/{groupId}/notes', [BitacoraNoteController::class, 'deleteAllNotes']);
 });
 
 Route::get('/bitacoras/{bitacoraId}/user/{userId}/notes', [BitacoraNoteController::class, 'getUserNotes']);

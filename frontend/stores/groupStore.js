@@ -51,13 +51,15 @@ export const useGroupStore = defineStore("groups", {
           }
         );
 
-        if (!response.ok) throw new Error("Error añadiendo estudiantes")
-        return await response.json();
+        if (!response.ok) throw new Error("Error añadiendo estudiantes");
+        const data = await response.json();
 
-        await bitacoraStore.fetchBitacora(groupId); 
+        await this.fetchGroups(); 
+
+        await bitacoraStore.fetchBitacora(groupId);
         await bitacoraStore.fetchNotes(groupId);
 
-
+        return data;
       } catch (error) {
         console.error("Error:", error);
         throw error;
@@ -67,7 +69,21 @@ export const useGroupStore = defineStore("groups", {
     async removeStudentFromGroup(groupId, studentId) {
       try {
         const token = useAuthStore().token;
-        const bitacoraStore = useBitacoraStore(); 
+        const bitacoraStore = useBitacoraStore();
+
+        const bitacoraResponse = await fetch(`http://localhost:8000/api/bitacoras/${groupId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          }
+        });
+        
+        if (!bitacoraResponse.ok) {
+          throw new Error("Error fetching bitacora");
+        }
+        
+        const bitacora = await bitacoraResponse.json();
+        const bitacoraId = bitacora.id;
 
         const response = await fetch(
           `http://localhost:8000/api/groups/${groupId}/removeStudentFromGroup`,
@@ -78,7 +94,10 @@ export const useGroupStore = defineStore("groups", {
               Authorization: `Bearer ${token}`,
               Accept: "application/json",
             },
-            body: JSON.stringify({ student_id: studentId }),
+            body: JSON.stringify({ 
+              student_id: studentId,
+              bitacora_id: bitacoraId 
+            }),
           }
         );
 
@@ -88,17 +107,11 @@ export const useGroupStore = defineStore("groups", {
 
         const data = await response.json();
 
-        // Actualizar el estado local
-        const group = this.groups.find(group => group.id === groupId);
-        if (group) {
-          group.number_of_students = data.number_of_students;
-          group.members = group.members.filter(member => member.id !== studentId);
-        }
-
-        // Actualizar la bitácora después de eliminar el estudiante
-        await bitacoraStore.fetchBitacora(groupId); 
+        await this.fetchGroups();
+        await bitacoraStore.fetchBitacora(groupId);
         await bitacoraStore.fetchNotes(groupId);
 
+        return data;
       } catch (error) {
         console.error("Error removing student from group:", error);
         throw error;
@@ -107,15 +120,15 @@ export const useGroupStore = defineStore("groups", {
 
     async deleteGroup(groupId) {
       try {
-        const authStore = useAuthStore(); // <-- Añadir esto
-        const token = authStore.token;    // <-- Obtener el token del store
+        const authStore = useAuthStore();
+        const token = authStore.token;
 
         const response = await fetch(
           `http://localhost:8000/api/groups/${groupId}`,
           {
             method: "DELETE",
             headers: {
-              Authorization: `Bearer ${token}`, // Token actualizado
+              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
               Accept: "application/json",
             },
@@ -123,13 +136,16 @@ export const useGroupStore = defineStore("groups", {
         );
 
         if (!response.ok) throw new Error("Error eliminando el grupo");
+        
+        this.groups = this.groups.filter(group => group.id !== groupId);
+        
         return await response.json();
-
       } catch (error) {
         console.error("Error:", error);
         throw error;
       }
     },
+
     async createGroup(groupData) {
       try {
         const authStore = useAuthStore();
@@ -146,8 +162,12 @@ export const useGroupStore = defineStore("groups", {
         });
 
         if (!response.ok) throw new Error("Error creando el grupo");
-        return await response.json();
+        
+        const newGroup = await response.json();
 
+        await this.fetchGroups();
+        
+        return newGroup;
       } catch (error) {
         console.error("Error:", error);
         throw error;
