@@ -230,33 +230,34 @@ class UserController extends Controller
      * )
      */
     public function show($id)
-{
-    $user = User::with(['courses.divisions', 'role', 'subjects'])->find($id);
+    {
+        $user = User::with([
+            'courseDivisionUsers.course',
+            'courseDivisionUsers.division',
+            'role',
+            'subjects'
+        ])->find($id);
 
-    if (is_null($user)) {
-        return response()->json(['message' => 'User not found'], 404);
-    }
+        if (is_null($user)) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
 
-    // Si la solicitud espera JSON (por ejemplo, una API), devolver JSON
-    if (request()->wantsJson()) {
-        if ($user->role_id == 2) { // Si es estudiante
-            $firstCourse = $user->courses->first();
+        if (request()->wantsJson()) {
+            $courseDivision = $user->courseDivisionUsers->first();
+
             return response()->json([
                 'id' => $user->id,
                 'name' => $user->name,
                 'last_name' => $user->last_name,
                 'email' => $user->email,
                 'image' => $user->image,
-                'course' => $firstCourse?->name ?? 'Sin Curso',
-                'division' => $firstCourse?->divisions->first()?->division ?? 'Sin División',
+                'course' => $courseDivision?->course?->name ?? 'Sin Curso',
+                'division' => $courseDivision?->division?->division ?? 'Sin División',
             ], 200);
         }
-        return response()->json($user, 200);
-    }
 
-    // Si no es una petición JSON, devolver la vista normalmente
-    return view('users.show', compact('user'));
-}
+        return view('users.show', compact('user'));
+    }
 
     /**
      * @OA\Put(
@@ -423,8 +424,23 @@ class UserController extends Controller
 
     public function getAuthenticatedUser(Request $request)
     {
+        $user = $request->user()->load([
+            'courseDivisionUsers.course',
+            'courseDivisionUsers.division'
+        ]);
+
+        $courseDivision = $user->courseDivisionUsers->first();
+
         return response()->json([
-            'user' => $request->user(),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'image' => $user->image,
+                'course' => $courseDivision?->course?->name ?? 'Sin Curso',
+                'division' => $courseDivision?->division?->division ?? 'Sin División',
+            ]
         ]);
     }
 }

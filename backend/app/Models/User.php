@@ -86,11 +86,10 @@ class User extends Authenticatable
     }
     public function courseDivisionUsers()
     {
-        return $this->hasMany(CourseDivisionUser::class, 'user_id');
+        return $this->hasMany(CourseDivisionUser::class);
     }
     public function bitacoras()
     {
         return $this->belongsToMany(Bitacora::class, 'bitacora_user', 'user_id', 'bitacora_id')->withTimestamps();
     }
-
 }

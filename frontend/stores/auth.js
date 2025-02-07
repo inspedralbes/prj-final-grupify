@@ -8,60 +8,50 @@ export const useAuthStore = defineStore("auth", {
   }),
 
   actions: {
-    // Inicializa el store (se llama al cargar la app)
+    // Inicialización del store
     initialize() {
-      if (this.token) {
-        this.checkAuth();
-      }
+      if (this.token) this.checkAuth();
     },
 
-    // Verifica si el token es válido
+    // Verificar autenticación
     async checkAuth() {
       try {
         const response = await $fetch('http://localhost:8000/api/user', {
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            Accept: 'application/json',
-          },
+          headers: { Authorization: `Bearer ${this.token}` }
         });
 
         if (response.user) {
-          this.user = response.user;
-          this.isAuthenticated = true;
-        } else {
-          this.logout();
+          this.user = response.user; // Guarda course y division
+          localStorage.setItem("user", JSON.stringify(response.user));
         }
       } catch (error) {
         this.logout();
       }
     },
 
-    // Guarda los datos de autenticación
+    // Establecer autenticación
     setAuth(token, user) {
       this.token = token;
       this.user = user;
       this.isAuthenticated = true;
-
-      // Almacena en localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
     },
 
-    // Cierra la sesión
+    // Cerrar sesión
     async logout() {
       try {
-        const token = this.token;
-        if (token) {
+        if (this.token) {
           await $fetch('http://localhost:8000/api/logout', {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${this.token}`,
               Accept: 'application/json',
             },
           });
         }
       } catch (error) {
-        console.error('Error durante el logout:', error);
+        console.error("Error en logout:", error);
       } finally {
         this.token = null;
         this.user = null;
@@ -70,6 +60,6 @@ export const useAuthStore = defineStore("auth", {
         localStorage.removeItem("user");
         navigateTo('/login');
       }
-    }
+    },
   },
 });

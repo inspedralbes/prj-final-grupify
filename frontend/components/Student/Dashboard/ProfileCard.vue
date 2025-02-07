@@ -45,63 +45,51 @@
       </h2>
       <p class="text-gray-500 text-sm">{{ userData.email }}</p>
       <p class="text-gray-500 text-sm">
-        Curs: {{ userData.course_name }} {{ userData.division_name }}
+        Curs: {{ userData.course }} {{ userData.division }}
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 import { useAuthStore } from '~/stores/auth';
 
 const authStore = useAuthStore();
-const userData = ref({
-  name: "",
-  last_name: "",
-  email: "",
-  image: "",
-  course_name: "",
-  division_name: "",
-});
+const fileInput = ref(null);
 
-// Datos de cursos y divisiones (simulados o obtenidos de una API)
-const courses = [
-  { id: 1, name: "1 ESO" },
-  { id: 2, name: "2 ESO" },
-  { id: 3, name: "3 ESO" },
-  { id: 4, name: "4 ESO" },
-  { id: 5, name: "BATXILLERAT" },
-];
-
-const divisions = [
-  { id: 1, division: "1" },
-  { id: 2, division: "2" },
-  { id: 3, division: "A" },
-  { id: 4, division: "B" },
-  { id: 5, division: "C" },
-  { id: 6, division: "D" },
-  { id: 7, division: "E" },
-];
-
-// Función para obtener el nombre del curso o división basado en el ID
-const getNameById = (id, data) => {
-  const item = data.find((item) => item.id === id);
-  return item ? item.name || item.division : "Sense dades";
-};
-
-onMounted(() => {
+// Datos reactivos del usuario
+const userData = computed(() => {
   const user = authStore.user;
 
-  if (user) {
-    userData.value = {
-      name: user.name,
-      last_name: user.last_name,
-      email: user.email,
-      image: user.image,
-      course_name: getNameById(user.course_id, courses),
-      division_name: getNameById(user.division_id, divisions),
+  if (!user) {
+    return {
+      name: "",
+      last_name: "",
+      email: "",
+      image: "",
+      course: "Sense curs",
+      division: "Sense divisió",
     };
   }
+
+  return {
+    name: user.name || "",
+    last_name: user.last_name || "",
+    email: user.email || "",
+    image: user.image || "",
+    course: user.course || "Sense curs", // Campo del API
+    division: user.division || "Sense divisió", // Campo del API
+  };
 });
+
+// Funciones para manejar la imagen
+const triggerFileInput = () => fileInput.value.click();
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    // Lógica para subir la imagen al servidor
+    console.log("Archivo seleccionado:", file);
+  }
+};
 </script>
