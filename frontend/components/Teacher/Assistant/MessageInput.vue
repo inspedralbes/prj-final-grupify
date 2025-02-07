@@ -28,7 +28,7 @@ const handleSuggestionSelect = suggestion => {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-2 p-sticky">
     <TeacherAssistantPromptSuggestions @select="handleSuggestionSelect" />
 
     <div v-if="showUploadZone" class="px-4">

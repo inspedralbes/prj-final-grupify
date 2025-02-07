@@ -22,6 +22,36 @@ use App\Mail\FormAssignedMail;
  */
 class FormController extends Controller
 {
+
+    /**
+     * @OA\Get(
+     *     path="/api/forms/active",
+     *     summary="Obtener todos los formularios activos",
+     *     tags={"Forms"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de formularios activos obtenida correctamente",
+     *         @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Form"))
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="No hay formularios activos disponibles"
+     *     )
+     * )
+     */
+    public function getActiveForms()
+    {
+        // Obtener todos los formularios con estado activo (status = 1)
+        $activeForms = Form::where('status', 1)->get();
+
+        // Verificar si hay formularios activos
+        if ($activeForms->isEmpty()) {
+            return response()->json(['message' => 'No hay formularios activos disponibles'], 404);
+        }
+
+        // Devolver los formularios activos
+        return response()->json($activeForms, 200);
+    }
     public function assignFormToCourseAndDivision(Request $request)
     {
         // Validar los datos
@@ -199,7 +229,7 @@ class FormController extends Controller
             ->count();
         // Agregamos logs para verificar los conteos
         // Log::info('Total de estudiantes:', ['studentsCount' => $studentsCount]);
-        // Log::info('Total de estudiantes que respondieron:', ['answeredCount' => $answeredCount]);       
+        // Log::info('Total de estudiantes que respondieron:', ['answeredCount' => $answeredCount]);
 
         return response()->json([
             //esta completo si el total alumnos de una clase es igual al total de alumnos que respondieron

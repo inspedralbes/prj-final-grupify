@@ -11,6 +11,65 @@ class SociogramRelationshipController extends Controller
 {
 
     /**
+     * Obtener todas las respuestas de todos los formularios.
+     */
+    public function getAllResponses()
+    {
+        try {
+            // Obtener todas las relaciones sociométricas con sus relaciones cargadas
+            $relationships = SociogramRelationship::with(['user', 'peer', 'question.form']) // Cargar user, peer, question y el formulario asociado
+                ->get();
+
+            // Verificar si hay relaciones disponibles
+            if ($relationships->isEmpty()) {
+                return response()->json(['message' => 'No hay respuestas registradas'], 404);
+            }
+
+            // Agrupar las relaciones por formulario
+            $groupedResponses = $relationships->groupBy('question.form_id')->map(function ($formRelationships, $formId) {
+                // Obtener el título del formulario (si existe)
+                $formTitle = optional($formRelationships->first()->question->form)->title;
+
+                // Agrupar las relaciones por usuario
+                return [
+                    'form_id' => $formId,
+                    'form_title' => $formTitle,
+                    'responses' => $formRelationships->groupBy('user_id')->map(function ($userRelationships, $userId) {
+                        return [
+                            'user_id' => $userId,
+                            'user_name' => optional($userRelationships->first()->user)->name,
+                            'user_last_name' => optional($userRelationships->first()->user)->last_name,
+                            'responses' => $userRelationships->groupBy('question_id')->map(function ($questionRelationships, $questionId) {
+                                return [
+                                    'question_id' => $questionId,
+                                    'question_title' => optional($questionRelationships->first()->question)->title,
+                                    'peers' => $questionRelationships->map(function ($relationship) {
+                                        return [
+                                            'peer_id' => optional($relationship->peer)->id,
+                                            'peer_name' => optional($relationship->peer)->name,
+                                            'peer_last_name' => optional($relationship->peer)->last_name,
+                                            'relationship_type' => $relationship->relationship_type,
+                                        ];
+                                    }),
+                                ];
+                            }),
+                        ];
+                    }),
+                ];
+            });
+
+            // Devolver las respuestas estructuradas
+            return response()->json([
+                'all_responses' => $groupedResponses->values(), // Respuestas agrupadas por formulario
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar cualquier excepción
+            return response()->json(['message' => 'Error interno en el servidor', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    /**
      * Obtener los usuarios que respondieron a un formulario sociométrico.
      */
     /**

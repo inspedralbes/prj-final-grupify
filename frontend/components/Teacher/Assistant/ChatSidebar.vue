@@ -65,7 +65,7 @@ const getDocumentCount = chat => {
       </button>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-3">
+    <div class="flex-1 overflow-y-auto px-3 chat-list">
       <div
         v-for="chat in chatStore.chats"
         :key="chat.id"
