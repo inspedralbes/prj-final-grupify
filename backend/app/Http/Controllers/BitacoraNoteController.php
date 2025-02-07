@@ -147,5 +147,4 @@ class BitacoraNoteController extends Controller
         $notes = $bitacora->notes; 
         return response()->json($notes);
     }
-
 }

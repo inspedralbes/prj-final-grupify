@@ -1,4 +1,3 @@
-// stores/BitacoraStore.js
 import { defineStore } from 'pinia'
 
 export const useBitacoraStore = defineStore('BitacoraStore', {
@@ -42,52 +41,53 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
     },
 
     async fetchNotes(groupId) {
-      this.loadingNotes = true
+      this.loadingNotes = true;
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`)
-        this.notes = await response.json()
+        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`);
+        const data = await response.json();
+        this.notes = data;
       } catch (error) {
-        console.error("Error fetchNotes:", error)
-        throw error
+        console.error("Error fetchNotes:", error);
+        throw error;
       } finally {
-        this.loadingNotes = false
+        this.loadingNotes = false;
       }
     },
 
     async createNote(groupId) {
-        if (!this.newNote.title || !this.newNote.content || !this.selectedUserId) {
-          throw new Error("Por favor, completa todos los campos y selecciona un usuario.")
-        }
-  
-        try {
-          const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-              bitacora_id: groupId,
-              user_id: this.selectedUserId,
-              title: this.newNote.title,
-              content: this.newNote.content
-            })
+      if (!this.newNote.title || !this.newNote.content || !this.selectedUserId) {
+        throw new Error("Por favor, completa todos los campos y selecciona un usuario.")
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            bitacora_id: groupId,
+            user_id: this.selectedUserId,
+            title: this.newNote.title,
+            content: this.newNote.content
           })
-  
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-          }
-  
-          const createdNote = await response.json()
-          this.notes.push(createdNote.note)
-          this.showCreateNoteModal = false
-          this.resetNewNote()
-          await this.fetchNotes(groupId)
-        } catch (error) {
-          console.error("Error createNote:", error)
-          throw error
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
+
+        const createdNote = await response.json()
+        this.notes.push(createdNote.note)
+        this.showCreateNoteModal = false
+        this.resetNewNote()
+        await this.fetchNotes(groupId)
+      } catch (error) {
+        console.error("Error createNote:", error)
+        throw error
+      }
     },
 
     async editNote(groupId, note) {
