@@ -15,7 +15,7 @@ export const useRelationshipsStore = defineStore("relationships", () => {
     isLoading.value = true;
     try {
       const response = await fetch(
-        "http://localhost:8000/api/sociogram-relationships/sociogram-relationships"
+        "https://api.grupify.cat/api/sociogram-relationships/sociogram-relationships"
       );
       if (!response.ok) throw new Error("Error al obtener las relaciones");
       relationships.value = await response.json();

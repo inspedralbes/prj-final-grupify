@@ -33,7 +33,7 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
   actions: {
     async fetchBitacora(groupId) {
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}`)
+        const response = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}`)
         this.bitacora = await response.json()
       } catch (error) {
         console.error("Error fetchBitacora:", error)
@@ -44,7 +44,7 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
     async fetchNotes(groupId) {
       this.loadingNotes = true
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`)
+        const response = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}/notes`)
         this.notes = await response.json()
       } catch (error) {
         console.error("Error fetchNotes:", error)
@@ -60,7 +60,7 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
         }
   
         try {
-          const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`, {
+          const response = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}/notes`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
 
     async editNote(groupId, note) {
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes/${note.id}`, {
+        const response = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}/notes/${note.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
 
     async deleteNote(groupId, noteId) {
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes/${noteId}`, {
+        const response = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}/notes/${noteId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'

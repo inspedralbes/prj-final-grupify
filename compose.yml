@@ -66,11 +66,11 @@ services:
       REDIS_PASSWORD: null
       REDIS_PORT_FILE: /run/secrets/redis_port
     secrets:
-      - grupify_db_database
-      - grupify_mysql_user
-      - grupify_mysql_password
-      - grupify_redis_host
-      - grupify_redis_port
+      - db_database
+      - mysql_user
+      - mysql_password
+      - redis_host
+      - redis_port
     networks:
       - app-network
 
@@ -126,10 +126,10 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
     secrets:
-      - grupify_db_database
-      - grupify_mysql_user
-      - grupify_mysql_password
-      - grupify_mysql_root_password
+      - db_database
+      - mysql_user
+      - mysql_password
+      - mysql_root_password
     volumes:
       - db_data:/var/lib/mysql
     deploy:
@@ -163,16 +163,17 @@ networks:
 
 secrets:
   mysql_user:
-    external: true
+    file: ./docker-secrets/mysql_user.txt
   mysql_password:
-    external: true
+    file: ./docker-secrets/mysql_password.txt
   mysql_root_password:
-    external: true
+    file: ./docker-secrets/mysql_root_password.txt
   db_database:
-    external: true
+    file: ./docker-secrets/db_database.txt
   redis_host:
-    external: true
+    file: ./docker-secrets/redis_host.txt
   redis_port:
-    external: true
+    file: ./docker-secrets/redis_port.txt
   db_host:
-    external: true
+    file: ./docker-secrets/db_host.txt
+
