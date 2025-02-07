@@ -42,15 +42,26 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
     },
 
     async fetchNotes(groupId) {
-      this.loadingNotes = true
+      this.loadingNotes = true;
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`)
-        this.notes = await response.json()
+        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`);
+        const data = await response.json();
+        this.notes = data;
+        
+        // Limpiar y actualizar el groupedNotes
+        this.groupedNotes = this.notes.reduce((acc, note) => {
+          const userName = note.user ? `${note.user.name} ${note.user.last_name}` : 'Desconocido';
+          if (!acc[userName]) {
+            acc[userName] = [];
+          }
+          acc[userName].push(note);
+          return acc;
+        }, {});
       } catch (error) {
-        console.error("Error fetchNotes:", error)
-        throw error
+        console.error("Error fetchNotes:", error);
+        throw error;
       } finally {
-        this.loadingNotes = false
+        this.loadingNotes = false;
       }
     },
 

@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { useAuthStore } from "~/stores/auth";
+import { useBitacoraStore } from "~/stores/bitacoraStore";
 
 export const useGroupStore = defineStore("groups", {
   state: () => ({
@@ -21,7 +22,8 @@ export const useGroupStore = defineStore("groups", {
 
         this.groups = response.map(group => ({
           ...group,
-          users: group.users || []
+          members: group.users || [], 
+          number_of_students: (group.users || []).length 
         }));
 
       } catch (error) {
@@ -34,6 +36,7 @@ export const useGroupStore = defineStore("groups", {
       try {
         const authStore = useAuthStore();
         const token = authStore.token;
+        const bitacoraStore = useBitacoraStore();
 
         const response = await fetch(
           `http://localhost:8000/api/groups/${groupId}/addStudentsToGroup`,
@@ -48,8 +51,12 @@ export const useGroupStore = defineStore("groups", {
           }
         );
 
-        if (!response.ok) throw new Error("Error añadiendo estudiantes");
+        if (!response.ok) throw new Error("Error añadiendo estudiantes")
         return await response.json();
+
+        await bitacoraStore.fetchBitacora(groupId); 
+        await bitacoraStore.fetchNotes(groupId);
+
 
       } catch (error) {
         console.error("Error:", error);
@@ -59,7 +66,9 @@ export const useGroupStore = defineStore("groups", {
 
     async removeStudentFromGroup(groupId, studentId) {
       try {
-        const token = useAuthStore().token; // Using token from the store
+        const token = useAuthStore().token;
+        const bitacoraStore = useBitacoraStore(); 
+
         const response = await fetch(
           `http://localhost:8000/api/groups/${groupId}/removeStudentFromGroup`,
           {
@@ -79,12 +88,16 @@ export const useGroupStore = defineStore("groups", {
 
         const data = await response.json();
 
-        // Update the number of students in the group and remove the student from local state
+        // Actualizar el estado local
         const group = this.groups.find(group => group.id === groupId);
         if (group) {
           group.number_of_students = data.number_of_students;
-          group.members = group.members.filter(member => member.id !== studentId); // Remove student from members
+          group.members = group.members.filter(member => member.id !== studentId);
         }
+
+        // Actualizar la bitácora después de eliminar el estudiante
+        await bitacoraStore.fetchBitacora(groupId); 
+        await bitacoraStore.fetchNotes(groupId);
 
       } catch (error) {
         console.error("Error removing student from group:", error);

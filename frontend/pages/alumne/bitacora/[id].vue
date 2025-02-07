@@ -155,13 +155,36 @@
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBitacoraStore } from '@/stores/bitacoraStore'
+import { useGroupStore } from '@/stores/groupStore';
 
-const route = useRoute()
-const store = useBitacoraStore()
-const groupId = route.params.id
+const route = useRoute();
+const store = useBitacoraStore();
+const groupStore = useGroupStore();
+const groupId = route.params.id;
 
 onMounted(async () => {
   await store.fetchBitacora(groupId)
   await store.fetchNotes(groupId)
 })
+
+// Observar cambios en el grupo
+watch(
+  () => groupStore.groups.find(group => group.id === parseInt(groupId)),
+  async (newGroup) => {
+    if (newGroup) {
+      await store.fetchBitacora(groupId);
+      await store.fetchNotes(groupId);
+    }
+  },
+  { deep: true }
+);
+
+// Observar cambios en las notas
+watchEffect(async () => {
+  const group = groupStore.groups.find(group => group.id === parseInt(groupId));
+  if (group) {
+    await store.fetchBitacora(groupId); // Actualiza la bitácora cuando cambia el grupo
+    await store.fetchNotes(groupId); // Actualiza las notas cuando cambian los integrantes
+  }
+});
 </script>
