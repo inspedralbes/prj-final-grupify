@@ -10,26 +10,13 @@ export function useChat() {
   const knowledgeStore = useKnowledgeStore();
   const studentsStore = useStudentsStore();
   const coursesStore = useCoursesStore();
+  const sociogramStore = useSociogramStore();
 
   // Variables reactivas para almacenar datos
   const students = ref([]);
   const courses = ref([]);
   const forms = ref([]);
   const responses = ref([]);
-  // const responsesSociogram = ref([]);
-
-  // // Cargar respuestas del sociograma
-  // onMounted(async () => {
-  //   fetch("http://localhost:8000/api/forms/all-responses-sociogram")
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       responsesSociogram.value = data;
-  //       console.log("Responses Sociogram loaded:", responsesSociogram.value);
-  //     })
-  //     .catch(error => {
-  //       console.error("Error loading responses sociogram:", error);
-  //     });
-  // });
 
   // Cargar formularios activos
   onMounted(async () => {
@@ -79,6 +66,48 @@ export function useChat() {
     }
   });
 
+  const waitForData = () => {
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        const sociogramResponses = sociogramStore.responses;
+        console.log("Waiting for data...", sociogramResponses);
+        if (sociogramResponses && sociogramResponses.all_responses.length > 0) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100); // Verificar cada 100ms
+    });
+  };
+
+  onMounted(async () => {
+    console.log("Waiting for data...");
+    await waitForData();
+    console.log("Data cargadad: ", sociogramStore.responses);
+
+    chatStore.createNewChat({ name: "Sociograma" });
+
+    chatStore.addMessage(chatStore.currentChatId, {
+      type: "system",
+      content: `Benvingut a la sessió de sociograma. \n 
+      CURSO: ${sociogramStore.currentCourse.courseName} \n
+      DIVISION: ${sociogramStore.currentDivision.divisionName}
+      \n Com puc ajudar-te?\n
+        Pot fer preguntes sobre:\n
+        - Sobre les preferències individuals\n
+        - Sobre les relacions entre alumnes\n
+        - Sobre el sociograma en general\n
+        I més...
+      `,
+      timestamp: new Date().toISOString(),
+    });
+    
+    chatStore.addMessage(chatStore.currentChatId, {
+      type: "user",
+      content: `Que informació pots proporcionar-me sobre el sociograma?`,
+      timestamp: new Date().toISOString(),
+    })
+  });
+
   const genAI = new GoogleGenerativeAI(
     "AIzaSyC0NI-xnqWHJy-0XoJl7cVo63MYpqC1r9E"
   );
@@ -118,6 +147,18 @@ export function useChat() {
         )
         .join("\n");
 
+      // Recuperar los datos del sociograma desde el sociogramStore
+      const sociogramData = sociogramStore.responses.all_responses;
+
+      // Construir el contexto del sociograma
+      const sociogramContext =
+        sociogramData && sociogramData.length > 0
+          ? `
+        Dades del sociograma:
+        ${JSON.stringify(sociogramData)}
+      `
+          : "No hi ha dades del sociograma disponibles.";
+
       // Construir el contexto de los alumnos
       const studentsContext = students.value.length
         ? `
@@ -137,8 +178,7 @@ export function useChat() {
           Informació dels cursos:
           ${courses.value
             .map(
-              course =>
-                `- Curs ${course.courseId}: Nom - ${course.courseName}`
+              course => `- Curs ${course.courseId}: Nom - ${course.courseName}`
             )
             .join("\n")}
         `
@@ -157,19 +197,18 @@ export function useChat() {
         `
         : "No hi ha informació de formularis disponibles.";
 
-        // Construir el contexto de las respuestas
-        const responsesContext = responses.value.length
+      // Construir el contexto de las respuestas
+      const responsesContext = responses.value.length
         ? `
           Informació de les respostes:
           ${responses.value
             .map(
-              (response) =>
+              response =>
                 `- Formulari: ${response.form_id}, Pregunta: ${response.question_id}, Respostes: ${JSON.stringify(response.responses)}`
             )
             .join("\n")}
         `
         : "No hi ha informació de respostes disponibles.";
-
 
       // Construir el prompt base
       const basePrompt = `
@@ -182,6 +221,9 @@ export function useChat() {
         Sempre respon en català, però si l'usuari pregunta en altre idioma, respon en el mateix idioma que ell utilitzi.
         Mantén una conversa natural i amable.
         Ten en compte que el Formulari ID: 3 és el sociograma.
+
+         Context del sociograma:
+          ${sociogramContext}
       `;
 
       const conversationContext = conversationHistory
