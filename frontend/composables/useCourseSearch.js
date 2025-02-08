@@ -6,6 +6,7 @@ export function useCourseSearch(courses) {
     const selectedDivision = ref('');
 
     const filteredCourses = computed(() => {
+        
         return courses.value.filter(course => {
             const matchesQuery = course.courseName.toLowerCase().includes(searchQuery.value.toLowerCase());
             const matchesCourse = selectedCourse.value ? course.courseId === Number(selectedCourse.value) : true;

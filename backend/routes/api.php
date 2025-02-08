@@ -99,6 +99,9 @@ Route::get('/all-responses', [AnswerController::class, 'getAllResponses']);
 //RUTA PARA OBTENER TODOS LOS FORMULARIOS ACTIVOS
 Route::get('/forms/active', [FormController::class, 'getActiveForms']);
 
+//RUTA PARA OBTENER TODAS LAS RESPUESTA AL SOCIOGRAMA DE UN CURSO Y DIVISION ESPECIFICA
+Route::post('/sociogram/responses', [SociogramRelationshipController::class, 'getResponsesByCourseAndDivision']);
+
 Route::get('/roles', [RoleController::class, 'index']);
 
 Route::resource('divisions', DivisionController::class);
@@ -196,7 +199,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Rutas para las bitácoras
 Route::prefix('bitacoras')->group(function () {
-    Route::get('/', [BitacoraController::class, 'index']); 
+    Route::get('/', [BitacoraController::class, 'index']);
     Route::post('/', [BitacoraController::class, 'store']);
     Route::get('/{id}', [BitacoraController::class, 'show']);
     Route::put('/{id}', [BitacoraController::class, 'update']);
