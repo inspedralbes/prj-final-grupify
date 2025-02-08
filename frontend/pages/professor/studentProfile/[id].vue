@@ -19,6 +19,20 @@ const comments = ref([]);
 const newComment = ref(""); // Ensure newComment is defined
 const editingComment = ref(null); // Ensure editingComment is defined
 const isFormVisible = ref(false);
+const hasAnsweredForm4 = ref(false); // Estado para saber si ha respondido el formulario 4
+
+
+
+const competences = [
+  { id: 22, name: "Responsabilitat" },
+  { id: 23, name: "Treball en equip" },
+  { id: 24, name: "Gestió del temps" },
+  { id: 25, name: "Comunicació" },
+  { id: 26, name: "Adaptabilitat" },
+  { id: 27, name: "Lideratge" },
+  { id: 28, name: "Creativitat" },
+  { id: 29, name: "Proactivitat" },
+];
 
 
 let teacherId = null;
@@ -127,6 +141,8 @@ onMounted(async () => {
       error.value = "Estudiant no trobat";
     } else {
       await fetchComments(studentId); // Fetch comments after student is loaded
+      await checkForm4Status(studentId); // Comprobar si ha respondido al formulario 4
+
     }
   } catch (err) {
     console.error(err);
@@ -135,6 +151,42 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+const checkForm4Status = async (studentId) => {
+  try {
+    console.log("Verificando respuesta del formulario 4 para el estudiante:", studentId);
+
+    // Llamada a la ruta correcta para obtener los usuarios que han respondido el formulario 4
+    const response = await fetch(`http://localhost:8000/api/forms/4/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al comprobar la respuesta del formulario (Código ${response.status})`);
+    }
+
+    const data = await response.json();
+    console.log("Respuesta del servidor para el formulario 4:", data); // Imprime la respuesta
+
+    // Asegúrate de que estamos comparando los IDs correctamente (convirtiéndolos a números si es necesario)
+    const hasAnswered = data.some(user => Number(user.id) === Number(studentId)); // Aseguramos que ambas sean del mismo tipo
+
+    console.log("¿El estudiante ha respondido?", hasAnswered); // Depuración adicional
+
+    // Verifica si el estudiante ha respondido y actualiza el estado
+    hasAnsweredForm4.value = hasAnswered;
+
+  } catch (error) {
+    console.error("Error en checkForm4Status:", error);
+    hasAnsweredForm4.value = false; // En caso de error, asumimos que no ha respondido
+  }
+};
+
+
+
+
 
 // Funciones para comentarios
 const fetchComments = async studentId => {
@@ -429,10 +481,20 @@ const cancelEdit = () => {
       </div>
     </div>
 
-    <!-- Contenido desplegable -->
-    <div class="bg-white rounded-xl shadow-sm p-6 mt-4" v-if="isFormVisible">
-      <p class="text-center text-gray-600">El gràfic d'autoavaluació es mostrarà aquí (pero ahora está vacío).</p>
-    </div>
+    <!-- Contenido desplegable para resultados de autoevaluación -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mt-4" v-if="isFormVisible">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Resultados de Autoevaluación</h2>
+          <p class="text-center text-gray-600">
+            El gràfic d'autoavaluació es mostrarà aquí (pero ahora está vacío).
+          </p>
+
+          <!-- Mostrar si el formulario ha sido contestado o no -->
+          <div class="mt-4 text-center text-gray-700">
+            <span v-if="hasAnsweredForm4" class="text-green-600 font-semibold">Contestado ✅</span>
+            <span v-else class="text-red-600 font-semibold">No contestado ❌</span>
+          </div>
+        </div>
+
   </div>
       <!-- Comentarios -->
       <div class="bg-white rounded-2xl shadow-lg p-8 mt-6">
