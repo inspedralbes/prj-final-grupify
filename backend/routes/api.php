@@ -27,6 +27,9 @@ Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 
+Route::get('/questions/{questionId}/average-rating', [AnswerController::class, 'getAverageRating']);
+
+
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-dashboard', [DashboardController::class, 'adminDashboard']);
 Route::middleware(['auth:sanctum', 'role:teacher'])->get('/teacher-dashboard', [DashboardController::class, 'teacherDashboard']);
 Route::middleware(['auth:sanctum', 'role:student'])->get('/student-dashboard', [DashboardController::class, 'studentDashboard']);

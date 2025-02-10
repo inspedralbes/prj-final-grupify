@@ -14,7 +14,8 @@ class CreateAnswersTable extends Migration
             $table->foreignId('form_id')->constrained()->onDelete('cascade');
             $table->foreignId('question_id')->constrained()->onDelete('cascade');
             $table->text('answer'); // El campo que almacenará las respuestas, puede ser un string o un JSON
-            $table->string('answer_type'); // El tipo de respuesta (multiple, checkbox, number, etc.)
+            $table->tinyInteger('rating')->unsigned()->nullable(); // Campo para almacenar el rating (1-5)
+            $table->string('answer_type')->nullable(); // Tipo de respuesta (rating, text, checkbox, etc.)
             $table->timestamps();
         });
 
