@@ -74,6 +74,7 @@ import {
   UserGroupIcon,
   DocumentTextIcon,
   PowerIcon,
+  CodeBracketIcon,
 } from "@heroicons/vue/24/outline";
 
 // Elementos del menú
@@ -81,6 +82,7 @@ const menuItems = [
   { name: "Dashboard", path: "/alumne/dashboard", icon: HomeIcon },
   { name: "Grups", path: "/alumne/grups", icon: UserGroupIcon },
   { name: "Formularis", path: "/alumne/formularis", icon: DocumentTextIcon },
+  { name: "Playground", path: "/alumne/playground", icon: CodeBracketIcon },
   { name: "Tancar la sessió", path: "/alumne/tancar-sessio", icon: PowerIcon },
 ];
 
