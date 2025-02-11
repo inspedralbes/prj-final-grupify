@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SociogramRelationship;
+use App\Models\CescRelationship;
+use App\Models\CescResult;
 use App\Models\Form;
 use App\Models\User;
+use App\Models\TagCesc;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SociogramRelationshipController extends Controller
+class CescRelationshipController extends Controller
 {
-
     public function getResponsesByCourseAndDivision(Request $request)
     {
         try {
@@ -35,7 +36,7 @@ class SociogramRelationshipController extends Controller
                 return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);
             }
 
-            // Obtener las relaciones sociométricas de los usuarios encontrados
+            // Obtener las relaciones Cesc de los usuarios encontrados
             $relationships = CescRelationship::whereIn('user_id', $userIds)
                 ->with(['user', 'peer', 'question']) // Cargar relaciones necesarias
                 ->get();
@@ -68,7 +69,7 @@ class SociogramRelationshipController extends Controller
                                             'peer_id' => optional($relationship->peer)->id,
                                             'peer_name' => optional($relationship->peer)->name,
                                             'peer_last_name' => optional($relationship->peer)->last_name,
-                                            'relationship_type' => $relationship->relationship_type,
+                                            'tag_id' => $relationship->tag_id, // Se cambió de relationship_type a tag_id
                                         ];
                                     }),
                                 ];
@@ -95,7 +96,7 @@ class SociogramRelationshipController extends Controller
     {
         try {
             // Cargar las relaciones incluyendo las relaciones Many-to-Many de user con courses y divisions
-            $relationships = SociogramRelationship::with([
+            $relationships = CescRelationship::with([
                 'user.courses',      // Carga los courses asociados al user
                 'user.divisions',    // Carga las divisions asociadas al user
                 'peer',
@@ -146,7 +147,7 @@ class SociogramRelationshipController extends Controller
                                             'peer_id' => optional($relationship->peer)->id,
                                             'peer_name' => optional($relationship->peer)->name,
                                             'peer_last_name' => optional($relationship->peer)->last_name,
-                                            'relationship_type' => $relationship->relationship_type,
+                                            'tag_id' => $relationship->tag_id, 
                                         ];
                                     }),
                                 ];
@@ -169,14 +170,8 @@ class SociogramRelationshipController extends Controller
         }
     }
 
-
-
-
     /**
-     * Obtener los usuarios que respondieron a un formulario sociométrico.
-     */
-    /**
-     * Obtener los usuarios que respondieron a un formulario sociométrico específico.
+     * Obtener los usuarios que respondieron a un formulario Cesc.
      */
     public function getRespondedUsers($formId)
     {
@@ -188,7 +183,7 @@ class SociogramRelationshipController extends Controller
             }
 
             // Obtener los IDs únicos de los usuarios que han respondido el formulario
-            $userIds = SociogramRelationship::whereHas('question', function ($query) use ($formId) {
+            $userIds = CescRelationship::whereHas('question', function ($query) use ($formId) {
                 $query->where('form_id', $formId); // Relación con preguntas dentro del formulario
             })
                 ->pluck('user_id')
@@ -210,7 +205,6 @@ class SociogramRelationshipController extends Controller
         }
     }
 
-
     public function getAnswersByUser($formId, $userId)
     {
         // Verificar si el formulario existe
@@ -228,15 +222,15 @@ class SociogramRelationshipController extends Controller
         // Obtener las preguntas del formulario
         $questions = $form->questions; // Suponiendo que el formulario tiene una relación de preguntas
 
-        // Obtener las relaciones sociométricas del usuario que pertenecen a las preguntas del formulario
-        $relationships = SociogramRelationship::where('user_id', $userId)
+        // Obtener las relaciones Cesc del usuario que pertenecen a las preguntas del formulario
+        $relationships = CescRelationship::where('user_id', $userId)
             ->whereIn('question_id', $questions->pluck('id')) // Filtrar solo las relaciones con preguntas del formulario
             ->with(['peer', 'question']) // Cargar las relaciones con peers y preguntas
             ->get();
 
         // Verificar si existen relaciones para el usuario
         if ($relationships->isEmpty()) {
-            return response()->json(['message' => 'El usuario no tiene relaciones sociométricas registradas para este formulario.'], 404);
+            return response()->json(['message' => 'El usuario no tiene relaciones Cesc registradas para este formulario.'], 404);
         }
 
         // Agrupar las relaciones por question_id
@@ -254,7 +248,7 @@ class SociogramRelationshipController extends Controller
                         'id' => optional($relationship->peer)->id,
                         'name' => optional($relationship->peer)->name,
                         'last_name' => optional($relationship->peer)->last_name,
-                        'relationship_type' => $relationship->relationship_type,
+                        'tag_id' => $relationship->tag_id, // Se cambió de relationship_type a tag_id
                     ];
                 }),
             ];
@@ -269,86 +263,115 @@ class SociogramRelationshipController extends Controller
         ], 200);
     }
 
-
     /**
-     * Listar todas las relaciones sociométricas.
-     */
-    public function index()
-    {
-        $relationships = SociogramRelationship::with(['user', 'peer', 'question'])->get();
-        return response()->json($relationships, 200);
-    }
-
-    /**
-     * Filtrar relaciones por usuario que respondió.
-     */
-    public function byUser($userId)
-    {
-        $relationships = SociogramRelationship::where('user_id', $userId)
-            ->with(['peer', 'question'])
-            ->get();
-
-        return response()->json($relationships, 200);
-    }
-
-    /**
-     * Guardar nuevas relaciones sociométricas.
-     */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'relationships' => 'required|array',
-            'relationships.*.peer_id' => 'required|exists:users,id',
-            'relationships.*.question_id' => 'required|exists:questions,id',
-            'relationships.*.relationship_type' => 'required|in:positive,negative',
-        ]);
-
-        foreach ($data['relationships'] as $relationship) {
-            SociogramRelationship::create([
-                'user_id' => $data['user_id'],
-                'peer_id' => $relationship['peer_id'],
-                'question_id' => $relationship['question_id'],
-                'relationship_type' => $relationship['relationship_type'],
-            ]);
-        }
-
-        $form = Form::find(3);
-        if ($form) {
-            $form->increment('responses_count');
-        } else {
-            return response()->json(['error' => 'Formulario sociograma no encontrado.'], 404);
-        }
-
-        $user = User::find($data['user_id']);
-        if ($user) {
-            $user->forms()->updateExistingPivot($form->id, ['answered' => true]);
-        } else {
-            return response()->json(['error' => 'Usuario no encontrado.'], 404);
-        }
-
-        // Devolver una respuesta exitosa
-        return response()->json(['message' => 'Relaciones guardadas, contador de respuestas actualizado y formulario marcado como respondido.'], 201);
-    }
-
-
-    /**
-     * Eliminar una relación específica.
-     */
-    public function destroy($id)
-    {
-        $relationship = SociogramRelationship::findOrFail($id);
-        $relationship->delete();
-
-        return response()->json(['message' => 'Relación eliminada correctamente.'], 200);
-    }
-    //ver relaciones para hacer el sociograma
-    public function getRelationships()
-    {
-        $relationships = SociogramRelationship::with(['user', 'peer', 'question'])
-            ->get()
-            ->makeHidden(['user', 'peer', 'question']);
-
-        return response()->json($relationships);
-    }
+ * Listar todas las relaciones Cesc.
+ */
+public function index()
+{
+    $relationships = CescRelationship::with(['user', 'peer', 'question', 'tag'])->get();
+    return response()->json($relationships, 200);
 }
+
+/**
+ * Filtrar relaciones por usuario que respondió.
+ */
+public function byUser($userId)
+{
+    $relationships = CescRelationship::where('user_id', $userId)
+        ->with(['peer', 'question', 'tag'])
+        ->get();
+
+    return response()->json($relationships, 200);
+}
+
+/**
+ * Guardar nuevas relaciones Cesc.
+ */
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'relationships' => 'required|array',
+        'relationships.*.peer_id' => 'required|exists:users,id',
+        'relationships.*.question_id' => 'required|exists:questions,id',
+        'relationships.*.tag_id' => 'required|exists:tags_cesc,id', // Cambio de relationship_type a tag_id
+    ]);
+
+    foreach ($data['relationships'] as $relationship) {
+        CescRelationship::create([
+            'user_id' => $data['user_id'],
+            'peer_id' => $relationship['peer_id'],
+            'question_id' => $relationship['question_id'],
+            'tag_id' => $relationship['tag_id'], // Usamos tag_id en lugar de relationship_type
+        ]);
+    }
+
+    $form = Form::find(2); // Cambio aquí de 3 a 2
+    if ($form) {
+        $form->increment('responses_count');
+    } else {
+        return response()->json(['error' => 'Formulario Cesc no encontrado.'], 404);
+    }
+
+    $user = User::find($data['user_id']);
+    if ($user) {
+        $user->forms()->updateExistingPivot($form->id, ['answered' => true]);
+    } else {
+        return response()->json(['error' => 'Usuario no encontrado.'], 404);
+    }
+
+    // Devolver una respuesta exitosa
+    return response()->json(['message' => 'Relaciones guardadas, contador de respuestas actualizado y formulario marcado como respondido.'], 201);
+}
+
+/**
+ * Eliminar una relación específica.
+ */
+public function destroy($id)
+{
+    $relationship = CescRelationship::findOrFail($id);
+    $relationship->delete();
+
+    return response()->json(['message' => 'Relación eliminada correctamente.'], 200);
+}
+
+/**
+ * Ver relaciones para hacer el Cesc.
+ */
+public function getRelationships()
+{
+    $relationships = CescRelationship::with(['user', 'peer', 'question', 'tag'])
+        ->get()
+        ->makeHidden(['user', 'peer', 'question', 'tag']); // Asegúrate de que los datos no sean revelados
+
+    return response()->json($relationships);
+}
+
+public function calcularResultados()
+{
+    // Obtener el recuento de votos agrupado por peer_id y tag_id
+    $resultados = CescRelationship::select('peer_id', 'tag_id', \DB::raw('COUNT(*) as vote_count'))
+        ->groupBy('peer_id', 'tag_id')
+        ->get();
+
+    // Guardar los resultados en la tabla cesc_results
+    foreach ($resultados as $resultado) {
+        CescResult::updateOrCreate(
+            ['peer_id' => $resultado->peer_id, 'tag_id' => $resultado->tag_id],
+            ['vote_count' => $resultado->vote_count]
+        );
+    }
+
+    return response()->json(['message' => 'Resultados actualizados']);
+}
+
+public function verResultados()
+{
+    $resultados = CescResult::with(['peer', 'tag'])->get();
+    
+    return response()->json($resultados);
+}
+
+}
+
+
