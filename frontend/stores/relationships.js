@@ -29,6 +29,7 @@ export const useRelationshipsStore = defineStore("relationships", () => {
 
   // Obtener relaciones por curso y división
   const getRelationshipsByCourseAndDivision = (courseName, divisionName) => {
+    
     const studentIds = studentsStore.students
       .filter(
         student =>
