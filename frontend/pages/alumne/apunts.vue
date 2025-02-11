@@ -4,10 +4,12 @@
       <div class="w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col">
         <!-- Home and Documents Section -->
         <div class="p-4 space-y-6">
-          <div class="flex items-center space-x-2">
-            <span class="material-icons text-blue-500">home</span>
-            <span class="font-medium">Inici</span>
-          </div>
+            <div class="flex items-center space-x-2">
+                <NuxtLink to="/alumne/dashboard" class="flex items-center space-x-2">
+                    <span class="material-icons text-blue-500">home</span>
+                    <span class="font-medium">Inici</span>
+                </NuxtLink>
+            </div>
   
           <div>
             <div class="flex items-center justify-between mb-4">
