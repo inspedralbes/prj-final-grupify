@@ -13,9 +13,8 @@ const getSkillPercentage = value => (value / 5) * 100;
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="space-y-8 mt-8">
     <div
-      class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-8 border border-gray-100"
     >
       <div
         v-if="props.filteredRoles.length > 0"
@@ -29,12 +28,12 @@ const getSkillPercentage = value => (value / 5) * 100;
           <!-- Nombre del alumno -->
           <div class="flex items-center mb-6">
             <div
-              class="w-12 h-12 bg-gradient-to-br from-[#00ADEC] to-[#0080C0] rounded-full flex items-center justify-center text-white font-bold text-xl"
+              class="w-12 h-12 bg-gradient-to-br from-[#00ADEC] to-[#0080C0] rounded-full flex items-center justify-center text-white font-bold text-sm"
             >
               {{ role.peer_name[0] }}{{ role.peer_last_name[0] }}
             </div>
             <div class="ml-4">
-              <h2 class="text-xl font-semibold text-gray-800">
+              <h2 class="text-sm font-semibold text-gray-800">
                 {{ role.peer_name }} {{ role.peer_last_name }}
               </h2>
             </div>
@@ -91,7 +90,7 @@ const getSkillPercentage = value => (value / 5) * 100;
             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <p class="text-xl text-gray-600 font-medium">
+        <p class="text-sm text-gray-600 font-medium">
           No hi ha dades de rols disponibles
         </p>
       </div>

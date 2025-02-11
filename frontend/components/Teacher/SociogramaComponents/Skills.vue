@@ -21,7 +21,7 @@ const getSkillColor = value => {
 </script>
 
 <template>
-  <div class="space-y-8">
+  <div class="space-y-8 mt-8">
     <!-- Skills Content -->
     <div
       v-if="props.filteredSkills.length > 0"
@@ -35,12 +35,12 @@ const getSkillColor = value => {
         <!-- Student Name -->
         <div class="flex items-center mb-6">
           <div
-            class="w-12 h-12 bg-gradient-to-br from-[#00ADEC] to-[#0080C0] rounded-full flex items-center justify-center text-white font-bold text-xl"
+            class="w-12 h-12 bg-gradient-to-br from-[#00ADEC] to-[#0080C0] rounded-full flex items-center justify-center text-white font-bold text-sm"
           >
             {{ skill.peer_name[0] }}{{ skill.peer_last_name[0] }}
           </div>
           <div class="ml-4">
-            <h2 class="text-xl font-semibold text-gray-800">
+            <h2 class="text-sm font-semibold text-gray-800">
               {{ skill.peer_name }} {{ skill.peer_last_name }}
             </h2>
           </div>
