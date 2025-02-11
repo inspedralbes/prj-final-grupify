@@ -1,9 +1,7 @@
 <template>
     <div class="h-screen bg-white dark:bg-gray-900 flex text-gray-900 dark:text-white">
       <!-- Left Sidebar -->
-      <div
-        class="w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col"
-      >
+      <div class="w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col">
         <!-- Home and Documents Section -->
         <div class="p-4 space-y-6">
           <div class="flex items-center space-x-2">
@@ -45,13 +43,11 @@
               <div
                 v-for="note in filteredNotes"
                 :key="note.id"
-                @click="currentNote = note"
-                class="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                :class="{
-                  'bg-gray-50 dark:bg-gray-800': currentNote?.id === note.id,
-                }"
+                class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                :class="{ 'bg-gray-50 dark:bg-gray-800': currentNote?.id === note.id }"
               >
-                <div class="flex items-start space-x-3">
+                <!-- Al hacer clic en esta área se selecciona la nota -->
+                <div class="flex items-start space-x-3" @click="currentNote = note">
                   <span class="material-icons text-gray-400">description</span>
                   <div class="flex-1">
                     <h3 class="font-medium">{{ note.title }}</h3>
@@ -65,6 +61,13 @@
                     </div>
                   </div>
                 </div>
+                <!-- Botón para borrar la nota -->
+                <button
+                  @click.stop="deleteNote(note.id)"
+                  class="text-red-500 hover:text-red-600"
+                >
+                  <span class="material-icons">delete</span>
+                </button>
               </div>
             </div>
           </div>
@@ -128,9 +131,7 @@
               />
               <StudentRichTextEditor
                 v-model="currentNote.content"
-                @update:modelValue="
-                  updateNote(currentNote.id, { content: $event })
-                "
+                @update:modelValue="updateNote(currentNote.id, { content: $event })"
               />
             </template>
             <div
@@ -198,7 +199,7 @@
             <div class="p-4 border-t border-gray-200 dark:border-gray-800">
               <textarea
                 v-model="prompt"
-                placeholder="Ask me to generate notes about any topic..."
+                placeholder="Demana'm que generi notes sobre qualsevol tema..."
                 class="w-full h-32 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               ></textarea>
               
@@ -218,8 +219,12 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, computed, onMounted, watch } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   import { useDark, useToggle } from '@vueuse/core';
+  // Importa tus hooks o funciones de notas y generación de contenido.
+  // Ajusta las rutas según la estructura de tu proyecto.
+  import { useNotes } from '@/composables/useNotes';
+  import { useGemini } from '@/composables/useGemini';
   
   const isDark = useDark({
     selector: 'html',
@@ -238,7 +243,10 @@
     }
   });
   
+  // Extraemos las funciones y variables del hook useNotes
+  // Se asume que useNotes utiliza localStorage para persistir las notas
   const { notes, currentNote, createNote, updateNote, exportNotePDF, exportNoteDocx } = useNotes();
+  // Extraemos la función para generar contenido y estados del hook useGemini
   const { generateNotes, generating, error } = useGemini();
   
   const subjects = [
@@ -254,14 +262,14 @@
   const prompt = ref('');
   const previewContent = ref('');
   const displayedContent = ref('');
-  const typingSpeed = 20; // ms per character
+  const typingSpeed = 20; // ms por carácter
   
   const filteredNotes = computed(() => {
     return notes.value.filter((note) => note.subject === selectedSubject.value);
   });
   
   const getSubjectColor = (subject: string) => {
-    const colors = {
+    const colors: { [key: string]: string } = {
       'Mathematics': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       'Physics': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
       'Chemistry': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -305,7 +313,9 @@
     
     updateNote(currentNote.value.id, {
       content: previewContent.value,
-      title: prompt.value.slice(0, 50) + (prompt.value.length > 50 ? '...' : '')
+      title:
+        prompt.value.slice(0, 50) +
+        (prompt.value.length > 50 ? '...' : '')
     });
     
     previewContent.value = '';
@@ -314,6 +324,21 @@
   
   const createNewNote = () => {
     createNote(selectedSubject.value);
+  };
+  
+  // Función para borrar una nota y actualizar el localStorage
+  const deleteNote = (id: number) => {
+    const index = notes.value.findIndex(note => note.id === id);
+    if (index !== -1) {
+      // Eliminamos la nota del arreglo reactivo
+      notes.value.splice(index, 1);
+      // Actualizamos el localStorage para que la eliminación sea persistente
+      localStorage.setItem('notes', JSON.stringify(notes.value));
+    }
+    // Si la nota borrada es la que está activa, la limpiamos
+    if (currentNote.value?.id === id) {
+      currentNote.value = null;
+    }
   };
   </script>
   
@@ -359,3 +384,4 @@
     line-height: 1.4;
   }
   </style>
+  
