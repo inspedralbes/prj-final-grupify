@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('course_division_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_id')->constrained('courses')->onDelete('cascade'); // Relación con courses
-            $table->foreignId('division_id')->constrained('divisions')->onDelete('cascade'); // Relación con divisions
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Relación con users
+            // Permitir valores null en course_id y division_id
+            $table->foreignId('course_id')->nullable()->constrained('courses')->onDelete('cascade');
+            $table->foreignId('division_id')->nullable()->constrained('divisions')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
-            $table->unique(['course_id', 'division_id', 'user_id'], 'unique_course_division_user'); // Unicidad
+            $table->unique(['course_id', 'division_id', 'user_id'], 'unique_course_division_user');
         });
     }
 

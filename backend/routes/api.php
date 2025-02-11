@@ -21,10 +21,14 @@ use App\Http\Controllers\CourseDivisionUserController;
 use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\BitacoraNoteController;
+use App\Http\Controllers\InvitationController;
 
 Route::post('/login', [AuthenticatedSessionController::class, 'login']);
 
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
+
+Route::get('/questions/{questionId}/average-rating', [AnswerController::class, 'getAverageRating']);
+
 
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-dashboard', [DashboardController::class, 'adminDashboard']);
 Route::middleware(['auth:sanctum', 'role:teacher'])->get('/teacher-dashboard', [DashboardController::class, 'teacherDashboard']);
@@ -86,11 +90,21 @@ Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshi
 // RUTA PARA OBTENER DIVISIONES SEGUN COURSE
 Route::get('/course-divisions', [CourseController::class, 'getDivisionsByCourse']);
 
+//RUTA PARA OBTENER LAS RESPUESTA DE SOCIOGRAMADA (TODA)
+Route::get('/forms/all-responses-sociogram', [SociogramRelationshipController::class, 'getAllResponses']);
 // RUTA PARA ASIGNAR FORMULARIO SEGUN CURSO Y DIVISION
 Route::post('/forms/assign-to-course-division', [FormController::class, 'assignFormToCourseAndDivision']);
 //RUTA PARA VER SI UN FORMULARIO ESTA CONTESTADO POR TODOS LOS ALUMNOS DE UNA CLASE
 Route::get('/check-form-completion/{course_id}/{division_id}/{form_id}', [FormController::class, 'checkClassFormCompletion']);
 
+// RUTA PARA OBETENER TODAS LAS RESPUESTAS A LOS FORMULARIOS
+Route::get('/all-responses', [AnswerController::class, 'getAllResponses']);
+
+//RUTA PARA OBTENER TODOS LOS FORMULARIOS ACTIVOS
+Route::get('/forms/active', [FormController::class, 'getActiveForms']);
+
+//RUTA PARA OBTENER TODAS LAS RESPUESTA AL SOCIOGRAMA DE UN CURSO Y DIVISION ESPECIFICA
+Route::post('/sociogram/responses', [SociogramRelationshipController::class, 'getResponsesByCourseAndDivision']);
 
 Route::get('/roles', [RoleController::class, 'index']);
 
@@ -189,7 +203,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Rutas para las bitácoras
 Route::prefix('bitacoras')->group(function () {
-    Route::get('/', [BitacoraController::class, 'index']); 
+    Route::get('/', [BitacoraController::class, 'index']);
     Route::post('/', [BitacoraController::class, 'store']);
     Route::get('/{id}', [BitacoraController::class, 'show']);
     Route::put('/{id}', [BitacoraController::class, 'update']);
@@ -201,8 +215,20 @@ Route::prefix('bitacoras')->group(function () {
     Route::get('/{bitacoraId}/notes/{id}', [BitacoraNoteController::class, 'show']);
     Route::put('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'update']);
     Route::delete('/{bitacoraId}/notes/{noteId}', [BitacoraNoteController::class, 'destroy']);
+    Route::delete('/{groupId}/notes', [BitacoraNoteController::class, 'deleteAllNotes']);
 });
 
 Route::get('/bitacoras/{bitacoraId}/user/{userId}/notes', [BitacoraNoteController::class, 'getUserNotes']);
 Route::get('bitacoras/{groupId}/notes', [BitacoraController::class, 'getNotes']);
 
+// Rutas para las invitaciones
+// Rutas públicas para consultar una invitación (útil en el front para validar el token)
+Route::get('/invitations/{token}', [InvitationController::class, 'show']);
+
+// Rutas protegidas con autenticación (por ejemplo, usando Sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    // Gestión de invitaciones: crear y listar (para el profesor)
+    Route::post('/invitations', [InvitationController::class, 'store']);
+    Route::get('/invitations', [InvitationController::class, 'index']);
+
+});

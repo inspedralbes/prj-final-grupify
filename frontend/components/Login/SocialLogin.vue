@@ -1,7 +1,13 @@
 <script setup>
+import { onMounted } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
+
 const config = useRuntimeConfig();
 const clientId = config.public.googleClientId;
 const authStore = useAuthStore();
+const router = useRouter();
+const errorMessage = ref('');
 
 const loadGoogleScript = async () => {
   if (window.google?.accounts?.id) return;
@@ -17,7 +23,7 @@ const loadGoogleScript = async () => {
 };
 
 const handleGoogleResponse = (response) => {
-  //console.log(response.credential); Ver el token JWT de Google
+  // Ver el token JWT de Google
   const userData = parseJwt(response.credential);
   sendToBackend(userData);
 };
@@ -40,6 +46,9 @@ const parseJwt = (token) => {
 };
 
 const sendToBackend = async (userData) => {
+  errorMessage.value = '';
+
+  // Construir el objeto de datos a enviar
   const postData = {
     email: userData.email,
     google_id: userData.sub,
@@ -47,6 +56,14 @@ const sendToBackend = async (userData) => {
     last_name: userData.family_name || '',
     image: userData.picture,
   };
+
+  // Si existe un token de invitación en la URL, lo incluimos en la petición
+  const currentQuery = router.currentRoute.value.query;
+  if (currentQuery.invitation) {
+    postData.invitation_token = currentQuery.invitation;
+  }
+
+  console.log('Datos enviados al backend:', postData); // Para depuración
 
   try {
     const { token, user } = await $fetch('https://api.grupify.cat/api/google-login', {
@@ -56,10 +73,23 @@ const sendToBackend = async (userData) => {
 
     authStore.setAuth(token, user);
 
-    // Redirigir con recarga completa
-    window.location.href = '/alumne/dashboard'; // Asegúrate que la ruta sea correcta
+    // Redirigir con recarga completa a la ruta correspondiente
+    if (user.role_id === 2) {
+      window.location.href = '/alumne/dashboard';
+    } else {
+      navigateTo('/professor/dashboard');
+    }
   } catch (error) {
     console.error('Error en el login:', error);
+    if (error.response && error.response.status === 400) {
+      errorMessage.value = error.response.data?.errors?.email[0] || 'Error en el formato del correo';
+    } else {
+      errorMessage.value = 'Error en el servidor. Por favor, intenta de nuevo más tarde.';
+    }
+    // Limpiar mensaje después de 5 segundos
+    setTimeout(() => {
+      errorMessage.value = '';
+    }, 5000);
   }
 };
 
@@ -86,6 +116,11 @@ onMounted(async () => {
 
 <template>
   <div class="social-login">
+    <!-- Mensaje de error -->
+    <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    
     <button class="social-button" aria-label="Entra amb Google" @click="gestioGoogleLogin">
       <img src="/icons/google.svg" alt="Google icon" />
       <span>Google / @inspedralbes.cat</span>

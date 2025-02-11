@@ -6,9 +6,171 @@ use App\Models\SociogramRelationship;
 use App\Models\Form;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SociogramRelationshipController extends Controller
 {
+
+    public function getResponsesByCourseAndDivision(Request $request)
+    {
+        try {
+            // Validar los datos de entrada
+            $validated = $request->validate([
+                'course_id' => 'required|exists:courses,id',
+                'division_id' => 'required|exists:divisions,id',
+            ]);
+
+            $courseId = $validated['course_id'];
+            $divisionId = $validated['division_id'];
+
+            // Obtener los usuarios que pertenecen al curso y división
+            $userIds = DB::table('course_division_user')
+                ->where('course_id', $courseId)
+                ->where('division_id', $divisionId)
+                ->pluck('user_id')
+                ->unique();
+
+            // Verificar si hay usuarios en el curso y división
+            if ($userIds->isEmpty()) {
+                return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);
+            }
+
+            // Obtener las relaciones sociométricas de los usuarios encontrados
+            $relationships = SociogramRelationship::whereIn('user_id', $userIds)
+                ->with(['user', 'peer', 'question']) // Cargar relaciones necesarias
+                ->get();
+
+            // Verificar si hay relaciones disponibles
+            if ($relationships->isEmpty()) {
+                return response()->json(['message' => 'No hay respuestas registradas para los usuarios de este curso y división.'], 404);
+            }
+
+            // Agrupar las relaciones por formulario
+            $groupedResponses = $relationships->groupBy('question.form_id')->map(function ($formRelationships, $formId) {
+                // Obtener el título del formulario (si existe)
+                $formTitle = optional($formRelationships->first()->question->form)->title;
+
+                // Agrupar las relaciones por usuario
+                return [
+                    'form_id' => $formId,
+                    'form_title' => $formTitle,
+                    'responses' => $formRelationships->groupBy('user_id')->map(function ($userRelationships, $userId) {
+                        return [
+                            'user_id' => $userId,
+                            'user_name' => optional($userRelationships->first()->user)->name,
+                            'user_last_name' => optional($userRelationships->first()->user)->last_name,
+                            'responses' => $userRelationships->groupBy('question_id')->map(function ($questionRelationships, $questionId) {
+                                return [
+                                    'question_id' => $questionId,
+                                    'question_title' => optional($questionRelationships->first()->question)->title,
+                                    'peers' => $questionRelationships->map(function ($relationship) {
+                                        return [
+                                            'peer_id' => optional($relationship->peer)->id,
+                                            'peer_name' => optional($relationship->peer)->name,
+                                            'peer_last_name' => optional($relationship->peer)->last_name,
+                                            'relationship_type' => $relationship->relationship_type,
+                                        ];
+                                    }),
+                                ];
+                            }),
+                        ];
+                    }),
+                ];
+            });
+
+            // Devolver las respuestas estructuradas
+            return response()->json([
+                'all_responses' => $groupedResponses->values(), // Respuestas agrupadas por formulario
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar cualquier excepción
+            return response()->json(['message' => 'Error interno en el servidor', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Obtener todas las respuestas de todos los formularios.
+     */
+    public function getAllResponses()
+    {
+        try {
+            // Cargar las relaciones incluyendo las relaciones Many-to-Many de user con courses y divisions
+            $relationships = SociogramRelationship::with([
+                'user.courses',      // Carga los courses asociados al user
+                'user.divisions',    // Carga las divisions asociadas al user
+                'peer',
+                'question.form'
+            ])->get();
+
+            // Verificar si hay relaciones disponibles
+            if ($relationships->isEmpty()) {
+                return response()->json(['message' => 'No hay respuestas registradas'], 404);
+            }
+
+            // Agrupar las relaciones por formulario
+            $groupedResponses = $relationships->groupBy('question.form_id')->map(function ($formRelationships, $formId) {
+                // Obtener el título del formulario (si existe)
+                $formTitle = optional($formRelationships->first()->question->form)->title;
+
+                // Agrupar las relaciones por usuario
+                return [
+                    'form_id' => $formId,
+                    'form_title' => $formTitle,
+                    'responses' => $formRelationships->groupBy('user_id')->map(function ($userRelationships, $userId) {
+                        $firstUser = $userRelationships->first()->user;
+
+                        return [
+                            'user_id' => $userId,
+                            'user_name' => optional($firstUser)->name,
+                            'user_last_name' => optional($firstUser)->last_name,
+                            // Mapear cada course asociado al usuario
+                            'course' => $firstUser->courses->map(function ($course) {
+                                return [
+                                    'id' => $course->id,
+                                    'name' => $course->name,
+                                ];
+                            }),
+                            // Mapear cada division asociada al usuario
+                            'division' => $firstUser->divisions->map(function ($division) {
+                                return [
+                                    'id' => $division->id,
+                                    'name' => $division->name,
+                                ];
+                            }),
+                            'responses' => $userRelationships->groupBy('question_id')->map(function ($questionRelationships, $questionId) {
+                                return [
+                                    'question_id' => $questionId,
+                                    'question_title' => optional($questionRelationships->first()->question)->title,
+                                    'peers' => $questionRelationships->map(function ($relationship) {
+                                        return [
+                                            'peer_id' => optional($relationship->peer)->id,
+                                            'peer_name' => optional($relationship->peer)->name,
+                                            'peer_last_name' => optional($relationship->peer)->last_name,
+                                            'relationship_type' => $relationship->relationship_type,
+                                        ];
+                                    }),
+                                ];
+                            }),
+                        ];
+                    }),
+                ];
+            });
+
+            // Devolver las respuestas estructuradas
+            return response()->json([
+                'all_responses' => $groupedResponses->values(),
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar cualquier excepción
+            return response()->json([
+                'message' => 'Error interno en el servidor',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
 
     /**
      * Obtener los usuarios que respondieron a un formulario sociométrico.

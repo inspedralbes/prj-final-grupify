@@ -1,6 +1,7 @@
 services:
   db:
     image: mysql:8.2.0
+    command: --default-authentication-plugin=caching_sha2_password
     restart: always
     container_name: mysql
     volumes:

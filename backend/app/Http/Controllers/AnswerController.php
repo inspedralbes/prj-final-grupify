@@ -17,6 +17,52 @@ use App\Models\Form;
  */
 class AnswerController extends Controller
 {
+
+    /**
+     * @OA\Get(
+     *     path="/api/all-responses",
+     *     summary="Obtener todas las respuestas de todos los usuarios",
+     *     tags={"Respostes"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de todas las respuestas obtenida correctamente",
+     *         @OA\JsonContent(type="array", @OA\Items(
+     *             type="object",
+     *             @OA\Property(property="form_id", type="integer", example=1),
+     *             @OA\Property(property="user_id", type="integer", example=2),
+     *             @OA\Property(property="question_id", type="integer", example=3),
+     *             @OA\Property(property="responses", type="array", @OA\Items(type="string"))
+     *         ))
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="No hay respuestas disponibles"
+     *     )
+     * )
+     */
+    public function getAllResponses()
+    {
+        // Obtener todas las respuestas con sus relaciones
+        $answers = Answer::all();
+
+        // Verificar si hay respuestas
+        if ($answers->isEmpty()) {
+            return response()->json(['message' => 'No hay respuestas disponibles'], 404);
+        }
+
+        // Formatear las respuestas
+        $formattedResponses = $answers->map(function ($answer) {
+            return [
+                'form_id' => $answer->form_id,
+                'user_id' => $answer->user_id,
+                'question_id' => $answer->question_id,
+                'responses' => $this->formatAnswer($answer), // Formatear la respuesta según su tipo
+            ];
+        });
+
+        // Devolver las respuestas formateadas
+        return response()->json($formattedResponses, 200);
+    }
     /**
      * @OA\Get(
      *     path="/api/forms/{formId}/users/{userId}/answers",
@@ -72,12 +118,15 @@ class AnswerController extends Controller
             return response()->json(['message' => 'El usuario no ha respondido este formulario'], 404);
         }
 
-        // Formatear las respuestas para asegurarnos que los tipos array se devuelvan correctamente
+        // Formatear las respuestas
         $answers->each(function ($answer) {
             if (in_array($answer->answer_type, ['multiple', 'checkbox'])) {
-                $answer->answer = json_decode($answer->answer, true); // Asegurarse de que las respuestas de tipo array se devuelvan como arrays
+                $answer->answer = json_decode($answer->answer, true);
+            } elseif ($answer->answer_type === 'rating') {
+                $answer->answer = $answer->rating; // Mostrar el valor de rating en lugar de `answer`
             }
         });
+
 
         // Devolver las respuestas con el título del formulario
         return response()->json([
@@ -135,6 +184,52 @@ class AnswerController extends Controller
         return response()->json($users, 200);
     }
 
+    /**
+ * @OA\Get(
+ *     path="/api/questions/{questionId}/average-rating",
+ *     summary="Obtener el promedio de rating de una pregunta",
+ *     tags={"Respostes"},
+ *     @OA\Parameter(
+ *         name="questionId",
+ *         in="path",
+ *         required=true,
+ *         description="ID de la pregunta",
+ *         @OA\Schema(type="integer")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Promedio de rating calculado correctamente",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="question_id", type="integer", example=1),
+ *             @OA\Property(property="average_rating", type="number", example=4.5)
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=404,
+ *         description="No hay ratings para esta pregunta"
+ *     )
+ * )
+ */
+public function getAverageRating($questionId)
+{
+    // Calcular el promedio de ratings de la pregunta
+    $averageRating = Answer::where('question_id', $questionId)
+        ->whereNotNull('rating')
+        ->avg('rating');
+
+    // Si no hay ratings, devolver un mensaje
+    if (is_null($averageRating)) {
+        return response()->json(['message' => 'No hay ratings para esta pregunta'], 404);
+    }
+
+    // Devolver el resultado en JSON
+    return response()->json([
+        'question_id' => $questionId,
+        'average_rating' => round($averageRating, 2), // Redondeamos a 2 decimales
+    ], 200);
+}
+
+
 
     public function submitResponses(Request $request, $formId)
     {
@@ -148,7 +243,7 @@ class AnswerController extends Controller
             'responses' => 'required|array',
             'responses.*.question_id' => 'required|integer|exists:questions,id',
             'responses.*.answer' => 'required',
-            'responses.*.answer_type' => 'required|in:string,number,boolean,array,object,multiple,checkbox',
+            'responses.*.answer_type' => 'required|in:string,number,boolean,array,object,multiple,checkbox,rating',
         ]);
 
         if ($validator->fails()) {
@@ -166,9 +261,12 @@ class AnswerController extends Controller
                 'user_id' => $userId,  // Se usa el userId que vino en la solicitud
                 'form_id' => $formId,  // ID del formulario que vino en la URL
                 'question_id' => $response['question_id'],  // ID de la pregunta
-                'answer' => $this->formatAnswer($response),  // Formateamos la respuesta
+                'answer' => $response['answer_type'] === 'rating' ? '' : $this->formatAnswer($response),  // Asignar vacío o el valor formateado para 'answer'
+                'rating' => $response['answer_type'] === 'rating' ? (int) $response['answer'] : null,  // Guardar el valor de rating si es una respuesta 'rating'
                 'answer_type' => $response['answer_type'],  // Guardamos el tipo de respuesta
             ]);
+            
+            
         }
 
         // Incrementar el contador de respuestas en el formulario
@@ -207,6 +305,8 @@ class AnswerController extends Controller
                 return (string) $response['answer']; // Convertir a string
             case 'boolean':
                 return (bool) $response['answer']; // Convertir a booleano
+            case 'rating':
+                    return (int) $response['answer']; // Guardar rating como número entero (1-5)
             default:
                 return $response['answer']; // Dejarlo tal cual
         }

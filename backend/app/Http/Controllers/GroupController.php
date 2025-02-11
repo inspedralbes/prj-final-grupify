@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Group;
+use App\Models\Bitacora;
+use App\Models\BitacoraNote;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 /**
@@ -337,18 +341,29 @@ class GroupController extends Controller
      * )
      */
 
-    public function removeStudentFromGroup(Request $request, $groupId)
-    {
-        // Validar el ID del estudiante
-        $validated = $request->validate([
-            'student_id' => 'required|integer|exists:users,id',
-        ]);
+     public function removeStudentFromGroup(Request $request, $groupId)
+{
+    // Validar el ID del estudiante
+    $validated = $request->validate([
+        'student_id' => 'required|integer|exists:users,id',
+    ]);
 
-        // Buscar el grupo
-        $group = Group::find($groupId);
+    // Buscar el grupo
+    $group = Group::find($groupId);
 
-        if (!$group) {
-            return response()->json(['message' => 'Grupo no encontrado'], 404);
+    if (!$group) {
+        return response()->json(['message' => 'Grupo no encontrado'], 404);
+    }
+
+    try {
+        // Obtener la bitácora del grupo
+        $bitacora = Bitacora::where('group_id', $groupId)->first();
+
+        if ($bitacora) {
+            // Eliminar las notas del usuario en esta bitácora
+            BitacoraNote::where('bitacora_id', $bitacora->id)
+                       ->where('user_id', $validated['student_id'])
+                       ->delete();
         }
 
         // Eliminar la relación entre el estudiante y el grupo
@@ -359,9 +374,14 @@ class GroupController extends Controller
         $group->save();
 
         return response()->json([
-            'message' => 'Estudiante eliminado correctamente del grupo.',
+            'message' => 'Estudiante y sus notas eliminados correctamente del grupo.',
             'removed_student_id' => $validated['student_id'],
             'number_of_students' => $group->number_of_students
         ], 200);
+
+    } catch (Exception $e) {
+        return response()->json(['message' => 'Error interno del servidor'], 500);
     }
+}
+     
 }

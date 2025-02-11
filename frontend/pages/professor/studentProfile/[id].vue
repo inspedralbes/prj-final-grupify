@@ -18,6 +18,22 @@ const reasons = ["Falta de assistència", "Baixa voluntària", "Altres motius"];
 const comments = ref([]);
 const newComment = ref(""); // Ensure newComment is defined
 const editingComment = ref(null); // Ensure editingComment is defined
+const isFormVisible = ref(false);
+const hasAnsweredForm4 = ref(false); // Estado para saber si ha respondido el formulario 4
+
+
+
+const competences = [
+  { id: 22, name: "Responsabilitat" },
+  { id: 23, name: "Treball en equip" },
+  { id: 24, name: "Gestió del temps" },
+  { id: 25, name: "Comunicació" },
+  { id: 26, name: "Adaptabilitat" },
+  { id: 27, name: "Lideratge" },
+  { id: 28, name: "Creativitat" },
+  { id: 29, name: "Proactivitat" },
+];
+
 
 let teacherId = null;
 
@@ -30,8 +46,130 @@ if (storedUser) {
   }
 }
 
+// Función para obtener las respuestas del alumno
+// Función para obtener las respuestas del alumno
+async function obtenerDatosAlumno(studentId) {
+  try {
+    const url = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
+    const response = await fetch(url);
 
+    if (!response.ok) {
+      throw new Error(`Error en la respuesta de la API: ${response.statusText}`);
+    }
 
+    const data = await response.json();
+    console.log("Respuesta del servidor:", data);
+
+    if (data && Array.isArray(data.answers)) {
+      // Mapear las respuestas para que coincidan con las competencias
+      const mappedAnswers = competences.map(competence => {
+        // Buscar la respuesta correspondiente a la competencia
+        const answer = data.answers.find(a => a.question_id === competence.id);
+        return {
+          ...competence, // Incluir los datos de la competencia
+          rating: answer ? answer.rating : 0, // Usar 0 si no hay respuesta
+        };
+      });
+
+      console.log("Respuestas mapeadas:", mappedAnswers);
+      return mappedAnswers;
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Error al obtener datos del alumno:", error);
+    return [];
+  }
+}
+// Función para actualizar el gráfico
+function actualizarGrafico(respuestas) {
+  console.log("Actualizando gráfico con respuestas:", respuestas);
+  
+  const svg = document.getElementById('radial-graph');
+  if (!svg) {
+    console.error("No se encontró el elemento SVG principal");
+    return;
+  }
+
+  const dataPointsElement = svg.querySelector('#data-points');
+  const areaDataElement = svg.querySelector('#area-data');
+
+  if (!dataPointsElement || !areaDataElement) {
+    console.error("No se encontraron los elementos necesarios del SVG");
+    return;
+  }
+
+  dataPointsElement.innerHTML = '';
+  let areaPath = '';
+
+  // Ajustar el radio base y el factor de escala
+  const baseRadius = 80; // Radio máximo del gráfico
+  const centerPoint = 100; // Centro del SVG
+
+  // Coordenadas base para cada dirección (normalizada)
+  const coordenadas = [
+    { x: 0, y: -1 },     // Responsabilitat (arriba)
+    { x: 0.707, y: -0.707 }, // Treball equip (arriba-derecha)
+    { x: 1, y: 0 },      // Gestió temps (derecha)
+    { x: 0.707, y: 0.707 }, // Comunicació (abajo-derecha)
+    { x: 0, y: 1 },      // Adaptabilitat (abajo)
+    { x: -0.707, y: 0.707 }, // Lideratge (abajo-izquierda)
+    { x: -1, y: 0 },     // Creativitat (izquierda)
+    { x: -0.707, y: -0.707 }  // Proactivitat (arriba-izquierda)
+  ];
+
+  const competenciasOrdenadas = [
+    "Responsabilitat",
+    "Treball en equip",
+    "Gestió del temps",
+    "Comunicació",
+    "Adaptabilitat",
+    "Lideratge",
+    "Creativitat",
+    "Proactivitat"
+  ];
+
+  const respuestasOrdenadas = competenciasOrdenadas.map(nombreCompetencia => {
+    return respuestas.find(r => r.name === nombreCompetencia) || { name: nombreCompetencia, rating: 0 };
+  });
+
+  respuestasOrdenadas.forEach((respuesta, index) => {
+    const rating = respuesta.rating || 0;
+    // Calcular el radio exacto basado en una escala de 1-5
+    const radio = (rating / 5) * baseRadius;
+    
+    // Calcular las coordenadas exactas desde el centro
+    const x = centerPoint + (coordenadas[index].x * radio);
+    const y = centerPoint + (coordenadas[index].y * radio);
+
+    // Crear punto
+    const point = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    point.setAttribute("cx", x);
+    point.setAttribute("cy", y);
+    point.setAttribute("r", "4");
+    point.setAttribute("fill", "#00ADEE");
+    
+    // Añadir título al punto con el valor exacto
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    title.textContent = `${respuesta.name}: ${rating}`;
+    point.appendChild(title);
+    
+    dataPointsElement.appendChild(point);
+
+    // Construir el path para el área
+    if (index === 0) {
+      areaPath = `M ${x},${y}`;
+    } else {
+      areaPath += ` L ${x},${y}`;
+    }
+  });
+
+  // Cerrar el path del área
+  if (areaPath) {
+    areaPath += " Z";
+    areaDataElement.setAttribute("d", areaPath);
+  }
+}
 // Función para confirmar la baja
 const handleBaja = async () => {
   if (!selectedReason.value) {
@@ -125,6 +263,22 @@ onMounted(async () => {
       error.value = "Estudiant no trobat";
     } else {
       await fetchComments(studentId); // Fetch comments after student is loaded
+      await checkForm4Status(studentId); // Comprobar si ha respondido al formulario 4
+      
+      // Obtener las respuestas del formulario 4
+      const respuestas = await obtenerDatosAlumno(studentId);
+      console.log("Respuestas recibidas en onMounted:", respuestas);
+
+      // Esperar a que el DOM esté listo
+      isFormVisible.value = true;
+      await nextTick();
+       // Actualizar el gráfico con las respuestas
+      if (respuestas && respuestas.length > 0) {
+        actualizarGrafico(respuestas);
+      } else {
+        console.warn("No se encontraron respuestas para actualizar el gráfico.");
+      }
+    
     }
   } catch (err) {
     console.error(err);
@@ -133,6 +287,42 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+const checkForm4Status = async (studentId) => {
+  try {
+    console.log("Verificando respuesta del formulario 4 para el estudiante:", studentId);
+
+    // Llamada a la ruta correcta para obtener los usuarios que han respondido el formulario 4
+    const response = await fetch(`http://localhost:8000/api/forms/4/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al comprobar la respuesta del formulario (Código ${response.status})`);
+    }
+
+    const data = await response.json();
+    console.log("Respuesta del servidor para el formulario 4:", data); // Imprime la respuesta
+
+    // Asegúrate de que estamos comparando los IDs correctamente (convirtiéndolos a números si es necesario)
+    const hasAnswered = data.some(user => Number(user.id) === Number(studentId)); // Aseguramos que ambas sean del mismo tipo
+
+    console.log("¿El estudiante ha respondido?", hasAnswered); // Depuración adicional
+
+    // Verifica si el estudiante ha respondido y actualiza el estado
+    hasAnsweredForm4.value = hasAnswered;
+
+  } catch (error) {
+    console.error("Error en checkForm4Status:", error);
+    hasAnsweredForm4.value = false; // En caso de error, asumimos que no ha respondido
+  }
+};
+
+
+
+
 
 // Funciones para comentarios
 const fetchComments = async studentId => {
@@ -242,6 +432,7 @@ const cancelEdit = () => {
 </script>
 
 <template>
+  
   <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <DashboardNavTeacher />
 
@@ -402,7 +593,89 @@ const cancelEdit = () => {
           </div>
         </div>
       </div>
+     <!-- Gràfic d'autoavaluació -->
+      <div class="mb-8">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-800">Gràfic d'autoavaluació</h3>
+        <button
+          @click="isFormVisible = !isFormVisible"
+          :class="{
+            'bg-[rgb(0,173,238)]': isFormVisible,
+            'bg-gray-200': !isFormVisible
+          }"
+          class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
+        >
+          <span
+            :class="{
+              'translate-x-6': isFormVisible,
+              'translate-x-1': !isFormVisible
+            }"
+            class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
+          ></span>
+        </button>
+      </div>
+    </div>
 
+    <!-- Contenido desplegable para resultados de autoevaluación -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mt-4" v-if="isFormVisible">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Resultados de Autoevaluación</h2>
+          <!-- Actualiza esta parte en tu template -->
+          <svg id="radial-graph" viewBox="-10 -10 231 231" xmlns="http://www.w3.org/2000/svg">
+  <!-- Cuadrícula de fondo -->
+  <g stroke="#e5e7eb" fill="none">
+    <circle r="16" cx="100" cy="100" />  <!-- 1 -->
+    <circle r="32" cx="100" cy="100" />  <!-- 2 -->
+    <circle r="48" cx="100" cy="100" />  <!-- 3 -->
+    <circle r="64" cx="100" cy="100" />  <!-- 4 -->
+    <circle r="80" cx="100" cy="100" />  <!-- 5 -->
+  </g>
+  
+  <!-- Líneas radiales -->
+  <g stroke="#e5e7eb" stroke-width="0.5">
+    <line x1="100" y1="100" x2="100" y2="20" />
+    <line x1="100" y1="100" x2="156.6" y2="43.4" />
+    <line x1="100" y1="100" x2="180" y2="100" />
+    <line x1="100" y1="100" x2="156.6" y2="156.6" />
+    <line x1="100" y1="100" x2="100" y2="180" />
+    <line x1="100" y1="100" x2="43.4" y2="156.6" />
+    <line x1="100" y1="100" x2="20" y2="100" />
+    <line x1="100" y1="100" x2="43.4" y2="43.4" />
+  </g>
+
+  <!-- Etiquetas de valores -->
+  <g fill="#6b7280" font-size="6">
+    <text x="105" y="37">4</text>
+    <text x="105" y="53">3</text>
+    <text x="105" y="69">2</text>
+    <text x="105" y="85">1</text>
+    <text x="105" y="21">5</text>
+  </g>
+
+  <!-- Etiquetas de competencias -->
+  <g font-size="6" fill="#374151">
+    <text x="100" y="15" text-anchor="middle">Responsabilitat</text>
+    <text x="165" y="43.4" text-anchor="start">Treball equip</text>
+    <text x="185" y="104" text-anchor="start">Gestió temps</text>
+    <text x="165" y="165" text-anchor="middle">Comunicació</text>
+    <text x="100" y="190" text-anchor="middle">Adaptabilitat</text>
+    <text x="35" y="165" text-anchor="end">Lideratge</text>
+    <text x="15" y="104" text-anchor="end">Creativitat</text>
+    <text x="35" y="43.4" text-anchor="end">Proactivitat</text>
+  </g>
+
+  <path id="area-data" fill="#00ADEE" fill-opacity="0.2" stroke="#00ADEE" stroke-width="1" />
+  <g id="data-points"></g>
+</svg>
+
+          <!-- Mostrar si el formulario ha sido contestado o no -->
+          <div class="mt-4 text-center text-gray-700">
+            <span v-if="hasAnsweredForm4" class="text-green-600 font-semibold">Contestado ✅</span>
+            <span v-else class="text-red-600 font-semibold">No contestado ❌</span>
+          </div>
+        </div>
+
+  </div>
       <!-- Comentarios -->
       <div class="bg-white rounded-2xl shadow-lg p-8 mt-6">
         <h2 class="text-2xl font-bold mb-4 text-gray-800">

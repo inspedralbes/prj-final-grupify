@@ -10,8 +10,10 @@ export default {
         warning: "#F59E0B",
         danger: "#EF4444",
         background: "#F3F4F6",
+        'editor-bg': "#282c34"
       },
     },
   },
   plugins: [],
+  darkMode: 'class',
 };
