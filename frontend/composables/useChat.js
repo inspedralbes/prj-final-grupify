@@ -18,6 +18,14 @@ export function useChat() {
   const forms = ref([]);
   const responses = ref([]);
 
+
+  onMounted(async () => {
+    try{
+      await sociogramStore.fetchResponses();
+    }catch(error){
+      console.error("Error loading responses:", error);
+    }
+  })
   // Cargar formularios activos
   onMounted(async () => {
     fetch("http://localhost:8000/api/forms/active")
@@ -147,7 +155,20 @@ export function useChat() {
         )
         .join("\n");
 
-      // Recuperar los datos del sociograma desde el sociogramStore
+
+      // RECUPERAR DATOS DE TODAS LAS RESPUESTAS DEL SOCIOGRAMA
+      const allResponsesSocriogramData = sociogramStore.responsesByCourseDivision.all_responses;
+
+      // Construir el contexto de todas las respuestas del sociograma
+      const allResponsesSociogramContext =
+        allResponsesSocriogramData && allResponsesSocriogramData.length > 0
+          ? `
+        Dades de totes les respostes del sociograma:
+        ${JSON.stringify(allResponsesSocriogramData)}
+      `
+          : "No hi ha dades de totes les respostes del sociograma disponibles.";
+
+      // Recuperar los datos del sociograma desde el sociogramStore CURSO Y DIVISION ACTUAL
       const sociogramData = sociogramStore.responses.all_responses;
 
       // Construir el contexto del sociograma
@@ -222,7 +243,11 @@ export function useChat() {
         Mantén una conversa natural i amable.
         Ten en compte que el Formulari ID: 3 és el sociograma.
 
-         Context del sociograma:
+
+        Context of all responses of sociogram:
+          ${allResponsesSociogramContext}
+
+        Context del sociograma:
           ${sociogramContext}
       `;
 

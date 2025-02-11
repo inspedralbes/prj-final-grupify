@@ -94,9 +94,13 @@ class SociogramRelationshipController extends Controller
     public function getAllResponses()
     {
         try {
-            // Obtener todas las relaciones sociométricas con sus relaciones cargadas
-            $relationships = SociogramRelationship::with(['user', 'peer', 'question.form']) // Cargar user, peer, question y el formulario asociado
-                ->get();
+            // Cargar las relaciones incluyendo las relaciones Many-to-Many de user con courses y divisions
+            $relationships = SociogramRelationship::with([
+                'user.courses',      // Carga los courses asociados al user
+                'user.divisions',    // Carga las divisions asociadas al user
+                'peer',
+                'question.form'
+            ])->get();
 
             // Verificar si hay relaciones disponibles
             if ($relationships->isEmpty()) {
@@ -113,10 +117,26 @@ class SociogramRelationshipController extends Controller
                     'form_id' => $formId,
                     'form_title' => $formTitle,
                     'responses' => $formRelationships->groupBy('user_id')->map(function ($userRelationships, $userId) {
+                        $firstUser = $userRelationships->first()->user;
+
                         return [
                             'user_id' => $userId,
-                            'user_name' => optional($userRelationships->first()->user)->name,
-                            'user_last_name' => optional($userRelationships->first()->user)->last_name,
+                            'user_name' => optional($firstUser)->name,
+                            'user_last_name' => optional($firstUser)->last_name,
+                            // Mapear cada course asociado al usuario
+                            'course' => $firstUser->courses->map(function ($course) {
+                                return [
+                                    'id' => $course->id,
+                                    'name' => $course->name,
+                                ];
+                            }),
+                            // Mapear cada division asociada al usuario
+                            'division' => $firstUser->divisions->map(function ($division) {
+                                return [
+                                    'id' => $division->id,
+                                    'name' => $division->name,
+                                ];
+                            }),
                             'responses' => $userRelationships->groupBy('question_id')->map(function ($questionRelationships, $questionId) {
                                 return [
                                     'question_id' => $questionId,
@@ -138,13 +158,18 @@ class SociogramRelationshipController extends Controller
 
             // Devolver las respuestas estructuradas
             return response()->json([
-                'all_responses' => $groupedResponses->values(), // Respuestas agrupadas por formulario
+                'all_responses' => $groupedResponses->values(),
             ], 200);
         } catch (\Exception $e) {
             // Manejar cualquier excepción
-            return response()->json(['message' => 'Error interno en el servidor', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Error interno en el servidor',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
+
 
 
     /**
