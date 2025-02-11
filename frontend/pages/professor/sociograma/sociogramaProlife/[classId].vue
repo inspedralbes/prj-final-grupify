@@ -5,11 +5,12 @@ import { useCoursesStore } from "~/stores/coursesStore";
 import { useRelationshipsStore } from "~/stores/relationships";
 import Relations from "@/components/Teacher/SociogramaComponents/Relations.vue";
 import Roles from "@/components/Teacher/SociogramaComponents/Roles.vue";
+import RolesGraphic from "~/components/Teacher/SociogramaComponents/RolesGraphic.vue";
 import Skills from "@/components/Teacher/SociogramaComponents/Skills.vue";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 import SociogramStatus from "@/components/Teacher/SociogramaComponents/SociogramStatus.vue";
 import { useStudentsStore } from "~/stores/studentsStore";
-
+import { ScatterChart } from 'echarts/charts';
 // Existing setup code remains the same
 const route = useRoute();
 const classId = ref(null);
@@ -279,7 +280,9 @@ const toggleComponent = component => {
               key="roles"
               class="animate-fade-in"
             >
+              <RolesGraphic :filteredRoles="filteredRoles" />
               <Roles :filteredRoles="filteredRoles" />
+              
             </div>
             <div
               v-else-if="activeComponent === 'skills'"

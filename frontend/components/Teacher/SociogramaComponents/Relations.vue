@@ -1,8 +1,13 @@
 <script setup>
-import { ref, onMounted, defineProps, computed } from "vue";
+import { computed, ref, watchEffect, onMounted } from "vue";
+import VChart from "vue-echarts";
+import { GraphChart } from "echarts/charts";
+import { TooltipComponent, LegendComponent } from "echarts/components";
+import { CanvasRenderer } from "echarts/renderers";
+import { use } from "echarts/core";
 
-const width = 800;
-const height = 600;
+// Configurar ECharts
+use([GraphChart, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 const props = defineProps({
   relationships: {
@@ -12,172 +17,148 @@ const props = defineProps({
   },
 });
 
-// console.log("esto recibo en relations", props.relationships);
-const userPositions = ref({});
+const graphData = ref({ nodes: [], links: [] });
+const highlightedNodeId = ref(null); // Almacena el ID del nodo resaltado
+const chartInstance = ref(null); // Referencia a la instancia del gráfico
 
-// Obtener lista de usuarios únicos
-const uniqueUsers = computed(() => {
-  const usersMap = new Map();
-  props.relationships.forEach(rel => {
+watchEffect(() => {
+  const nodesMap = new Map();
+  const links = [];
+
+  props.relationships.forEach((rel) => {
     if (rel.user_id && rel.user_name && rel.user_last_name) {
-      usersMap.set(rel.user_id, {
-        id: rel.user_id,
-        name: rel.user_name,
-        last_name: rel.user_last_name,
+      nodesMap.set(rel.user_id, {
+        id: String(rel.user_id),
+        name: `${rel.user_name} ${rel.user_last_name}`,
+        symbolSize: 25,
+        itemStyle: { color: "#3b82f6" },
       });
     }
     if (rel.peer_id && rel.peer_name && rel.peer_last_name) {
-      usersMap.set(rel.peer_id, {
-        id: rel.peer_id,
-        name: rel.peer_name,
-        last_name: rel.peer_last_name,
+      nodesMap.set(rel.peer_id, {
+        id: String(rel.peer_id),
+        name: `${rel.peer_name} ${rel.peer_last_name}`,
+        symbolSize: 25,
+        itemStyle: { color: "#3b82f6" },
+      });
+    }
+
+    if (nodesMap.has(rel.user_id) && nodesMap.has(rel.peer_id)) {
+      const color = rel.relationship_type === "negative" ? "#EF4444" : "#10B981";
+      links.push({
+        source: String(rel.user_id),
+        target: String(rel.peer_id),
+        lineStyle: { color: color, width: 3, opacity: 0 }, // Líneas ocultas inicialmente
+        label: {
+          show: true,
+          formatter: rel.relationship_type === "negative" ? "" : "",
+          color: color,
+          fontSize: 14,
+          fontWeight: "bold",
+        },
       });
     }
   });
-  return Array.from(usersMap.values());
+
+  graphData.value = { nodes: Array.from(nodesMap.values()), links };
 });
 
-const getUserPosition = (userId, index, total) => {
-  const radius = Math.min(width, height) / 2 - 80;
-  const angle = (2 * Math.PI * index) / total + Math.PI / 4;
-  const centerX = width / 2;
-  const centerY = height / 2;
-
-  if (!userPositions.value[userId]) {
-    userPositions.value[userId] = {
-      x: centerX + radius * Math.cos(angle),
-      y: centerY + radius * Math.sin(angle),
-    };
+// Función para manejar el evento "mouseover" en los nodos
+const onChartMouseOver = (params) => {
+  if (params.dataType === "node") {
+    highlightedNodeId.value = params.data.id; // Almacena el ID del nodo resaltado
   }
-
-  return userPositions.value[userId];
 };
 
-const getUserPositionStyle = (userId, index, total) => {
-  const position = getUserPosition(userId, index, total);
-  return {
-    position: "absolute",
-    top: `${position.y}px`,
-    left: `${position.x}px`,
-    transform: "translate(-50%, -50%)",
-  };
+// Función para manejar el evento "mouseout" en los nodos
+const onChartMouseOut = () => {
+  highlightedNodeId.value = null; // Restablece el nodo resaltado
 };
+
+// Opciones del gráfico
+const chartOptions = computed(() => ({
+  tooltip: {
+    trigger: "item",
+    formatter: (params) => {
+      if (params.dataType === "node") return `<b>${params.data.name}</b>`;
+      if (params.dataType === "edge");
+    },
+  },
+  animation: false, // Desactivar animaciones para evitar movimientos innecesarios
+  series: [
+    {
+      type: "graph",
+      layout: "force",
+      force: {
+        initLayout: "circular", // Diseño inicial circular para distribuir los nodos
+        repulsion: 1000, // Reducir la repulsión para que los nodos no se alejen demasiado
+        edgeLength: 300, // Reducir la longitud de los enlaces
+        gravity: 0.5, // Aumentar la gravedad para que los nodos se agrupen más
+        friction: 0.6, // Añadir fricción para reducir la velocidad de movimiento
+        layoutAnimation: false, // Desactivar animación del diseño de fuerza
+      },
+      roam: true,
+      draggable: true,
+      data: graphData.value.nodes,
+      links: graphData.value.links.map((link) => ({
+        ...link,
+        lineStyle: {
+          curveness: 0.2,
+          ...link.lineStyle,
+          opacity: highlightedNodeId.value
+            ? link.source === highlightedNodeId.value || link.target === highlightedNodeId.value
+              ? 1 // Mostrar líneas relacionadas con el nodo resaltado
+              : 0 // Ocultar otras líneas
+            : 0, // Ocultar todas las líneas si no hay nodo resaltado
+        },
+      })),
+      edgeSymbol: ["circle", "arrow"],
+      edgeSymbolSize: [4, 10],
+      label: {
+        show: true,
+        position: "right",
+        fontSize: 12,
+      },
+    },
+  ],
+}));
+
+// Detener el diseño de fuerza después de que los nodos se hayan posicionado
+const stopForceLayout = () => {
+  if (chartInstance.value) {
+    const chart = chartInstance.value.getEchartsInstance();
+    chart.setOption({
+      series: [
+        {
+          type: "graph",
+          layout: "none", // Desactivar el diseño de fuerza
+        },
+      ],
+    });
+  }
+};
+
+// Inicializar el gráfico y detener el diseño de fuerza después de un tiempo
+onMounted(() => {
+  setTimeout(stopForceLayout, 1000); // Detener el diseño de fuerza después de 1 segundo
+});
 </script>
 
 <template>
   <div class="max-w-6xl mx-auto px-4 py-8">
-    <div
-      class="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-8 border border-gray-100"
-    >
-      <!-- Main container -->
-      <div
-        class="relative w-full bg-white rounded-xl p-6 border border-gray-100"
-        :style="{
-          height: `${height}px`,
-          width: `${width}px`,
-          margin: '0 auto',
-        }"
-      >
-        <!-- Empty State when no users -->
-        <div v-if="uniqueUsers.length === 0" class="bg-white rounded-3xl shadow-xl p-12 text-center transform transition-all duration-500 hover:shadow-2xl backdrop-blur-sm bg-opacity-90">
-          <svg
-            class="w-20 h-20 mx-auto text-gray-400 mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <p class="text-xl text-gray-600 font-medium">
-            No hi ha dades de relacions disponibles
-          </p>
-        </div>
-
-        <!-- Nodes -->
-        <div
-          v-if="uniqueUsers.length > 0"
-          v-for="(user, index) in uniqueUsers"
-          :key="user.id"
-          class="absolute flex items-center justify-center text-white rounded-full shadow-md transition-all duration-300 cursor-pointer group"
-          :style="[getUserPositionStyle(user.id, index, uniqueUsers.length), { width: '80px', height: '80px', zIndex: 1 }]"
-        >
-          <div
-            class="absolute w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-blue-700 group-hover:from-blue-600 group-hover:to-blue-800 transition-all duration-300 opacity-90 group-hover:opacity-100 group-hover:scale-110"
-          ></div>
-          <span class="relative text-sm font-medium leading-tight p-2 text-center">
-            {{ user.name }} {{ user.last_name }}
-          </span>
-        </div>
-
-        <!-- Relationship lines -->
-        <svg class="absolute top-0 left-0 w-full h-full" style="z-index: 0">
-          <defs>
-            <marker
-              id="arrowhead-positive"
-              markerWidth="10"
-              markerHeight="10"
-              refX="8"
-              refY="5"
-              orient="auto"
-            >
-              <polygon points="0 0, 10 5, 0 10" class="fill-emerald-500" />
-            </marker>
-            <marker
-              id="arrowhead-negative"
-              markerWidth="10"
-              markerHeight="10"
-              refX="8"
-              refY="5"
-              orient="auto"
-            >
-              <polygon points="0 0, 10 5, 0 10" class="fill-rose-500" />
-            </marker>
-          </defs>
-          <line
-            v-for="relationship in relationships"
-            :key="relationship.id"
-            :x1="getUserPosition(relationship.user_id).x"
-            :y1="getUserPosition(relationship.user_id).y"
-            :x2="getUserPosition(relationship.peer_id).x"
-            :y2="getUserPosition(relationship.peer_id).y"
-            :stroke="
-              relationship.relationship_type === 'positive'
-                ? '#10B981'
-                : '#EF4444'
-            "
-            :marker-end="
-              relationship.relationship_type === 'positive'
-                ? 'url(#arrowhead-positive)'
-                : 'url(#arrowhead-negative)'
-            "
-            stroke-width="2.5"
-            class="relationship-line transition-all duration-300 hover:stroke-[3px]"
-            :class="{
-              'opacity-80 hover:opacity-100': true,
-              'stroke-emerald-500':
-                relationship.relationship_type === 'positive',
-              'stroke-rose-500': relationship.relationship_type === 'negative',
-            }"
-          />
-        </svg>
+    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+      <div v-if="graphData.nodes.length > 0" class="w-full h-[600px]">
+        <VChart
+          ref="chartInstance"
+          class="w-full h-full"
+          :option="chartOptions"
+          @mouseover="onChartMouseOver"
+          @mouseout="onChartMouseOut"
+        />
+      </div>
+      <div v-else class="p-12 text-center text-gray-600">
+        <p class="text-xl font-medium">No hi ha dades de relacions disponibles</p>
       </div>
     </div>
   </div>
 </template>
-
-
-<style scoped>
-.relationship-line {
-  transition: all 0.3s ease;
-}
-
-.relationship-line:hover {
-  stroke-width: 4;
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
-}
-</style>
