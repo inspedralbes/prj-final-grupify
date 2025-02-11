@@ -50,7 +50,7 @@ if (storedUser) {
 // Función para obtener las respuestas del alumno
 async function obtenerDatosAlumno(studentId) {
   try {
-    const url = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
+    const url = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -292,7 +292,7 @@ const checkForm4Status = async (studentId) => {
     console.log("Verificando respuesta del formulario 4 para el estudiante:", studentId);
 
     // Llamada a la ruta correcta para obtener los usuarios que han respondido el formulario 4
-    const response = await fetch(`http://localhost:8000/api/forms/4/users`, {
+    const response = await fetch(`https://api.grupify.cat/api/forms/4/users`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

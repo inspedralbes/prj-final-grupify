@@ -28,7 +28,7 @@ export function useChat() {
   })
   // Cargar formularios activos
   onMounted(async () => {
-    fetch("http://localhost:8000/api/forms/active")
+    fetch("https://api.grupify.cat/api/forms/active")
       .then(response => response.json())
       .then(data => {
         forms.value = data;
@@ -41,7 +41,7 @@ export function useChat() {
 
   // Cargar respuestas
   onMounted(async () => {
-    fetch("http://localhost:8000/api/all-responses")
+    fetch("https://api.grupify.cat/api/all-responses")
       .then(response => response.json())
       .then(data => {
         responses.value = data;

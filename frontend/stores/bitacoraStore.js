@@ -43,7 +43,7 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
     async fetchNotes(groupId) {
       this.loadingNotes = true;
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`);
+        const response = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}/notes`);
         const data = await response.json();
         this.notes = data;
       } catch (error) {
@@ -60,7 +60,7 @@ export const useBitacoraStore = defineStore('BitacoraStore', {
       }
 
       try {
-        const response = await fetch(`http://localhost:8000/api/bitacoras/${groupId}/notes`, {
+        const response = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}/notes`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',

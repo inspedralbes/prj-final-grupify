@@ -42,7 +42,7 @@ const setupSocketListeners = () => {
 // Función para obtener todos los cursos
 const fetchCourses = async () => {
   try {
-    const response = await fetch("http://localhost:8000/api/courses", {
+    const response = await fetch("https://api.grupify.cat/api/courses", {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -65,7 +65,7 @@ const fetchInvitationDivisions = async () => {
   }
   try {
     const response = await fetch(
-      `http://localhost:8000/api/course-divisions?course_id=${selectedInvitationCourse.value}`,
+      `https://api.grupify.cat/api/course-divisions?course_id=${selectedInvitationCourse.value}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -94,7 +94,7 @@ const generateInvitation = async () => {
     return;
   }
   try {
-    const response = await fetch("http://localhost:8000/api/invitations", {
+    const response = await fetch("https://api.grupify.cat/api/invitations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

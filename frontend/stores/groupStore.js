@@ -71,7 +71,7 @@ export const useGroupStore = defineStore("groups", {
         const token = useAuthStore().token;
         const bitacoraStore = useBitacoraStore();
 
-        const bitacoraResponse = await fetch(`http://localhost:8000/api/bitacoras/${groupId}`, {
+        const bitacoraResponse = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             Accept: "application/json",
