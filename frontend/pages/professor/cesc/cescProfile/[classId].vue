@@ -50,27 +50,14 @@ const evaluationsData = computed(() => {
   });
 });
 
+const resultCesc = ref([]);
+
 // Initialize component
 onMounted(async () => {
-  // Load necessary data
-  await Promise.all([
-    coursesStore.fetchCourses(),
-    resultatStore.initialize()
-  ]);
+  const response = await resultatStore.fetchResults(classId.value);
+  resultCesc.value = await response.json();
+  console.log(response);
 
-  // Get course and division from classId
-  const [courseId, divisionId] = classId.value.split('-').map(Number);
-  currentCourse.value = coursesStore.courses.find(c => c.id === courseId);
-  currentDivision.value = currentCourse.value?.divisions.find(d => d.id === divisionId);
-
-  if (currentCourse.value && currentDivision.value) {
-    resultatStore.setCurrentCourseAndDivision(
-      currentCourse.value.name,
-      courseId,
-      currentDivision.value.name,
-      divisionId
-    );
-  }
 });
 </script>
 

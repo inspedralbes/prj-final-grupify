@@ -1,153 +1,107 @@
 import { defineStore } from "pinia";
+import { ref, computed } from "vue";
 import { useStudentsStore } from "~/stores/studentsStore";
 
-const studentsStore = useStudentsStore();
+export const useResultatCescStore = defineStore("resultatCesc", () => {
+  const results = ref([]); // Todos los resultados sin filtrar
+  const filteredResults = ref([]); // Resultados filtrados
+  const currentCourse = ref(null);
+  const currentDivision = ref(null);
+  const isLoading = ref(false);
+  const error = ref(null);
 
-export const useResultatCescStore = defineStore("resultatCesc", {
-  state: () => ({
-    relationships: [],
-    results: [],
-    filteredResults: [],
-    currentCourse: {
-      courseName: null,
-      courseId: null,
-    },
-    currentDivision: {
-      divisionName: null,
-      divisionId: null,
-    },
-  }),
-  
-  actions: {
-    // Fetch all CESC relationships
-    async fetchRelationships() {
-      try {
-        const response = await fetch("http://localhost:8000/api/cesc-relationships/cesc-relationships");
-        const data = await response.json();
-        this.relationships = data;
-        console.log("Relationships loaded:", this.relationships);
-      } catch (error) {
-        console.error("Error loading relationships:", error);
-      }
-    },
+  // Store de estudiantes
+  const studentsStore = useStudentsStore();
 
-    // Fetch all CESC results
-    async fetchResults() {
-      try {
-        const response = await fetch("http://localhost:8000/api/cesc-relationships/cesc-results");
-        const data = await response.json();
-        this.results = data;
-        console.log("Results loaded:", this.results);
-      } catch (error) {
-        console.error("Error loading results:", error);
-      }
-    },
+  // Definir los tipos de tags
+  const tagTypes = [
+    { id: 1, name: "Popular" },
+    { id: 2, name: "Rechazado" },
+    { id: 3, name: "Agresivo" },
+    { id: 4, name: "Prosocial" },
+    { id: 5, name: "Víctima" },
+  ];
 
-    // Set current course and division
-    setCurrentCourseAndDivision(courseName, courseId, divisionName, divisionId) {
-      this.currentCourse.courseName = courseName;
-      this.currentCourse.courseId = courseId;
-      this.currentDivision.divisionName = divisionName;
-      this.currentDivision.divisionId = divisionId;
-      this.filterResultsByCourseDivision();
-    },
+  // Fetch de resultados desde la API
+  const fetchResults = async () => {
+    isLoading.value = true;
+    try {
+      const response = await fetch("http://localhost:8000/api/cesc/ver-resultados");
+      if (!response.ok) throw new Error("Error al obtener resultados");
+      results.value = await response.json();
+      filterResultsByCourseDivision();
+    } catch (err) {
+      console.error("Error al cargar resultados:", err);
+      error.value = "Error al cargar resultados";
+    } finally {
+      isLoading.value = false;
+    }
+  };
 
-    // Filter results by current course and division
-    filterResultsByCourseDivision() {
-      if (!this.currentCourse.courseId || !this.currentDivision.divisionId) {
-        this.filteredResults = [];
-        return;
-      }
+  // Setear curso y división
+  const setCurrentCourseAndDivision = (courseName, divisionName) => {
+    currentCourse.value = courseName;
+    currentDivision.value = divisionName;
+    filterResultsByCourseDivision();
+  };
 
-      // First, get all peer_ids from the current course and division
-      const peersInGroup = new Set();
-      
-      // Use relationships to find peers in the current course/division
-      this.relationships.forEach(relationship => {
-        // Assuming relationship has course and division information through user
-        if (relationship.user?.courses?.some(course => course.id === this.currentCourse.courseId) &&
-            relationship.user?.divisions?.some(division => division.id === this.currentDivision.divisionId)) {
-          peersInGroup.add(relationship.peer_id);
-        }
-      });
+  // Filtrar los resultados por curso y división
+  const filterResultsByCourseDivision = () => {
+    if (!currentCourse.value || !currentDivision.value) {
+      filteredResults.value = [];
+      return;
+    }
 
-      // Filter results to only include peers from the current group
-      this.filteredResults = this.results.filter(result => peersInGroup.has(result.peer_id));
+    // Obtener lista de estudiantes en el curso y división seleccionados
+    const studentIds = studentsStore.students
+      .filter(student => student.course === currentCourse.value && student.division === currentDivision.value)
+      .map(student => student.id);
 
-      // Group results by peer_id to show all tags for each peer
-      this.filteredResults = Array.from(peersInGroup).map(peerId => {
-        const peerResults = this.results.filter(r => r.peer_id === peerId);
-        const peer = this.relationships.find(r => r.peer_id === peerId)?.peer;
+    // Filtrar resultados que pertenezcan a esos estudiantes
+    const filteredData = results.value.filter(result => studentIds.includes(result.peer_id));
+
+    // Agrupar los resultados por `peer_id`
+    const groupedResults = {};
+    
+    filteredData.forEach(result => {
+      if (!groupedResults[result.peer_id]) {
+        // Obtener datos del estudiante desde `studentsStore`
+        const student = studentsStore.students.find(student => student.id === result.peer_id) || {};
         
-        return {
-          peer_id: peerId,
-          peer_name: peer?.name,
-          peer_last_name: peer?.last_name,
-          tags: peerResults.map(r => ({
-            tag_id: r.tag_id,
-            tag_name: r.tag?.name,
-            vote_count: r.vote_count
-          }))
+        groupedResults[result.peer_id] = {
+          peer_id: result.peer_id,
+          peer_name: student.name || "Desconocido",
+          peer_last_name: student.last_name || "",
+          tags: {}
         };
-      });
-    },
+      }
 
-    // Clear all state
-    clearResults() {
-      this.relationships = [];
-      this.results = [];
-      this.filteredResults = [];
-      this.currentCourse = {
-        courseName: null,
-        courseId: null,
-      };
-      this.currentDivision = {
-        divisionName: null,
-        divisionId: null,
-      };
-    },
+      // Guardar los votos de cada tag
+      groupedResults[result.peer_id].tags[result.tag_id] = result.vote_count;
+    });
 
-    // Initialize store by fetching all necessary data
-    async initialize() {
-      await Promise.all([
-        this.fetchRelationships(),
-        this.fetchResults()
-      ]);
-    }
-  },
+    filteredResults.value = Object.values(groupedResults);
+  };
 
-  getters: {
-    // Get results grouped by tag type
-    resultsByTag: (state) => {
-      const groupedResults = {};
-      state.filteredResults.forEach(peer => {
-        peer.tags.forEach(tag => {
-          if (!groupedResults[tag.tag_name]) {
-            groupedResults[tag.tag_name] = [];
-          }
-          groupedResults[tag.tag_name].push({
-            peer_id: peer.peer_id,
-            peer_name: peer.peer_name,
-            peer_last_name: peer.peer_last_name,
-            vote_count: tag.vote_count
-          });
-        });
-      });
-      return groupedResults;
-    },
+  // Obtener los resultados en formato tabla
+  const getResultsTable = computed(() => {
+    return filteredResults.value.map(student => ({
+      name: `${student.peer_name} ${student.peer_last_name}`,
+      ...tagTypes.reduce((acc, tag) => ({
+        ...acc,
+        [tag.name]: student.tags[tag.id] || 0
+      }), {})
+    }));
+  });
 
-    // Get total votes for each tag type
-    tagTotals: (state) => {
-      const totals = {};
-      state.filteredResults.forEach(peer => {
-        peer.tags.forEach(tag => {
-          if (!totals[tag.tag_name]) {
-            totals[tag.tag_name] = 0;
-          }
-          totals[tag.tag_name] += tag.vote_count;
-        });
-      });
-      return totals;
-    }
-  }
+  return {
+    results,
+    filteredResults,
+    isLoading,
+    error,
+    tagTypes,
+    fetchResults,
+    setCurrentCourseAndDivision,
+    getResultsTable,
+  };
 });
