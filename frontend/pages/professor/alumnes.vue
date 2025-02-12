@@ -184,7 +184,7 @@ const generateInvitation = async () => {
               <div class="flex items-center space-x-2">
                 <button 
   @click="openInvitationModal" 
-  class="flex items-center justify-center w-10 h-10 bg-[rgb(0,173,238)] text-white rounded-full hover:bg-blue-600"
+  class="flex items-center justify-center w-10 h-10 bg-[rgb(0,173,238)] text-white rounded-full"
   title="Generar enllaç d'invitació"
 >
   <svg 
