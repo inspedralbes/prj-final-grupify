@@ -21,22 +21,6 @@ const props = defineProps({
 const rolesData = ref([]);
 const chartKey = ref(0); // Clave reactiva para forzar la actualización del gráfico
 
-// Guardar datos en el almacenamiento local
-const saveToLocalStorage = (roles) => {
-  localStorage.setItem("rolesData", JSON.stringify(roles));
-};
-
-// Cargar datos del almacenamiento local
-const loadFromLocalStorage = () => {
-  const storedData = localStorage.getItem("rolesData");
-  if (storedData) {
-    rolesData.value = JSON.parse(storedData);
-  } else if (props.filteredRoles.length > 0) {
-    rolesData.value = props.filteredRoles;
-    saveToLocalStorage(props.filteredRoles);
-  }
-};
-
 // Función para determinar la categoría según las puntuaciones
 const getCategory = (role) => {
   if (role.aïllament > role.popularitat) return "Aïllament";
@@ -107,16 +91,17 @@ const chartOptions = computed(() => {
   };
 });
 
-// Cargar los datos al montar el componente
+// Cargar los datos al montar el componente (ahora solo usa props.filteredRoles)
 onMounted(() => {
-  loadFromLocalStorage();
+  if (props.filteredRoles.length > 0) {
+    rolesData.value = props.filteredRoles;
+  }
 });
 
 // Actualizar rolesData cuando filteredRoles cambie
 watch(() => props.filteredRoles, (newRoles) => {
   if (newRoles.length > 0) {
     rolesData.value = newRoles;
-    saveToLocalStorage(newRoles);
   }
 }, { immediate: true });
 
