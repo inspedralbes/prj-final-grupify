@@ -42,6 +42,9 @@ const invitationLink = ref(""); // Enllaç generat
 // VARIABLE PER CONTROLAR EL MODAL
 const showInvitationModal = ref(false);
 
+// VARIABLE PER CONTROLAR EL POP-UP DE COPIA
+const showCopyPopup = ref(false);
+
 // Funcions per obrir i tancar el modal
 const openInvitationModal = () => {
   showInvitationModal.value = true;
@@ -115,11 +118,14 @@ const fetchInvitationDivisions = async () => {
     console.error("Error al carregar les divisions:", error);
   }
 };
-
+const showErrorToast = ref(false);
 // Funció per generar l'enllaç d'invitació
 const generateInvitation = async () => {
   if (!selectedInvitationCourse.value || !selectedInvitationDivision.value) {
-    alert("Si us plau, selecciona un curs i una divisió abans de generar l'enllaç.");
+    showErrorToast.value = true;
+    setTimeout(() => {
+      showErrorToast.value = false;
+    }, 3000); // Oculta el toast después de 3 segundos
     return;
   }
   try {
@@ -140,6 +146,19 @@ const generateInvitation = async () => {
     invitationLink.value = data.link;
   } catch (error) {
     console.error("Error al generar la invitació:", error);
+  }
+};
+
+// Funció per copiar l'enllaç al portapapeles
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(invitationLink.value);
+    showCopyPopup.value = true;
+    setTimeout(() => {
+      showCopyPopup.value = false;
+    }, 2000); // El pop-up desaparece después de 2 segundos
+  } catch (error) {
+    console.error("Error al copiar el enlace:", error);
   }
 };
 </script>
@@ -166,11 +185,8 @@ const generateInvitation = async () => {
       <div v-else class="space-y-6">
         <!-- Filtres d'estudiants -->
         <div class="bg-white rounded-lg shadow-sm p-6">
-          <TeacherStudentFilters 
-            v-model:search-query="searchQuery" 
-            v-model:selected-course="selectedCourse"
-            v-model:selected-division="selectedDivision" 
-          />
+          <TeacherStudentFilters v-model:search-query="searchQuery" v-model:selected-course="selectedCourse"
+            v-model:selected-division="selectedDivision" />
         </div>
 
         <!-- Llistat d'estudiants -->
@@ -182,24 +198,15 @@ const generateInvitation = async () => {
               </h2>
               <!-- Container amb l'icona d'invitació i el número d'estudiants -->
               <div class="flex items-center space-x-2">
-                <button 
-  @click="openInvitationModal" 
-  class="flex items-center justify-center w-10 h-10 bg-[rgb(0,173,238)] text-white rounded-full"
-  title="Generar enllaç d'invitació"
->
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    fill="white" 
-    viewBox="0 0 24 24" 
-    stroke-width="1.5" 
-    stroke="white" 
-    class="w-5 h-5"
-  >
-    <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
-  </svg>
-</button>
-
-
+                <button @click="openInvitationModal"
+                  class="flex items-center justify-center w-10 h-10 bg-[rgb(0,173,238)] text-white rounded-full"
+                  title="Generar enllaç d'invitació">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="white" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                  </svg>
+                </button>
                 <span class="px-3 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
                   {{ filteredStudents.length }} estudiants
                 </span>
@@ -211,19 +218,13 @@ const generateInvitation = async () => {
 
           <!-- Controls de paginació -->
           <div class="flex justify-center mt-4 space-x-4">
-            <button
-              @click="currentPage--"
-              :disabled="currentPage === 1"
-              class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
+            <button @click="currentPage--" :disabled="currentPage === 1"
+              class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
               Anterior
             </button>
             <span>Pàgina {{ currentPage }} de {{ totalPages }}</span>
-            <button
-              @click="currentPage++"
-              :disabled="currentPage === totalPages"
-              class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            >
+            <button @click="currentPage++" :disabled="currentPage === totalPages"
+              class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
               Siguiente
             </button>
           </div>
@@ -232,29 +233,18 @@ const generateInvitation = async () => {
     </main>
 
     <!-- Modal per generar l'enllaç d'invitació -->
-    <div 
-      v-if="showInvitationModal" 
-      class="fixed inset-0 z-50 flex items-center justify-center"
-    >
+    <div v-if="showInvitationModal" class="fixed inset-0 z-50 flex items-center justify-center">
       <!-- Fons semi-transparent -->
-      <div 
-        class="absolute inset-0 bg-gray-900 opacity-50" 
-        @click="closeInvitationModal"
-      ></div>
+      <div class="absolute inset-0 bg-gray-900 opacity-50" @click="closeInvitationModal"></div>
       <!-- Contingut del modal -->
       <div class="bg-white rounded-lg p-6 relative z-10 w-11/12 md:w-1/2">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold">Generar enllaç d'invitació</h2>
-          <button 
-            @click="closeInvitationModal" 
-            class="text-gray-500 hover:text-gray-700"
-            title="Tanca"
-          >
+          <button @click="closeInvitationModal" class="text-gray-500 hover:text-gray-700" title="Tanca">
             <!-- Icono de tancar (X) -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" 
-                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" 
-                    d="M6 18L18 6M6 6l12 12" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -264,17 +254,10 @@ const generateInvitation = async () => {
           <label class="block text-sm font-medium text-gray-700 mb-1">
             Selecciona un curs
           </label>
-          <select 
-            v-model="selectedInvitationCourse" 
-            @change="fetchInvitationDivisions"
-            class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
+          <select v-model="selectedInvitationCourse" @change="fetchInvitationDivisions"
+            class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
             <option disabled value="">Selecciona un curs</option>
-            <option 
-              v-for="course in courses" 
-              :key="course.id" 
-              :value="course.id"
-            >
+            <option v-for="course in courses" :key="course.id" :value="course.id">
               {{ course.name }}
             </option>
           </select>
@@ -285,39 +268,68 @@ const generateInvitation = async () => {
           <label class="block text-sm font-medium text-gray-700 mb-1">
             Selecciona una divisió
           </label>
-          <select 
-            v-model="selectedInvitationDivision"
-            class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
+          <select v-model="selectedInvitationDivision"
+            class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
             <option disabled value="">Selecciona una divisió</option>
-            <option 
-              v-for="division in divisions" 
-              :key="division.id" 
-              :value="division.id"
-            >
+            <option v-for="division in divisions" :key="division.id" :value="division.id">
               {{ division.division }}
             </option>
           </select>
         </div>
 
         <!-- Botó per generar l'enllaç -->
-        <button 
-          @click="generateInvitation" 
-          class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
+        <button @click="generateInvitation"
+          class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
           Generar enllaç
         </button>
 
         <!-- Mostra l'enllaç generat si existeix -->
-        <div 
-          v-if="invitationLink" 
-          class="mt-4 p-4 bg-green-100 rounded-md"
-        >
-          <p class="text-green-800 mb-2">Enllaç d'invitació:</p>
-          <a :href="invitationLink" class="text-blue-600">
-            {{ invitationLink }}
-          </a>
+        <div v-if="invitationLink" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
+          <p class="text-gray-700 font-semibold mb-2">Enllaç d'invitació generat:</p>
+
+          <div class="flex items-center bg-white border border-gray-300 rounded-md p-2 shadow-sm">
+            <input type="text" :value="invitationLink"
+              class="w-full text-gray-700 text-sm bg-transparent border-none focus:ring-0 cursor-text" readonly />
+            <button @click="copyToClipboard"
+              class="ml-3 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200"
+              title="Copiar enllaç">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h4a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </button>
+          </div>
         </div>
+        <!-- Toast de error -->
+        <transition enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2">
+          <div v-if="showErrorToast"
+            class="fixed bottom-6 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Si us plau, selecciona un curs i una divisió.</span>
+          </div>
+        </transition>
+
+        <!-- Pop-up per confirmar que s'ha copiat l'enllaç -->
+        <transition enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2">
+          <div v-if="showCopyPopup"
+            class="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Enllaç copiat!</span>
+          </div>
+        </transition>
       </div>
     </div>
   </div>
