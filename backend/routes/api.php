@@ -86,13 +86,13 @@ Route::get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, '
 Route::get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
 
 // RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO CESC
-Route::get('/forms/{formId}/responded-users', [CescRelationshipController::class, 'getRespondedUsers']);
+Route::get('/forms/{formId}/responded-users-cesc', [CescRelationshipController::class, 'getRespondedUsers']);
 
 // RUTA PARA OBTENER RESPUESTA DE UN USUARIO DEL SOCIOGRAMA
 Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
 
 // RUTA PARA OBTENER RESPUESTA DE UN USUARIO DEL CESC
-Route::get('/forms/{formId}/users/{userId}/relationships', [CescRelationshipController::class, 'getAnswersByUser']);
+Route::get('/forms/{formId}/users/{userId}/relationships-cesc', [CescRelationshipController::class, 'getAnswersByUser']);
 
 // RUTA PARA OBTENER DIVISIONES SEGUN COURSE
 Route::get('/course-divisions', [CourseController::class, 'getDivisionsByCourse']);
