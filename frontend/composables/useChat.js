@@ -11,6 +11,7 @@ export function useChat() {
   const studentsStore = useStudentsStore();
   const coursesStore = useCoursesStore();
   const sociogramStore = useSociogramStore();
+  const groupStore = useGroupStore();
 
   // Variables reactivas para almacenar datos
   const students = ref([]);
@@ -29,15 +30,15 @@ export function useChat() {
       const name_group = match[1].trim();
       const integrantsRaw = match[2].trim();
 
-      console.log("📌 Grupo detectado:", name_group);
-      console.log("👥 Raw integrants:", integrantsRaw);
+      // console.log("Grupo detectado:", name_group);
+      // console.log("Raw integrants:", integrantsRaw);
 
       const integrants =
         integrantsRaw
           .match(/\((\d+)\)/g) // Extrae solo los números dentro de paréntesis
           ?.map(id => id.replace(/\(|\)/g, "")) || []; // Elimina los paréntesis
 
-      console.log("✅ Procesado:", { name_group, integrants });
+      // console.log("Procesado:", { name_group, integrants });
 
       groups.push({
         name_group,
@@ -48,6 +49,19 @@ export function useChat() {
     }
 
     return groups;
+  }
+
+  const createGroup  = async (group, integrants) => {
+    const response = await groupStore.createGroup(group);
+
+    console.log(group)
+    console.log(integrants)
+    if (response) {
+      console.log(response.id)
+      groupStore.addStudentsToGroup(response.id, integrants);
+    }else{
+      console.error("Error creating group:", response);
+    }
   }
 
   onMounted(async () => {
@@ -110,7 +124,7 @@ export function useChat() {
       const interval = setInterval(() => {
         const sociogramResponses = sociogramStore.responses;
         console.log("Waiting for data...", sociogramResponses);
-        if (sociogramResponses && sociogramResponses.all_responses.length > 0) {
+        if (sociogramResponses && sociogramResponses.all_responses != null > 0) {
           clearInterval(interval);
           resolve();
         }
@@ -308,17 +322,19 @@ export function useChat() {
         console.log("Groups:", groups);
 
         groups.forEach(group => {
-          const groupStore = useGroupStore();
           const groupName = group.name_group;
           const groupDescription = group.description_group;
           const number_of_students = group.integrants.length;
+          const integrants = group.integrants;
 
           // Crear el grupo en la base de datos
-          groupStore.createGroup({
+          const groupData = {
             name: groupName,
             description: groupDescription,
             number_of_students,
-          });
+          };
+
+          createGroup(groupData, integrants);
         });
       }
 
