@@ -6,7 +6,8 @@ export const useGroupStore = defineStore("groups", {
   state: () => ({
     groups: [],
   }),
-  actions: {
+  actions:
+   {
     async fetchGroups() {
       try {
         const authStore = useAuthStore();
