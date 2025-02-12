@@ -8,6 +8,8 @@ import { useSociogramStore } from "@/stores/sociogramStore";
 const router = useRouter();
 const sociogramStore = useSociogramStore();
 const isLoading = ref(false);
+const chatStore = useChatStore();
+
 
 defineProps({
   course: {
@@ -56,8 +58,24 @@ const analyzeWithAI = async (course) => {
 
     // Guardar los datos formateados en sociogramStore
     sociogramStore.setResponses(data);
-    sociogramStore.setCurrentCourseAndDivision(course.courseName,course.courseId,course.division.name, course.division.id);
-    
+    sociogramStore.setCurrentCourseAndDivision(course.courseName, course.courseId, course.division.name, course.division.id);
+    chatStore.createNewChat({ name: "Sociograma" });
+
+    chatStore.addMessage(chatStore.currentChatId, {
+      type: "system",
+      content: `Benvingut a la sessió de sociograma. \n 
+    CURSO: ${sociogramStore.currentCourse.courseName} \n
+    DIVISION: ${sociogramStore.currentDivision.divisionName}
+    \n Com puc ajudar-te?\n
+      Pot fer preguntes sobre:\n
+      - Sobre les preferències individuals\n
+      - Sobre les relacions entre alumnes\n
+      - Sobre el sociograma en general\n
+      I més...
+    `,
+      timestamp: new Date().toISOString(),
+    });
+
     // Redirigir al chat solo después de que todo esté listo
     router.push({
       path: "/professor/assistent",
