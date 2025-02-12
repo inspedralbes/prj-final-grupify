@@ -123,16 +123,6 @@ const gestioSubmit = async (e) => {
 
           <div class="divider"></div>
 
-          <!-- Registro -->
-          <div class="register-link">
-            <p>
-              No tens un compte?
-              <a class="cursor-pointer font-bold" @click.prevent="navigateTo('/register')">
-                Registrar-se
-              </a>
-            </p>
-          </div>
-
           <LoginSocialLogin />
         </form>
       </div>
