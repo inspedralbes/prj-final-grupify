@@ -47,7 +47,6 @@ if (storedUser) {
 }
 
 // Función para obtener las respuestas del alumno
-// Función para obtener las respuestas del alumno
 async function obtenerDatosAlumno(studentId) {
   try {
     const url = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
@@ -619,7 +618,6 @@ const cancelEdit = () => {
 
     <!-- Contenido desplegable para resultados de autoevaluación -->
         <div class="bg-white rounded-xl shadow-sm p-6 mt-4" v-if="isFormVisible">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Resultados de Autoevaluación</h2>
           <!-- Actualiza esta parte en tu template -->
           <svg id="radial-graph" viewBox="-10 -10 231 231" xmlns="http://www.w3.org/2000/svg">
   <!-- Cuadrícula de fondo -->
@@ -670,8 +668,8 @@ const cancelEdit = () => {
 
           <!-- Mostrar si el formulario ha sido contestado o no -->
           <div class="mt-4 text-center text-gray-700">
-            <span v-if="hasAnsweredForm4" class="text-green-600 font-semibold">Contestado ✅</span>
-            <span v-else class="text-red-600 font-semibold">No contestado ❌</span>
+            <span v-if="hasAnsweredForm4" class="text-green-600 font-semibold">Contestat ✅</span>
+            <span v-else class="text-red-600 font-semibold">No contestat ❌</span>
           </div>
         </div>
 
