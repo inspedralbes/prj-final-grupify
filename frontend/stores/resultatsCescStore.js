@@ -13,6 +13,15 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
     // Store de estudiantes
     const studentsStore = useStudentsStore();
 
+    // Definir las etiquetas disponibles
+    const tagTypes = [
+        { id: 1, name: "Popular" },
+        { id: 2, name: "Rechazado" },
+        { id: 3, name: "Agresivo" },
+        { id: 4, name: "Prosocial" },
+        { id: 5, name: "Víctima" },
+    ];
+
     // Fetch de resultados desde la API
     const fetchResults = async () => {
         isLoading.value = true;
@@ -20,7 +29,7 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
             const response = await fetch("http://localhost:8000/api/cesc/ver-resultados");
             if (!response.ok) throw new Error("Error al obtener resultados");
             resultsCesc.value = await response.json();
-            console.log("Datos obtenidos del endpoint:", resultsCesc.value);
+            // console.log("Datos obtenidos del endpoint:", resultsCesc.value);
         } catch (err) {
             console.error("Error al cargar resultados:", err);
             error.value = "Error al cargar resultados";
@@ -39,14 +48,21 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
 
         console.log("Estudiantes en el curso y división:", studentIds);
 
+        // Filtrar los resultados
         const filteredResults = resultsCesc.value
             .filter(rel => studentIds.includes(rel.peer_id))
             .map(rel => {
+                // Encontrar los datos del estudiante
                 const peer = studentsStore.students.find(student => student.id === rel.peer_id);
+                
+                // Obtener el nombre de la etiqueta (tag)
+                const tag = tagTypes.find(tag => tag.id === rel.tag_id);
+                
                 return {
                     ...rel,
                     peer_name: peer ? peer.name : "Desconocido",
                     peer_last_name: peer ? peer.last_name : "",
+                    tag_name: tag ? tag.name : "Desconocido" // Agregar el nombre de la etiqueta
                 };
             });
 
