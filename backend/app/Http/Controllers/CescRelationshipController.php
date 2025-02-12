@@ -367,8 +367,10 @@ public function calcularResultados()
 
 public function verResultados()
 {
-    $resultados = CescResult::with(['peer', 'tag'])->get();
-    
+    $resultados = CescResult::with(['peer', 'tag'])
+    ->get()
+    ->makeHidden(['peer', 'question', 'tag']); 
+
     return response()->json($resultados);
 }
 

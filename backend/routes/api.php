@@ -260,3 +260,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/invitations', [InvitationController::class, 'index']);
 
 });
+
+// RUTAS PARA OBTENER RESULTADOS DEL CESC
+Route::post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
+Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']);
