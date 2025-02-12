@@ -14,10 +14,8 @@ const getSkillPercentage = value => (value / 5) * 100;
 
 <template>
   <div class="space-y-8 mt-8">
-    <div
-    >
       <div
-        v-if="props.filteredRoles.length > 0"
+      v-show="props.filteredRoles.length > 0"
         class="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
       >
         <div
@@ -72,30 +70,7 @@ const getSkillPercentage = value => (value / 5) * 100;
           </div>
         </div>
       </div>
-
-      <div
-        v-else
-        class="bg-white rounded-3xl shadow-xl p-12 text-center transform transition-all duration-500 hover:shadow-2xl backdrop-blur-sm bg-opacity-90"
-      >
-        <svg
-          class="w-20 h-20 mx-auto text-gray-400 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <p class="text-sm text-gray-600 font-medium">
-          No hi ha dades de rols disponibles
-        </p>
-      </div>
     </div>
-  </div>
 </template>
 
 <style scoped>

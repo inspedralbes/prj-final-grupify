@@ -129,7 +129,7 @@ watch(() => rolesData.value, () => {
 <template>
   <div class="space-y-8 mt-8">
     <div
-      v-if="rolesData.length > 0"
+      v-if="props.filteredRoles.length >= 3"
       class="bg-white rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl hover:scale-105 backdrop-blur-sm bg-opacity-90"
     >
       <client-only>
@@ -160,7 +160,7 @@ watch(() => rolesData.value, () => {
           d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <p class="text-xl text-gray-600 font-medium">
+      <p class="text-sm text-gray-600 font-medium">
         No hi ha dades de rols disponibles
       </p>
     </div>
