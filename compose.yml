@@ -121,7 +121,7 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: /run/secrets/db_database
+      MYSQL_DATABASE_FILE: /run/secrets/db_database
       MYSQL_USER_FILE: /run/secrets/mysql_user
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
