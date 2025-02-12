@@ -338,11 +338,11 @@ public function destroy($id)
 /**
  * Ver relaciones para hacer el Cesc.
  */
-public function getRelationships()
+public function getCesc()
 {
-    $relationships = CescRelationship::with(['user', 'peer', 'question', 'tag'])
+    $relationships = CescRelationship::with(['peer', 'question', 'tag'])
         ->get()
-        ->makeHidden(['user', 'peer', 'question', 'tag']); // Asegúrate de que los datos no sean revelados
+        ->makeHidden(['peer', 'question', 'tag']); // Asegúrate de que los datos no sean revelados
 
     return response()->json($relationships);
 }

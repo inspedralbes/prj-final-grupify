@@ -180,7 +180,8 @@ Route::prefix('sociogram-relationships')->group(function () {
 
 // Rutas para relaciones sociométricas del CESC
 Route::prefix('cesc-relationships')->group(function () {
-    Route::get('/cesc-relationships', [CescRelationshipController::class, 'getRelationships']);
+    // PARA USAR
+    Route::get('/cesc-relationships', [CescRelationshipController::class, 'getCesc']);
     Route::get('/', [CescRelationshipController::class, 'index']); // Listar todas las relaciones
     Route::get('/user/{id}', [CescRelationshipController::class, 'byUser']); // Filtrar por usuario
     Route::post('/', [CescRelationshipController::class, 'store']); // Guardar relaciones
