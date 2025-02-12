@@ -325,9 +325,18 @@ const saveGroup = () => {
               <div v-for="user in group?.users" :key="user.id"
                 class="group relative bg-gray-50 rounded-lg p-4 flex items-center justify-between hover:bg-[rgba(0,173,238,0.05)] transition-colors">
                 <div class="flex items-center gap-3">
-                  <div
-                    class="w-8 h-8 rounded-full bg-[rgba(0,173,238,0.1)] flex items-center justify-center text-[rgb(0,173,238)]">
-                    {{ user.name.charAt(0).toUpperCase() }}
+                  <!-- Mostrar imagen de perfil o inicial -->
+                  <div class="relative">
+                    <div v-if="user.image" class="w-8 h-8 rounded-full overflow-hidden">
+                      <img :src="user.image" class="w-full h-full object-cover" :alt="`Foto de ${user.name}`" />
+                    </div>
+                    <div v-else
+                      class="w-8 h-8 rounded-full bg-[rgba(0,173,238,0.1)] flex items-center justify-center text-[rgb(0,173,238)]">
+                      {{ user.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <!-- Indicador de estado online (si es necesario) -->
+                    <div class="absolute bottom-0 right-0 w-2 h-2 rounded-full border-2 border-white"
+                      :class="studentsStore.isStudentOnline(user.id) ? 'bg-green-500' : 'bg-gray-400'"></div>
                   </div>
                   <span class="font-medium text-gray-700">
                     {{ user.name }} {{ user.last_name }}
