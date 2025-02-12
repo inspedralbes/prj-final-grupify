@@ -145,9 +145,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto px-4 py-8">
-    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-      <div v-if="graphData.nodes.length > 0" class="w-full h-[600px]">
+  <div class="space-y-8 mt-8">
+      <div v-if="graphData.nodes.length > 0" class="w-full h-[600px] bg-white rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl hover:scale-105 backdrop-blur-sm bg-opacity-90">
         <VChart
           ref="chartInstance"
           class="w-full h-full"
@@ -156,9 +155,28 @@ onMounted(() => {
           @mouseout="onChartMouseOut"
         />
       </div>
-      <div v-else class="p-12 text-center text-gray-600">
-        <p class="text-xl font-medium">No hi ha dades de relacions disponibles</p>
+      
+      <div
+        v-else
+        class="bg-white rounded-3xl shadow-xl p-12 text-center transform transition-all duration-500 hover:shadow-2xl backdrop-blur-sm bg-opacity-90"
+      >
+        <svg
+          class="w-20 h-20 mx-auto text-gray-400 mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <p class="text-sm text-gray-600 font-medium">
+          No hi ha dades de rols disponibles
+        </p>
       </div>
     </div>
-  </div>
+  
 </template>

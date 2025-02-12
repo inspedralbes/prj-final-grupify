@@ -10,7 +10,7 @@ import Skills from "@/components/Teacher/SociogramaComponents/Skills.vue";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 import SociogramStatus from "@/components/Teacher/SociogramaComponents/SociogramStatus.vue";
 import { useStudentsStore } from "~/stores/studentsStore";
-import { ScatterChart } from 'echarts/charts';
+import { ScatterChart } from "echarts/charts";
 // Existing setup code remains the same
 const route = useRoute();
 const classId = ref(null);
@@ -135,37 +135,30 @@ const toggleComponent = component => {
       <div v-else class="space-y-6">
         <!-- Simplified Course Information -->
         <div class="bg-white rounded-lg shadow-md p-6">
-          <div class="flex flex-col space-y-4">
+          <div class="flex justify-between items-center bg-gray-50 p-4 rounded-md text-gray-700">
+            <div class="flex items-center space-x-2">
+              <svg
+                class="w-5 h-5 text-[#0080C0]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                />
+              </svg>
+              <span class="font-medium">
+                {{ course ? course.courseName : "" }} - {{ course && course.division ? course.division.name : "" }}
+              </span>
+            </div>
             <!-- Status Bar -->
-            <div class="w-full flex justify-center">
-              <SociogramStatus
-                v-if="course && course.sociograma_available !== undefined"
-                :course="course"
-              />
-            </div>
-
-            <!-- Combined Course Info -->
-            <div class="bg-gray-50 p-4 rounded-md">
-              <div class="flex items-center space-x-2 text-gray-700">
-                <svg
-                  class="w-5 h-5 text-[#0080C0]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
-                  />
-                </svg>
-                <span class="font-medium">
-                  {{ course ? course.courseName : "" }} - 
-                  {{ course && course.division ? course.division.name : "" }}
-                </span>
-              </div>
-            </div>
+            <SociogramStatus
+              v-if="course && course.sociograma_available !== undefined"
+              :course="course"
+            />
           </div>
         </div>
 

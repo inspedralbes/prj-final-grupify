@@ -122,7 +122,7 @@ const getSkillColor = value => {
           d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <p class="text-xl text-gray-600 font-medium">
+      <p class="text-sm text-gray-600 font-medium">
         No hi ha dades de competències disponibles
       </p>
     </div>

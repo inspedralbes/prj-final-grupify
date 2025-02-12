@@ -21,22 +21,6 @@ const props = defineProps({
 const rolesData = ref([]);
 const chartKey = ref(0); // Clave reactiva para forzar la actualización del gráfico
 
-// Guardar datos en el almacenamiento local
-const saveToLocalStorage = (roles) => {
-  localStorage.setItem("rolesData", JSON.stringify(roles));
-};
-
-// Cargar datos del almacenamiento local
-const loadFromLocalStorage = () => {
-  const storedData = localStorage.getItem("rolesData");
-  if (storedData) {
-    rolesData.value = JSON.parse(storedData);
-  } else if (props.filteredRoles.length > 0) {
-    rolesData.value = props.filteredRoles;
-    saveToLocalStorage(props.filteredRoles);
-  }
-};
-
 // Función para determinar la categoría según las puntuaciones
 const getCategory = (role) => {
   if (role.aïllament > role.popularitat) return "Aïllament";
@@ -107,16 +91,17 @@ const chartOptions = computed(() => {
   };
 });
 
-// Cargar los datos al montar el componente
+// Cargar los datos al montar el componente (ahora solo usa props.filteredRoles)
 onMounted(() => {
-  loadFromLocalStorage();
+  if (props.filteredRoles.length > 0) {
+    rolesData.value = props.filteredRoles;
+  }
 });
 
 // Actualizar rolesData cuando filteredRoles cambie
 watch(() => props.filteredRoles, (newRoles) => {
   if (newRoles.length > 0) {
     rolesData.value = newRoles;
-    saveToLocalStorage(newRoles);
   }
 }, { immediate: true });
 
@@ -129,7 +114,7 @@ watch(() => rolesData.value, () => {
 <template>
   <div class="space-y-8 mt-8">
     <div
-      v-if="rolesData.length > 0"
+      v-if="props.filteredRoles.length >= 3"
       class="bg-white rounded-2xl shadow-xl p-8 transform transition-all duration-300 hover:shadow-2xl hover:scale-105 backdrop-blur-sm bg-opacity-90"
     >
       <client-only>
@@ -160,7 +145,7 @@ watch(() => rolesData.value, () => {
           d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <p class="text-xl text-gray-600 font-medium">
+      <p class="text-sm text-gray-600 font-medium">
         No hi ha dades de rols disponibles
       </p>
     </div>
