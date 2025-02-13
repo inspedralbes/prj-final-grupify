@@ -443,38 +443,23 @@ const saveGroup = () => {
           <table class="w-full border-collapse">
             <thead>
               <tr class="bg-[rgb(0,173,238)] text-white">
-                <th class="border px-4 py-2">Data</th>
+                <th class="border px-4 py-2">Notes</th>
                 <th v-for="user in group?.users" :key="user.id" class="border px-4 py-2">
                   {{ user.name }} {{ user.last_name }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <!-- Fila para nuevas entradas -->
-              <tr>
-                <td class="border px-4 py-2 text-center">
-                  <input type="date" v-model="logDate" class="w-full p-1 border rounded" />
-                </td>
-                <td v-for="user in group?.users" :key="user.id" class="border px-4 py-2 text-center">
-                  <div class="flex gap-2">
-                    <input type="text" v-model="logEntries[user.id]" class="w-full p-1 border rounded"
-                      placeholder="Comentario..." />
-                    <button @click="handleSaveBitacoraEntry(user.id)"
-                      class="px-3 py-1 bg-[rgb(0,173,238)] text-white rounded hover:bg-[rgb(0,153,218)]">
-                      Guardar
-                    </button>
-                  </div>
-                </td>
-              </tr>
               <!-- Notas existentes -->
               <tr>
                 <td class="border px-4 py-2 text-center">
-                  Notas
+                  Notes
                 </td>
                 <td v-for="user in group?.users" :key="user.id" class="border px-4 py-2">
                   <div class="space-y-2">
                     <div v-for="note in bitacoraStore.notes.filter(note => note.user_id === user.id)" :key="note.id"
                       class="p-2 bg-gray-50 rounded mb-2">
+                      <p class="text-sm font-bold">{{ note.title }}</p>
                       <p class="text-sm">{{ note.content }}</p>
                       <div class="text-xs text-gray-500 mt-1">
                         {{ new Date(note.created_at).toLocaleDateString() }}
