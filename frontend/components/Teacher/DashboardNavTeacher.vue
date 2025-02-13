@@ -1,5 +1,8 @@
 <script setup>
 import { useRouter, useRoute } from "vue-router";
+import { ref } from 'vue';
+
+const isFormsOpen = ref(false);
 
 const menuItems = [
   {
@@ -13,19 +16,26 @@ const menuItems = [
     icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
   },
   {
+    type: "dropdown",
     title: "Formularis",
-    route: "/professor/formularis",
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
-  },
-  {
-    title: "Sociograma",
-    route: "/professor/sociograma/SociogramaView",
-    icon: "M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z",
-  },
-  {
-    title: "Cesc",
-    route: "/professor/cesc/CescView",
-    icon: "M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z",
+    items: [
+      {
+        title: "Formularis",
+        route: "/professor/formularis",
+        icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+      },
+      {
+        title: "Sociograma",
+        route: "/professor/sociograma/SociogramaView",
+        icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
+      },
+      {
+        title: "Cesc",
+        route: "/professor/cesc/CescView",
+        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+      }
+    ]
   },
   {
     title: "Colonias",
@@ -52,6 +62,25 @@ const goHome = () => {
 };
 
 const isActiveRoute = itemRoute => route.path === itemRoute;
+
+const toggleForms = () => {
+  isFormsOpen.value = !isFormsOpen.value;
+};
+
+// Cerrar el menú cuando se hace clic fuera
+const closeDropdown = (event) => {
+  if (!event.target.closest('.dropdown-container')) {
+    isFormsOpen.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', closeDropdown);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown);
+});
 </script>
 
 <template>
@@ -81,34 +110,126 @@ const isActiveRoute = itemRoute => route.path === itemRoute;
 
         <!-- Menú de navegación -->
         <div class="flex space-x-1">
-          <NuxtLink
-            v-for="item in menuItems"
-            :key="item.title"
-            :to="item.route"
-            class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
-            :class="[
-              isActiveRoute(item.route)
-                ? 'bg-blue-700 text-white'
-                : 'text-blue-50 hover:bg-blue-600 hover:text-white',
-            ]"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <template v-for="item in menuItems" :key="item.title">
+            <!-- Menú normal -->
+            <NuxtLink
+              v-if="!item.type"
+              :to="item.route"
+              class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
+              :class="[
+                isActiveRoute(item.route)
+                  ? 'bg-blue-700 text-white'
+                  : 'text-blue-50 hover:bg-blue-600 hover:text-white',
+              ]"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                :d="item.icon"
-              />
-            </svg>
-            <span>{{ item.title }}</span>
-          </NuxtLink>
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  :d="item.icon"
+                />
+              </svg>
+              <span>{{ item.title }}</span>
+            </NuxtLink>
+
+            <!-- Menú desplegable -->
+            <div v-else-if="item.type === 'dropdown'" class="relative dropdown-container">
+              <button
+                @click="toggleForms"
+                class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200 text-blue-50 hover:bg-blue-600 hover:text-white"
+                :class="{ 'bg-blue-700': isActiveRoute('/professor/formularis') || isActiveRoute('/professor/sociograma/SociogramaView') || isActiveRoute('/professor/cesc/CescView') }"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    :d="item.icon"
+                  />
+                </svg>
+                <span>{{ item.title }}</span>
+                <svg
+                  class="w-4 h-4 ml-1 transition-transform duration-200"
+                  :class="{ 'transform rotate-180': isFormsOpen }"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              <!-- Menú desplegable mejorado -->
+              <div
+                v-show="isFormsOpen"
+                class="absolute z-10 right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top transition-all duration-200"
+              >
+                <div class="py-2 divide-y divide-gray-100">
+                  <NuxtLink
+                    v-for="subItem in item.items"
+                    :key="subItem.title"
+                    :to="subItem.route"
+                    class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200 first:rounded-t-lg last:rounded-b-lg"
+                    :class="{ 'bg-blue-50 text-blue-700': isActiveRoute(subItem.route) }"
+                  >
+                    <svg
+                      class="w-5 h-5 mr-3 text-gray-400 group-hover:text-blue-500"
+                      :class="{ 'text-blue-500': isActiveRoute(subItem.route) }"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        :d="subItem.icon"
+                      />
+                    </svg>
+                    <span class="flex-1">{{ subItem.title }}</span>
+                    <svg
+                      v-if="isActiveRoute(subItem.route)"
+                      class="w-5 h-5 text-blue-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
   </nav>
 </template>
+
+<style scoped>
+.dropdown-container {
+  isolation: isolate;
+}
+</style>
