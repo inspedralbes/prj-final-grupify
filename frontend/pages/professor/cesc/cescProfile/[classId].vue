@@ -1,3 +1,64 @@
+<template>
+  <div class="min-h-screen bg-white">
+    <DashboardNavTeacher class="w-full" />
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h1 class="text-3xl font-semibold text-[#0080C0] text-center">
+          RESULTATS CESC
+        </h1>
+      </div>
+      
+      <div v-if="isLoading" class="bg-white rounded-lg shadow-md p-8 flex flex-col items-center justify-center min-h-[300px]">
+        Cargando...
+      </div>
+      
+      <div v-else-if="error">{{ error }}</div>
+
+      <div v-else>
+        <p v-if="filtered.length === 0" class="text-center text-gray-600">
+          No hay datos filtrados para este curso y división.
+        </p>
+
+        <!-- Tabla de resultados agrupados -->
+        <div v-if="groupedResults.length > 0" class="mt-4 overflow-x-auto">
+          <table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-sm">
+            <thead class="bg-gradient-to-r from-blue-50 to-purple-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-b">
+                  Nombre Completo
+                </th>
+                <th v-for="(tag, index) in uniqueTags" :key="tag" 
+                    class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider border-b"
+                    :class="getTagHeaderColor(index)">
+                  {{ tag }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr v-for="student in groupedResults" 
+                  :key="student.fullName"
+                  class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap font-medium">
+                  {{ student.fullName }}
+                </td>
+                <td v-for="(tag, index) in uniqueTags" :key="tag"
+                    class="px-6 py-4 whitespace-nowrap text-center">
+                  <span v-if="student.tags[tag]" 
+                        class="px-3 py-1 rounded-full"
+                        :class="getTagBadgeClasses(index)">
+                    {{ student.tags[tag] }}
+                  </span>
+                  <span v-else>-</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useCoursesStore } from "~/stores/coursesStore";
@@ -15,6 +76,30 @@ const course = ref(null);
 const coursesStore = useCoursesStore();
 const studentsStore = useStudentsStore();
 const resultatsCescStore = useResultatCescStore();
+
+// Color combinations for tags
+const tagColors = [
+  { bg: 'bg-red-100', text: 'text-red-800' },
+  { bg: 'bg-blue-100', text: 'text-blue-800' },
+  { bg: 'bg-green-100', text: 'text-green-800' },
+  { bg: 'bg-purple-100', text: 'text-purple-800' },
+  { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+  { bg: 'bg-pink-100', text: 'text-pink-800' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800' },
+  { bg: 'bg-orange-100', text: 'text-orange-800' }
+];
+
+// Function to get tag header color
+const getTagHeaderColor = (index) => {
+  const colorIndex = index % tagColors.length;
+  return tagColors[colorIndex].text;
+};
+
+// Function to get tag badge classes
+const getTagBadgeClasses = (index) => {
+  const colorIndex = index % tagColors.length;
+  return `${tagColors[colorIndex].bg} ${tagColors[colorIndex].text}`;
+};
 
 classId.value = route.params.classId;
 
@@ -46,55 +131,35 @@ onMounted(async () => {
 const filtered = computed(() => {
   if (!course.value) return [];
 
-  console.log("Obteniendo datos filtrados...");
-
-  const data = resultatsCescStore.getCescByCourseAndDivision(
+  return resultatsCescStore.getCescByCourseAndDivision(
     course.value.courseName,
     course.value.division.name
   );
+});
 
-  console.log(
-    "CESC POR CURSO:",
-    course.value.courseName,
-    course.value.division.name,
-    data
-  );
+// Obtener tags únicos
+const uniqueTags = computed(() => {
+  const tags = new Set(filtered.value.map(item => item.tag_name));
+  return Array.from(tags);
+});
 
-  return data;
+// Agrupar resultados por estudiante
+const groupedResults = computed(() => {
+  const groupedByStudent = {};
+  
+  filtered.value.forEach(item => {
+    const fullName = `${item.peer_name} ${item.peer_last_name}`;
+    
+    if (!groupedByStudent[fullName]) {
+      groupedByStudent[fullName] = {
+        fullName,
+        tags: {}
+      };
+    }
+    
+    groupedByStudent[fullName].tags[item.tag_name] = item.vote_count;
+  });
+  
+  return Object.values(groupedByStudent);
 });
 </script>
-
-<template>
-  <div class="min-h-screen bg-white">
-    <DashboardNavTeacher class="w-full" />
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="mb-8">
-        <h1 class="text-3xl font-semibold text-[#0080C0] text-center">
-          RESULTATS CESC
-        </h1>
-      </div>
-      <div v-if="isLoading" class="bg-white rounded-lg shadow-md p-8 flex flex-col items-center justify-center min-h-[300px]">Cargando...</div>
-      <div v-else-if="error">{{ error }}</div>
-
-      <!-- Verificación de datos -->
-      <div v-else>
-        <p v-if="filtered.length === 0">
-          No hay datos filtrados para este curso y división.
-        </p>
-
-        <!-- Mostrar datos -->
-        <ul v-if="filtered.length > 0">
-          <li v-for="item in filtered" :key="item.id">
-            <p>
-              <strong>Peer:</strong> {{ item.peer_name }}
-              {{ item.peer_last_name }}
-            </p>
-            <p><strong>Tag:</strong> {{ item.tag_name }}</p>
-            <!-- Aquí mostramos el nombre del tag -->
-            <p><strong>Vote Count:</strong> {{ item.vote_count }}</p>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</template>

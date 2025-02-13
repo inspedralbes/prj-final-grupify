@@ -36,7 +36,7 @@ class SociogramRelationshipController extends Controller
             }
 
             // Obtener las relaciones sociométricas de los usuarios encontrados
-            $relationships = CescRelationship::whereIn('user_id', $userIds)
+            $relationships = SociogramaRelationship::whereIn('user_id', $userIds)
                 ->with(['user', 'peer', 'question']) // Cargar relaciones necesarias
                 ->get();
 
