@@ -31,12 +31,11 @@ defineEmits([
           @change="$emit('update:selectedCourse', $event.target.value)"
         >
           <option value="all">Tots els cursos</option>
-          <option value="1">1º ESO</option>
-          <option value="2">2º ESO</option>
-          <option value="3">3º ESO</option>
-          <option value="4">4º ESO</option>
-          <option value="1 BATXILLERAT">1ºBATXILLERAT</option>
-          <option value="2 BATXILLERAT">2ºBATXILLERAT</option>
+          <option value="1 ESO">1º ESO</option>
+          <option value="2 ESO">2º ESO</option>
+          <option value="3 ESO">3º ESO</option>
+          <option value="4 ESO">4º ESO</option>
+          <option value="BACHILLERATO">BATXILLERAT</option>
         </select>
         <select
           :value="selectedDivision"
