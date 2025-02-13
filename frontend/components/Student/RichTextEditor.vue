@@ -1,6 +1,6 @@
 <template>
   <div class="rich-text-editor">
-    <editor-content :editor="editor" class="prose dark:prose-invert editor-container" />
+    <editor-content :editor="editor" class="prose dark:prose-invert max-w-none editor-container" />
     
     <div class="editor-toolbar fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex gap-2 border border-gray-200 dark:border-gray-700">
       <button
@@ -120,21 +120,18 @@ onBeforeUnmount(() => {
   font-size: 20px;
 }
 
-.editor-container {
-  max-width: 800px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 1rem;
-  overflow-x: hidden;
-}
-
 .ProseMirror {
   min-height: 300px;
   padding: 1rem;
   outline: none;
-  width: 100%;
-  overflow-x: hidden;
-  word-break: break-word; /* Permite romper palabras largas */
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.editor-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
