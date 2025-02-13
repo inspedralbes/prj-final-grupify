@@ -19,24 +19,24 @@
 </template>
 
 <script setup lang="ts">
-import { Editor, EditorContent } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
-import Image from '@tiptap/extension-image'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TextAlign from '@tiptap/extension-text-align'
-import { onBeforeUnmount } from 'vue'
+import { Editor, EditorContent } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import TextAlign from '@tiptap/extension-text-align';
+import { onBeforeUnmount } from 'vue';
 
 const props = defineProps<{
-  modelValue: string
-}>()
+  modelValue: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-}>()
+  (e: 'update:modelValue', value: string): void;
+}>();
 
 const editor = new Editor({
   extensions: [
@@ -48,14 +48,14 @@ const editor = new Editor({
     TableCell,
     TableHeader,
     TextAlign.configure({
-      types: ['heading', 'paragraph']
-    })
+      types: ['heading', 'paragraph'],
+    }),
   ],
   content: props.modelValue,
   onUpdate: () => {
-    emit('update:modelValue', editor.getHTML())
+    emit('update:modelValue', editor.getHTML());
   },
-})
+});
 
 const toolbarItems = [
   {
@@ -108,11 +108,11 @@ const toolbarItems = [
     action: () => editor.chain().focus().setTextAlign('justify').run(),
     isActive: () => editor.isActive({ textAlign: 'justify' }),
   },
-]
+];
 
 onBeforeUnmount(() => {
-  editor.destroy()
-})
+  editor.destroy();
+});
 </script>
 
 <style>
@@ -172,20 +172,15 @@ onBeforeUnmount(() => {
   text-align: left;
 }
 
-.ProseMirror img {
-  max-width: 100%;
-  height: auto;
+/* En modo oscuro: Solo cabeceras con fondo negro, texto blanco y borde gris */
+.dark .ProseMirror th {
+  background-color: #000;
+  color: #fff;
+  border-color: #4b5563;
 }
 
-[data-text-align='center'] {
-  text-align: center;
-}
-
-[data-text-align='right'] {
-  text-align: right;
-}
-
-[data-text-align='justify'] {
-  text-align: justify;
+/* Bordes de celdas (td) en dark mode se modifican a gris */
+.dark .ProseMirror td {
+  border-color: #4b5563;
 }
 </style>

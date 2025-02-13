@@ -1,9 +1,7 @@
 <template>
   <div class="h-screen bg-white dark:bg-gray-900 flex text-gray-900 dark:text-white">
     <!-- Left Sidebar -->
-    <div
-      class="w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col"
-    >
+    <div class="w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col">
       <!-- Home and Documents Section -->
       <div class="p-4 space-y-6">
         <div class="flex items-center space-x-2">
@@ -28,7 +26,7 @@
             >
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Buscar"
               class="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
             />
           </div>
@@ -129,9 +127,7 @@
               />
               <StudentRichTextEditor
                 v-model="currentNote.content"
-                @update:modelValue="
-                  updateNote(currentNote.id, { content: $event })
-                "
+                @update:modelValue="updateNote(currentNote.id, { content: $event })"
               />
             </template>
             <div
@@ -220,8 +216,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useDark, useToggle } from '@vueuse/core';
+import { useNotes } from '~/composables/useNotes';
+import { useGemini } from '~/composables/useGemini';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+// Se utiliza "html-to-docx" en lugar de "html-docx-js"
+import htmlToDocx from 'html-to-docx';
 
 const isDark = useDark({
   selector: 'html',
@@ -240,7 +242,7 @@ onMounted(() => {
   }
 });
 
-const { notes, currentNote, createNote, updateNote, exportNotePDF, exportNoteDocx } = useNotes();
+const { notes, currentNote, createNote, updateNote } = useNotes();
 const { generateNotes, generating, error } = useGemini();
 
 const subjects = [
@@ -256,7 +258,7 @@ const selectedSubject = ref(subjects[0]);
 const prompt = ref('');
 const previewContent = ref('');
 const displayedContent = ref('');
-const typingSpeed = 20; // ms per character
+const typingSpeed = 20; // ms por carácter
 
 const filteredNotes = computed(() => {
   return notes.value.filter((note) => note.subject === selectedSubject.value);
@@ -264,12 +266,12 @@ const filteredNotes = computed(() => {
 
 const getSubjectColor = (subject: string) => {
   const colors = {
-    'Mathematics': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    'Physics': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-    'Chemistry': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    'Biology': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    'History': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    'Literature': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+    'Matemàtiques': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'Física': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    'Química': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'Biologia': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'Història': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    'Literatura': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
   };
   return colors[subject] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
 };
@@ -305,9 +307,14 @@ const insertToDocument = () => {
     createNewNote();
   }
   
+  // Actualiza inmediatamente el contenido y título del documento (reactivamente)
+  currentNote.value.content = previewContent.value;
+  currentNote.value.title =
+    prompt.value.slice(0, 50) + (prompt.value.length > 50 ? '...' : '');
+  
   updateNote(currentNote.value.id, {
-    content: previewContent.value,
-    title: prompt.value.slice(0, 50) + (prompt.value.length > 50 ? '...' : '')
+    content: currentNote.value.content,
+    title: currentNote.value.title,
   });
   
   previewContent.value = '';
@@ -316,6 +323,73 @@ const insertToDocument = () => {
 
 const createNewNote = () => {
   createNote(selectedSubject.value);
+};
+
+const exportNotePDF = async (note: any) => {
+  // Creamos un contenedor temporal
+  const element = document.createElement('div');
+  element.innerHTML = note.content;
+  element.style.width = '800px';
+  element.style.padding = '20px';
+  // Forzamos el fondo a blanco, sin importar el modo oscuro
+  element.style.backgroundColor = '#ffffff';
+
+  // Inyectamos estilos básicos para títulos, párrafos, etc.
+  const style = document.createElement('style');
+  style.textContent = `
+    body { font-family: 'Helvetica', sans-serif; }
+    h1 { font-size: 2em; font-weight: bold; margin-bottom: 0.5em; }
+    h2 { font-size: 1.75em; font-weight: bold; margin-bottom: 0.5em; }
+    h3 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; }
+    h4, h5, h6 { font-size: 1.2em; font-weight: bold; margin-bottom: 0.5em; }
+    p { font-size: 1em; margin-bottom: 1em; }
+  `;
+  element.prepend(style);
+  document.body.appendChild(element);
+
+  // Generamos el PDF utilizando el método html() de jsPDF
+  const pdf = new jsPDF('p', 'pt', 'a4');
+  await pdf.html(element, {
+    callback: (pdfInstance) => {
+      pdfInstance.save(`${note.title}.pdf`);
+    },
+    margin: [20, 20, 20, 20],
+    autoPaging: 'text',
+    html2canvas: { scale: 1 }
+  });
+
+  document.body.removeChild(element);
+};
+
+
+const exportNoteDocx = async (note: any) => {
+  const content = note.content;
+  const htmlContent = `<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <title>${note.title}</title>
+    </head>
+    <body>${content}</body>
+  </html>`;
+  
+  try {
+    const fileBuffer = await htmlToDocx(htmlContent, {
+      orientation: 'portrait',
+      margins: { top: 720, right: 720, bottom: 720, left: 720 },
+    });
+    const blob = new Blob([fileBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${note.title}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Error exporting DOCX:', err);
+  }
 };
 </script>
 
