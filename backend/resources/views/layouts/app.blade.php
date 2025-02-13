@@ -35,11 +35,11 @@
 
         .dashboard-title,
         .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-decoration: none;
-            color: white; 
-        }
+                font-size: 1.5rem;
+                font-weight: bold;
+                text-decoration: none;
+                color: white;
+            }
 
         /* Botón de cierre de sesión (estilo simplificado) */
         .logout-btn {
@@ -70,13 +70,11 @@
             font-size: 1rem;
             padding: 0.5rem 0.8rem;
             border-radius: 0.25rem;
-            transition: background-color 0.2s ease, color 0.2s ease;
             display: flex;
             align-items: center;
             gap: 0.3rem;
-            background: none; /* Sin fondo por defecto */
+            background: none;
         }
-
         .nav-links a:hover {
             background-color: var(--link-active-bg); /* Efecto hover */
             color: var(--primary-hover);
@@ -123,6 +121,7 @@
         .nav-link.dropdown-toggle {
             padding: 0.5rem 0.8rem;
             border-radius: 0.25rem;
+            color: white;
         }
 
         .nav-link.dropdown-toggle.active {
@@ -131,6 +130,10 @@
 
         .nav-link.dropdown-toggle:hover {
             background-color: var(--link-active-bg);
+            color: var(--primary-hover);
+        }
+                
+        .navbar-brand:hover {
             color: var(--primary-hover);
         }
                 
