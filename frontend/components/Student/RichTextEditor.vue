@@ -1,17 +1,13 @@
 <template>
   <div class="rich-text-editor">
     <editor-content :editor="editor" class="prose dark:prose-invert max-w-none editor-container" />
-    
-    <div class="editor-toolbar fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex gap-2 border border-gray-200 dark:border-gray-700">
-      <button
-        v-for="item in toolbarItems"
-        :key="item.action"
-        @click="item.action"
-        :class="[
-          'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
-          { 'bg-gray-100 dark:bg-gray-700': item.isActive?.() }
-        ]"
-      >
+
+    <div
+      class="editor-toolbar fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex gap-2 border border-gray-200 dark:border-gray-700">
+      <button v-for="item in toolbarItems" :key="item.action" @click="item.action" :class="[
+        'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
+        { 'bg-gray-100 dark:bg-gray-700': item.isActive?.() }
+      ]">
         <span class="material-icons">{{ item.icon }}</span>
       </button>
     </div>
@@ -28,7 +24,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import TextAlign from '@tiptap/extension-text-align';
-import { onBeforeUnmount } from 'vue';
+import { onBeforeUnmount, watch } from 'vue';
 
 const props = defineProps<{
   modelValue: string;
@@ -113,6 +109,15 @@ const toolbarItems = [
 onBeforeUnmount(() => {
   editor.destroy();
 });
+
+watch(
+  () => props.modelValue,
+  (newContent) => {
+    // Solo actualizar si el contenido es diferente al actual
+    if (newContent !== editor.getHTML()) {
+      editor.commands.setContent(newContent, false);
+    }
+  });
 </script>
 
 <style>

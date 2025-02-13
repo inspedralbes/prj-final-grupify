@@ -31,19 +31,34 @@ export const useNotes = () => {
     notes.value.push(newNote);
     currentNote.value = newNote;
     saveNotes();
+    return newNote; // Retornamos la nueva nota para uso inmediato
   };
 
-  // Update a note
+  // Update a note with improved reactivity
   const updateNote = (noteId: string, updates: Partial<Note>) => {
     const index = notes.value.findIndex(n => n.id === noteId);
     if (index !== -1) {
-      notes.value[index] = {
+      // Crear una nueva referencia del objeto para asegurar reactividad
+      const updatedNote = {
         ...notes.value[index],
         ...updates,
         lastModified: Date.now()
       };
+      
+      // Actualizar el array de notes con la nueva referencia
+      notes.value[index] = updatedNote;
+      
+      // Si es la nota actual, actualizar también currentNote
+      if (currentNote.value?.id === noteId) {
+        currentNote.value = updatedNote;
+      }
+      
+      // Guardar en localStorage
       saveNotes();
+      
+      return updatedNote; // Retornar la nota actualizada
     }
+    return null;
   };
 
   // Delete a note
@@ -134,6 +149,11 @@ export const useNotes = () => {
     a.click();
     window.URL.revokeObjectURL(url);
   };
+
+  // Watcher para asegurar que los cambios en las notas se reflejan en localStorage
+  watch(notes, () => {
+    saveNotes();
+  }, { deep: true });
 
   // Initialize
   loadNotes();
