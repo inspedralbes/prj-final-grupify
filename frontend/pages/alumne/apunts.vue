@@ -154,7 +154,7 @@
                 <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
                 <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
               </div>
-              <span class="text-sm text-blue-600 dark:text-blue-400">Generating notes...</span>
+              <span class="text-sm text-blue-600 dark:text-blue-400">Generant notes...</span>
             </div>
             
             <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -176,7 +176,7 @@
                     class="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     <span class="material-icons text-sm">add_circle</span>
-                    Insert to Document
+                    Insertar al Document
                   </button>
                   <button
                     @click="previewContent = ''"
@@ -253,7 +253,7 @@ const isDark = useDark({
 
 const toggleDarkMode = useToggle(isDark);
 
-const { notes, currentNote, createNote, updateNote, deleteNote } = useNotes();
+const { notes, currentNote, createNote, updateNote, deleteNote, exportNotePDF, exportNoteDocx } = useNotes();
 const { generateNotes, generating, error } = useGemini();
 
 const subjects = [
@@ -329,14 +329,28 @@ const insertToDocument = () => {
     createNewNote();
   }
   
-  currentNote.value.content = previewContent.value;
-  currentNote.value.title = prompt.value.slice(0, 50) + (prompt.value.length > 50 ? '...' : '');
+  // Crear una nueva nota con el contenido actualizado
+  const updatedNote = {
+    ...currentNote.value,
+    content: previewContent.value, // Usar el contenido HTML del preview
+    title: prompt.value.slice(0, 50) + (prompt.value.length > 50 ? '...' : '')
+  };
+
+  // Si hay contenido existente, añadir el nuevo contenido al final
+  if (currentNote.value.content) {
+    updatedNote.content = currentNote.value.content + '<br><br>' + previewContent.value;
+  }
+
+  // Actualizar la nota actual
+  currentNote.value = updatedNote;
   
+  // Actualizar la nota en el almacenamiento
   updateNote(currentNote.value.id, {
-    content: currentNote.value.content,
-    title: currentNote.value.title,
+    content: updatedNote.content,
+    title: updatedNote.title,
   });
   
+  // Limpiar el preview y el prompt
   previewContent.value = '';
   prompt.value = '';
 };
