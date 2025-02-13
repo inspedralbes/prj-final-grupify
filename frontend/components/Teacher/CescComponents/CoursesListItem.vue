@@ -29,7 +29,7 @@ const analyzeWithAI = async (course) => {
   try {
     isLoading.value = true;
     
-    const response = await fetch("http://localhost:8000/api/cesc/responses", {
+    const response = await fetch("https://api.grupify.cat/api/cesc/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

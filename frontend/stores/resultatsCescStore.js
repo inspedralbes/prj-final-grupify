@@ -26,7 +26,7 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
     const fetchResults = async () => {
         isLoading.value = true;
         try {
-            const response = await fetch("http://localhost:8000/api/cesc/ver-resultados");
+            const response = await fetch("https://api.grupify.cat/api/cesc/ver-resultados");
             if (!response.ok) throw new Error("Error al obtener resultados");
             resultsCesc.value = await response.json();
             // console.log("Datos obtenidos del endpoint:", resultsCesc.value);

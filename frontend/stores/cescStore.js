@@ -16,7 +16,7 @@ export const useCescStore = defineStore("cesc", {
   actions: {
     async fetchResponses() {
       try {
-        const response = await fetch("http://localhost:8000/api/forms/all-responses-cesc");
+        const response = await fetch("https://api.grupify.cat/api/forms/all-responses-cesc");
         const data = await response.json();
         console.log("Data:", data);
         this.responsesByCourseDivision = data;

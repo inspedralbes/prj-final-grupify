@@ -189,7 +189,7 @@ const handleBaja = async () => {
   try {
     // Enviar el estado actualizado al backend
     const response = await fetch(
-      `http://localhost:8000/api/user/${student.value.id}/status`,
+      `https://api.grupify.cat/api/user/${student.value.id}/status`,
       {
         method: "PUT",
         headers: {
@@ -229,7 +229,7 @@ const handleAlta = async () => {
   try {
     // Enviar el estado actualizado al backend
     const response = await fetch(
-      `http://localhost:8000/api/user/${student.value.id}/status`,
+      `https://api.grupify.cat/api/user/${student.value.id}/status`,
       {
         method: "PUT",
         headers: {

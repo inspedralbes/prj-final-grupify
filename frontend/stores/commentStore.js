@@ -13,7 +13,7 @@ export const useCommentStore = defineStore("comment", {
               throw new Error("No authentication token available");
           }
           
-          const response = await fetch(`http://localhost:8000/api/groups/${idGroup}/comments`, {
+          const response = await fetch(`https://api.grupify.cat/api/groups/${idGroup}/comments`, {
               method: "GET",
               headers: {
                   Authorization: `Bearer ${authStore.token}`,

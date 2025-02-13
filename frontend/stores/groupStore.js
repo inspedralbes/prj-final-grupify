@@ -75,7 +75,7 @@ export const useGroupStore = defineStore("groups", {
         // Verificar si la bitácora existe
         let bitacoraId = null;
         try {
-          const bitacoraResponse = await fetch(`http://localhost:8000/api/bitacoras/${groupId}`, {
+          const bitacoraResponse = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}`, {
             headers: {
               Authorization: `Bearer ${token}`,
               Accept: "application/json",
