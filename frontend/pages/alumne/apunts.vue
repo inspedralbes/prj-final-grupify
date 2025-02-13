@@ -5,11 +5,11 @@
       <!-- Home and Documents Section -->
       <div class="p-4 space-y-6">
         <div class="flex items-center space-x-2">
-  <NuxtLink to="/alumne/dashboard" class="flex items-center space-x-2 hover:text-blue-600 transition-colors">
-    <span class="material-icons text-blue-500">home</span>
-    <span class="font-medium">Inici</span>
-  </NuxtLink>
-</div>
+          <NuxtLink to="/alumne/dashboard" class="flex items-center space-x-2 hover:text-blue-600 transition-colors">
+            <span class="material-icons text-blue-500">home</span>
+            <span class="font-medium">Inici</span>
+          </NuxtLink>
+        </div>
 
         <div>
           <div class="flex items-center justify-between mb-4">
@@ -22,46 +22,32 @@
           </div>
           <div class="relative mb-4">
             <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-            <input
-              type="text"
-              placeholder="Buscar"
-              class="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-            />
+            <input type="text" placeholder="Buscar"
+              class="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
           </div>
-          <button
-            @click="createNewNote"
-            class="w-full flex items-center justify-center space-x-2 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
+          <button @click="createNewNote"
+            class="w-full flex items-center justify-center space-x-2 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
             <span class="material-icons text-gray-600 dark:text-gray-400">add</span>
             <span>Nou Document</span>
           </button>
           <div class="mt-4 space-y-2">
-            <div
-              v-for="note in filteredNotes"
-              :key="note.id"
-              class="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer relative group"
-              :class="{
+            <div v-for="note in filteredNotes" :key="note.id"
+              class="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer relative group" :class="{
                 'bg-gray-50 dark:bg-gray-800': currentNote?.id === note.id,
-              }"
-            >
+              }">
               <div class="flex items-start space-x-3" @click="currentNote = note">
                 <span class="material-icons text-gray-400">description</span>
                 <div class="flex-1">
                   <h3 class="font-medium">{{ note.title }}</h3>
                   <div class="flex items-center mt-1">
-                    <span 
-                      class="text-xs px-2 py-1 rounded-full" 
-                      :class="getSubjectColor(note.subject)"
-                    >
+                    <span class="text-xs px-2 py-1 rounded-full" :class="getSubjectColor(note.subject)">
                       {{ note.subject }}
                     </span>
                   </div>
                 </div>
                 <!-- Delete button -->
-                <button 
-                  @click.stop="confirmDelete(note)"
-                  class="hidden group-hover:block p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded"
-                >
+                <button @click.stop="confirmDelete(note)"
+                  class="hidden group-hover:block p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded">
                   <span class="material-icons text-red-500">delete</span>
                 </button>
               </div>
@@ -74,38 +60,25 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col h-screen overflow-hidden">
       <!-- Top Bar -->
-      <div class="h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 flex-shrink-0">
+      <div
+        class="h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 flex-shrink-0">
         <div class="flex items-center space-x-4">
-          <select
-            v-model="selectedSubject"
-            class="px-3 py-1.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-          >
+          <select v-model="selectedSubject"
+            class="px-3 py-1.5 rounded-md bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
             <option v-for="subject in subjects" :key="subject" :value="subject">
               {{ subject }}
             </option>
           </select>
         </div>
         <div class="flex items-center space-x-4">
-          <button
-            @click="toggleDarkMode()"
-            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
+          <button @click="toggleDarkMode()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
             <span class="material-icons text-gray-700 dark:text-gray-300">
               {{ isDark ? 'light_mode' : 'dark_mode' }}
             </span>
           </button>
           <div v-if="currentNote" class="flex space-x-2">
-            <button
-              @click="exportNotePDF(currentNote)"
-              class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <span class="material-icons text-sm">picture_as_pdf</span>
-              <span>PDF</span>
-            </button>
-            <button
-              @click="exportNoteDocx(currentNote)"
-              class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white"
-            >
+            <button @click="exportNoteDocx(currentNote)"
+              class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white">
               <span class="material-icons text-sm">description</span>
               <span>DOCX</span>
             </button>
@@ -118,16 +91,11 @@
         <div class="flex-1 overflow-y-auto">
           <div class="p-6">
             <template v-if="currentNote">
-              <input
-                v-model="currentNote.title"
+              <input v-model="currentNote.title"
                 class="text-3xl font-bold mb-6 w-full bg-transparent border-none outline-none"
-                placeholder="Document Title"
-                @input="updateNote(currentNote.id, { title: currentNote.title })"
-              />
-              <StudentRichTextEditor
-                v-model="currentNote.content"
-                @update:modelValue="updateNote(currentNote.id, { content: $event })"
-              />
+                placeholder="Document Title" @input="updateNote(currentNote.id, { title: currentNote.title })" />
+              <StudentRichTextEditor v-model="currentNote.content"
+                @update:modelValue="updateNote(currentNote.id, { content: $event })" />
             </template>
             <div v-else class="h-full flex items-center justify-center text-gray-500">
               <div class="text-center">
@@ -146,7 +114,7 @@
               Assistent IA
             </h3>
           </div>
-          
+
           <div class="flex-1 p-4 overflow-y-auto" style="max-height: calc(100vh - 14rem)">
             <div v-if="generating" class="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <div class="flex items-center gap-1">
@@ -156,8 +124,9 @@
               </div>
               <span class="text-sm text-blue-600 dark:text-blue-400">Generant notes...</span>
             </div>
-            
-            <div v-if="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+
+            <div v-if="error"
+              class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
               <div class="flex items-center gap-2 text-red-600 dark:text-red-400">
                 <span class="material-icons text-sm">error</span>
                 <span class="text-sm font-medium">Error</span>
@@ -171,17 +140,13 @@
                   <div v-html="displayedContent" class="typing-animation"></div>
                 </div>
                 <div class="mt-4 flex justify-end gap-2">
-                  <button
-                    @click="insertToDocument"
-                    class="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
+                  <button @click="insertToDocument"
+                    class="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                     <span class="material-icons text-sm">add_circle</span>
                     Insertar al Document
                   </button>
-                  <button
-                    @click="previewContent = ''"
-                    class="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                  >
+                  <button @click="previewContent = ''"
+                    class="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                     <span class="material-icons text-sm">close</span>
                   </button>
                 </div>
@@ -190,17 +155,11 @@
           </div>
 
           <div class="p-4 border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
-            <textarea
-              v-model="prompt"
-              placeholder="Demana'm que generi notes sobre qualsevol tema..."
-              class="w-full h-32 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            ></textarea>
-            
-            <button
-              @click="generateAINotes"
-              :disabled="generating || !prompt"
-              class="mt-3 w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
-            >
+            <textarea v-model="prompt" placeholder="Demana'm que generi notes sobre qualsevol tema..."
+              class="w-full h-32 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"></textarea>
+
+            <button @click="generateAINotes" :disabled="generating || !prompt"
+              class="mt-3 w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
               <span class="material-icons text-sm">auto_awesome</span>
               <span>Generar notes</span>
             </button>
@@ -217,16 +176,11 @@
         ¿Estás seguro de que quieres eliminar "{{ noteToDelete?.title }}"? Esta acción no se puede deshacer.
       </p>
       <div class="flex justify-end space-x-4">
-        <button 
-          @click="showDeleteModal = false"
-          class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-        >
+        <button @click="showDeleteModal = false"
+          class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
           Cancelar
         </button>
-        <button 
-          @click="deleteConfirmed"
-          class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-        >
+        <button @click="deleteConfirmed" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
           Eliminar
         </button>
       </div>
@@ -301,7 +255,7 @@ const getSubjectColor = (subject: string) => {
 const typeContent = (content: string) => {
   let currentIndex = 0;
   displayedContent.value = '';
-  
+
   const typeNextChar = () => {
     if (currentIndex < content.length) {
       displayedContent.value += content[currentIndex];
@@ -309,15 +263,15 @@ const typeContent = (content: string) => {
       setTimeout(typeNextChar, typingSpeed);
     }
   };
-  
+
   typeNextChar();
 };
 
 const generateAINotes = async () => {
   if (!prompt.value || generating.value) return;
-  
+
   const generatedContent = await generateNotes(prompt.value, selectedSubject.value);
-  
+
   if (generatedContent) {
     previewContent.value = generatedContent;
     typeContent(generatedContent);
@@ -328,7 +282,7 @@ const insertToDocument = () => {
   if (!currentNote.value) {
     createNewNote();
   }
-  
+
   // Crear una nueva nota con el contenido actualizado
   const updatedNote = {
     ...currentNote.value,
@@ -343,13 +297,13 @@ const insertToDocument = () => {
 
   // Actualizar la nota actual
   currentNote.value = updatedNote;
-  
+
   // Actualizar la nota en el almacenamiento
   updateNote(currentNote.value.id, {
     content: updatedNote.content,
     title: updatedNote.title,
   });
-  
+
   // Limpiar el preview y el prompt
   previewContent.value = '';
   prompt.value = '';
@@ -389,6 +343,7 @@ const deleteConfirmed = () => {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -401,9 +356,12 @@ const deleteConfirmed = () => {
 }
 
 @keyframes blink {
-  from, to {
+
+  from,
+  to {
     border-color: transparent;
   }
+
   50% {
     border-color: #3b82f6;
   }

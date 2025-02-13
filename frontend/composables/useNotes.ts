@@ -1,6 +1,7 @@
 import { ref, watch } from 'vue';
 import { Note } from '~/types';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
+import htmlToDocx from 'html-to-docx';
 
 export const useNotes = () => {
   const notes = ref<Note[]>([]);
@@ -44,18 +45,18 @@ export const useNotes = () => {
         ...updates,
         lastModified: Date.now()
       };
-      
+
       // Actualizar el array de notes con la nueva referencia
       notes.value[index] = updatedNote;
-      
+
       // Si es la nota actual, actualizar también currentNote
       if (currentNote.value?.id === noteId) {
         currentNote.value = updatedNote;
       }
-      
+
       // Guardar en localStorage
       saveNotes();
-      
+
       return updatedNote; // Retornar la nota actualizada
     }
     return null;
@@ -107,48 +108,32 @@ export const useNotes = () => {
 
   // Export note as DOCX
   const exportNoteDocx = async (note: Note) => {
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: note.title,
-                bold: true,
-                size: 32,
-              }),
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: note.subject,
-                size: 24,
-                color: '666666',
-              }),
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: note.content.replace(/<[^>]*>/g, ''),
-                size: 24,
-              }),
-            ],
-          }),
-        ],
-      }],
-    });
+    const contentHTML = `
+      <div style="font-family: Arial, sans-serif;">
+        <h1>${note.title}</h1>
+        <h2 style="color: #666;">${note.subject}</h2>
+        ${note.content}
+      </div>
+    `;
 
-    const blob = await Packer.toBlob(doc);
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${note.title}.docx`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    try {
+      // Convierte el HTML a DOCX
+      const fileBuffer = await htmlToDocx(contentHTML);
+      const blob = new Blob([fileBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${note.title}.docx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al exportar DOCX:', error);
+    }
   };
+
 
   // Watcher para asegurar que los cambios en las notas se reflejan en localStorage
   watch(notes, () => {
