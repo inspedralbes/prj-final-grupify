@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { defineNuxtConfig } from 'nuxt/config'
+
 export default defineNuxtConfig({
   modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "nuxt-vue3-google-signin"],
   compatibilityDate: "2024-11-01",
@@ -14,4 +16,14 @@ export default defineNuxtConfig({
   googleSignIn: {
     clientId: process.env.GOOGLE_CLIENT_ID,
   },
+  vite: {
+    define: {
+      global: 'globalThis'
+    },
+    resolve: {
+      alias: {
+        stream: 'stream-browserify'
+      }
+    }
+  }
 });
