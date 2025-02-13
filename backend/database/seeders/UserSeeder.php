@@ -34,6 +34,7 @@ User::create([
     'email' => 'lucas@gmail.com',
     'password' => Hash::make('password'),
     'role_id' => Role::where('name', 'alumno')->first()->id,
+    'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQGPp0Yrjkv_DQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1714931862069?e=1744848000&v=beta&t=uBmxp5nw0Li0eBmwUiur6AsXsNf7NSgSKUcbrtclHJA'
 ]);
 
 // Crear otro usuario específico
@@ -43,6 +44,7 @@ User::create([
     'email' => 'adri@gmail.com',
     'password' => Hash::make('password'),
     'role_id' => Role::where('name', 'alumno')->first()->id,
+    'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQH1WwSOsPAnmw/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1689523295036?e=1744848000&v=beta&t=_ygufCfSmMDLV6Bdeok5rVBrmxwbAi2QIP9c30KP8EE'
 ]);
 
 User::create([
@@ -51,6 +53,7 @@ User::create([
     'email' => 'joselito@gmail.com',
     'password' => Hash::make('password'),
     'role_id' => Role::where('name', 'alumno')->first()->id,
+    'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQEdFtig7c-woQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1682366266997?e=1744848000&v=beta&t=B_XULbr-qSGAJFNQGGgUUA-WXMuudQkrr2tpptD7jxM'
 ]);
 
 User::create([
@@ -59,6 +62,7 @@ User::create([
     'email' => 'ale@gmail.com',
     'password' => Hash::make('password'),
     'role_id' => Role::where('name', 'alumno')->first()->id,
+    'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQESIlLlguI6sA/profile-displayphoto-shrink_400_400/B4DZOGXw62HcAk-/0/1733126197378?e=1744848000&v=beta&t=I6fLRblAncYVYI7sSkO9ol5SvjevBPr61mc_PEjQa7E'
 ]);
 
 User::create([
@@ -67,4 +71,5 @@ User::create([
     'email' => 'ara@gmail.com',
     'password' => Hash::make('password'),
     'role_id' => Role::where('name', 'alumno')->first()->id,
+    'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQHgqZ8mMp5enQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1694774589516?e=1744848000&v=beta&t=anV8DGNUfA18T7Zkbcty53xTe_AZ_o1briGnsonrKEc'
 ]);
