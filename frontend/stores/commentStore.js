@@ -8,26 +8,34 @@ export const useCommentStore = defineStore("comment", {
   actions: {
     async fetchComments(idGroup) {
       try {
-        const authStore = useAuthStore();
-        const response = await fetch(`http://localhost:8000/api/groups/${idGroup}/comments`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-
-        if (!response.ok) throw new Error("Error fetching comments");
-        
-        const data = await response.json();
-        this.comments = data.comments;
-
+          const authStore = useAuthStore();
+          if (!authStore.token) {
+              throw new Error("No authentication token available");
+          }
+          
+          const response = await fetch(`http://localhost:8000/api/groups/${idGroup}/comments`, {
+              method: "GET",
+              headers: {
+                  Authorization: `Bearer ${authStore.token}`,
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+              },
+          });
+  
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || "Error fetching comments");
+          }
+          
+          const data = await response.json();
+          this.comments = data.comments;
+  
       } catch (error) {
-        console.error("Error fetching comments:", error);
-        throw error;
+          console.error("Error fetching comments:", error);
+          this.comments = []; // Set empty array on error
+          throw error;
       }
-    },
+  },
 
     async addCommentToGroup(idGroup, commentData) {
       try {

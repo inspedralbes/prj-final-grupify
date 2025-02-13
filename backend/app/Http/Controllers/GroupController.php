@@ -76,23 +76,28 @@ class GroupController extends Controller
      */
     public function store(Request $request)
 {
-    // Validación básica sin roles
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'number_of_students' => 'required|integer',
-    ]);
+    try {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'number_of_students' => 'required|integer',
+        ]);
 
-    $group = Group::create($validated);
+        $group = Group::create($validated);
+        \Log::info("Group created successfully", ['group_id' => $group->id]);
 
-    // Crear una bitácora para el grupo
-    $bitacora = new Bitacora();
-    $bitacora->group_id = $group->id;
-    $bitacora->title = "Bitácora del grupo " . $group->name;
-    $bitacora->description = "Bitácora asociada al grupo " . $group->name;
-    $bitacora->save();
+        $bitacora = new Bitacora();
+        $bitacora->group_id = $group->id;
+        $bitacora->title = "Bitácora del grupo " . $group->name;
+        $bitacora->description = "Bitácora asociada al grupo " . $group->name;
+        $bitacora->save();
+        \Log::info("Bitacora created successfully", ['bitacora_id' => $bitacora->id]);
 
-    return $group;
+        return response()->json($group, 201);
+    } catch (\Exception $e) {
+        \Log::error("Error creating group: " . $e->getMessage());
+        return response()->json(['message' => 'Error creating group'], 500);
+    }
 }
 
     /**
