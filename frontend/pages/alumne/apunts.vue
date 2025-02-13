@@ -8,7 +8,6 @@
           <span class="material-icons text-blue-500">home</span>
           <span class="font-medium">Home</span>
         </div>
-
         <div>
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -18,19 +17,14 @@
               <span class="material-icons text-sm">filter_list</span>
             </button>
           </div>
-
           <div class="relative mb-4">
-            <span
-              class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              >search</span
-            >
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
             <input
               type="text"
               placeholder="Buscar"
               class="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
             />
           </div>
-
           <button
             @click="createNewNote"
             class="w-full flex items-center justify-center space-x-2 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -38,18 +32,16 @@
             <span class="material-icons text-gray-600 dark:text-gray-400">add</span>
             <span>Nou Document</span>
           </button>
-
           <div class="mt-4 space-y-2">
             <div
               v-for="note in filteredNotes"
               :key="note.id"
-              @click="currentNote = note"
-              class="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+              class="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer relative group"
               :class="{
                 'bg-gray-50 dark:bg-gray-800': currentNote?.id === note.id,
               }"
             >
-              <div class="flex items-start space-x-3">
+              <div class="flex items-start space-x-3" @click="currentNote = note">
                 <span class="material-icons text-gray-400">description</span>
                 <div class="flex-1">
                   <h3 class="font-medium">{{ note.title }}</h3>
@@ -62,6 +54,13 @@
                     </span>
                   </div>
                 </div>
+                <!-- Delete button -->
+                <button 
+                  @click.stop="confirmDelete(note)"
+                  class="hidden group-hover:block p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded"
+                >
+                  <span class="material-icons text-red-500">delete</span>
+                </button>
               </div>
             </div>
           </div>
@@ -72,9 +71,7 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col h-screen overflow-hidden">
       <!-- Top Bar -->
-      <div
-        class="h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 flex-shrink-0"
-      >
+      <div class="h-14 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-6 flex-shrink-0">
         <div class="flex items-center space-x-4">
           <select
             v-model="selectedSubject"
@@ -85,15 +82,14 @@
             </option>
           </select>
         </div>
-
         <div class="flex items-center space-x-4">
           <button
             @click="toggleDarkMode()"
             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <span class="material-icons text-gray-700 dark:text-gray-300">{{
-              isDark ? 'light_mode' : 'dark_mode'
-            }}</span>
+            <span class="material-icons text-gray-700 dark:text-gray-300">
+              {{ isDark ? 'light_mode' : 'dark_mode' }}
+            </span>
           </button>
           <div v-if="currentNote" class="flex space-x-2">
             <button
@@ -130,10 +126,7 @@
                 @update:modelValue="updateNote(currentNote.id, { content: $event })"
               />
             </template>
-            <div
-              v-else
-              class="h-full flex items-center justify-center text-gray-500"
-            >
+            <div v-else class="h-full flex items-center justify-center text-gray-500">
               <div class="text-center">
                 <span class="material-icons text-4xl mb-2">description</span>
                 <p>Select a document or create a new one to start writing</p>
@@ -213,6 +206,29 @@
       </div>
     </div>
   </div>
+  <!-- Delete Confirmation Modal -->
+  <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+      <h3 class="text-lg font-medium mb-4">Confirmar eliminación</h3>
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        ¿Estás seguro de que quieres eliminar "{{ noteToDelete?.title }}"? Esta acción no se puede deshacer.
+      </p>
+      <div class="flex justify-end space-x-4">
+        <button 
+          @click="showDeleteModal = false"
+          class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+        >
+          Cancelar
+        </button>
+        <button 
+          @click="deleteConfirmed"
+          class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -220,9 +236,9 @@ import { ref, computed, onMounted } from 'vue';
 import { useDark, useToggle } from '@vueuse/core';
 import { useNotes } from '~/composables/useNotes';
 import { useGemini } from '~/composables/useGemini';
+import { Note } from '~/types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-// Se utiliza "html-to-docx" en lugar de "html-docx-js"
 import htmlToDocx from 'html-to-docx';
 
 const isDark = useDark({
@@ -231,18 +247,10 @@ const isDark = useDark({
   valueDark: 'dark',
   valueLight: 'light',
 });
+
 const toggleDarkMode = useToggle(isDark);
 
-onMounted(() => {
-  const htmlElement = document.documentElement;
-  if (isDark.value) {
-    htmlElement.classList.add('dark');
-  } else {
-    htmlElement.classList.remove('dark');
-  }
-});
-
-const { notes, currentNote, createNote, updateNote } = useNotes();
+const { notes, currentNote, createNote, updateNote, deleteNote } = useNotes();
 const { generateNotes, generating, error } = useGemini();
 
 const subjects = [
@@ -258,10 +266,21 @@ const selectedSubject = ref(subjects[0]);
 const prompt = ref('');
 const previewContent = ref('');
 const displayedContent = ref('');
+const showDeleteModal = ref(false);
+const noteToDelete = ref<Note | null>(null);
 const typingSpeed = 20; // ms por carácter
 
 const filteredNotes = computed(() => {
   return notes.value.filter((note) => note.subject === selectedSubject.value);
+});
+
+onMounted(() => {
+  const htmlElement = document.documentElement;
+  if (isDark.value) {
+    htmlElement.classList.add('dark');
+  } else {
+    htmlElement.classList.remove('dark');
+  }
 });
 
 const getSubjectColor = (subject: string) => {
@@ -307,10 +326,8 @@ const insertToDocument = () => {
     createNewNote();
   }
   
-  // Actualiza inmediatamente el contenido y título del documento (reactivamente)
   currentNote.value.content = previewContent.value;
-  currentNote.value.title =
-    prompt.value.slice(0, 50) + (prompt.value.length > 50 ? '...' : '');
+  currentNote.value.title = prompt.value.slice(0, 50) + (prompt.value.length > 50 ? '...' : '');
   
   updateNote(currentNote.value.id, {
     content: currentNote.value.content,
@@ -325,70 +342,16 @@ const createNewNote = () => {
   createNote(selectedSubject.value);
 };
 
-const exportNotePDF = async (note: any) => {
-  // Creamos un contenedor temporal
-  const element = document.createElement('div');
-  element.innerHTML = note.content;
-  element.style.width = '800px';
-  element.style.padding = '20px';
-  // Forzamos el fondo a blanco, sin importar el modo oscuro
-  element.style.backgroundColor = '#ffffff';
-
-  // Inyectamos estilos básicos para títulos, párrafos, etc.
-  const style = document.createElement('style');
-  style.textContent = `
-    body { font-family: 'Helvetica', sans-serif; }
-    h1 { font-size: 2em; font-weight: bold; margin-bottom: 0.5em; }
-    h2 { font-size: 1.75em; font-weight: bold; margin-bottom: 0.5em; }
-    h3 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; }
-    h4, h5, h6 { font-size: 1.2em; font-weight: bold; margin-bottom: 0.5em; }
-    p { font-size: 1em; margin-bottom: 1em; }
-  `;
-  element.prepend(style);
-  document.body.appendChild(element);
-
-  // Generamos el PDF utilizando el método html() de jsPDF
-  const pdf = new jsPDF('p', 'pt', 'a4');
-  await pdf.html(element, {
-    callback: (pdfInstance) => {
-      pdfInstance.save(`${note.title}.pdf`);
-    },
-    margin: [20, 20, 20, 20],
-    autoPaging: 'text',
-    html2canvas: { scale: 1 }
-  });
-
-  document.body.removeChild(element);
+const confirmDelete = (note: Note) => {
+  noteToDelete.value = note;
+  showDeleteModal.value = true;
 };
 
-
-const exportNoteDocx = async (note: any) => {
-  const content = note.content;
-  const htmlContent = `<!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <title>${note.title}</title>
-    </head>
-    <body>${content}</body>
-  </html>`;
-  
-  try {
-    const fileBuffer = await htmlToDocx(htmlContent, {
-      orientation: 'portrait',
-      margins: { top: 720, right: 720, bottom: 720, left: 720 },
-    });
-    const blob = new Blob([fileBuffer], {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${note.title}.docx`;
-    a.click();
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('Error exporting DOCX:', err);
+const deleteConfirmed = () => {
+  if (noteToDelete.value) {
+    deleteNote(noteToDelete.value.id);
+    showDeleteModal.value = false;
+    noteToDelete.value = null;
   }
 };
 </script>
