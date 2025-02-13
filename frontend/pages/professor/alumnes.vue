@@ -217,16 +217,34 @@ const copyToClipboard = async () => {
           <TeacherStudentList :students="paginatedStudents" class="divide-y divide-gray-200" />
 
           <!-- Controls de paginació -->
-          <div class="flex justify-center mt-4 space-x-4">
-            <button @click="currentPage--" :disabled="currentPage === 1"
-              class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-              Anterior
-            </button>
-            <span>Pàgina {{ currentPage }} de {{ totalPages }}</span>
-            <button @click="currentPage++" :disabled="currentPage === totalPages"
-              class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-              Siguiente
-            </button>
+          <div class="d-flex justify-content-center mb-3">
+            <nav>
+              <ul class="pagination">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <button @click="currentPage--" class="page-link" :disabled="currentPage === 1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </li>
+
+                <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                  <button @click="currentPage = page" class="page-link">
+                    {{ page }}
+                  </button>
+                </li>
+
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <button @click="currentPage++" class="page-link" :disabled="currentPage === totalPages">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       </div>
@@ -334,3 +352,67 @@ const copyToClipboard = async () => {
     </div>
   </div>
 </template>
+<style scoped>
+.pagination {
+  display: flex;
+  padding-left: 0;
+  list-style: none;
+  margin: 1rem 0;
+  justify-content: center;
+}
+
+.page-item:not(:first-child) .page-link {
+  margin-left: -1px;
+}
+
+.page-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  margin-left: -1px;
+  line-height: 1.25;
+  color: #3b82f6;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-width: 2.5rem;
+  height: 2.5rem;
+}
+
+.page-item.active .page-link {
+  z-index: 3;
+  color: #fff;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.page-item.disabled .page-link {
+  color: #9ca3af;
+  pointer-events: none;
+  cursor: auto;
+  background-color: #fff;
+  border-color: #e2e8f0;
+}
+
+.page-link:hover {
+  z-index: 2;
+  color: #fff;
+  text-decoration: none;
+  background-color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+.page-item:first-child .page-link {
+  margin-left: 0;
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.page-item:last-child .page-link {
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+</style>
