@@ -5,9 +5,12 @@
       <!-- Home and Documents Section -->
       <div class="p-4 space-y-6">
         <div class="flex items-center space-x-2">
-          <span class="material-icons text-blue-500">home</span>
-          <span class="font-medium">Home</span>
-        </div>
+  <NuxtLink to="/alumne/dashboard" class="flex items-center space-x-2 hover:text-blue-600 transition-colors">
+    <span class="material-icons text-blue-500">home</span>
+    <span class="font-medium">Inici</span>
+  </NuxtLink>
+</div>
+
         <div>
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -129,7 +132,7 @@
             <div v-else class="h-full flex items-center justify-center text-gray-500">
               <div class="text-center">
                 <span class="material-icons text-4xl mb-2">description</span>
-                <p>Select a document or create a new one to start writing</p>
+                <p>Seleccioneu un document o creeu-ne un de nou per començar a escriure</p>
               </div>
             </div>
           </div>
