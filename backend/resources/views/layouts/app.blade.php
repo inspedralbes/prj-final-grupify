@@ -10,7 +10,7 @@
         :root {
             --primary-color: rgb(0, 173, 238);
             --primary-hover: rgb(0, 153, 218);
-            --active-background: #0000FF; /* Azul puro */
+            --active-background: #0000FF; 
             --background-color: #f2f2f2;
             --navbar-background: var(--primary-color);
             --link-active-bg: rgba(255, 255, 255, 0.1);
@@ -38,6 +38,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             text-decoration: none;
+            color: white; 
         }
 
         /* Botón de cierre de sesión (estilo simplificado) */
@@ -97,6 +98,42 @@
             min-height: calc(100vh - 70px); /* Altura del header o navbar */
             background-color: var(--background-color);
         }
+
+        /* Estilos para el menú desplegable */
+        .dropdown-menu {
+            background-color: var(--navbar-background);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-item {
+            color: white;
+            padding: 0.5rem 1rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--link-active-bg);
+            color: var(--primary-hover);
+        }
+
+        .dropdown-item.active {
+            background-color: var(--active-background);
+            color: white;
+        }
+
+        .nav-link.dropdown-toggle {
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.25rem;
+        }
+
+        .nav-link.dropdown-toggle.active {
+            background-color: var(--active-background);
+        }
+
+        .nav-link.dropdown-toggle:hover {
+            background-color: var(--link-active-bg);
+            color: var(--primary-hover);
+        }
+                
     </style>
 </head>
 <body>
@@ -105,35 +142,71 @@
     <nav class="navbar">
         <!-- Logo y título con ícono de inicio -->
         <a href="{{ route('dashboard') }}" class="navbar-brand">
-            <i class="fas fa-home"></i> Panell Administrador
+            <i class="fas fa-home"></i> Panell d'Administrador
         </a>
         <!-- Enlaces de navegación -->
         <div class="nav-links">
-            <a href="{{ route('roles.index') }}" class="{{ request()->routeIs('roles.*') ? 'active' : '' }}">
-                <i class="fas fa-user-tag"></i> Rols
-            </a>
-            <a href="{{ route('courses.index') }}" class="{{ request()->routeIs('courses.*') ? 'active' : '' }}">
-                <i class="fas fa-graduation-cap"></i> Cursos
-            </a>
-            <a href="{{ route('subjects.index') }}" class="{{ request()->routeIs('subjects.*') ? 'active' : '' }}">
-                <i class="fas fa-book"></i> Assignatures
-            </a>
-            <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
-                <i class="fas fa-users"></i> Usuaris
-            </a>
-            <a href="{{ route('groups.index') }}" class="{{ request()->routeIs('groups.*') ? 'active' : '' }}">
-                <i class="fas fa-layer-group"></i> Grups
-            </a>
-            <a href="{{ route('divisions.index') }}" class="{{ request()->routeIs('divisions.*') ? 'active' : '' }}">
-                <i class="fas fa-sitemap"></i> Divisions
-            </a>
-            <a href="{{ route('forms.index') }}" class="{{ request()->routeIs('forms.*') ? 'active' : '' }}">
-                <i class="fas fa-clipboard-list"></i> Formularis
-            </a>
-            <a href="{{ route('questions.index') }}" class="{{ request()->routeIs('questions.*') ? 'active' : '' }}">
-                <i class="fas fa-question-circle"></i> Preguntes
-            </a>
-        </div>
+    <a href="{{ route('roles.index') }}" class="{{ request()->routeIs('roles.*') ? 'active' : '' }}">
+        <i class="fas fa-user-tag"></i> Rols
+    </a>
+    <!-- Menú desplegable de Classes -->
+    <div class="dropdown d-inline-block">
+        <a class="nav-link dropdown-toggle text-white {{ request()->routeIs(['courses.*', 'divisions.*']) ? 'active' : '' }}" 
+           href="#" 
+           role="button" 
+           data-bs-toggle="dropdown" 
+           aria-expanded="false">
+            <i class="fas fa-chalkboard"></i> Classes
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item {{ request()->routeIs('courses.*') ? 'active' : '' }}" 
+                   href="{{ route('courses.index') }}">
+                    <i class="fas fa-graduation-cap"></i> Cursos
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item {{ request()->routeIs('divisions.*') ? 'active' : '' }}" 
+                   href="{{ route('divisions.index') }}">
+                    <i class="fas fa-sitemap"></i> Divisions
+                </a>
+            </li>
+        </ul>
+    </div>
+    <a href="{{ route('subjects.index') }}" class="{{ request()->routeIs('subjects.*') ? 'active' : '' }}">
+        <i class="fas fa-book"></i> Assignatures
+    </a>
+    <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
+        <i class="fas fa-users"></i> Usuaris
+    </a>
+    <a href="{{ route('groups.index') }}" class="{{ request()->routeIs('groups.*') ? 'active' : '' }}">
+        <i class="fas fa-layer-group"></i> Grups
+    </a>
+    <!-- Menú desplegable de Formularis -->
+    <div class="dropdown d-inline-block">
+        <a class="nav-link dropdown-toggle text-white {{ request()->routeIs(['forms.*', 'questions.*']) ? 'active' : '' }}" 
+           href="#" 
+           role="button" 
+           data-bs-toggle="dropdown" 
+           aria-expanded="false">
+            <i class="fas fa-clipboard-list"></i> Formularis
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item {{ request()->routeIs('forms.*') ? 'active' : '' }}" 
+                   href="{{ route('forms.index') }}">
+                    <i class="fas fa-clipboard-list"></i> Formularis
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item {{ request()->routeIs('questions.*') ? 'active' : '' }}" 
+                   href="{{ route('questions.index') }}">
+                    <i class="fas fa-question-circle"></i> Preguntes
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
         <!-- Botón de cierre de sesión -->
         <form id="logout-form" action="{{ route('logout') }}" method="POST">
             @csrf
@@ -147,7 +220,7 @@
     <!-- Encabezado específico para el dashboard -->
     @if (request()->routeIs('dashboard'))
     <header class="dashboard-header">
-        <div class="dashboard-title">Panell d'administrador</div>
+        <div class="dashboard-title">Panell d'Administrador</div>
         <!-- Botón de cierre de sesión -->
         <form id="logout-form" action="{{ route('logout') }}" method="POST">
             @csrf

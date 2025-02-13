@@ -23,14 +23,13 @@
                 <td>{{ $user->last_name }}</td>
                 <td>{{ $user->email }}</td>
                 <td>{{ $user->role ? $user->role->name : 'Sense rol assignat' }}</td>
-
                 <td>
                     <!-- Botó de visualització -->
                     <a href="{{ route('users.show', $user->id) }}" class="btn btn-info btn-sm">Veure</a>
                     
                     <!-- Botó d'edició -->
                     <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning btn-sm">Editar</a>
-
+                    
                     <!-- Botó d'eliminació -->
                     <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline-block;">
                         @csrf
@@ -46,6 +45,11 @@
             @endforelse
         </tbody>
     </table>
+
+    <!-- Paginació -->
+    <div class="d-flex justify-content-center mb-3">
+        {{ $users->links('pagination::bootstrap-4') }}
+    </div>
 
     <!-- Botó de tornar al dashboard -->
     <a href="{{ route('dashboard') }}" class="btn btn-primary mt-3 w-100">Tornar al Dashboard</a>

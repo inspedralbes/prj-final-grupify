@@ -85,7 +85,8 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::all();
+        //$users = User::all();
+        $users = User::paginate(20);
 
         // Si la solicitud es AJAX, devolver una respuesta JSON
         if (request()->wantsJson()) {
