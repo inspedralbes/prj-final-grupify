@@ -48,7 +48,7 @@ const router = useRouter();
 const route = useRoute();
 
 const goHome = () => {
-  router.push("/professor/dashboard");
+  navigateTo("/professor/dashboard");
 };
 
 const isActiveRoute = itemRoute => route.path === itemRoute;
