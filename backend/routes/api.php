@@ -16,6 +16,7 @@ use Illuminate\Auth\Events\Authenticated;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SociogramRelationshipController;
+use App\Http\Controllers\CescRelationshipController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CourseDivisionUserController;
 use App\Http\Controllers\UserNotificationController;
@@ -84,14 +85,24 @@ Route::get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, '
 // RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
 Route::get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
 
+// RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO CESC
+Route::get('/forms/{formId}/responded-users-cesc', [CescRelationshipController::class, 'getRespondedUsers']);
+
 // RUTA PARA OBTENER RESPUESTA DE UN USUARIO DEL SOCIOGRAMA
 Route::get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
+
+// RUTA PARA OBTENER RESPUESTA DE UN USUARIO DEL CESC
+Route::get('/forms/{formId}/users/{userId}/relationships-cesc', [CescRelationshipController::class, 'getAnswersByUser']);
 
 // RUTA PARA OBTENER DIVISIONES SEGUN COURSE
 Route::get('/course-divisions', [CourseController::class, 'getDivisionsByCourse']);
 
 //RUTA PARA OBTENER LAS RESPUESTA DE SOCIOGRAMADA (TODA)
 Route::get('/forms/all-responses-sociogram', [SociogramRelationshipController::class, 'getAllResponses']);
+
+//RUTA PARA OBTENER LAS RESPUESTA DEL CESC (TODA)
+Route::get('/forms/all-responses-cesc', [CescRelationshipController::class, 'getAllResponses']);
+
 // RUTA PARA ASIGNAR FORMULARIO SEGUN CURSO Y DIVISION
 Route::post('/forms/assign-to-course-division', [FormController::class, 'assignFormToCourseAndDivision']);
 //RUTA PARA VER SI UN FORMULARIO ESTA CONTESTADO POR TODOS LOS ALUMNOS DE UNA CLASE
@@ -105,6 +116,9 @@ Route::get('/forms/active', [FormController::class, 'getActiveForms']);
 
 //RUTA PARA OBTENER TODAS LAS RESPUESTA AL SOCIOGRAMA DE UN CURSO Y DIVISION ESPECIFICA
 Route::post('/sociogram/responses', [SociogramRelationshipController::class, 'getResponsesByCourseAndDivision']);
+
+//RUTA PARA OBTENER TODAS LAS RESPUESTA DEL CESC DE UN CURSO Y DIVISION ESPECIFICA
+Route::post('/cesc/responses', [CescRelationshipController::class, 'getResponsesByCourseAndDivision']);
 
 Route::get('/roles', [RoleController::class, 'index']);
 
@@ -162,6 +176,20 @@ Route::prefix('sociogram-relationships')->group(function () {
     Route::get('/user/{id}', [SociogramRelationshipController::class, 'byUser']); // Filtrar por usuario
     Route::post('/', [SociogramRelationshipController::class, 'store']); // Guardar relaciones
     Route::delete('/{id}', [SociogramRelationshipController::class, 'destroy']); // Eliminar una relación específica
+});
+
+// Rutas para relaciones sociométricas del CESC
+Route::prefix('cesc-relationships')->group(function () {
+    // PARA USAR
+    Route::get('/cesc-relationships', [CescRelationshipController::class, 'getCesc']);
+    Route::get('/', [CescRelationshipController::class, 'index']); // Listar todas las relaciones
+    Route::get('/user/{id}', [CescRelationshipController::class, 'byUser']); // Filtrar por usuario
+    Route::post('/', [CescRelationshipController::class, 'store']); // Guardar relaciones
+    Route::delete('/{id}', [CescRelationshipController::class, 'destroy']); // Eliminar una relación específica
+    //Route::post('/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
+    //Route::get('/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
+    Route::get('/cesc-results', [CescRelationshipController::class, 'verResultados']);
+    Route::get('/cesc-results/{id}', [CescRelationshipController::class, 'verResultadosPorGrupo']);
 });
 
 // Rutas para los comentarios
@@ -232,3 +260,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/invitations', [InvitationController::class, 'index']);
 
 });
+
+// RUTAS PARA OBTENER RESULTADOS DEL CESC
+Route::post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
+Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']);

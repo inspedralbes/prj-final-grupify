@@ -6,7 +6,8 @@ export const useGroupStore = defineStore("groups", {
   state: () => ({
     groups: [],
   }),
-  actions: {
+  actions:
+   {
     async fetchGroups() {
       try {
         const authStore = useAuthStore();
@@ -70,21 +71,25 @@ export const useGroupStore = defineStore("groups", {
       try {
         const token = useAuthStore().token;
         const bitacoraStore = useBitacoraStore();
-
-        const bitacoraResponse = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
+    
+        // Verificar si la bitácora existe
+        let bitacoraId = null;
+        try {
+          const bitacoraResponse = await fetch(`http://localhost:8000/api/bitacoras/${groupId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            }
+          });
+    
+          if (bitacoraResponse.ok) {
+            const bitacora = await bitacoraResponse.json();
+            bitacoraId = bitacora.id;
           }
-        });
-        
-        if (!bitacoraResponse.ok) {
-          throw new Error("Error fetching bitacora");
+        } catch (error) {
+          console.warn("No se encontró la bitácora, continuando sin ella:", error);
         }
-        
-        const bitacora = await bitacoraResponse.json();
-        const bitacoraId = bitacora.id;
-
+    
         const response = await fetch(
           `https://api.grupify.cat/api/groups/${groupId}/removeStudentFromGroup`,
           {
@@ -96,21 +101,21 @@ export const useGroupStore = defineStore("groups", {
             },
             body: JSON.stringify({ 
               student_id: studentId,
-              bitacora_id: bitacoraId 
+              bitacora_id: bitacoraId // Enviar null si no existe la bitácora
             }),
           }
         );
-
+    
         if (!response.ok) {
           throw new Error("Error removing student from group");
         }
-
+    
         const data = await response.json();
-
+    
         await this.fetchGroups();
         await bitacoraStore.fetchBitacora(groupId);
         await bitacoraStore.fetchNotes(groupId);
-
+    
         return data;
       } catch (error) {
         console.error("Error removing student from group:", error);

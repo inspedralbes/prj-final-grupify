@@ -32,8 +32,12 @@
     "@tiptap/vue-3": "^2.11.5",
     "@vueuse/core": "^12.5.0",
     "docx": "^9.1.1",
+    "echarts": "^5.6.0",
     "google-auth-library": "^9.15.1",
+    "html-to-docx": "^1.8.0",
+    "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.2",
+    "jspdf": "^2.5.2",
     "marked": "^15.0.6",
     "material-icons": "^1.13.13",
     "nuxt": "^3.15.2",
@@ -42,11 +46,14 @@
     "socket.io-client": "^4.8.1",
     "vue": "latest",
     "vue-codemirror": "^6.1.1",
+    "vue-echarts": "^7.0.3",
     "vue-router": "latest",
     "vue3-google-login": "^2.0.33"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.13.1",
-    "prettier": "^3.4.2"
+    "@tailwindcss/typography": "^0.5.16",
+    "prettier": "^3.4.2",
+    "stream-browserify": "^3.0.0"
   }
 }

@@ -75,16 +75,30 @@ class GroupController extends Controller
      * )
      */
     public function store(Request $request)
-    {
-        // Validación básica sin roles
+{
+    try {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'number_of_students' => 'required|integer',
         ]);
 
-        return Group::create($validated);
+        $group = Group::create($validated);
+        \Log::info("Group created successfully", ['group_id' => $group->id]);
+
+        $bitacora = new Bitacora();
+        $bitacora->group_id = $group->id;
+        $bitacora->title = "Bitácora del grupo " . $group->name;
+        $bitacora->description = "Bitácora asociada al grupo " . $group->name;
+        $bitacora->save();
+        \Log::info("Bitacora created successfully", ['bitacora_id' => $bitacora->id]);
+
+        return response()->json($group, 201);
+    } catch (\Exception $e) {
+        \Log::error("Error creating group: " . $e->getMessage());
+        return response()->json(['message' => 'Error creating group'], 500);
     }
+}
 
     /**
      * @OA\Get(
@@ -341,11 +355,13 @@ class GroupController extends Controller
      * )
      */
 
+
      public function removeStudentFromGroup(Request $request, $groupId)
 {
     // Validar el ID del estudiante
     $validated = $request->validate([
         'student_id' => 'required|integer|exists:users,id',
+        'bitacora_id' => 'nullable|integer|exists:bitacoras,id', // Aceptar bitacora_id como nullable
     ]);
 
     // Buscar el grupo
@@ -356,12 +372,9 @@ class GroupController extends Controller
     }
 
     try {
-        // Obtener la bitácora del grupo
-        $bitacora = Bitacora::where('group_id', $groupId)->first();
-
-        if ($bitacora) {
-            // Eliminar las notas del usuario en esta bitácora
-            BitacoraNote::where('bitacora_id', $bitacora->id)
+        // Si se proporciona bitacora_id, eliminar las notas del usuario en esta bitácora
+        if (isset($validated['bitacora_id'])) {
+            BitacoraNote::where('bitacora_id', $validated['bitacora_id'])
                        ->where('user_id', $validated['student_id'])
                        ->delete();
         }

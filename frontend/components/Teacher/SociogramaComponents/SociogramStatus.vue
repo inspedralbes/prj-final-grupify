@@ -96,7 +96,7 @@ onMounted(() => {
 
         <!-- Status Text -->
         <span 
-          class="text-white font-semibold tracking-wide text-lg"
+          class="text-white font-semibold tracking-wide text-sm"
           :class="{'animate-pulse': course.sociograma_available === undefined}"
         >
           {{ course.sociograma_available !== undefined 

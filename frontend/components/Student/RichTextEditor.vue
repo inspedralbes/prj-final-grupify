@@ -1,17 +1,13 @@
 <template>
   <div class="rich-text-editor">
-    <editor-content :editor="editor" class="prose dark:prose-invert editor-container" />
-    
-    <div class="editor-toolbar fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex gap-2 border border-gray-200 dark:border-gray-700">
-      <button
-        v-for="item in toolbarItems"
-        :key="item.action"
-        @click="item.action"
-        :class="[
-          'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
-          { 'bg-gray-100 dark:bg-gray-700': item.isActive?.() }
-        ]"
-      >
+    <editor-content :editor="editor" class="prose dark:prose-invert max-w-none editor-container" />
+
+    <div
+      class="editor-toolbar fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex gap-2 border border-gray-200 dark:border-gray-700">
+      <button v-for="item in toolbarItems" :key="item.action" @click="item.action" :class="[
+        'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
+        { 'bg-gray-100 dark:bg-gray-700': item.isActive?.() }
+      ]">
         <span class="material-icons">{{ item.icon }}</span>
       </button>
     </div>
@@ -19,24 +15,24 @@
 </template>
 
 <script setup lang="ts">
-import { Editor, EditorContent } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
-import Image from '@tiptap/extension-image'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
-import TextAlign from '@tiptap/extension-text-align'
-import { onBeforeUnmount } from 'vue'
+import { Editor, EditorContent } from '@tiptap/vue-3';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
+import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import TextAlign from '@tiptap/extension-text-align';
+import { onBeforeUnmount, watch } from 'vue';
 
 const props = defineProps<{
-  modelValue: string
-}>()
+  modelValue: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-}>()
+  (e: 'update:modelValue', value: string): void;
+}>();
 
 const editor = new Editor({
   extensions: [
@@ -48,14 +44,14 @@ const editor = new Editor({
     TableCell,
     TableHeader,
     TextAlign.configure({
-      types: ['heading', 'paragraph']
-    })
+      types: ['heading', 'paragraph'],
+    }),
   ],
   content: props.modelValue,
   onUpdate: () => {
-    emit('update:modelValue', editor.getHTML())
+    emit('update:modelValue', editor.getHTML());
   },
-})
+});
 
 const toolbarItems = [
   {
@@ -108,11 +104,20 @@ const toolbarItems = [
     action: () => editor.chain().focus().setTextAlign('justify').run(),
     isActive: () => editor.isActive({ textAlign: 'justify' }),
   },
-]
+];
 
 onBeforeUnmount(() => {
-  editor.destroy()
-})
+  editor.destroy();
+});
+
+watch(
+  () => props.modelValue,
+  (newContent) => {
+    // Solo actualizar si el contenido es diferente al actual
+    if (newContent !== editor.getHTML()) {
+      editor.commands.setContent(newContent, false);
+    }
+  });
 </script>
 
 <style>
@@ -120,21 +125,18 @@ onBeforeUnmount(() => {
   font-size: 20px;
 }
 
-.editor-container {
-  max-width: 800px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 1rem;
-  overflow-x: hidden;
-}
-
 .ProseMirror {
   min-height: 300px;
   padding: 1rem;
   outline: none;
-  width: 100%;
-  overflow-x: hidden;
-  word-break: break-word; /* Permite romper palabras largas */
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.editor-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
@@ -175,20 +177,15 @@ onBeforeUnmount(() => {
   text-align: left;
 }
 
-.ProseMirror img {
-  max-width: 100%;
-  height: auto;
+/* En modo oscuro: Solo cabeceras con fondo negro, texto blanco y borde gris */
+.dark .ProseMirror th {
+  background-color: #000;
+  color: #fff;
+  border-color: #4b5563;
 }
 
-[data-text-align='center'] {
-  text-align: center;
-}
-
-[data-text-align='right'] {
-  text-align: right;
-}
-
-[data-text-align='justify'] {
-  text-align: justify;
+/* Bordes de celdas (td) en dark mode se modifican a gris */
+.dark .ProseMirror td {
+  border-color: #4b5563;
 }
 </style>

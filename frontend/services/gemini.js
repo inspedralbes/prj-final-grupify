@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI("AIzaSyC0NI-xnqWHJy-0XoJl7cVo63MYpqC1r9E");
+const genAI = new GoogleGenerativeAI("AIzaSyCeLUwISVfHOQbA7HeN_coGBnMZHvHNgic");
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;

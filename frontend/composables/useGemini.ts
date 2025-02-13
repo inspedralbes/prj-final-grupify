@@ -14,23 +14,23 @@ export const useGemini = () => {
       
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       
-      const fullPrompt = `Generate detailed study notes about ${prompt} for the subject ${subject}. 
-        Structure the content in a clean, formatted way using HTML tags.
+      const fullPrompt = `Generar notes d'estudi detallades sobre ${prompt} per al tema ${subject}. 
+        Estructureu el contingut d'una manera neta i formatada mitjançant etiquetes HTML.
         
-        Follow these formatting rules:
-        1. Use proper HTML structure
-        2. Main topics should be wrapped in <h1> tags
-        3. Subtopics should be wrapped in <h2> tags
-        4. Use <p> tags for paragraphs
-        5. Use <ul> and <li> for bullet points
-        6. Important concepts should be wrapped in <strong> tags
-        7. Use <em> for emphasis
-        8. Examples should be wrapped in a <div class="example"> tag
+        Seguiu aquestes regles de format:
+        1. Utilitzeu una estructura HTML adequada
+        2. Els temes principals s'han d'embolicar en etiquetes <h1>
+        3. Els subtemes s'han d'embolicar en etiquetes <h2>
+        4. Utilitzeu etiquetes <p> per als paràgrafs
+        5. Utilitzeu <ul> i <li> per a les vinyetes
+        6. Els conceptes importants s'han d'embolicar en etiquetes <strong>
+        7. Utilitzeu <em> per emfatitzar
+        8. Els exemples s'han d'embolicar en una etiqueta <div class="example">
         
-        DO NOT use markdown symbols like #, *, or -. Use proper HTML tags instead.
+        NO utilitzeu símbols de reducció com #, * o -. Utilitzeu etiquetes HTML adequades.
         
-        Make sure the content is well-structured and easy to read, with clear headings, 
-        concise explanations, and relevant examples.`;
+        Assegureu-vos que el contingut estigui ben estructurat i fàcil de llegir, amb encapçalaments clars, 
+        explicacions concises i exemples rellevants. Assegureu-vos que el contingut sigui escrit en català.`;
       
       const result = await model.generateContent(fullPrompt);
       const response = result.response;

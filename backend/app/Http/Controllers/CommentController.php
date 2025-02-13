@@ -69,18 +69,15 @@ class CommentController extends Controller
     // Obtener comentarios de un grupo
     public function getCommentsForGroup($idGroup)
 {
-    // Intentar obtener el grupo
-    $group = Group::findOrFail($idGroup);
-
-    // Comprobar si la relación tiene datos
-    $comments = $group->comments;  // Sin usar paginate inicialmente
-
-    // Verificar si realmente hay comentarios
-    if ($comments->isEmpty()) {
-        return response()->json(['message' => 'No comments found for this group'], 404);
+    try {
+        $group = Group::findOrFail($idGroup);
+        $comments = $group->comments;
+        
+        return response()->json(['comments' => $comments]);
+    } catch (\Exception $e) {
+        \Log::error("Error getting comments for group: " . $e->getMessage());
+        return response()->json(['message' => 'Group not found or error retrieving comments'], 404);
     }
-
-    return response()->json(['comments' => $comments]);
 }
 
     // Editar un comentario

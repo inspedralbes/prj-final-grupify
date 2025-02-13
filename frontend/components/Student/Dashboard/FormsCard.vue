@@ -100,7 +100,7 @@ const handleFormClick = formId => {
   if (formId === 2) {
     navigateTo(`/alumne/cesc/${formId}`); // Redirige a la ruta del cesc si el formId es 2
   } else if (formId === 3) {
-    navigateTo(`/alumne/sociograma`); // Redirige a /sociogram si el formId es 3
+    navigateTo(`/alumne/sociograma/${formId}`); // Redirige a /sociogram si el formId es 3
   } else {
     navigateTo(`/alumne/forms/${formId}`); // Redirige a la ruta correspondiente para cualquier otro formId
   }

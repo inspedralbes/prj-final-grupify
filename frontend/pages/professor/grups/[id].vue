@@ -325,9 +325,18 @@ const saveGroup = () => {
               <div v-for="user in group?.users" :key="user.id"
                 class="group relative bg-gray-50 rounded-lg p-4 flex items-center justify-between hover:bg-[rgba(0,173,238,0.05)] transition-colors">
                 <div class="flex items-center gap-3">
-                  <div
-                    class="w-8 h-8 rounded-full bg-[rgba(0,173,238,0.1)] flex items-center justify-center text-[rgb(0,173,238)]">
-                    {{ user.name.charAt(0).toUpperCase() }}
+                  <!-- Mostrar imagen de perfil o inicial -->
+                  <div class="relative">
+                    <div v-if="user.image" class="w-8 h-8 rounded-full overflow-hidden">
+                      <img :src="user.image" class="w-full h-full object-cover" :alt="`Foto de ${user.name}`" />
+                    </div>
+                    <div v-else
+                      class="w-8 h-8 rounded-full bg-[rgba(0,173,238,0.1)] flex items-center justify-center text-[rgb(0,173,238)]">
+                      {{ user.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <!-- Indicador de estado online (si es necesario) -->
+                    <div class="absolute bottom-0 right-0 w-2 h-2 rounded-full border-2 border-white"
+                      :class="studentsStore.isStudentOnline(user.id) ? 'bg-green-500' : 'bg-gray-400'"></div>
                   </div>
                   <span class="font-medium text-gray-700">
                     {{ user.name }} {{ user.last_name }}
@@ -434,38 +443,23 @@ const saveGroup = () => {
           <table class="w-full border-collapse">
             <thead>
               <tr class="bg-[rgb(0,173,238)] text-white">
-                <th class="border px-4 py-2">Data</th>
+                <th class="border px-4 py-2">Notes</th>
                 <th v-for="user in group?.users" :key="user.id" class="border px-4 py-2">
                   {{ user.name }} {{ user.last_name }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <!-- Fila para nuevas entradas -->
-              <tr>
-                <td class="border px-4 py-2 text-center">
-                  <input type="date" v-model="logDate" class="w-full p-1 border rounded" />
-                </td>
-                <td v-for="user in group?.users" :key="user.id" class="border px-4 py-2 text-center">
-                  <div class="flex gap-2">
-                    <input type="text" v-model="logEntries[user.id]" class="w-full p-1 border rounded"
-                      placeholder="Comentario..." />
-                    <button @click="handleSaveBitacoraEntry(user.id)"
-                      class="px-3 py-1 bg-[rgb(0,173,238)] text-white rounded hover:bg-[rgb(0,153,218)]">
-                      Guardar
-                    </button>
-                  </div>
-                </td>
-              </tr>
               <!-- Notas existentes -->
               <tr>
                 <td class="border px-4 py-2 text-center">
-                  Notas
+                  Notes
                 </td>
                 <td v-for="user in group?.users" :key="user.id" class="border px-4 py-2">
                   <div class="space-y-2">
                     <div v-for="note in bitacoraStore.notes.filter(note => note.user_id === user.id)" :key="note.id"
                       class="p-2 bg-gray-50 rounded mb-2">
+                      <p class="text-sm font-bold">{{ note.title }}</p>
                       <p class="text-sm">{{ note.content }}</p>
                       <div class="text-xs text-gray-500 mt-1">
                         {{ new Date(note.created_at).toLocaleDateString() }}

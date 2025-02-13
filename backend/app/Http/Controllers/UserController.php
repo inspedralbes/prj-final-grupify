@@ -85,7 +85,8 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::all();
+        //$users = User::all();
+        $users = User::paginate(20);
 
         // Si la solicitud es AJAX, devolver una respuesta JSON
         if (request()->wantsJson()) {
@@ -381,26 +382,27 @@ class UserController extends Controller
     }
 
     public function getStudents()
-    {
-        $students = User::where('role_id', 2)
-            ->with(['courseDivisionUsers.course', 'courseDivisionUsers.division'])
-            ->get();
+{
+    $students = User::where('role_id', 2)
+        ->with(['courseDivisionUsers.course', 'courseDivisionUsers.division'])
+        ->get();
 
-        $formatted = $students->map(function ($student) {
-            $courseDivision = $student->courseDivisionUsers->first();
+    $formatted = $students->map(function ($student) {
+        $courseDivision = $student->courseDivisionUsers->first();
 
-            return [
-                'id' => $student->id,
-                'name' => $student->name,
-                'last_name' => $student->last_name,
-                'email' => $student->email,
-                'course' => optional($courseDivision?->course)->name ?? 'Sin Curso',
-                'division' => optional($courseDivision?->division)->division ?? 'Sin División',
-            ];
-        });
+        return [
+            'id' => $student->id,
+            'name' => $student->name,
+            'last_name' => $student->last_name,
+            'email' => $student->email,
+            'image' => $student->image, // <- Añadir esta línea
+            'course' => optional($courseDivision?->course)->name ?? 'Sin Curso',
+            'division' => optional($courseDivision?->division)->division ?? 'Sin División',
+        ];
+    });
 
-        return response()->json($formatted);
-    }
+    return response()->json($formatted);
+}
 
     public function getTeachers()
     {

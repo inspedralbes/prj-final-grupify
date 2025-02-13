@@ -1,35 +1,67 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useStudentSearch } from "@/composables/useStudentSearch";
 import { useStudentsStore } from "@/stores/studentsStore";
 import { useAuthStore } from "@/stores/auth"; // Importar el store de auth
 
 const studentsStore = useStudentsStore();
-const authStore = useAuthStore(); // Acceso al store de auth
+const authStore = useAuthStore();
 const { $socket } = useNuxtApp();
 const isLoading = ref(true);
 
-// VARIABLES REACTIVES PARA FILTRAR ESTUDIANTES (LOGICA ORIGINAL)
+// VARIABLES REACTIVES PER FILTRAR ELS ESTUDIANTS (lògica original)
 const students = computed(() => studentsStore.students || []);
 const { searchQuery, selectedCourse, selectedDivision, filteredStudents } =
   useStudentSearch(students);
 
-// VARIABLES PARA LA GENERACIÓN DE INVITACIÓN
+// >>> VARIABLES PER LA PAGINACIÓ <<<
+const currentPage = ref(1);
+const itemsPerPage = ref(20); // Ajusta aquí la quantitat d'estudiants per pàgina
+
+const totalPages = computed(() =>
+  Math.ceil(filteredStudents.value.length / itemsPerPage.value)
+);
+
+const paginatedStudents = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  return filteredStudents.value.slice(start, start + itemsPerPage.value);
+});
+
+// Reinicia la pàgina actual quan canvien els filtres
+watch(filteredStudents, () => {
+  currentPage.value = 1;
+});
+
+// VARIABLES PER GENERAR LA INVITACIÓ
 const courses = ref([]);
 const divisions = ref([]);
-const selectedInvitationCourse = ref(""); // ID del curso seleccionado para el enlace
-const selectedInvitationDivision = ref(""); // ID de la división seleccionada para el enlace
-const invitationLink = ref(""); // Enlace generado
+const selectedInvitationCourse = ref(""); // ID del curs seleccionat per l'enllaç
+const selectedInvitationDivision = ref(""); // ID de la divisió seleccionada per l'enllaç
+const invitationLink = ref(""); // Enllaç generat
 
-// Función para cargar los estudiantes y cursos al montar el componente
+// VARIABLE PER CONTROLAR EL MODAL
+const showInvitationModal = ref(false);
+
+// VARIABLE PER CONTROLAR EL POP-UP DE COPIA
+const showCopyPopup = ref(false);
+
+// Funcions per obrir i tancar el modal
+const openInvitationModal = () => {
+  showInvitationModal.value = true;
+};
+const closeInvitationModal = () => {
+  showInvitationModal.value = false;
+};
+
+// Funció per carregar els estudiants i els cursos al montar el component
 onMounted(async () => {
   await studentsStore.fetchStudents();
   setupSocketListeners();
-  await fetchCourses(); // Carga los cursos para la invitación
+  await fetchCourses(); // Carrega els cursos per a la invitació
   isLoading.value = false;
 });
 
-// Configuración de los listeners del socket
+// Configuració dels listeners del socket
 const setupSocketListeners = () => {
   $socket.on('user_online', (userId) => {
     studentsStore.setUserOnline(userId);
@@ -39,25 +71,25 @@ const setupSocketListeners = () => {
   });
 };
 
-// Función para obtener todos los cursos
+// Funció per obtenir tots els cursos
 const fetchCourses = async () => {
   try {
     const response = await fetch("https://api.grupify.cat/api/courses", {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${authStore.token}`, // Usar el token desde authStore
+        Authorization: `Bearer ${authStore.token}`, // Usar el token des d'authStore
       },
     });
-    if (!response.ok) throw new Error("Error al cargar los cursos");
+    if (!response.ok) throw new Error("Error al carregar els cursos");
     const data = await response.json();
     courses.value = data;
   } catch (error) {
-    console.error("Error al cargar los cursos:", error);
+    console.error("Error al carregar els cursos:", error);
   }
 };
 
-// Función para obtener las divisiones según el curso seleccionado
+// Funció per obtenir les divisions segons el curs seleccionat
 const fetchInvitationDivisions = async () => {
   if (!selectedInvitationCourse.value) {
     divisions.value = [];
@@ -70,27 +102,30 @@ const fetchInvitationDivisions = async () => {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          Authorization: `Bearer ${authStore.token}`, // Usar el token desde authStore
+          Authorization: `Bearer ${authStore.token}`, // Usar el token des d'authStore
         },
       }
     );
-    if (!response.ok) throw new Error("Error al cargar las divisiones");
+    if (!response.ok) throw new Error("Error al carregar les divisions");
     const data = await response.json();
     if (data.divisions) {
       divisions.value = data.divisions;
     } else {
       divisions.value = [];
-      console.error(data.message || "No se han encontrado divisiones");
+      console.error(data.message || "No s'han trobat divisions");
     }
   } catch (error) {
-    console.error("Error al cargar las divisiones:", error);
+    console.error("Error al carregar les divisions:", error);
   }
 };
-
-// Función para generar el enlace de invitación
+const showErrorToast = ref(false);
+// Funció per generar l'enllaç d'invitació
 const generateInvitation = async () => {
   if (!selectedInvitationCourse.value || !selectedInvitationDivision.value) {
-    alert("Por favor, selecciona un curso y una división antes de generar el enlace.");
+    showErrorToast.value = true;
+    setTimeout(() => {
+      showErrorToast.value = false;
+    }, 3000); // Oculta el toast después de 3 segundos
     return;
   }
   try {
@@ -99,22 +134,34 @@ const generateInvitation = async () => {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${authStore.token}`, // Usar el token desde authStore
+        Authorization: `Bearer ${authStore.token}`, // Usar el token des d'authStore
       },
       body: JSON.stringify({
         course_id: selectedInvitationCourse.value,
         division_id: selectedInvitationDivision.value,
       }),
     });
-    if (!response.ok) throw new Error("Error al generar la invitación");
+    if (!response.ok) throw new Error("Error al generar la invitació");
     const data = await response.json();
     invitationLink.value = data.link;
   } catch (error) {
-    console.error("Error al generar la invitación:", error);
+    console.error("Error al generar la invitació:", error);
+  }
+};
+
+// Funció per copiar l'enllaç al portapapeles
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(invitationLink.value);
+    showCopyPopup.value = true;
+    setTimeout(() => {
+      showCopyPopup.value = false;
+    }, 2000); // El pop-up desaparece después de 2 segundos
+  } catch (error) {
+    console.error("Error al copiar el enlace:", error);
   }
 };
 </script>
-
 
 <template>
   <div class="min-h-screen bg-gray-50">
@@ -129,10 +176,98 @@ const generateInvitation = async () => {
         </p>
       </div>
 
-      <!-- Secció per generar l’enllaç d’invitació -->
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <h2 class="text-xl font-bold mb-4">Generar enllaç d'invitació</h2>
-        <!-- Selector de curs -->
+      <!-- Llistat d'estudiants amb controls i icona per generar invitació -->
+      <div v-if="isLoading" class="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="mt-4 text-gray-600 font-medium">Carregant estudiants...</p>
+      </div>
+
+      <div v-else class="space-y-6">
+        <!-- Filtres d'estudiants -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+          <TeacherStudentFilters v-model:search-query="searchQuery" v-model:selected-course="selectedCourse"
+            v-model:selected-division="selectedDivision" />
+        </div>
+
+        <!-- Llistat d'estudiants -->
+        <div class="bg-white rounded-lg shadow-sm">
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm text-gray-500 uppercase">
+                Llistat d'estudiants
+              </h2>
+              <!-- Container amb l'icona d'invitació i el número d'estudiants -->
+              <div class="flex items-center space-x-2">
+                <button @click="openInvitationModal"
+                  class="flex items-center justify-center w-10 h-10 bg-[rgb(0,173,238)] text-white rounded-full"
+                  title="Generar enllaç d'invitació">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="white" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                  </svg>
+                </button>
+                <span class="px-3 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
+                  {{ filteredStudents.length }} estudiants
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Mostrem els estudiants paginats -->
+          <TeacherStudentList :students="paginatedStudents" class="divide-y divide-gray-200" />
+
+          <!-- Controls de paginació -->
+          <div class="d-flex justify-content-center mb-3">
+            <nav>
+              <ul class="pagination">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <button @click="currentPage--" class="page-link" :disabled="currentPage === 1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </li>
+
+                <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                  <button @click="currentPage = page" class="page-link">
+                    {{ page }}
+                  </button>
+                </li>
+
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <button @click="currentPage++" class="page-link" :disabled="currentPage === totalPages">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal per generar l'enllaç d'invitació -->
+    <div v-if="showInvitationModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <!-- Fons semi-transparent -->
+      <div class="absolute inset-0 bg-gray-900 opacity-50" @click="closeInvitationModal"></div>
+      <!-- Contingut del modal -->
+      <div class="bg-white rounded-lg p-6 relative z-10 w-11/12 md:w-1/2">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">Generar enllaç d'invitació</h2>
+          <button @click="closeInvitationModal" class="text-gray-500 hover:text-gray-700" title="Tanca">
+            <!-- Icono de tancar (X) -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Formulari per generar la invitació -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-1">
             Selecciona un curs
@@ -161,45 +296,123 @@ const generateInvitation = async () => {
         </div>
 
         <!-- Botó per generar l'enllaç -->
-        <button @click="generateInvitation" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+        <button @click="generateInvitation"
+          class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
           Generar enllaç
         </button>
 
         <!-- Mostra l'enllaç generat si existeix -->
-        <div v-if="invitationLink" class="mt-4 p-4 bg-green-100 rounded-md">
-          <p class="text-green-800 mb-2">Enllaç d'invitació:</p>
-          <a :href="invitationLink" class="text-blue-600">{{ invitationLink }}</a>
-        </div>
-      </div>
+        <div v-if="invitationLink" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
+          <p class="text-gray-700 font-semibold mb-2">Enllaç d'invitació generat:</p>
 
-      <!-- Llista d'estudiants i filtres -->
-      <div v-if="isLoading" class="bg-white rounded-lg shadow-sm p-8 text-center">
-        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p class="mt-4 text-gray-600 font-medium">Carregant estudiants...</p>
-      </div>
-
-      <div v-else class="space-y-6">
-        <!-- Filtres d'estudiants -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <TeacherStudentFilters v-model:search-query="searchQuery" v-model:selected-course="selectedCourse"
-            v-model:selected-division="selectedDivision" />
-        </div>
-
-        <!-- Llistat d'estudiants -->
-        <div class="bg-white rounded-lg shadow-sm">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h2 class="text-sm text-gray-500 uppercase">
-                Llistat d'estudiants
-              </h2>
-              <span class="px-3 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
-                {{ filteredStudents.length }} estudiants
-              </span>
-            </div>
+          <div class="flex items-center bg-white border border-gray-300 rounded-md p-2 shadow-sm">
+            <input type="text" :value="invitationLink"
+              class="w-full text-gray-700 text-sm bg-transparent border-none focus:ring-0 cursor-text" readonly />
+            <button @click="copyToClipboard"
+              class="ml-3 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200"
+              title="Copiar enllaç">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h4a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </button>
           </div>
-          <TeacherStudentList :students="filteredStudents" class="divide-y divide-gray-200" />
         </div>
+        <!-- Toast de error -->
+        <transition enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2">
+          <div v-if="showErrorToast"
+            class="fixed bottom-6 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Si us plau, selecciona un curs i una divisió.</span>
+          </div>
+        </transition>
+
+        <!-- Pop-up per confirmar que s'ha copiat l'enllaç -->
+        <transition enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2">
+          <div v-if="showCopyPopup"
+            class="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Enllaç copiat!</span>
+          </div>
+        </transition>
       </div>
-    </main>
+    </div>
   </div>
 </template>
+<style scoped>
+.pagination {
+  display: flex;
+  padding-left: 0;
+  list-style: none;
+  margin: 1rem 0;
+  justify-content: center;
+}
+
+.page-item:not(:first-child) .page-link {
+  margin-left: -1px;
+}
+
+.page-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  margin-left: -1px;
+  line-height: 1.25;
+  color: #3b82f6;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-width: 2.5rem;
+  height: 2.5rem;
+}
+
+.page-item.active .page-link {
+  z-index: 3;
+  color: #fff;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.page-item.disabled .page-link {
+  color: #9ca3af;
+  pointer-events: none;
+  cursor: auto;
+  background-color: #fff;
+  border-color: #e2e8f0;
+}
+
+.page-link:hover {
+  z-index: 2;
+  color: #fff;
+  text-decoration: none;
+  background-color: #60a5fa;
+  border-color: #60a5fa;
+}
+
+.page-item:first-child .page-link {
+  margin-left: 0;
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.page-item:last-child .page-link {
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+</style>

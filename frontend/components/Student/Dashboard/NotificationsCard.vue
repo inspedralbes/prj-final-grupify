@@ -1,6 +1,22 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg p-6">
-    <h2 class="text-xl font-bold mb-4">Notificacions</h2>
+    <h2 class="text-xl font-bold mb-4 flex items-center">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 text-primary mr-2"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 17h5l-1.405-1.405A2 2 0 0018 14V9a6 6 0 10-12 0v5a2 2 0 00-1.595 1.595L4 17h5m6 0a3 3 0 11-6 0"
+        />
+      </svg>
+      Notificacions
+    </h2>
     <div v-if="loading" class="text-gray-500">Cargant notificacions...</div>
     <div v-else>
       <div v-if="notifications.length === 0" class="text-gray-500">
@@ -14,7 +30,9 @@
         >
           <h3 class="font-bold">{{ notification.title }}</h3>
           <p>{{ notification.body }}</p>
-          <small class="text-gray-500">{{ formatDate(notification.created_at) }}</small>
+          <small class="text-gray-500">{{
+            formatDate(notification.created_at)
+          }}</small>
         </li>
       </ul>
     </div>
@@ -22,8 +40,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useAuthStore } from '~/stores/auth';
+import { ref, onMounted } from "vue";
+import { useAuthStore } from "~/stores/auth";
 
 const authStore = useAuthStore();
 const notifications = ref([]);
@@ -36,15 +54,15 @@ function formatDate(dateStr) {
 
 async function fetchNotifications() {
   try {
-    const data = await $fetch('https://api.grupify.cat/api/notifications', {
+    const data = await $fetch("http://localhost:8000/api/notifications", {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
-        Accept: 'application/json'
-      }
+        Accept: "application/json",
+      },
     });
     notifications.value = data.notifications;
   } catch (error) {
-    console.error('Error al obtener notificaciones:', error);
+    console.error("Error al obtener notificaciones:", error);
   } finally {
     loading.value = false;
   }

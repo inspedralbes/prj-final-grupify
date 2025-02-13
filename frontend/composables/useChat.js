@@ -11,6 +11,7 @@ export function useChat() {
   const studentsStore = useStudentsStore();
   const coursesStore = useCoursesStore();
   const sociogramStore = useSociogramStore();
+  const groupStore = useGroupStore();
 
   // Variables reactivas para almacenar datos
   const students = ref([]);
@@ -18,14 +19,58 @@ export function useChat() {
   const forms = ref([]);
   const responses = ref([]);
 
+  //extraccion de grupos a partir de la respuesta de la ia
+  function extractGroups(text) {
+    const groups = [];
+    const groupRegex =
+      /Grup \d+:\s*Name grup:\s*(.*?)\s*\nIntegrants:\s*(.*?)(?=\n\n|\nGrup|\n?$)/gs;
+
+    let match;
+    while ((match = groupRegex.exec(text)) !== null) {
+      const name_group = match[1].trim();
+      const integrantsRaw = match[2].trim();
+
+      // console.log("Grupo detectado:", name_group);
+      // console.log("Raw integrants:", integrantsRaw);
+
+      const integrants =
+        integrantsRaw
+          .match(/\((\d+)\)/g) // Extrae solo los números dentro de paréntesis
+          ?.map(id => id.replace(/\(|\)/g, "")) || []; // Elimina los paréntesis
+
+      // console.log("Procesado:", { name_group, integrants });
+
+      groups.push({
+        name_group,
+        description_group:
+          "Grupo formado por alumnos de Batxillerat 2 con relaciones positivas identificadas en el sociograma.",
+        integrants,
+      });
+    }
+
+    return groups;
+  }
+
+  const createGroup  = async (group, integrants) => {
+    const response = await groupStore.createGroup(group);
+
+    console.log(group)
+    console.log(integrants)
+    if (response) {
+      console.log(response.id)
+      groupStore.addStudentsToGroup(response.id, integrants);
+    }else{
+      console.error("Error creating group:", response);
+    }
+  }
 
   onMounted(async () => {
-    try{
+    try {
       await sociogramStore.fetchResponses();
-    }catch(error){
+    } catch (error) {
       console.error("Error loading responses:", error);
     }
-  })
+  });
   // Cargar formularios activos
   onMounted(async () => {
     fetch("https://api.grupify.cat/api/forms/active")
@@ -79,7 +124,7 @@ export function useChat() {
       const interval = setInterval(() => {
         const sociogramResponses = sociogramStore.responses;
         console.log("Waiting for data...", sociogramResponses);
-        if (sociogramResponses && sociogramResponses.all_responses.length > 0) {
+        if (sociogramResponses && sociogramResponses.all_responses != null > 0) {
           clearInterval(interval);
           resolve();
         }
@@ -92,32 +137,12 @@ export function useChat() {
     await waitForData();
     console.log("Data cargadad: ", sociogramStore.responses);
 
-    chatStore.createNewChat({ name: "Sociograma" });
-
-    chatStore.addMessage(chatStore.currentChatId, {
-      type: "system",
-      content: `Benvingut a la sessió de sociograma. \n 
-      CURSO: ${sociogramStore.currentCourse.courseName} \n
-      DIVISION: ${sociogramStore.currentDivision.divisionName}
-      \n Com puc ajudar-te?\n
-        Pot fer preguntes sobre:\n
-        - Sobre les preferències individuals\n
-        - Sobre les relacions entre alumnes\n
-        - Sobre el sociograma en general\n
-        I més...
-      `,
-      timestamp: new Date().toISOString(),
-    });
-    
-    chatStore.addMessage(chatStore.currentChatId, {
-      type: "user",
-      content: `Que informació pots proporcionar-me sobre el sociograma?`,
-      timestamp: new Date().toISOString(),
-    })
+    if (sociogramStore.currentCourse != null) {
+    }
   });
 
   const genAI = new GoogleGenerativeAI(
-    "AIzaSyC0NI-xnqWHJy-0XoJl7cVo63MYpqC1r9E"
+    "AIzaSyCeLUwISVfHOQbA7HeN_coGBnMZHvHNgic"
   );
 
   const processFile = (content, chatId) => {
@@ -139,7 +164,9 @@ export function useChat() {
     isLoading.value = true;
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash-lite-preview-02-05",
+      });
 
       // Obtener el contexto de la conversación actual
       const chat = chatStore.chats.find(c => c.id === chatId);
@@ -155,9 +182,9 @@ export function useChat() {
         )
         .join("\n");
 
-
       // RECUPERAR DATOS DE TODAS LAS RESPUESTAS DEL SOCIOGRAMA
-      const allResponsesSocriogramData = sociogramStore.responsesByCourseDivision.all_responses;
+      const allResponsesSocriogramData =
+        sociogramStore.responsesByCourseDivision.all_responses;
 
       // Construir el contexto de todas las respuestas del sociograma
       const allResponsesSociogramContext =
@@ -242,7 +269,13 @@ export function useChat() {
         Sempre respon en català, però si l'usuari pregunta en altre idioma, respon en el mateix idioma que ell utilitzi.
         Mantén una conversa natural i amable.
         Ten en compte que el Formulari ID: 3 és el sociograma.
-
+        5. Formacio de gruops amb el seguent format: Simpre que se mencione la palabra "generar grup","crear grupo", "crear grup", "grup" o "grupos" en la respuesta utilizar siempre el siguiente formato.
+        Siempre usar el nombre y apellido del usuario e incluir el id del usuario. Agregar siempre un name_group.
+        FORMACIO GRUPS:
+        Grup 1:
+        Name grup: 
+        Integrants: (id) Nombre y  Apellido, (id) Nombre y  Apellido
+        etc...
 
         Context of all responses of sociogram:
           ${allResponsesSociogramContext}
@@ -279,6 +312,31 @@ export function useChat() {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
+
+      const keywords = /groups|grup|grupos|team/i;
+
+      // Verificar si el texto contiene alguna de las palabras clave
+      if (keywords.test(text)) {
+        console.log("Text contains keywords:", text);
+        const groups = extractGroups(text);
+        console.log("Groups:", groups);
+
+        groups.forEach(group => {
+          const groupName = group.name_group;
+          const groupDescription = group.description_group;
+          const number_of_students = group.integrants.length;
+          const integrants = group.integrants;
+
+          // Crear el grupo en la base de datos
+          const groupData = {
+            name: groupName,
+            description: groupDescription,
+            number_of_students,
+          };
+
+          createGroup(groupData, integrants);
+        });
+      }
 
       // Agregar la respuesta de la IA a la conversación
       const aiMessage = {

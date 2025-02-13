@@ -9,7 +9,7 @@
       <h3 class="font-semibold text-lg">{{ note.title }}</h3>
       <p class="text-sm text-gray-600 dark:text-gray-400">{{ note.subject }}</p>
       <p class="text-xs text-gray-500 dark:text-gray-500">
-        Última modificació: {{ new Date(note.lastModified).toLocaleDateString() }}
+        Last modified: {{ new Date(note.lastModified).toLocaleDateString() }}
       </p>
     </div>
   </div>
