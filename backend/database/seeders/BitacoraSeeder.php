@@ -20,8 +20,8 @@ class BitacoraSeeder extends Seeder
             // Crear la bitácora asociada al grupo
             $bitacora = Bitacora::create([
                 'group_id' => $group->id, // Asociar la bitácora con el grupo
-                'title' => 'Bitácora del Grupo ' . $group->name,
-                'description' => 'Descripción general de las actividades del grupo '  . $group->name,
+                'title' => 'Bitàcora del Grup' . $group->name,
+                'description' => 'Descripció general de les activitats del grup'  . $group->name,
             ]);
 
             $users = $group->users; // Relación entre usuarios y grupos

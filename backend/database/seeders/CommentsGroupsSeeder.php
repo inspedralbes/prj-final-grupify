@@ -20,7 +20,7 @@ class CommentsGroupsSeeder extends Seeder
 
         // Valida que haya datos en ambas tablas
         if (empty($comments) || empty($groups)) {
-            $this->command->warn('No hay suficientes datos en las tablas comments o groups para poblar la tabla intermedia.');
+            $this->command->warn('No hi ha prou dades a les taules comments o groups per poblar la taula intermèdia.');
             return;
         }
 
