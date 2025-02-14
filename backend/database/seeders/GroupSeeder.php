@@ -17,62 +17,72 @@ class GroupSeeder extends Seeder
     {
         // Group::factory()->count(10)->create(); // aixo es si volem crear 10 grups amb factories (dades aleatories)
         Group::create([
-            'name' => 'Group 1',
-            'description' => 'Description of Group 1',
+            'name' => 'Grup 1',
+            'description' => 'Un grup d estudiants i docents compromesos amb l
+             aprenentatge col·laboratiu i l intercanvi de coneixements',
             'number_of_students' => 3,
         ]);
 
         Group::create([
-            'name' => 'Group 2',
-            'description' => 'Description of Group 2',
+            'name' => 'Grup 2',
+            'description' => 'Un equip d alumnes apassionats per explorar idees 
+             noves i aprofundir en diferents àrees del coneixement.',
             'number_of_students' => 4,
         ]);
 
         Group::create([
-            'name' => 'Group 3',
-            'description' => 'Description of Group 3',
+            'name' => 'Grup 3',
+            'description' => 'Un grup enfocat al desenvolupament d habilitats 
+             acadèmiques i professionals a través de l aprenentatge actiu.',
             'number_of_students' => 4,
         ]);
 
         Group::create([
-            'name' => 'Group 4',
-            'description' => 'Description of Group 4',
+            'name' => 'Grup 4',
+            'description' => 'Un col·lectiu d estudiants que busquen millorar el 
+             seu exercici acadèmic mitjançant el suport mutu i el treball en equip.',
             'number_of_students' => 3,
         ]);
 
         Group::create([
-            'name' => 'Group 5',
-            'description' => 'Description of Group 5',
+            'name' => 'Grup 5',
+            'description' => 'Un grup de recerca i aprenentatge basat en la curiositat
+             i el descobriment de noves àrees del coneixement.',
             'number_of_students' => 4,
         ]);
 
         Group::create([
-            'name' => 'Group 6',
-            'description' => 'Description of Group 6',
+            'name' => 'Grup 6',
+            'description' => 'Un equip dedicat a la discussió i anàlisi de temes educatius
+             per desenvolupar habilitats de pensament crític i argumentació.',
             'number_of_students' => 3,
         ]);
 
         Group::create([
-            'name' => 'Group 7',
-            'description' => 'Description of Group 7',
+            'name' => 'Grup 7',
+            'description' => 'Un grup que busca aplicar la tecnologia i les noves metodologies 
+             per millorar l ensenyament i l aprenentatge.',
             'number_of_students' => 4,
         ]);
 
         Group::create([
-            'name' => 'Group 8',
-            'description' => 'Description of Group 8',
+            'name' => 'Grup 8',
+            'description' => 'Un espai on alumnes i professors treballen plegats per enfortir 
+             l educació a través del diàleg i la col·laboració.',
             'number_of_students' => 3,
         ]);
 
         Group::create([
-            'name' => 'Group 9',
-            'description' => 'Description of Group 9',
+            'name' => 'Grup 9',
+            'description' => 'Un col·lectiu que fomenta l autonomia en l aprenentatge i la 
+             creació d estratègies efectives per a l èxit acadèmic.',
             'number_of_students' => 3,
         ]);
 
         Group::create([
-            'name' => 'Group 10',
-            'description' => 'Description of Group 10',
+            'name' => 'Grup 10',
+            'description' => 'Un grup de suport acadèmic on els participants s ajuden mútuament
+             en la comprensió i l aplicació de continguts educatius.',
             'number_of_students' => 4,
         ]);
     }
