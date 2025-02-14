@@ -52,6 +52,6 @@
     </div>
 
     <!-- Botó de tornar al dashboard -->
-    <a href="{{ route('dashboard') }}" class="btn btn-primary mt-3 w-100">Tornar al Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="btn btn-primary mt-3 w-100">Tornar al Panell</a>
 </div>
 @endsection
