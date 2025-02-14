@@ -100,45 +100,48 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 // Registrar componentes de ECharts
 use([CanvasRenderer, BarChart, GridComponent, TooltipComponent, LegendComponent]);
 
-// Configuración del gráfico ECharts
+// Mapeo de colores "base" para cada etiqueta
+const baseColors = {
+  'Popular': '#22c55e',
+  'Rebutjat': '#3b82f6',
+  'Agressiu': '#dc2626',
+  'Prosocial': '#8b5cf6',
+  'Víctima': '#f59e0b'
+};
+
 const chartOption = computed(() => {
-  // Obtener el estudiante más agresivo y más víctima
   const maxAggressive = maxAggressiveScore.value;
   const maxVictim = maxVictimScore.value;
 
   const series = uniqueTags.value.map(tag => {
+    // Color que quieres ver en la leyenda (ícono)
+    const baseColor = baseColors[tag] || '#64748b';
+
     return {
       name: tag,
       type: 'bar',
       stack: 'total',
-      label: {
-        show: false,
-        formatter: (params) => {
-          // Solo mostrar etiquetas para valores mayores que 0
-          return params.value > 0 ? params.value : '';
-        }
-      },
+
+      // 1) Este color se usa para la leyenda
+      color: baseColor,
+
+      // 2) Este color se usa para las barras, punto por punto
       itemStyle: {
-        // Resaltar las barras de los estudiantes con máximos valores
         color: (params) => {
           const student = groupedResults.value[params.dataIndex];
           const value = student.tags[tag] || 0;
-          
+
+          // Ejemplo: colores especiales si es el máximo
           if (tag === 'Agressiu' && value === maxAggressive) {
-            return '#ef4444'; // Rojo para máximo agresivo
+            return '#ef4444'; // Rojo
           } else if (tag === 'Víctima' && value === maxVictim) {
-            return '#eab308'; // Amarillo para máxima víctima
+            return '#eab308'; // Amarillo
           }
-          // Colores por defecto para las demás barras
-          return {
-            'Popular': '#22c55e',
-            'Rebutjat': '#3b82f6',
-            'Agressiu': '#dc2626',
-            'Prosocial': '#8b5cf6',
-            'Víctima': '#f59e0b'
-          }[tag] || '#64748b';
+          // Por defecto, el color "normal"
+          return baseColor;
         }
       },
+
       data: groupedResults.value.map(student => student.tags[tag] || 0)
     };
   });
@@ -146,30 +149,21 @@ const chartOption = computed(() => {
   return {
     tooltip: {
       trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      }
+      axisPointer: { type: 'shadow' }
     },
     legend: {
-      data: uniqueTags.value
+      data: uniqueTags.value,
+      // Si quieres también cambiar la forma del ícono:
+      // icon: 'circle' | 'rect' | 'roundRect' | 'triangle' | ...
     },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
     xAxis: {
       type: 'category',
       data: groupedResults.value.map(student => student.fullName)
     },
-    yAxis: {
-      type: 'value'
-    },
+    yAxis: { type: 'value' },
     series,
-    emphasis: {
-      focus: 'series'
-    }
+    emphasis: { focus: 'series' }
   };
 });
 
@@ -190,9 +184,7 @@ const tagColors = [
   { bg: 'bg-red-100', text: 'text-red-800' },
   { bg: 'bg-purple-100', text: 'text-purple-800' },
   { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  { bg: 'bg-pink-100', text: 'text-pink-800' },
-  { bg: 'bg-indigo-100', text: 'text-indigo-800' },
-  { bg: 'bg-orange-100', text: 'text-orange-800' }
+
 ];
 
 // Function to get tag header color
