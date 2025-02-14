@@ -18,51 +18,99 @@ export function useChat() {
   const courses = ref([]);
   const forms = ref([]);
   const responses = ref([]);
+  const waitingForConfirmation = ref(false);
+  let extractedGroups = []; 
 
-  //extraccion de grupos a partir de la respuesta de la ia
+  const handleUserConfirmation = (content, chatId) => {
+    const userMessage = {
+      type: "user",
+      content,
+      timestamp: new Date().toISOString(),
+    };
+    chatStore.addMessage(chatId, userMessage);
+    if (content.trim().toUpperCase() === "S") {
+      
+      handleDataGroup(extractedGroups);
+      const aiMessage = {
+        type: "ai",
+        content: "Los grupos han sido generados exitosamente.",
+        timestamp: new Date().toISOString(),
+      };
+      chatStore.addMessage(chatId, aiMessage);
+      waitingForConfirmation.value = false; 
+    } else if (content.trim().toUpperCase() === "N") {
+     
+      const chatMessage = {
+        type: "ai",
+        content: "No se han generado los grupos.",
+        timestamp: new Date().toISOString(),
+      };
+      chatStore.addMessage(chatId, chatMessage);
+      waitingForConfirmation.value = false; 
+    } else {
+      
+      const chatMessage = {
+        type: "ai",
+        content: "Por favor, responde con 'S' para sí o 'N' para no.",
+        timestamp: new Date().toISOString(),
+      };
+      chatStore.addMessage(chatId, chatMessage);
+    }
+  };
+
+  
   function extractGroups(text) {
     const groups = [];
     const groupRegex =
       /Grup \d+:\s*Name grup:\s*(.*?)\s*\nIntegrants:\s*(.*?)(?=\n\n|\nGrup|\n?$)/gs;
-
     let match;
     while ((match = groupRegex.exec(text)) !== null) {
       const name_group = match[1].trim();
       const integrantsRaw = match[2].trim();
-
-      // console.log("Grupo detectado:", name_group);
-      // console.log("Raw integrants:", integrantsRaw);
-
       const integrants =
         integrantsRaw
-          .match(/\((\d+)\)/g) // Extrae solo los números dentro de paréntesis
-          ?.map(id => id.replace(/\(|\)/g, "")) || []; // Elimina los paréntesis
-
-      // console.log("Procesado:", { name_group, integrants });
-
+          .match(/\((\d+)\)/g)
+          ?.map(id => id.replace(/\(|\)/g, "")) || [];
       groups.push({
         name_group,
         description_group:
-          "Grupo formado por alumnos de Batxillerat 2 con relaciones positivas identificadas en el sociograma.",
+          "Grupo formado con relaciones positivas identificadas en el sociograma.",
         integrants,
       });
     }
-
-    return groups;
+    extractedGroups = groups; 
   }
 
-  const createGroup  = async (group, integrants) => {
+  const handleDataGroup = groups => {
+    groups.forEach(group => {
+      const groupName = group.name_group;
+      const groupDescription = group.description_group;
+      const number_of_students = group.integrants.length;
+      const integrants = group.integrants;
+
+      // Crear el grupo en la base de datos
+      const groupData = {
+        name: groupName,
+        description: groupDescription,
+        number_of_students,
+      };
+
+      createGroup(groupData, integrants);
+    });
+  };
+
+  const createGroup = async (group, integrants) => {
     const response = await groupStore.createGroup(group);
 
-    console.log(group)
-    console.log(integrants)
+    console.log(group);
+    console.log(integrants);
     if (response) {
-      console.log(response.id)
+      console.log(response.id);
       groupStore.addStudentsToGroup(response.id, integrants);
-    }else{
+    } else {
       console.error("Error creating group:", response);
     }
-  }
+  };
 
   onMounted(async () => {
     try {
@@ -124,7 +172,10 @@ export function useChat() {
       const interval = setInterval(() => {
         const sociogramResponses = sociogramStore.responses;
         console.log("Waiting for data...", sociogramResponses);
-        if (sociogramResponses && sociogramResponses.all_responses != null > 0) {
+        if (
+          sociogramResponses &&
+          sociogramResponses.all_responses != null > 0
+        ) {
           clearInterval(interval);
           resolve();
         }
@@ -152,6 +203,10 @@ export function useChat() {
 
   const sendMessage = async (content, chatId) => {
     if (!content.trim()) return;
+    if (waitingForConfirmation.value) {
+      handleUserConfirmation(content, chatId);
+      return;
+    }
 
     // Agregar el mensaje del usuario a la conversación
     const userMessage = {
@@ -308,43 +363,34 @@ export function useChat() {
         Respon a: ${content}
       `;
 
-      // Enviar el prompt a la IA y obtener la respuesta
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
       const keywords = /groups|grup|grupos|team/i;
 
-      // Verificar si el texto contiene alguna de las palabras clave
       if (keywords.test(text)) {
         console.log("Text contains keywords:", text);
-        const groups = extractGroups(text);
-        console.log("Groups:", groups);
 
-        groups.forEach(group => {
-          const groupName = group.name_group;
-          const groupDescription = group.description_group;
-          const number_of_students = group.integrants.length;
-          const integrants = group.integrants;
+      
+        extractGroups(text);
 
-          // Crear el grupo en la base de datos
-          const groupData = {
-            name: groupName,
-            description: groupDescription,
-            number_of_students,
-          };
+        const aiMessage = {
+          type: "ai",
+          content: text + "\n\nDesea generar los grupos: (S/N)",
+          timestamp: new Date().toISOString(),
+        };
+        chatStore.addMessage(chatId, aiMessage);
 
-          createGroup(groupData, integrants);
-        });
+        waitingForConfirmation.value = true;
+      } else {
+        const aiMessage = {
+          type: "ai",
+          content: text,
+          timestamp: new Date().toISOString(),
+        };
+        chatStore.addMessage(chatId, aiMessage);
       }
-
-      // Agregar la respuesta de la IA a la conversación
-      const aiMessage = {
-        type: "ai",
-        content: text,
-        timestamp: new Date().toISOString(),
-      };
-      chatStore.addMessage(chatId, aiMessage);
 
       return text;
     } catch (error) {
