@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="display-5">Gestió de Formularis</h1>
         <a href="{{ route('dashboard') }}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i> Tornar al Dashboard
+            <i class="fas fa-arrow-left me-2"></i> Tornar al panell
         </a>
     </div>
 

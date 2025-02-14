@@ -4,10 +4,10 @@
 <div class="container">
     <!-- Encabezado y botón de retorno -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="px-4">Gestión de Roles</h1>
+        <h1 class="px-4">Gestió de Rols</h1>
         <a href="{{ route('dashboard') }}" class="btn btn-outline-primary">
             <i class="fas fa-arrow-left me-2"></i>
-            Volver al Dashboard
+            Tornar al panell
         </a>
     </div>
 
@@ -28,7 +28,7 @@
                 <div class="card-header bg-white py-3">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-list me-2" style="color: var(--primary-color)"></i>
-                        Lista de Roles
+                        Llista de Rols
                     </h5>
                 </div>
                 <div class="card-body p-0">
@@ -81,7 +81,7 @@
                     <h5 class="card-title mb-0">
                         <i class="fas fa-{{ isset($_GET['edit']) ? 'edit' : 'plus' }} me-2" 
                            style="color: var(--primary-color)"></i>
-                        {{ isset($_GET['edit']) ? 'Editar Rol' : 'Crear Nuevo Rol' }}
+                        {{ isset($_GET['edit']) ? 'Editar Rol' : 'Crear nou Rol' }}
                     </h5>
                 </div>
                 <div class="card-body">
@@ -93,7 +93,7 @@
                         @csrf
 
                         <div class="mb-3">
-                            <label for="name" class="form-label">Nombre del Rol</label>
+                            <label for="name" class="form-label">Nom del Rol</label>
                             <input type="text" 
                                    class="form-control" 
                                    id="name" 

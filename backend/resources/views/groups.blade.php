@@ -7,7 +7,7 @@
         <h1 class="display-5 mb-0">Gestió de Grups</h1>
         <a href="{{ route('dashboard') }}" class="btn btn-outline-primary">
             <i class="fas fa-arrow-left me-2"></i>
-            Tornar al Tauler de Control
+            Tornar al panell
         </a>
     </div>
 
