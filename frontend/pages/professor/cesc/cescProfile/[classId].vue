@@ -16,7 +16,7 @@
 
       <div v-else>
         <p v-if="filtered.length === 0" class="text-center text-gray-600">
-          No hay datos filtrados para este curso y división.
+          No hi ha dades filtrades per a aquest curs i divisió.
         </p>
 
         <!-- Tabla de resultados agrupados -->
@@ -25,7 +25,7 @@
             <thead class="bg-gradient-to-r from-blue-50 to-purple-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-b">
-                  Nombre Completo
+                  Nom Complet
                 </th>
                 <th v-for="(tag, index) in uniqueTags" :key="tag" 
                     class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider border-b"
@@ -79,9 +79,9 @@ const resultatsCescStore = useResultatCescStore();
 
 // Color combinations for tags
 const tagColors = [
-  { bg: 'bg-red-100', text: 'text-red-800' },
-  { bg: 'bg-blue-100', text: 'text-blue-800' },
   { bg: 'bg-green-100', text: 'text-green-800' },
+  { bg: 'bg-blue-100', text: 'text-blue-800' },
+  { bg: 'bg-red-100', text: 'text-red-800' },
   { bg: 'bg-purple-100', text: 'text-purple-800' },
   { bg: 'bg-yellow-100', text: 'text-yellow-800' },
   { bg: 'bg-pink-100', text: 'text-pink-800' },
@@ -106,11 +106,11 @@ classId.value = route.params.classId;
 // Initialize component
 onMounted(async () => {
   try {
-    if (!classId.value) throw new Error("classId no encontrado");
+    if (!classId.value) throw new Error("classId no trobat");
 
     await coursesStore.fetchCourses();
     course.value = coursesStore.courses.find(c => c.classId == classId.value);
-    if (!course.value) throw new Error("Curso no encontrado");
+    if (!course.value) throw new Error("Curs no trobat");
 
     await studentsStore.fetchStudents();
     students.value = studentsStore.students.filter(
@@ -120,8 +120,8 @@ onMounted(async () => {
     );
     await resultatsCescStore.fetchResults();
   } catch (err) {
-    console.error("Error al cargar los datos:", err);
-    error.value = "Error al cargar los datos";
+    console.error("Error en carregar les dades:", err);
+    error.value = "Error en carregar les dades";
   } finally {
     isLoading.value = false;
   }

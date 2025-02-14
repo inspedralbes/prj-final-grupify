@@ -35,9 +35,9 @@ class BitacoraNotesSeeder extends Seeder
                         BitacoraNote::create([
                             'bitacora_id' => $bitacora->id,
                             'user_id' => $user->id,
-                            'title' => "Nota $i del usuario {$user->name}",
-                            'content' => "Esta es la nota número $i creada por {$user->name} para el grupo {$group->name}. " .
-                                        "Contenido de ejemplo generado para propósitos de prueba. " ,
+                            'title' => "Nota $i de l'usuari {$user->name}",
+                            'content' => "Aquesta és la nota número $i creada per {$user->name} per al grup {$group->name}. " .
+                                        "Contingut d'exemple generat per a propòsits de prova.",
                         ]);
                     }
                 }

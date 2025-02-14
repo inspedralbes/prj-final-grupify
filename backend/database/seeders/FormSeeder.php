@@ -10,27 +10,27 @@ class FormSeeder extends Seeder
     public function run()
     {
         // Verificar si el formulario ya existe antes de crear uno nuevo
-        if (!Form::where('title', 'Formulario de prueba')->exists()) {
+        if (!Form::where('title', 'Formulari de prova')->exists()) {
             Form::create([
-                'title' => 'Formulario de prueba',
-                'description' => 'Un formulario generado para pruebas.',
+                'title' => 'Formulari de prova',
+                'description' => 'Un formulari generat per a proves.',
                 'teacher_id' => 1,
                 'is_global' => false,
             ]);
         }
 
-        if (!Form::where('title', 'Formulario CESC')->exists()) {
+        if (!Form::where('title', 'Formulari CESC')->exists()) {
             Form::create([
                 'title' => 'Formulario CESC',
-                'description' => 'Conducta y Experiencias Sociales en Clase',
+                'description' => 'Conducta i Experiències Socials a Classe',
                 'is_global' => true,
             ]);
         }
 
-        if (!Form::where('title', 'Formulario Sociograma')->exists()) {
+        if (!Form::where('title', 'Formulari Sociograma')->exists()) {
             Form::create([
-                'title' => 'Formulario Sociograma',
-                'description' => 'Relaciones entre estudiantes en el aula.',
+                'title' => 'Formulari Sociograma',
+                'description' => 'Relacions entre estudiants a l aula.',
                 'is_global' => true,
             ]);
         }
