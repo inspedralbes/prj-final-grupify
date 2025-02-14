@@ -280,7 +280,7 @@ onMounted(async () => {
       console.log("Respuestas recibidas en onMounted:", respuestas);
 
       // Esperar a que el DOM esté listo
-      isFormVisible.value = false;
+      isFormVisible.value = true;
       await nextTick();
       // Actualizar el gráfico con las respuestas
       if (respuestas && respuestas.length > 0) {
