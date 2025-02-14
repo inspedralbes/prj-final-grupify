@@ -19,7 +19,7 @@ export function useChat() {
   const forms = ref([]);
   const responses = ref([]);
   const waitingForConfirmation = ref(false);
-  let extractedGroups = []; 
+  let extractedGroups = [];
 
   const handleUserConfirmation = (content, chatId) => {
     const userMessage = {
@@ -29,26 +29,24 @@ export function useChat() {
     };
     chatStore.addMessage(chatId, userMessage);
     if (content.trim().toUpperCase() === "S") {
-      
       handleDataGroup(extractedGroups);
       const aiMessage = {
         type: "ai",
-        content: "Los grupos han sido generados exitosamente.",
+        content: "Generando grupos...",
         timestamp: new Date().toISOString(),
       };
       chatStore.addMessage(chatId, aiMessage);
-      waitingForConfirmation.value = false; 
+      waitingForConfirmation.value = false;
+    
     } else if (content.trim().toUpperCase() === "N") {
-     
       const chatMessage = {
         type: "ai",
         content: "No se han generado los grupos.",
         timestamp: new Date().toISOString(),
       };
       chatStore.addMessage(chatId, chatMessage);
-      waitingForConfirmation.value = false; 
+      waitingForConfirmation.value = false;
     } else {
-      
       const chatMessage = {
         type: "ai",
         content: "Por favor, responde con 'S' para sí o 'N' para no.",
@@ -58,7 +56,6 @@ export function useChat() {
     }
   };
 
-  
   function extractGroups(text) {
     const groups = [];
     const groupRegex =
@@ -78,7 +75,7 @@ export function useChat() {
         integrants,
       });
     }
-    extractedGroups = groups; 
+    extractedGroups = groups;
   }
 
   const handleDataGroup = groups => {
@@ -323,8 +320,8 @@ export function useChat() {
         4. Donar informació sobre els alumnes i cursos, com ara rendiment acadèmic, participació en activitats, etc.
         Sempre respon en català, però si l'usuari pregunta en altre idioma, respon en el mateix idioma que ell utilitzi.
         Mantén una conversa natural i amable.
-        Ten en compte que el Formulari ID: 3 és el sociograma.
-        5. Formacio de gruops amb el seguent format: Simpre que se mencione la palabra "generar grup","crear grupo", "crear grup", "grup" o "grupos" en la respuesta utilizar siempre el siguiente formato.
+        Ten en compte que el Formulari ID: 3 és el sociograma."
+        5. Formacio de gruops amb el seguent format: Simpre que se mencione la palabra "generar grup","crear grupo", "crear grup" "formr grupos" "Formar grup" en la respuesta utilizar siempre el siguiente formato.
         Siempre usar el nombre y apellido del usuario e incluir el id del usuario. Agregar siempre un name_group.
         FORMACIO GRUPS:
         Grup 1:
@@ -367,12 +364,11 @@ export function useChat() {
       const response = await result.response;
       const text = response.text();
 
-      const keywords = /groups|grup|grupos|team/i;
+      const keywords = /FORMACIO GROUPOS|FORMACIO GRUP/i;
 
       if (keywords.test(text)) {
         console.log("Text contains keywords:", text);
 
-      
         extractGroups(text);
 
         const aiMessage = {
@@ -383,6 +379,7 @@ export function useChat() {
         chatStore.addMessage(chatId, aiMessage);
 
         waitingForConfirmation.value = true;
+
       } else {
         const aiMessage = {
           type: "ai",
