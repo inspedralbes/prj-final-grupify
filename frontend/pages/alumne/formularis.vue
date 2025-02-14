@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
-    <h2 class="text-2xl font-bold">Mis Formularios</h2>
+    <h2 class="text-2xl font-bold">Formularis</h2>
     <div v-if="forms.length === 0" class="text-gray-500">
-      No tienes formularios asignados.
+      No tens formularis assignats.
     </div>
     <div v-else>
       <div
@@ -22,7 +22,7 @@
           class="mt-4 px-4 py-2 rounded"
           @click="handleFormClick(form.id)"
         >
-          {{ form.answered === 1 ? "Completado" : "Completar" }}
+          {{ form.answered === 1 ? "Completat" : "Completar" }}
         </button>
       </div>
     </div>
