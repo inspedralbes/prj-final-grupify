@@ -295,11 +295,11 @@ const copyToClipboard = async () => {
           </select>
         </div>
 
-        <!-- Botó per generar l'enllaç -->
-        <button @click="generateInvitation"
-          class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Generar enllaç
-        </button>
+        <!-- Botón con color primario -->
+<button @click="generateInvitation"
+  class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary">
+  Generar enllaç
+</button>
 
         <!-- Mostra l'enllaç generat si existeix -->
         <div v-if="invitationLink" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
