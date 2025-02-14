@@ -12,6 +12,7 @@ export function useChat() {
   const coursesStore = useCoursesStore();
   const sociogramStore = useSociogramStore();
   const groupStore = useGroupStore();
+  const cescStore = useCescStore();
 
   // Variables reactivas para almacenar datos
   const students = ref([]);
@@ -37,7 +38,6 @@ export function useChat() {
       };
       chatStore.addMessage(chatId, aiMessage);
       waitingForConfirmation.value = false;
-    
     } else if (content.trim().toUpperCase() === "N") {
       const chatMessage = {
         type: "ai",
@@ -189,6 +189,25 @@ export function useChat() {
     }
   });
 
+  const waitForDataCesc = () => {
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        const cescResponses = cescStore.responses;
+        console.log("Waiting for data...", cescResponses);
+        if (cescResponses && cescResponses.all_responses != null > 0) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100); // Verificar cada 100ms
+    });
+  };
+
+  onMounted(async () => {
+    console.log("Waiting for data...");
+    await waitForDataCesc();
+    console.log("Data cargadad: ", cescStore.responses);
+  });
+
   const genAI = new GoogleGenerativeAI(
     "AIzaSyCeLUwISVfHOQbA7HeN_coGBnMZHvHNgic"
   );
@@ -256,6 +275,19 @@ export function useChat() {
           ? `
         Dades del sociograma:
         ${JSON.stringify(sociogramData)}
+      `
+          : "No hi ha dades del sociograma disponibles.";
+
+      // asdas
+      // Recuperar los datos del sociograma desde el sociogramStore CURSO Y DIVISION ACTUAL
+      const cescData = cescStore.responses.all_responses;
+
+      // Construir el contexto del sociograma
+      const cescContext =
+        cescData && cescData.length > 0
+          ? `
+        Dades del sociograma:
+        ${JSON.stringify(cescData)}
       `
           : "No hi ha dades del sociograma disponibles.";
 
@@ -329,11 +361,30 @@ export function useChat() {
         Integrants: (id) Nombre y  Apellido, (id) Nombre y  Apellido
         etc...
 
+        cuando se hable del formulario cesc quiero que sigas este formato:
+        ### Formulario CESC (ID: 2)
+        
+        \n
+        ---[Usuari]---
+        ✦ Nombre del alumno (ID:3)
+          - Pregnta:
+            ➤ Respuesta 1
+            ➤ Respuesta 1 
+            ➤ Respuesta 1  
+          
+
+
         Context of all responses of sociogram:
           ${allResponsesSociogramContext}
 
+
         Context del sociograma:
           ${sociogramContext}
+
+        
+        Contex of cesc responses of course and division
+
+        ${cescContext}
       `;
 
       const conversationContext = conversationHistory
@@ -355,6 +406,7 @@ export function useChat() {
         ${studentsContext}
         ${coursesContext}
         ${formsContext}
+        ${cescContext}
         ${responsesContext} // Usar el contexto combinado de respuestas
         ${contextPrompt}
         Respon a: ${content}
@@ -379,7 +431,6 @@ export function useChat() {
         chatStore.addMessage(chatId, aiMessage);
 
         waitingForConfirmation.value = true;
-
       } else {
         const aiMessage = {
           type: "ai",
