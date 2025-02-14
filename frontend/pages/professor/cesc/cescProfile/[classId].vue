@@ -19,6 +19,11 @@
           No hi ha dades filtrades per a aquest curs i divisió.
         </p>
 
+        <!-- Gráfico ECharts -->
+        <div v-if="groupedResults.length > 0" class="mt-8 mb-8">
+          <v-chart class="w-full h-[400px]" :option="chartOption" autoresize />
+        </div>
+
         <!-- Tabla de resultados agrupados -->
         <div v-if="groupedResults.length > 0" class="mt-4 overflow-x-auto">
           <table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-sm">
@@ -37,15 +42,35 @@
             <tbody class="divide-y divide-gray-200">
               <tr v-for="student in groupedResults" 
                   :key="student.fullName"
-                  class="hover:bg-gray-50 transition-colors">
+                  :class="{
+                    'hover:bg-gray-50 transition-colors': !isHighlightedStudent(student),
+                    'bg-red-50 hover:bg-red-100 transition-colors': isHighlightedStudent(student, 'Agressiu'),
+                    'bg-yellow-50 hover:bg-yellow-100 transition-colors': isHighlightedStudent(student, 'Víctima')
+                  }">
                 <td class="px-6 py-4 whitespace-nowrap font-medium">
-                  {{ student.fullName }}
+                  <span :class="{
+                    'text-red-700': isHighlightedStudent(student, 'Agressiu'),
+                    'text-yellow-700': isHighlightedStudent(student, 'Víctima')
+                  }">
+                    {{ student.fullName }}
+                    <span v-if="isHighlightedStudent(student, 'Agressiu')" 
+                          class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                      Agressiu
+                    </span>
+                    <span v-if="isHighlightedStudent(student, 'Víctima')" 
+                          class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                      Víctima
+                    </span>
+                  </span>
                 </td>
                 <td v-for="(tag, index) in uniqueTags" :key="tag"
                     class="px-6 py-4 whitespace-nowrap text-center">
                   <span v-if="student.tags[tag]" 
                         class="px-3 py-1 rounded-full"
-                        :class="getTagBadgeClasses(index)">
+                        :class="[
+                          getTagBadgeClasses(index),
+                          { 'font-bold': isHighlightedStudent(student) && (tag === 'Agressiu' || tag === 'Víctima') }
+                        ]">
                     {{ student.tags[tag] }}
                   </span>
                   <span v-else>-</span>
@@ -66,6 +91,87 @@ import { useResultatCescStore } from "~/stores/resultatsCescStore";
 import { useStudentsStore } from "~/stores/studentsStore";
 import { useRoute } from "vue-router";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
+import VChart from 'vue-echarts';
+import { use } from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
+import { BarChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
+
+// Registrar componentes de ECharts
+use([CanvasRenderer, BarChart, GridComponent, TooltipComponent, LegendComponent]);
+
+// Configuración del gráfico ECharts
+const chartOption = computed(() => {
+  // Obtener el estudiante más agresivo y más víctima
+  const maxAggressive = maxAggressiveScore.value;
+  const maxVictim = maxVictimScore.value;
+
+  const series = uniqueTags.value.map(tag => {
+    return {
+      name: tag,
+      type: 'bar',
+      stack: 'total',
+      label: {
+        show: false,
+        formatter: (params) => {
+          // Solo mostrar etiquetas para valores mayores que 0
+          return params.value > 0 ? params.value : '';
+        }
+      },
+      itemStyle: {
+        // Resaltar las barras de los estudiantes con máximos valores
+        color: (params) => {
+          const student = groupedResults.value[params.dataIndex];
+          const value = student.tags[tag] || 0;
+          
+          if (tag === 'Agressiu' && value === maxAggressive) {
+            return '#ef4444'; // Rojo para máximo agresivo
+          } else if (tag === 'Víctima' && value === maxVictim) {
+            return '#eab308'; // Amarillo para máxima víctima
+          }
+          // Colores por defecto para las demás barras
+          return {
+            'Popular': '#22c55e',
+            'Rebutjat': '#3b82f6',
+            'Agressiu': '#dc2626',
+            'Prosocial': '#8b5cf6',
+            'Víctima': '#f59e0b'
+          }[tag] || '#64748b';
+        }
+      },
+      data: groupedResults.value.map(student => student.tags[tag] || 0)
+    };
+  });
+
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow'
+      }
+    },
+    legend: {
+      data: uniqueTags.value
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: groupedResults.value.map(student => student.fullName)
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series,
+    emphasis: {
+      focus: 'series'
+    }
+  };
+});
 
 const route = useRoute();
 const classId = ref(null);
@@ -99,6 +205,40 @@ const getTagHeaderColor = (index) => {
 const getTagBadgeClasses = (index) => {
   const colorIndex = index % tagColors.length;
   return `${tagColors[colorIndex].bg} ${tagColors[colorIndex].text}`;
+};
+
+// Computed properties para encontrar los máximos valores
+const maxAggressiveScore = computed(() => {
+  let max = 0;
+  groupedResults.value.forEach(student => {
+    const score = student.tags['Agressiu'] || 0;
+    if (score > max) max = score;
+  });
+  return max;
+});
+
+const maxVictimScore = computed(() => {
+  let max = 0;
+  groupedResults.value.forEach(student => {
+    const score = student.tags['Víctima'] || 0;
+    if (score > max) max = score;
+  });
+  return max;
+});
+
+// Function to check if a student should be highlighted
+const isHighlightedStudent = (student, type = null) => {
+  const aggressiveScore = student.tags['Agressiu'] || 0;
+  const victimScore = student.tags['Víctima'] || 0;
+
+  if (type === 'Agressiu') {
+    return aggressiveScore === maxAggressiveScore.value && aggressiveScore > 0;
+  } else if (type === 'Víctima') {
+    return victimScore === maxVictimScore.value && victimScore > 0;
+  }
+  
+  return (aggressiveScore === maxAggressiveScore.value && aggressiveScore > 0) ||
+         (victimScore === maxVictimScore.value && victimScore > 0);
 };
 
 classId.value = route.params.classId;
@@ -163,3 +303,4 @@ const groupedResults = computed(() => {
   return Object.values(groupedByStudent);
 });
 </script>
+
