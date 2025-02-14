@@ -18,7 +18,7 @@ const error = ref(null);
 const isLoading = ref(true);
 const students = ref([]);
 const course = ref(null);
-const activeComponent = ref("");
+const activeComponent = ref("relations");
 const coursesStore = useCoursesStore();
 const relationshipsStore = useRelationshipsStore();
 const studentsStore = useStudentsStore();
@@ -79,7 +79,7 @@ const filteredRoles = computed(() => {
   }
   return [];
 });
-const toggleComponent = component => {
+const toggleComponent = (component) => {
   activeComponent.value = activeComponent.value === component ? "" : component;
 };
 </script>
