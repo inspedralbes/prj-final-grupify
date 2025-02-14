@@ -12,7 +12,7 @@ export const useGroupStore = defineStore("groups", {
       try {
         const authStore = useAuthStore();
         const token = authStore.token;
-
+    
         const response = await $fetch("http://localhost:8000/api/groups", {
           headers: {
             Authorization: `Bearer ${token}`, 
@@ -20,18 +20,19 @@ export const useGroupStore = defineStore("groups", {
             Accept: "application/json",
           }
         });
-
+    
         this.groups = response.map(group => ({
           ...group,
-          members: group.users || [], 
-          number_of_students: (group.users || []).length 
+          members: (group.users || []).filter(user => user.role === "alumno"), // Solo estudiantes
+          number_of_students: (group.users || []).filter(user => user.role === "alumno").length
         }));
-
+    
       } catch (error) {
         console.error("Error fetching groups:", error);
         throw error;
       }
     },
+    
 
     async addStudentsToGroup(groupId, studentIds) {
       try {
