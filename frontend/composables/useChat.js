@@ -32,7 +32,7 @@ export function useChat() {
       handleDataGroup(extractedGroups);
       const aiMessage = {
         type: "ai",
-        content: "Generando grupos...",
+        content: "Generant grups...",
         timestamp: new Date().toISOString(),
       };
       chatStore.addMessage(chatId, aiMessage);
@@ -41,7 +41,7 @@ export function useChat() {
     } else if (content.trim().toUpperCase() === "N") {
       const chatMessage = {
         type: "ai",
-        content: "No se han generado los grupos.",
+        content: "No s'han generat els grups.",
         timestamp: new Date().toISOString(),
       };
       chatStore.addMessage(chatId, chatMessage);
@@ -49,7 +49,7 @@ export function useChat() {
     } else {
       const chatMessage = {
         type: "ai",
-        content: "Por favor, responde con 'S' para sí o 'N' para no.",
+        content: "Si us plau, respon com a 'S' per a si o 'N' per a no.",
         timestamp: new Date().toISOString(),
       };
       chatStore.addMessage(chatId, chatMessage);
@@ -71,7 +71,7 @@ export function useChat() {
       groups.push({
         name_group,
         description_group:
-          "Grupo formado con relaciones positivas identificadas en el sociograma.",
+          "Grup format amb relacions positives identificades al sociograma",
         integrants,
       });
     }
