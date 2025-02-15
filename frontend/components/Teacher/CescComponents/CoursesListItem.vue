@@ -95,7 +95,7 @@ const analyzeWithAI = async (course) => {
       </button>
     </td>
     <td>
-      <button @click="analyzeWithAI(course)">Analizar IA</button>
+      <button @click="analyzeWithAI(course)">Analitzar IA</button>
     </td>
   </tr>
 </template>

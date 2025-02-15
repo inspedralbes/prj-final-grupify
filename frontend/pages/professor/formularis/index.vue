@@ -245,7 +245,7 @@ const handleFormAssigned = assignments => {
                       />
                     </button>
                     <button @click="viewUsersAnswered(form.id)">
-                      Ver respuestas
+                      Veure respostes
                     </button>
                   </div>
                 </td>
