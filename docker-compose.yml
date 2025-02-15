@@ -45,7 +45,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     container_name: laravel
     ports:
       - "8000:8000" 
@@ -80,7 +80,7 @@ services:
   queue-worker:
     build:
       context: ./backend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     container_name: laravel-queue
     volumes:
       - ./backend:/var/www/
@@ -99,7 +99,7 @@ services:
   frontend:
     build: 
       context: ./frontend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     container_name: vue
     ports:
       - "3000:3000"

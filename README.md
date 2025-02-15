@@ -1,7 +1,50 @@
 # Grupify
 **Integrants del projecte:**
 Aleiram Minaya, Lucas Benitez, Araceli Pacheco, Joselyn Ninahuaman, Adrià Estévez.
-- Un projecte de gestió de grups dins dels centres educatius per evitar el risc d'exclusió/bullying. Fem servir eines com Taiga per la gestió de treball en grup amb metodología SCRUM <!--i sistema per generar grups automátics, INSERTAR AQUI ENLACE TAIGA, figma/penpot, URL PRODUCCIÓ, estado actual del proyecto-->
+
+# 📚 Grupify: Gestió Educativa Intel·ligent per a Professors
+
+Benvingut a **Grupify**, una plataforma integral dissenyada per a empoderar als professors en la gestió de les seves classes, alumnes i projectes grupals, potenciada amb eines de IA per a simplificar i optimitzar el treball educatiu!
+
+## ✨ *Funcionalitats Principals*
+
+### *📢 Comunicació Eficient*
+- Enviament de notificacions directes als alumnes des del panell del professor.
+
+### *👥 Gestió d'Alumnes i Grups*
+- *Vista detallada d'alumnes*: Fitxes individuals amb dades acadèmiques i gràfics d'autoavaluació.
+- *Creació i gestió de grups*: Afegeix o elimina membres manualment, afegeix comentaris del professor i utilitza bitàcoles compartides per a projectes estudiantils.
+
+### *📋 Assistent de IA per a Formularis*
+- *Crea formularis intel·ligents*: Usa prompts naturals per a generar qüestionaris personalitzats, edita preguntes, regenera seccions i guarda/descarrega plantilles en JSON.
+- *Assignació flexible*: Distribueix formularis per curs, programa dates d'expiració i accedeix a respostes organitzades per alumne.
+
+### *🔍 Sociograma Interactiu*
+- *Analitza dinàmiques socials*: Genera visualitzacions amb fletxes verdes/vermelles per a relacions positives/negatives entre alumnes, identifica rols i competències mitjançant respostes a formularis específics.
+
+### *🤖 Agent de IA per a Professors*
+- *Assistència intel·ligent*: Consulta dubtes, puja arxius per a anàlisi contextual i crea grups automàticament usant prompts (basats en sociogrames, CESC o altres criteris).
+
+---
+
+## 🚀 *Per què Grupify?*
+- *Eficiència*: Automatitza tasques repetitives (formularis, grups) amb IA.
+- **Insights profunds*: Visualitza dades acadèmiques i socials en gràfics i sociogrames.
+- *Flexibilitat*: Personalitza cada aspecte, des de formularis fins a comentaris en grups.
+- *Innovació*: Integració de bots i generació de contingut assistit per IA.
+
+---
+
+## 🛠 *Començar és fàcil*
+1. *Configura cursos i alumnes* des del panell del professor.
+2. *Prova l'Assistent de IA* per a crear el teu primer formulari en segons.
+3. *Explora el sociograma* per a entendre les dinàmiques de la teva classe.
+4. *Conversa amb l'Agent de IA* per a resoldre dubtes o generar grups automàtics.
+
+Taiga: https://tree.taiga.io/project/aleiram19-2daw_projectefinal_grupify/timeline
+Penpot: https://design.penpot.app/#/view/7ad540b5-8190-815d-8005-5ce4491a439f?page-id=7ad540b5-8190-815d-8005-5ce4491a43a0&section=interactions&index=0&share-id=0b127ab7-8934-814e-8005-bc502dc95691
+
+URL Producció (proxy invers): https://grupify.cat | https://api.grupify.cat
 
 ## 🐳 Projecte amb Vue, Nodejs + Laravel 🐳
 
@@ -13,19 +56,43 @@ Aleiram Minaya, Lucas Benitez, Araceli Pacheco, Joselyn Ninahuaman, Adrià Esté
 Abans de començar, assegura't de tenir instal·lat el següent component:
 
 - **Docker**: [Guía d'instalació oficial](https://docs.docker.com/get-docker/)
-    ```bash
-    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    sudo docker run hello-world # Verifica si s'ha instal·lat correctament.
 - Utilitza aquesta comanda per evitar fer `sudo` cada vegada que utilitzes docker
     ```bash
     sudo usermod -aG docker $USER
-**Aixeca els serveis de forma senzilla (Vue, nodejs y laravel)**
+**Configuració abans d'aixecar els serveis**
+
+> **Nota**: Suposem que el projecte està clonat en el teu directori home (~/).
+> Si ho tens en una altra ubicació, ajusta les rutes segons correspongui.
+- Configuració .env de laravel (backend) | Base de dades
+    ```bash
+    cd ~/prj-final-grupify/backend
+    DB_CONNECTION=mysql
+    DB_HOST=db #Nom del servei a Docker
+    DB_PORT=3306
+    DB_DATABASE=
+    DB_USERNAME=
+    DB_PASSWORD=
+- Configuració .env de Laravel (backend) | Redis
+    ```bash
+    cd ~/prj-final-grupify/backend
+    REDIS_CLIENT=phpredis
+    QUEUE_CONNECTION=redis
+    REDIS_HOST=redis
+    REDIS_PASSWORD=
+    REDIS_PORT=6379
+- Configuració .env de Nuxt (frontend)
+    ```bash
+    cd ~/prj-final-grupify/frontend
+    cp .env.example .env
+    GOOGLE_CLIENT_ID=
+    API_BASE_URL=http://localhost:8000 #URL de Laravel
+**Aixeca els serveis per desenvolupament de forma senzilla (Nuxt, Node, Laravel, Redis, MySQL, Adminer)**
 - Les **comandes principals** per obrir el projecte de forma ràpida i segura.
     ```bash
     cd prj-final-grupify
-    docker-compose up # Encendre els contenidors
-    docker-compose down # Apagar els contenidors
-Aquest projecte utilitza Docker per gestionar de manera senzilla els serveis del frontend i backend.
+    docker compose -f docker-compose.yml up # Encendre els contenidors
+    docker compose -f docker-compose.yml down # Apagar els contenidors
+Aquest projecte utilitza Docker per gestionar de manera senzilla els serveis.
 
 ---
 
@@ -60,7 +127,7 @@ El projecte està dividit en dos directoris principals:
 
 - **Backend/:** Conté el codi i els serveis per al backend (laravel / nodejs).
 - **Backend/node-app:** Conte el nodejs dins del back
-- **Frontend/:** Conté el codi i els serveis per al frontend.
+- **Frontend/:** Conté el codi i els serveis per al frontend (Nuxt3).
 
 # Convenciones para los Commits
 chore: Cambios menores que no afectan el código de producción, como actualizaciones de dependencias o tareas de mantenimiento.
