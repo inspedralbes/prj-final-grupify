@@ -24,11 +24,9 @@ onMounted(() => {
 // Validar formulario
 const validateForm = () => {
   if (!email.value.trim()) {
-    msgError.value = "El email és obligatori";
     return false;
   }
   if (!password.value.trim()) {
-    msgError.value = "La contrasenya és obligatoria";
     return false;
   }
   return true;

@@ -3,12 +3,18 @@
     <editor-content :editor="editor" class="prose dark:prose-invert max-w-none editor-container" />
 
     <div
-      class="editor-toolbar fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex gap-2 border border-gray-200 dark:border-gray-700">
-      <button v-for="item in toolbarItems" :key="item.action" @click="item.action" :class="[
-        'p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
-        { 'bg-gray-100 dark:bg-gray-700': item.isActive?.() }
-      ]">
-        <span class="material-icons">{{ item.icon }}</span>
+      class="editor-toolbar fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-1 md:p-2 flex gap-1 md:gap-2 border border-gray-200 dark:border-gray-700"
+    >
+      <button
+        v-for="item in toolbarItems"
+        :key="item.action"
+        @click="item.action"
+        :class="[
+          'p-1 md:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
+          { 'bg-gray-100 dark:bg-gray-700': item.isActive?.() }
+        ]"
+      >
+        <span class="material-icons text-xs md:text-base">{{ item.icon }}</span>
       </button>
     </div>
   </div>
@@ -113,14 +119,16 @@ onBeforeUnmount(() => {
 watch(
   () => props.modelValue,
   (newContent) => {
-    // Solo actualizar si el contenido es diferente al actual
     if (newContent !== editor.getHTML()) {
       editor.commands.setContent(newContent, false);
     }
-  });
+  }
+);
 </script>
 
 <style>
+@import 'material-icons/iconfont/material-icons.css';
+
 .material-icons {
   font-size: 20px;
 }
@@ -177,14 +185,13 @@ watch(
   text-align: left;
 }
 
-/* En modo oscuro: Solo cabeceras con fondo negro, texto blanco y borde gris */
+/* En modo oscuro */
 .dark .ProseMirror th {
   background-color: #000;
   color: #fff;
   border-color: #4b5563;
 }
 
-/* Bordes de celdas (td) en dark mode se modifican a gris */
 .dark .ProseMirror td {
   border-color: #4b5563;
 }

@@ -8,6 +8,7 @@ import { useCescStore } from "@/stores/cescStore";
 const router = useRouter();
 const cescStore = useCescStore();
 const isLoading = ref(false);
+const chatStore = useChatStore();
 
 defineProps({
   course: {
@@ -28,8 +29,8 @@ const viewProfile = (course) => {
 const analyzeWithAI = async (course) => {
   try {
     isLoading.value = true;
-    
-    const response = await fetch("https://api.grupify.cat/api/cesc/responses", {
+
+    const response = await fetch("http://localhost:8000/api/cesc/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,10 +49,30 @@ const analyzeWithAI = async (course) => {
     const data = await response.json();
     console.log(data);
 
-    cescStore.clearResponses(); 
+    cescStore.clearResponses();
     cescStore.setResponses(data);
     cescStore.setCurrentCourseAndDivision(course.courseName, course.courseId, course.division.name, course.division.id);
-    
+
+    chatStore.createNewChat({ name: "Cesc" });
+
+    chatStore.addMessage(chatStore.currentChatId, {
+      type: "system",
+      content: `Benvingut a la sessió de CESC. \n 
+    CURSO: ${cescStore.currentCourse.courseName} \n
+    DIVISION: ${cescStore.currentDivision.divisionName}
+    \n Com puc ajudar-te?\n
+      Pot fer preguntes sobre:\n
+      - Puedes preguntarme sobre:\n
+      - Preferencias individuales: Puedes preguntar por las respuestas de un alumno específico.\n
+      - Relaciones entre alumnos: Puedo analizar las respuestas para identificar quiénes se llevan bien, quiénes no, etc.\n
+      - Comportamientos en el aula:  Puedo ofrecer información sobre quiénes difunden rumores, ayudan a los demás, dan empujones, etc.\n
+      - Grupos sociales: Puedo ayudarte a identificar los grupos de amigos y amigas dentro del aula.\n
+      I més...
+    `,
+      timestamp: new Date().toISOString(),
+    });
+
+
     router.push({
       path: "/professor/assistent",
     });

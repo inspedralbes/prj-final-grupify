@@ -214,7 +214,7 @@ onMounted(async () => {
     </div>
 
     <div v-else class="text-center">
-      <h3 class="text-xl font-bold mb-4">¡Quiz completado!</h3>
+      <h3 class="text-xl font-bold mb-4">¡Quiz completat!</h3>
     </div>
 
     <!-- Toast -->

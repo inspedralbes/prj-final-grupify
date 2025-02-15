@@ -1,9 +1,10 @@
 <script setup>
 import { useRouter, useRoute } from "vue-router";
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 const isFormsOpen = ref(false);
-
+const isMobileMenuOpen = ref(false);
+const isMobileFormsOpen = ref(false);
 const menuItems = [
   {
     title: "Gestió de Alumnes",
@@ -38,11 +39,6 @@ const menuItems = [
     ]
   },
   {
-    title: "Colonias",
-    route: "/professor/colonias",
-    icon: "M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z",
-  },
-  {
     title: "Chat IA",
     route: "/professor/assistent",
     icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
@@ -58,13 +54,22 @@ const router = useRouter();
 const route = useRoute();
 
 const goHome = () => {
-  navigateTo("/professor/dashboard");
+  router.push("/professor/dashboard");
 };
 
 const isActiveRoute = itemRoute => route.path === itemRoute;
 
 const toggleForms = () => {
   isFormsOpen.value = !isFormsOpen.value;
+};
+
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+  isMobileFormsOpen.value = false; // Cerrar el menú desplegable al abrir/cerrar el menú móvil
+};
+const toggleMobileForms = () => {
+  isMobileFormsOpen.value = !isMobileFormsOpen.value;
 };
 
 // Cerrar el menú cuando se hace clic fuera
@@ -108,8 +113,8 @@ onUnmounted(() => {
           <span class="text-lg font-semibold">Inici</span>
         </button>
 
-        <!-- Menú de navegación -->
-        <div class="flex space-x-1">
+        <!-- Menú de navegación para pantallas grandes -->
+        <div class="hidden md:flex space-x-1">
           <template v-for="item in menuItems" :key="item.title">
             <!-- Menú normal -->
             <NuxtLink
@@ -143,7 +148,7 @@ onUnmounted(() => {
               <button
                 @click="toggleForms"
                 class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200 text-blue-50 hover:bg-blue-600 hover:text-white"
-                :class="{ 'bg-blue-700': isActiveRoute('/professor/formularis') || isActiveRoute('/professor/sociograma/SociogramaView') || isActiveRoute('/professor/cesc/CescView') }"
+                :class="{ 'bg-blue-700': isFormsOpen }"
               >
                 <svg
                   class="w-5 h-5"
@@ -203,22 +208,90 @@ onUnmounted(() => {
                       />
                     </svg>
                     <span class="flex-1">{{ subItem.title }}</span>
-                    <svg
-                      v-if="isActiveRoute(subItem.route)"
-                      class="w-5 h-5 text-blue-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
+                    
+                   
                   </NuxtLink>
                 </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Botón de menú móvil -->
+        <div class="md:hidden flex items-center">
+          <button
+            @click="toggleMobileMenu"
+            class="text-white hover:text-blue-100 focus:outline-none"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16m-7 6h7"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Menú móvil -->
+      <div v-show="isMobileMenuOpen" class="md:hidden">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <template v-for="item in menuItems" :key="item.title">
+            <!-- Menú normal -->
+            <NuxtLink
+              v-if="!item.type"
+              :to="item.route"
+              class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
+              :class="{ 'bg-blue-700': isActiveRoute(item.route) }"
+            >
+              {{ item.title }}
+            </NuxtLink>
+
+            <!-- Menú desplegable -->
+            <div v-else-if="item.type === 'dropdown'" class="relative">
+              <button
+                @click="toggleMobileForms"
+                class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
+                :class="{ 'bg-blue-700': isMobileFormsOpen }"
+              >
+                <span>{{ item.title }}</span>
+                <svg
+                  class="w-4 h-4 ml-1 transition-transform duration-200"
+                  :class="{ 'transform rotate-180': isMobileFormsOpen }"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              <!-- Menú desplegable mejorado -->
+              <div
+                v-show="isMobileFormsOpen"
+                class="pl-4"
+              >
+                <NuxtLink
+                  v-for="subItem in item.items"
+                  :key="subItem.title"
+                  :to="subItem.route"
+                  class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
+                  :class="{ 'bg-blue-700': isActiveRoute(subItem.route) }"
+                >
+                  {{ subItem.title }}
+                </NuxtLink>
               </div>
             </div>
           </template>

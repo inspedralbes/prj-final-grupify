@@ -18,10 +18,10 @@ class TagCescSeeder extends Seeder
         // Insertar los 5 tags predefinidos en la tabla tags_cesc
         $tags = [
             ['name' => 'popular'],
-            ['name' => 'rechazado'],
-            ['name' => 'agresivo'],
+            ['name' => 'rebutjat'],
+            ['name' => 'agressiu'],
             ['name' => 'prosocial'],
-            ['name' => 'victima'],
+            ['name' => 'víctima'],
         ];
 
         // Usar el modelo Tag para insertar los tags en la base de datos

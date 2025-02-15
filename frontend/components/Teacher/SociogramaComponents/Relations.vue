@@ -174,7 +174,7 @@ onMounted(() => {
           />
         </svg>
         <p class="text-sm text-gray-600 font-medium">
-          No hi ha dades de rols disponibles
+          No hi ha dades de relacions disponibles
         </p>
       </div>
     </div>

@@ -48,7 +48,7 @@
               class="mt-4 px-4 py-2 rounded"
               @click="handleFormClick(form.id)"
             >
-              {{ form.answered === 1 ? "Completado" : "Completar" }}
+              {{ form.answered === 1 ? "Completat" : "Completar" }}
             </button>
           </div>
         </div>

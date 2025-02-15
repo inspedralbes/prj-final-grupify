@@ -48,6 +48,7 @@ export const useChatStore = defineStore("chat", {
             words + (message.content.length > words.length ? "..." : "")
           );
         }
+        console.log(message)
         this.saveToLocalStorage();
       }
     },

@@ -16,8 +16,8 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
     // Definir las etiquetas disponibles
     const tagTypes = [
         { id: 1, name: "Popular" },
-        { id: 2, name: "Rechazado" },
-        { id: 3, name: "Agresivo" },
+        { id: 2, name: "Rebutjat" },
+        { id: 3, name: "Agressiu" },
         { id: 4, name: "Prosocial" },
         { id: 5, name: "Víctima" },
     ];
