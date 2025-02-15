@@ -13,7 +13,7 @@ export const useGroupStore = defineStore("groups", {
         const authStore = useAuthStore();
         const token = authStore.token;
     
-        const response = await $fetch("http://localhost:8000/api/groups", {
+        const response = await $fetch("https://api.grupify.cat/api/groups", {
           headers: {
             Authorization: `Bearer ${token}`, 
             "Content-Type": "application/json",
