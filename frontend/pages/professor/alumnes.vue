@@ -167,84 +167,74 @@ const copyToClipboard = async () => {
   <div class="min-h-screen bg-gray-50">
     <TeacherDashboardNavTeacher />
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="container mx-auto px-4 py-6 sm:py-8">
       <!-- Títol i descripció del panell -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Gestió d'Alumnes</h1>
-        <p class="mt-2 text-sm text-gray-600">
+      <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Gestió d'Alumnes</h1>
+        <p class="mt-1 sm:mt-2 text-sm text-gray-600">
           Gestiona i supervisa l'alumnat registrat a l'institut
         </p>
       </div>
 
       <!-- Llistat d'estudiants amb controls i icona per generar invitació -->
-      <div v-if="isLoading" class="bg-white rounded-lg shadow-sm p-8 text-center">
+      <div v-if="isLoading" class="bg-white rounded-lg shadow p-8 text-center">
         <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
         <p class="mt-4 text-gray-600 font-medium">Carregant estudiants...</p>
       </div>
 
       <div v-else class="space-y-6">
         <!-- Filtres d'estudiants -->
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <TeacherStudentFilters v-model:search-query="searchQuery" v-model:selected-course="selectedCourse"
-            v-model:selected-division="selectedDivision" />
+        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+          <TeacherStudentFilters
+            v-model:search-query="searchQuery"
+            v-model:selected-course="selectedCourse"
+            v-model:selected-division="selectedDivision"
+          />
         </div>
 
         <!-- Llistat d'estudiants -->
-        <div class="bg-white rounded-lg shadow-sm">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h2 class="text-sm text-gray-500 uppercase">
-                Llistat d'estudiants
-              </h2>
-              <!-- Container amb l'icona d'invitació i el número d'estudiants -->
-              <div class="flex items-center space-x-2">
-                <button @click="openInvitationModal"
-                  class="flex items-center justify-center w-10 h-10 bg-[rgb(0,173,238)] text-white rounded-full"
-                  title="Generar enllaç d'invitació">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="white" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
-                  </svg>
-                </button>
-                <span class="px-3 py-1 text-sm text-gray-500 bg-gray-100 rounded-full">
-                  {{ filteredStudents.length }} estudiants
-                </span>
-              </div>
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-xs sm:text-sm text-gray-500 uppercase">Llistat d'estudiants</h2>
+            <div class="flex items-center space-x-2">
+              <button
+                @click="openInvitationModal"
+                class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-[rgb(0,173,238)] text-white rounded-full"
+                title="Generar enllaç d'invitació"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" stroke-width="1.5"
+                  stroke="white" class="w-4 h-4 sm:w-5 sm:h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                </svg>
+              </button>
+              <span class="px-2 py-1 text-xs sm:text-sm text-gray-500 bg-gray-100 rounded-full">
+                {{ filteredStudents.length }} estudiants
+              </span>
             </div>
           </div>
           <!-- Mostrem els estudiants paginats -->
           <TeacherStudentList :students="paginatedStudents" class="divide-y divide-gray-200" />
 
           <!-- Controls de paginació -->
-          <div class="d-flex justify-content-center mb-3">
-            <nav>
-              <ul class="pagination">
-                <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                  <button @click="currentPage--" class="page-link" :disabled="currentPage === 1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                </li>
-
-                <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: page === currentPage }">
-                  <button @click="currentPage = page" class="page-link">
-                    {{ page }}
-                  </button>
-                </li>
-
-                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                  <button @click="currentPage++" class="page-link" :disabled="currentPage === totalPages">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </li>
-              </ul>
-            </nav>
+          <div class="flex items-center justify-between px-4 py-3 sm:px-6">
+            <button
+              @click="currentPage--"
+              :disabled="currentPage === 1"
+              class="px-3 py-1 text-sm text-blue-600 bg-white border border-gray-200 rounded disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <div class="hidden sm:block text-sm text-gray-600">
+              Pàgina {{ currentPage }} de {{ totalPages }}
+            </div>
+            <button
+              @click="currentPage++"
+              :disabled="currentPage === totalPages"
+              class="px-3 py-1 text-sm text-blue-600 bg-white border border-gray-200 rounded disabled:opacity-50"
+            >
+              Següent
+            </button>
           </div>
         </div>
       </div>
@@ -255,11 +245,10 @@ const copyToClipboard = async () => {
       <!-- Fons semi-transparent -->
       <div class="absolute inset-0 bg-gray-900 opacity-50" @click="closeInvitationModal"></div>
       <!-- Contingut del modal -->
-      <div class="bg-white rounded-lg p-6 relative z-10 w-11/12 md:w-1/2">
+      <div class="bg-white rounded-lg p-4 sm:p-6 relative z-10 w-full max-w-md mx-4">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">Generar enllaç d'invitació</h2>
+          <h2 class="text-lg sm:text-xl font-bold">Generar enllaç d'invitació</h2>
           <button @click="closeInvitationModal" class="text-gray-500 hover:text-gray-700" title="Tanca">
-            <!-- Icono de tancar (X) -->
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
               stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -269,9 +258,7 @@ const copyToClipboard = async () => {
 
         <!-- Formulari per generar la invitació -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Selecciona un curs
-          </label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona un curs</label>
           <select v-model="selectedInvitationCourse" @change="fetchInvitationDivisions"
             class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
             <option disabled value="">Selecciona un curs</option>
@@ -281,11 +268,9 @@ const copyToClipboard = async () => {
           </select>
         </div>
 
-        <!-- Selector de divisió (només si hi ha divisions disponibles) -->
+        <!-- Selector de divisió -->
         <div class="mb-4" v-if="divisions.length > 0">
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Selecciona una divisió
-          </label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona una divisió</label>
           <select v-model="selectedInvitationDivision"
             class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
             <option disabled value="">Selecciona una divisió</option>
@@ -295,35 +280,38 @@ const copyToClipboard = async () => {
           </select>
         </div>
 
-        <!-- Botón con color primario -->
-<button @click="generateInvitation"
-  class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary">
-  Generar enllaç
-</button>
+        <button @click="generateInvitation"
+          class="w-full px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors">
+          Generar enllaç
+        </button>
 
-        <!-- Mostra l'enllaç generat si existeix -->
+        <!-- Mostra l'enllaç generat -->
         <div v-if="invitationLink" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-sm">
           <p class="text-gray-700 font-semibold mb-2">Enllaç d'invitació generat:</p>
-
-          <div class="flex items-center bg-white border border-gray-300 rounded-md p-2 shadow-sm">
+          <div class="flex items-center bg-white border border-gray-300 rounded-md p-2">
             <input type="text" :value="invitationLink"
               class="w-full text-gray-700 text-sm bg-transparent border-none focus:ring-0 cursor-text" readonly />
             <button @click="copyToClipboard"
               class="ml-3 p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200"
               title="Copiar enllaç">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                stroke="currentColor" class="size-6">
+                stroke="currentColor" class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z" />
               </svg>
             </button>
           </div>
         </div>
+
         <!-- Toast de error -->
-        <transition enter-active-class="transition ease-out duration-300 transform"
-          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 translate-y-2">
+        <transition
+          enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2"
+        >
           <div v-if="showErrorToast"
             class="fixed bottom-6 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -334,11 +322,15 @@ const copyToClipboard = async () => {
           </div>
         </transition>
 
-        <!-- Pop-up per confirmar que s'ha copiat l'enllaç -->
-        <transition enter-active-class="transition ease-out duration-300 transform"
-          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 translate-y-2">
+        <!-- Pop-up per confirmar copia -->
+        <transition
+          enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2"
+        >
           <div v-if="showCopyPopup"
             class="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
