@@ -35,7 +35,7 @@ defineEmits([
           <option value="2 ESO">2º ESO</option>
           <option value="3 ESO">3º ESO</option>
           <option value="4 ESO">4º ESO</option>
-          <option value="BACHILLERATO">BATXILLERAT</option>
+          <option value="BATXILLERAT">BATXILLERAT</option>
         </select>
         <select
           :value="selectedDivision"
