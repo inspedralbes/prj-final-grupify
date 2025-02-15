@@ -2,7 +2,7 @@
 **Integrants del projecte:**
 Aleiram Minaya, Lucas Benitez, Araceli Pacheco, Joselyn Ninahuaman, Adrià Estévez.
 
-##Gestió Educativa Intel·ligent per a Professors
+## Gestió Educativa Intel·ligent per a Professors
 
 Benvingut a **Grupify**, una plataforma integral dissenyada per a empoderar als professors en la gestió de les seves classes, alumnes i projectes grupals, potenciada amb eines de IA per a simplificar i optimitzar el treball educatiu!
 
