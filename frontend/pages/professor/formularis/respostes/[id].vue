@@ -27,8 +27,8 @@ const checkIfMobile = () => {
 const getUsersByForm = async (formId) => {
   try {
     const apiUrl = formId === "3"
-      ? `http://localhost:8000/api/forms/${formId}/responded-users`
-      : `http://localhost:8000/api/forms/${formId}/users`;
+      ? `https://api.grupify.cat/api/forms/${formId}/responded-users`
+      : `https://api.grupify.cat/api/forms/${formId}/users`;
     
     const response = await fetch(apiUrl, {
       method: "GET",
