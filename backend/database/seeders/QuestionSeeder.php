@@ -18,55 +18,54 @@ class QuestionSeeder extends Seeder
 
 
         if (!$form1 || !$form2 || !$form3 || !$form4) {
-            throw new \Exception('Uno o más formularios no se encontraron en la base de datos.');
+            throw new \Exception('Un o més formularis no es van trobar a la base de dades.');
         }
 
         // Inserta preguntas asociadas al formulario 1
         Question::create([
             'form_id' => $form1->id,
-            'title' => '¿Cuál es tu color favorito?',
+            'title' => 'Quin és el teu color preferit?',
         ]);
 
         Question::create([
             'form_id' => $form1->id,
-            'title' => '¿Qué opinas sobre la inteligencia artificial?',
+            'title' => 'Què opines sobre la intel·ligència artificial?',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => 'Me cae bien',
+            'title' => 'Em cau bé',
         ]);
 
         // Inserta preguntas asociadas al formulario 2
         Question::create([
             'form_id' => $form2->id,
-            'title' => 'No me cae bien',
+            'title' => 'No em cau bé',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => 'Difunde rumores',
+            'title' => 'Difon rumors',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => 'Ayuda a los demás',
-        ]);
-
-        // Y así sucesivamente para las demás preguntas...
-        Question::create([
-            'form_id' => $form2->id,
-            'title' => 'Da empujones',
+            'title' => 'Ajuda els altres',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => 'No deja participar',
+            'title' => 'Dóna empentes',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => 'Anima a los demás',
+            'title' => 'No deixa participar',
+        ]);
+
+        Question::create([
+            'form_id' => $form2->id,
+            'title' => 'Anima als altres',
         ]);
 
         Question::create([
@@ -74,55 +73,54 @@ class QuestionSeeder extends Seeder
             'title' => 'Insulta',
         ]);
 
-        // Y más preguntas para el formulario 2...
         Question::create([
             'form_id' => $form2->id,
-            'title' => '¿A quién dan empujones?',
+            'title' => 'A qui donen empentes?',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => '¿A quién insultan o ridiculizan?',
+            'title' => 'A qui insulten o ridiculitzen?',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => '¿A quién no dejan participar?',
+            'title' => 'A qui no deixen participar?',
         ]);
 
         Question::create([
             'form_id' => $form2->id,
-            'title' => 'Mis amigos / amigas',
+            'title' => 'Els meus amics / amigues',
         ]);
 
         // Inserta preguntas asociadas al formulario 1
         Question::create([
             'form_id' => $form3->id,
-            'title' => '¿Con quién prefieres trabajar?',
+            'title' => 'Amb qui prefereixes treballar?',
         ]);
         Question::create([
             'form_id' => $form3->id,
-            'title' => '¿Con quién prefieres no trabajar?',
+            'title' => 'Amb qui prefereixes no treballar?',
         ]);
         Question::create([
             'form_id' => $form3->id,
-            'title' => '¿Con quién has trabajado anteriormente?',
+            'title' => 'Amb qui has treballat anteriorment?',
         ]);
         Question::create([
             'form_id' => $form3->id,
-            'title' => '¿Quién tiene habilidades de liderazgo?',
+            'title' => 'Qui té habilitats de lideratge?',
         ]);
         Question::create([
             'form_id' => $form3->id,
-            'title' => '¿Quién tiene habilidades de creatividad?',
+            'title' => 'Qui té habilitats de creativitat?',
         ]);
         Question::create([
             'form_id' => $form3->id,
-            'title' => '¿Quién tiene habilidades de organización?',
+            'title' => 'Qui té habilitats dorganització?',
         ]);
         Question::create([
             'form_id' => $form3->id,
-            'title' => '¿Con quién no has trabajado anteriormente?',
+            'title' => 'Amb qui no has treballat anteriorment?',
         ]);
 
     // Inserta preguntas asociadas al formulario de autoevaluación (form_id = 4)

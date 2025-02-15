@@ -275,7 +275,7 @@ public function getAverageRating($questionId)
             // Incrementar el contador de respuestas del formulario
             $form->increment('responses_count'); // Esto incrementa el campo `responses_count`
         } else {
-            Log::error('Formulario no encontrado', ['form_id' => $formId]);
+            Log::error('Formulari no trobat', ['form_id' => $formId]);
         }
 
         // Marcar como respondido en la tabla intermedia "form_user"
@@ -285,9 +285,9 @@ public function getAverageRating($questionId)
             $user->forms()->updateExistingPivot($formId, ['answered' => true]);
         }
 
-        Log::info('Form ID recibido:', ['form_id' => $formId]);
+        Log::info('Form ID rebut:', ['form_id' => $formId]);
 
-        return response()->json(['message' => 'Respuestas guardadas correctamente'], 200);
+        return response()->json(['message' => 'Respostes desades correctament'], 200);
     }
 
 

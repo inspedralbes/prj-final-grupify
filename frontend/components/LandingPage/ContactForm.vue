@@ -103,7 +103,7 @@ export default {
   },
   methods: {
     handleSubmit() {
-      alert("Formulario enviado correctamente!");
+      alert("Formulari enviat correctament!");
       this.$emit("close");
     },
   },

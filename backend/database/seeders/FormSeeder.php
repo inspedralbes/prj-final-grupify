@@ -21,7 +21,7 @@ class FormSeeder extends Seeder
 
         if (!Form::where('title', 'Formulari CESC')->exists()) {
             Form::create([
-                'title' => 'Formulario CESC',
+                'title' => 'Formulari CESC',
                 'description' => 'Conducta i Experiències Socials a Classe',
                 'is_global' => true,
             ]);
