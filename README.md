@@ -42,6 +42,7 @@ Benvingut a **Grupify**, una plataforma integral dissenyada per a empoderar als 
 4. *Conversa amb l'Agent de IA* per a resoldre dubtes o generar grups automàtics.
 
 Taiga: https://tree.taiga.io/project/aleiram19-2daw_projectefinal_grupify/timeline
+
 Penpot: https://design.penpot.app/#/view/7ad540b5-8190-815d-8005-5ce4491a439f?page-id=7ad540b5-8190-815d-8005-5ce4491a43a0&section=interactions&index=0&share-id=0b127ab7-8934-814e-8005-bc502dc95691
 
 URL Producció (proxy invers): https://grupify.cat | https://api.grupify.cat
