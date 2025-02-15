@@ -48,6 +48,7 @@ Penpot: https://design.penpot.app/#/view/7ad540b5-8190-815d-8005-5ce4491a439f?pa
 URL Producció (proxy invers): https://grupify.cat | https://api.grupify.cat
 
 ## 🐳 Projecte amb Vue, Nodejs + Laravel 🐳
+Aixecar el projecte per desenvolupament amb Docker
 
 1. **Clona el projecte**
     ```bash
