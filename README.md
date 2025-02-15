@@ -2,7 +2,7 @@
 **Integrants del projecte:**
 Aleiram Minaya, Lucas Benitez, Araceli Pacheco, Joselyn Ninahuaman, Adrià Estévez.
 
-# 📚 Grupify: Gestió Educativa Intel·ligent per a Professors
+##Gestió Educativa Intel·ligent per a Professors
 
 Benvingut a **Grupify**, una plataforma integral dissenyada per a empoderar als professors en la gestió de les seves classes, alumnes i projectes grupals, potenciada amb eines de IA per a simplificar i optimitzar el treball educatiu!
 
@@ -29,7 +29,7 @@ Benvingut a **Grupify**, una plataforma integral dissenyada per a empoderar als 
 
 ## 🚀 *Per què Grupify?*
 - *Eficiència*: Automatitza tasques repetitives (formularis, grups) amb IA.
-- **Insights profunds*: Visualitza dades acadèmiques i socials en gràfics i sociogrames.
+- *Insights profunds*: Visualitza dades acadèmiques i socials en gràfics i sociogrames.
 - *Flexibilitat*: Personalitza cada aspecte, des de formularis fins a comentaris en grups.
 - *Innovació*: Integració de bots i generació de contingut assistit per IA.
 
