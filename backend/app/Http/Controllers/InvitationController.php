@@ -33,7 +33,7 @@ class InvitationController extends Controller
         ]);
 
         // Use frontend URL instead of localhost:8000
-        $invitationLink = 'http://localhost:3000' . '/login?invitation=' . $token;
+        $invitationLink = 'https://api.grupify.cat' . '/login?invitation=' . $token;
 
         return response()->json([
             'message'    => 'Invitación creada correctamente.',
