@@ -72,6 +72,8 @@ push:
 allprod:
 	make rebuild
 	make push
+	docker context use clouding
+	docker stack deploy -c compose.yml --with-registry-auth grupify
 
 frontprod:
 	docker build -t ghcr.io/adriapedralbes/frontend:${TAG} -f ./frontend/Dockerfile.prod ./frontend
