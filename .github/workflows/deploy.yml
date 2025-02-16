@@ -73,7 +73,7 @@ jobs:
 
       - name: Remove previous stack (if exists)
         run: |
-          docker stack rm grupify || true
+          docker stack rm grupify-ghactions || true
           echo "Esperando a que se elimine la stack anterior..."
           # Esperamos 60 segundos para asegurarnos de que todos los servicios se liberen
           sleep 60
@@ -82,4 +82,4 @@ jobs:
         run: |
           # Exportamos las variables de los .env para que se realice la sustitución en el compose.yml
           set -o allexport && source frontend/.env && source backend/.env && set +o allexport
-          docker stack deploy -c compose.yml grupify
+          docker stack deploy -c compose.yml grupify-ghactions
