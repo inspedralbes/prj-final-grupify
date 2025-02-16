@@ -27,7 +27,7 @@ services:
       - app-network
 
   nuxt-app:
-    image: ghcr.io/adriapedralbes/frontend:v2.3
+    image: ghcr.io/adriapedralbes/frontend:v2.4
     deploy:
       replicas: 1
       restart_policy:
@@ -40,13 +40,11 @@ services:
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
     environment:
       NODE_ENV: production
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      API_BASE_URL: ${API_BASE_URL}
     networks:
       - app-network
 
   laravel-app:
-    image: ghcr.io/adriapedralbes/backend:v2.3
+    image: ghcr.io/adriapedralbes/backend:v2.4
     deploy:
       replicas: 1
       restart_policy:
@@ -75,42 +73,19 @@ services:
       - redis_port
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "-H", "Host:api.grupify.cat", "http://localhost/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   queue-worker:
-    image: ghcr.io/adriapedralbes/backend:v2.3
+    image: ghcr.io/adriapedralbes/backend:v2.4
     deploy:
       replicas: 1
       restart_policy:
         condition: any
     command: "php artisan queue:work redis --tries=3 --timeout=90"
-    environment:
-      DB_CONNECTION: mysql
-      DB_HOST_FILE: /run/secrets/db_host
-      DB_PORT: 3306
-      DB_DATABASE_FILE: /run/secrets/db_database
-      DB_USERNAME_FILE: /run/secrets/mysql_user
-      DB_PASSWORD_FILE: /run/secrets/mysql_password
-      REDIS_HOST_FILE: /run/secrets/redis_host
-      REDIS_PASSWORD: null
-      REDIS_PORT_FILE: /run/secrets/redis_port
-    secrets:
-      - db_database
-      - mysql_user
-      - mysql_password
-      - redis_host
-      - redis_port
-      - db_host
     networks:
       - app-network
 
   node-app:
-    image: ghcr.io/adriapedralbes/nodejs:v2.3
+    image: ghcr.io/adriapedralbes/nodejs:v2.4
     deploy:
       replicas: 1
       restart_policy:
@@ -201,4 +176,3 @@ secrets:
     file: ./docker-secrets/redis_port.txt
   db_host:
     file: ./docker-secrets/db_host.txt
-
