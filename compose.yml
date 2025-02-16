@@ -89,6 +89,23 @@ services:
       restart_policy:
         condition: any
     command: "php artisan queue:work redis --tries=3 --timeout=90"
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST_FILE: /run/secrets/db_host
+      DB_PORT: 3306
+      DB_DATABASE_FILE: /run/secrets/db_database
+      DB_USERNAME_FILE: /run/secrets/mysql_user
+      DB_PASSWORD_FILE: /run/secrets/mysql_password
+      REDIS_HOST_FILE: /run/secrets/redis_host
+      REDIS_PASSWORD: null
+      REDIS_PORT_FILE: /run/secrets/redis_port
+    secrets:
+      - db_database
+      - mysql_user
+      - mysql_password
+      - redis_host
+      - redis_port
+      - db_host
     networks:
       - app-network
 
