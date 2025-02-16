@@ -25,6 +25,28 @@ jobs:
         run: |
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
+      - name: Login to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+      - name: Build Frontend image
+        run: docker build -t ghcr.io/adriapedralbes/frontend:v2.3 frontend
+
+      - name: Push Frontend image
+        run: docker push ghcr.io/adriapedralbes/frontend:v2.3
+
+      - name: Build Backend image
+        run: docker build -t ghcr.io/adriapedralbes/backend:v2.3 backend
+
+      - name: Push Backend image
+        run: docker push ghcr.io/adriapedralbes/backend:v2.3
+
+      - name: Build NodeJS image
+        run: docker build -t ghcr.io/adriapedralbes/nodejs:v2.3 nodejs
+
+      - name: Push NodeJS image
+        run: docker push ghcr.io/adriapedralbes/nodejs:v2.3
+
       - name: Create Docker secrets files
         run: |
           mkdir -p docker-secrets
@@ -75,11 +97,10 @@ jobs:
         run: |
           docker stack rm grupify-ghactions || true
           echo "Esperando a que se elimine la stack anterior..."
-          # Esperamos 60 segundos para asegurarnos de que todos los servicios se liberen
           sleep 60
 
       - name: Deploy Docker stack
         run: |
           # Exportamos las variables de los .env para que se realice la sustitución en el compose.yml
           set -o allexport && source frontend/.env && source backend/.env && set +o allexport
-          docker stack deploy -c compose.yml grupify-ghactions
+          docker stack deploy --with-registry-auth -c compose.yml grupify-ghactions
