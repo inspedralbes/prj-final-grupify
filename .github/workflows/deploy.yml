@@ -1,0 +1,68 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main  # Ajusta la rama según convenga
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Create Docker secrets files
+        run: |
+          mkdir -p docker-secrets
+          echo "${{ secrets.MYSQL_USER }}" > docker-secrets/mysql_user.txt
+          echo "${{ secrets.MYSQL_PASSWORD }}" > docker-secrets/mysql_password.txt
+          echo "${{ secrets.MYSQL_ROOT_PASSWORD }}" > docker-secrets/mysql_root_password.txt
+          echo "${{ secrets.DB_DATABASE }}" > docker-secrets/db_database.txt
+          echo "${{ secrets.REDIS_HOST }}" > docker-secrets/redis_host.txt
+          echo "${{ secrets.REDIS_PORT }}" > docker-secrets/redis_port.txt
+          echo "${{ secrets.DB_HOST }}" > docker-secrets/db_host.txt
+
+      - name: Create .env file for frontend
+        run: |
+          mkdir -p frontend
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" > frontend/.env
+          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> frontend/.env
+
+      - name: Create .env file for backend mail configuration
+        run: |
+          mkdir -p backend
+          echo "MAIL_MAILER=${{ secrets.MAIL_MAILER }}" > backend/.env
+          echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> backend/.env
+          echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> backend/.env
+          echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> backend/.env
+          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> backend/.env
+          echo "MAIL_ENCRYPTION=${{ secrets.MAIL_ENCRYPTION }}" >> backend/.env
+          echo "MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}" >> backend/.env
+          echo "MAIL_FROM_NAME=${{ secrets.MAIL_FROM_NAME }}" >> backend/.env
+
+      - name: Create Docker context (if not exists)
+        run: |
+          docker context create production --docker "host=ssh://root@${{ secrets.SERVER_IP }}" || echo "Context 'production' already exists"
+
+      - name: Use Docker context
+        run: docker context use production
+
+      - name: Deploy Docker stack
+        run: |
+          # Exportamos las variables de los .env para que docker stack deploy realice la sustitución
+          set -o allexport && source frontend/.env && source backend/.env && set +o allexport
+          docker stack deploy -c compose.yml grupify
