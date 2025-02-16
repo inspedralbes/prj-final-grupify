@@ -75,4 +75,4 @@ jobs:
         run: |
           # Exportamos las variables definidas en los .env para que se realice la sustitución en el compose.yml
           set -o allexport && source frontend/.env && source backend/.env && set +o allexport
-          docker stack deploy -c compose.yml grupify
+          docker stack deploy -c compose.yml grupify-ghactions
