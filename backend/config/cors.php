@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['https://grupify.cat'], // Solo tu dominio
+    'allowed_origins' => ['https://grupify.cat', 'https://www.grupify.cat'],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => true, // Para autenticación con tokens/cookies
+    'supports_credentials' => true,
 ];
