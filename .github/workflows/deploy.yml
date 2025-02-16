@@ -71,8 +71,15 @@ jobs:
           docker secret rm grupify_redis_port || true
           docker secret rm grupify_db_host || true
 
+      - name: Remove previous stack (if exists)
+        run: |
+          docker stack rm grupify || true
+          echo "Esperando a que se elimine la stack anterior..."
+          # Esperamos 60 segundos para asegurarnos de que todos los servicios se liberen
+          sleep 60
+
       - name: Deploy Docker stack
         run: |
-          # Exportamos las variables definidas en los .env para que se realice la sustitución en el compose.yml
+          # Exportamos las variables de los .env para que se realice la sustitución en el compose.yml
           set -o allexport && source frontend/.env && source backend/.env && set +o allexport
-          docker stack deploy -c compose.yml grupify-ghactions
+          docker stack deploy -c compose.yml grupify
