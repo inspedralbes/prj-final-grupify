@@ -40,6 +40,8 @@ services:
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
     environment:
       NODE_ENV: production
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      API_BASE_URL: ${API_BASE_URL}
     networks:
       - app-network
 
