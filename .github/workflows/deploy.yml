@@ -42,7 +42,7 @@ jobs:
         run: docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/backend:v2.3
 
       - name: Build NodeJS image
-        run: docker build -f backend/node-app/Dockerfile.prod -t ghcr.io/${{ secrets.GHCR_USERNAME }}/nodejs:v2.3 nodejs
+        run: docker build -f backend/node-app/Dockerfile.prod -t ghcr.io/${{ secrets.GHCR_USERNAME }}/nodejs:v2.3 backend/node-app
 
       - name: Push NodeJS image
         run: docker push ghcr.io/adriapedralbes/nodejs:v2.3
