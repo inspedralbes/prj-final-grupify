@@ -61,8 +61,18 @@ jobs:
       - name: Use Docker context
         run: docker context use production
 
+      - name: Remove existing docker secrets
+        run: |
+          docker secret rm grupify_mysql_user || true
+          docker secret rm grupify_mysql_password || true
+          docker secret rm grupify_mysql_root_password || true
+          docker secret rm grupify_db_database || true
+          docker secret rm grupify_redis_host || true
+          docker secret rm grupify_redis_port || true
+          docker secret rm grupify_db_host || true
+
       - name: Deploy Docker stack
         run: |
-          # Exportamos las variables de los .env para que docker stack deploy realice la sustitución
+          # Exportamos las variables definidas en los .env para que se realice la sustitución en el compose.yml
           set -o allexport && source frontend/.env && source backend/.env && set +o allexport
           docker stack deploy -c compose.yml grupify
