@@ -24,8 +24,6 @@ use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\BitacoraNoteController;
 use App\Http\Controllers\InvitationController;
 
-Route::post('/login', [AuthenticatedSessionController::class, 'login']);
-
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 
 Route::get('/questions/{questionId}/average-rating', [AnswerController::class, 'getAverageRating']);
