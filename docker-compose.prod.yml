@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   traefik:
     image: traefik:v3
@@ -49,21 +47,14 @@ services:
       - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
     environment:
       DB_CONNECTION: mysql
-      DB_HOST_FILE: /run/secrets/db_host
+      DB_HOST: ${DB_HOST}
       DB_PORT: 3306
-      DB_DATABASE_FILE: /run/secrets/db_database
-      DB_USERNAME_FILE: /run/secrets/mysql_user
-      DB_PASSWORD_FILE: /run/secrets/mysql_password
-      REDIS_HOST_FILE: /run/secrets/redis_host
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
       REDIS_PASSWORD: null
-      REDIS_PORT_FILE: /run/secrets/redis_port
-    volumes:
-      - ./docker-secrets/db_host.txt:/run/secrets/db_host:ro
-      - ./docker-secrets/db_database.txt:/run/secrets/db_database:ro
-      - ./docker-secrets/mysql_user.txt:/run/secrets/mysql_user:ro
-      - ./docker-secrets/mysql_password.txt:/run/secrets/mysql_password:ro
-      - ./docker-secrets/redis_host.txt:/run/secrets/redis_host:ro
-      - ./docker-secrets/redis_port.txt:/run/secrets/redis_port:ro
+      REDIS_PORT: ${REDIS_PORT}
     restart: always
     networks:
       - app-network
@@ -106,16 +97,12 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE_FILE: /run/secrets/db_database
-      MYSQL_USER_FILE: /run/secrets/mysql_user
-      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: /run/secrets/mysql_root_password
     volumes:
       - db_data:/var/lib/mysql
-      - ./docker-secrets/db_database.txt:/run/secrets/db_database:ro
-      - ./docker-secrets/mysql_user.txt:/run/secrets/mysql_user:ro
-      - ./docker-secrets/mysql_password.txt:/run/secrets/mysql_password:ro
-      - ./docker-secrets/mysql_root_password.txt:/run/secrets/mysql_root_password:ro
     restart: always
     networks:
       - app-network
