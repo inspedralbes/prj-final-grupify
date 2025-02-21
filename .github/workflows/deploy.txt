@@ -3,7 +3,7 @@ name: Deploy to Production
 on:
   push:
     branches:
-      - main  # Ajusta la rama según convenga
+      - main
 
 jobs:
   deploy:
@@ -13,94 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup SSH key
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      # Conéctate al servidor y ejecuta los comandos de despliegue.
+      - name: Deploy with Docker Compose
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_rsa
-
-      - name: Add server to known_hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-
-      - name: Login to GitHub Container Registry
-        run: |
-          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-
-      - name: Build Frontend image
-        run: docker build -f frontend/Dockerfile.prod -t ghcr.io/${{ secrets.GHCR_USERNAME }}/frontend:v2.3 frontend
-
-      - name: Push Frontend image
-        run: docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/frontend:v2.3
-
-      - name: Build Backend image
-        run: docker build -f backend/Dockerfile.prod -t ghcr.io/${{ secrets.GHCR_USERNAME }}/backend:v2.3 backend
-
-      - name: Push Backend image
-        run: docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/backend:v2.3
-
-      - name: Build NodeJS image
-        run: docker build -f backend/node-app/Dockerfile.prod -t ghcr.io/${{ secrets.GHCR_USERNAME }}/nodejs:v2.3 backend/node-app
-
-      - name: Push NodeJS image
-        run: docker push ghcr.io/adriapedralbes/nodejs:v2.3
-
-      - name: Create Docker secrets files
-        run: |
-          mkdir -p docker-secrets
-          echo "${{ secrets.MYSQL_USER }}" > docker-secrets/mysql_user.txt
-          echo "${{ secrets.MYSQL_PASSWORD }}" > docker-secrets/mysql_password.txt
-          echo "${{ secrets.MYSQL_ROOT_PASSWORD }}" > docker-secrets/mysql_root_password.txt
-          echo "${{ secrets.DB_DATABASE }}" > docker-secrets/db_database.txt
-          echo "${{ secrets.REDIS_HOST }}" > docker-secrets/redis_host.txt
-          echo "${{ secrets.REDIS_PORT }}" > docker-secrets/redis_port.txt
-          echo "${{ secrets.DB_HOST }}" > docker-secrets/db_host.txt
-
-      - name: Create .env file for frontend
-        run: |
-          mkdir -p frontend
-          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" > frontend/.env
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL }}" >> frontend/.env
-
-      - name: Create .env file for backend mail configuration
-        run: |
-          mkdir -p backend
-          echo "MAIL_MAILER=${{ secrets.MAIL_MAILER }}" > backend/.env
-          echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> backend/.env
-          echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> backend/.env
-          echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> backend/.env
-          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> backend/.env
-          echo "MAIL_ENCRYPTION=${{ secrets.MAIL_ENCRYPTION }}" >> backend/.env
-          echo "MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}" >> backend/.env
-          echo "MAIL_FROM_NAME=${{ secrets.MAIL_FROM_NAME }}" >> backend/.env
-
-      - name: Create Docker context (if not exists)
-        run: |
-          docker context create production --docker "host=ssh://root@${{ secrets.SERVER_IP }}" || echo "Context 'production' already exists"
-
-      - name: Use Docker context
-        run: docker context use production
-
-      - name: Remove existing docker secrets
-        run: |
-          docker secret rm grupify_mysql_user || true
-          docker secret rm grupify_mysql_password || true
-          docker secret rm grupify_mysql_root_password || true
-          docker secret rm grupify_db_database || true
-          docker secret rm grupify_redis_host || true
-          docker secret rm grupify_redis_port || true
-          docker secret rm grupify_db_host || true
-
-      - name: Remove previous stack (if exists)
-        run: |
-          docker stack rm grupify-ghactions || true
-          echo "Esperando a que se elimine la stack anterior..."
-          sleep 60
-
-      - name: Deploy Docker stack
-        run: |
-          # Exportamos las variables de los .env para que se realice la sustitución en el compose.yml
-          set -o allexport && source frontend/.env && source backend/.env && set +o allexport
-          docker stack deploy --with-registry-auth -c compose.yml grupify-ghactions
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /${{ secrets.SERVER_USER }}/prj-final-grupify && git pull && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d"

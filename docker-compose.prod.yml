@@ -1,0 +1,138 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v3
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=a23adrestmar@inspedralbes.cat"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    restart: always
+    networks:
+      - app-network
+
+  nuxt-app:
+    image: ghcr.io/adriapedralbes/frontend:v2.5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nuxt-app.rule=Host(`grupify.cat`) || Host(`www.grupify.cat`)"
+      - "traefik.http.routers.nuxt-app.entrypoints=websecure"
+      - "traefik.http.routers.nuxt-app.tls.certresolver=myresolver"
+      - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
+    environment:
+      NODE_ENV: production
+    restart: always
+    networks:
+      - app-network
+
+  laravel-app:
+    image: ghcr.io/adriapedralbes/backend:v2.5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.laravel-app.rule=Host(`api.grupify.cat`)"
+      - "traefik.http.routers.laravel-app.entrypoints=websecure"
+      - "traefik.http.routers.laravel-app.tls.certresolver=myresolver"
+      - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST_FILE: /run/secrets/db_host
+      DB_PORT: 3306
+      DB_DATABASE_FILE: /run/secrets/db_database
+      DB_USERNAME_FILE: /run/secrets/mysql_user
+      DB_PASSWORD_FILE: /run/secrets/mysql_password
+      REDIS_HOST_FILE: /run/secrets/redis_host
+      REDIS_PASSWORD: null
+      REDIS_PORT_FILE: /run/secrets/redis_port
+    volumes:
+      - ./docker-secrets/db_host.txt:/run/secrets/db_host:ro
+      - ./docker-secrets/db_database.txt:/run/secrets/db_database:ro
+      - ./docker-secrets/mysql_user.txt:/run/secrets/mysql_user:ro
+      - ./docker-secrets/mysql_password.txt:/run/secrets/mysql_password:ro
+      - ./docker-secrets/redis_host.txt:/run/secrets/redis_host:ro
+      - ./docker-secrets/redis_port.txt:/run/secrets/redis_port:ro
+    restart: always
+    networks:
+      - app-network
+
+  queue-worker:
+    image: ghcr.io/adriapedralbes/backend:v2.5
+    command: "php artisan queue:work redis --tries=3 --timeout=90"
+    restart: always
+    networks:
+      - app-network
+
+  node-app:
+    image: ghcr.io/adriapedralbes/nodejs:v2.5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.node-app.rule=Host(`node.grupify.cat`)"
+      - "traefik.http.routers.node-app.entrypoints=websecure"
+      - "traefik.http.routers.node-app.tls.certresolver=myresolver"
+      - "traefik.http.services.node-app.loadbalancer.server.port=5000"
+    environment:
+      NODE_ENV: production
+    restart: always
+    networks:
+      - app-network
+
+  adminer:
+    image: adminer:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.grupify.cat`)"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls.certresolver=myresolver"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    restart: always
+    networks:
+      - app-network
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE_FILE: /run/secrets/db_database
+      MYSQL_USER_FILE: /run/secrets/mysql_user
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker-secrets/db_database.txt:/run/secrets/db_database:ro
+      - ./docker-secrets/mysql_user.txt:/run/secrets/mysql_user:ro
+      - ./docker-secrets/mysql_password.txt:/run/secrets/mysql_password:ro
+      - ./docker-secrets/mysql_root_password.txt:/run/secrets/mysql_root_password:ro
+    restart: always
+    networks:
+      - app-network
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    restart: always
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+  redis_data:
+  letsencrypt:
+
+networks:
+  app-network:
+    driver: bridge
