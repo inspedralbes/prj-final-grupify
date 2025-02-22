@@ -92,7 +92,7 @@ backprod:
 	docker build -t ghcr.io/adriapedralbes/nodejs:$(TAG) -f ./backend/node-app/Dockerfile.prod ./backend/node-app
 	docker push ghcr.io/adriapedralbes/nodejs:$(TAG)
 
-deploy: ## Actualiza el repositorio y despliega los contenedores en producción
+deploy: ## Actualitza el repositori i desplega els contenidors en producció
 	@echo "Actualizando repositorio..."
 	git reset --hard HEAD
 	git pull
