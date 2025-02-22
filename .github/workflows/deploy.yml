@@ -5,10 +5,18 @@ on:
     branches:
       - main
 
+env:
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  API_BASE_URL: ${{ secrets.API_BASE_URL }}
+  GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+  GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+  SERVER_USER: ${{ secrets.SERVER_USER }}
+  SERVER_IP: ${{ secrets.SERVER_IP }}
+  TAG: v2.5
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -17,20 +25,30 @@ jobs:
         run: |
           echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
 
-      # Se construyen y suben las imágenes en GitHub Actions
-      name: Build and push Docker images
-      env:
-        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-        API_BASE_URL: ${{ secrets.API_BASE_URL }}
-      run: |
-        make allprod
+      - name: Set up environment variables
+        run: |
+          echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> $GITHUB_ENV
+          echo "API_BASE_URL=${API_BASE_URL}" >> $GITHUB_ENV
+
+      - name: Build and push Docker images
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: |
+          make allprod
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Se conecta al servidor para actualizar el código y levantar los contenedores con las nuevas imágenes
       - name: Deploy on Server
         run: |
-          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /${{ secrets.SERVER_USER }}/prj-final-grupify && git reset --hard HEAD && git pull && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d"
+          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "\
+            cd /${{ secrets.SERVER_USER }}/prj-final-grupify && \
+            git reset --hard HEAD && \
+            git pull && \
+            export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' && \
+            export API_BASE_URL='${{ secrets.API_BASE_URL }}' && \
+            docker compose -f docker-compose.prod.yml pull && \
+            docker compose -f docker-compose.prod.yml up -d"
