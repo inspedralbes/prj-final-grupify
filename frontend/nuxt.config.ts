@@ -13,9 +13,6 @@ export default defineNuxtConfig({
       apiBaseUrl: process.env.API_BASE_URL,
     },
   },
-  googleSignIn: {
-    clientId: process.env.GOOGLE_CLIENT_ID,
-  },
   vite: {
     define: {
       global: 'globalThis'
