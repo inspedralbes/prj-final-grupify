@@ -32,6 +32,8 @@ services:
       - "traefik.http.routers.nuxt-app.tls.certresolver=myresolver"
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
     environment:
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      API_BASE_URL: ${API_BASE_URL}
       NODE_ENV: production
     restart: always
     networks:
