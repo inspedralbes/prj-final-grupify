@@ -82,12 +82,12 @@ backprod:
 	docker push ghcr.io/adriapedralbes/backend:${TAG}
 	docker build -t ghcr.io/adriapedralbes/nodejs:${TAG} -f ./backend/node-app/Dockerfile.prod ./backend/node-app
 
-deploy: ## Deploy per github actions!!
+deploy: ## Actualiza el repositorio y despliega los contenedores en producción
 	@echo "Actualizando repositorio..."
+	git reset --hard HEAD
 	git pull
-	@echo "Ejecutando make allprod..."
-	$(MAKE) allprod
-	@echo "Subiendo contenedores con Docker Compose..."
+	@echo "Actualizando contenedores con Docker Compose..."
+	docker compose -f docker-compose.prod.yml pull
 	docker compose -f docker-compose.prod.yml up -d
 
 
