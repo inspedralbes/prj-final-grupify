@@ -13,11 +13,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Se construyen y suben las imágenes en GitHub Actions
+      - name: Build and push Docker images
+        run: |
+          make allprod
+
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy using Makefile target deploy
+      # Se conecta al servidor para actualizar el código y levantar los contenedores con las nuevas imágenes
+      - name: Deploy on Server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /${{ secrets.SERVER_USER }}/prj-final-grupify && git reset --hard HEAD && make deploy"
+          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /${{ secrets.SERVER_USER }}/prj-final-grupify && git reset --hard HEAD && git pull && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d"
