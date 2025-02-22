@@ -72,8 +72,6 @@ push:
 allprod:
 	make rebuild
 	make push
-	docker context use clouding
-	docker stack deploy -c compose.yml --with-registry-auth grupify
 
 frontprod:
 	docker build -t ghcr.io/adriapedralbes/frontend:${TAG} -f ./frontend/Dockerfile.prod ./frontend
@@ -83,6 +81,15 @@ backprod:
 	docker build -t ghcr.io/adriapedralbes/backend:${TAG} -f ./backend/Dockerfile.prod ./backend
 	docker push ghcr.io/adriapedralbes/backend:${TAG}
 	docker build -t ghcr.io/adriapedralbes/nodejs:${TAG} -f ./backend/node-app/Dockerfile.prod ./backend/node-app
+
+deploy: ## Actualiza el repo, ejecuta allprod y levanta el entorno en producción
+	@echo "Actualizando repositorio..."
+	git pull
+	@echo "Ejecutando make allprod..."
+	$(MAKE) allprod
+	@echo "Subiendo contenedores con Docker Compose..."
+	docker compose -f docker-compose.prod.yml up -d
+
 
 
 
