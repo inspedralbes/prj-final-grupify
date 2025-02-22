@@ -4,7 +4,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="text-left space-y-6">
           <h1 class="text-5xl font-bold tracking-tight">
-            <span class="text-primary">GRUP</span><span class="text-gray-900"></span>IFY<br />
+            <span class="text-primary">TEST</span><span class="text-gray-900"></span>IFY<br />
           </h1>
           <h2 class="text-3xl font-bold tracking-tight">
             <span class="text-primary">Auto</span><span class="text-gray-900">matitza</span> l'institut,<br />
