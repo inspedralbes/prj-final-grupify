@@ -45,6 +45,10 @@ jobs:
       - name: Deploy on Server
         run: |
           ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "\
-            cd /${{ secrets.SERVER_USER }}/deployment && \
+            cd /${{ secrets.SERVER_USER }}/prj-final-grupify && \
+            git reset --hard HEAD && \
+            git pull && \
+            export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' && \
+            export API_BASE_URL='${{ secrets.API_BASE_URL }}' && \
             docker compose -f docker-compose.prod.yml pull && \
             docker compose -f docker-compose.prod.yml up -d"
