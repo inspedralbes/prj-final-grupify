@@ -82,7 +82,7 @@ backprod:
 	docker push ghcr.io/adriapedralbes/backend:${TAG}
 	docker build -t ghcr.io/adriapedralbes/nodejs:${TAG} -f ./backend/node-app/Dockerfile.prod ./backend/node-app
 
-deploy: ## Actualiza el repo, ejecuta allprod y levanta el entorno en producción
+deploy: ## Deploy per github actions
 	@echo "Actualizando repositorio..."
 	git pull
 	@echo "Ejecutando make allprod..."
