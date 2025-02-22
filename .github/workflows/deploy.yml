@@ -21,4 +21,4 @@ jobs:
       # Conéctate al servidor y ejecuta los comandos de despliegue.
       - name: Deploy with Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /${{ secrets.SERVER_USER }}/prj-final-grupify && git pull && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /${{ secrets.SERVER_USER }}/prj-final-grupify && git reset --hard HEAD && git pull && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d --build"
