@@ -74,8 +74,12 @@ allprod:
 	make push
 
 frontprod:
-	docker build -t ghcr.io/adriapedralbes/frontend:${TAG} -f ./frontend/Dockerfile.prod ./frontend
-	docker push ghcr.io/adriapedralbes/frontend:${TAG}
+    docker build \
+        --build-arg GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} \
+        --build-arg API_BASE_URL=${API_BASE_URL} \
+        -t ghcr.io/adriapedralbes/frontend:${TAG} \
+        -f ./frontend/Dockerfile.prod ./frontend
+    docker push ghcr.io/adriapedralbes/frontend:${TAG}
 
 backprod:
 	docker build -t ghcr.io/adriapedralbes/backend:${TAG} -f ./backend/Dockerfile.prod ./backend

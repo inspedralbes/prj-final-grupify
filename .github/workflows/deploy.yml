@@ -18,9 +18,12 @@ jobs:
           echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
 
       # Se construyen y suben las imágenes en GitHub Actions
-      - name: Build and push Docker images
-        run: |
-          make allprod
+      name: Build and push Docker images
+      env:
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        API_BASE_URL: ${{ secrets.API_BASE_URL }}
+      run: |
+        make allprod
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.5.3
