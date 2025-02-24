@@ -146,6 +146,7 @@ volumes:
   db_data:
   redis_data:
   letsencrypt:
+  crowdsec-config:
 
 networks:
   app-network:
