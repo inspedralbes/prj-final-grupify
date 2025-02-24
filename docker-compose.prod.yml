@@ -12,7 +12,6 @@ services:
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=a23adrestmar@inspedralbes.cat"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--entrypoints.websecure.http.middlewares=crowdsec@file"
     ports:
       - "80:80"
       - "443:443"
@@ -32,7 +31,6 @@ services:
       - "traefik.http.routers.nuxt-app.entrypoints=websecure"
       - "traefik.http.routers.nuxt-app.tls.certresolver=myresolver"
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
-      - "traefik.http.routers.nuxt-app.middlewares=crowdsec@file"
     environment:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       API_BASE_URL: ${API_BASE_URL}
@@ -49,7 +47,6 @@ services:
       - "traefik.http.routers.laravel-app.entrypoints=websecure"
       - "traefik.http.routers.laravel-app.tls.certresolver=myresolver"
       - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
-      - "traefik.http.routers.laravel-app.middlewares=crowdsec@file"
     environment:
       DB_CONNECTION: mysql
       DB_HOST: ${DB_HOST}
@@ -79,7 +76,6 @@ services:
       - "traefik.http.routers.node-app.entrypoints=websecure"
       - "traefik.http.routers.node-app.tls.certresolver=myresolver"
       - "traefik.http.services.node-app.loadbalancer.server.port=5000"
-      - "traefik.http.routers.node-app.middlewares=crowdsec@file"
     environment:
       NODE_ENV: production
     restart: always
@@ -121,32 +117,11 @@ services:
     networks:
       - app-network
 
-  crowdsec:
-    image: crowdsecurity/crowdsec:latest
-    volumes:
-      - crowdsec-config:/etc/crowdsec
-      - /var/log:/var/log:ro
-    environment:
-      - COLLECTIONS=traefik
-    networks:
-      - app-network
-    restart: always
-
-  traefik-bouncer:
-    image: fbonalair/traefik-crowdsec-bouncer:latest
-    environment:
-      - CROWDSEC_BOUNCER_API_KEY=mysecureapikey #Cambiar
-      - CROWDSEC_AGENT_HOST=http://crowdsec:8080
-    networks:
-      - app-network
-    restart: always
-
 
 volumes:
   db_data:
   redis_data:
   letsencrypt:
-  crowdsec-config:
 
 networks:
   app-network:
