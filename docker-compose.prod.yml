@@ -12,6 +12,8 @@ services:
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.myresolver.acme.email=a23adrestmar@inspedralbes.cat"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--providers.file.directory=/config"
+      - "--providers.file.watch=true"
     ports:
       - "80:80"
       - "443:443"
@@ -19,9 +21,40 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
+      - ./traefik:/config
     restart: always
     networks:
       - app-network
+    depends_on:
+      - crowdsec
+      - crowdsec-bouncer
+
+  # CrowdSec main service
+  crowdsec:
+    image: crowdsecurity/crowdsec:latest
+    environment:
+      COLLECTIONS: "crowdsecurity/nginx crowdsecurity/http-cve crowdsecurity/traefik"
+      CUSTOM_SECRETS: "true"
+    volumes:
+      - ./crowdsec/data:/var/lib/crowdsec/data
+      - ./crowdsec/config:/etc/crowdsec
+      - ./crowdsec/custom_scenarios:/etc/crowdsec/scenarios
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
+    restart: always
+
+  # CrowdSec bouncer (for Traefik)
+  crowdsec-bouncer:
+    image: fbonalair/traefik-crowdsec-bouncer:latest
+    environment:
+      CROWDSEC_BOUNCER_API_KEY: "${BOUNCER_API_KEY}"
+      CROWDSEC_AGENT_HOST: "crowdsec:8080"
+    networks:
+      - app-network
+    restart: always
+    depends_on:
+      - crowdsec
 
   nuxt-app:
     image: ghcr.io/adriapedralbes/frontend:v2.5
@@ -31,6 +64,7 @@ services:
       - "traefik.http.routers.nuxt-app.entrypoints=websecure"
       - "traefik.http.routers.nuxt-app.tls.certresolver=myresolver"
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
+      - "traefik.http.routers.nuxt-app.middlewares=crowdsec-bouncer@file"
     environment:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       API_BASE_URL: ${API_BASE_URL}
@@ -47,6 +81,7 @@ services:
       - "traefik.http.routers.laravel-app.entrypoints=websecure"
       - "traefik.http.routers.laravel-app.tls.certresolver=myresolver"
       - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
+      - "traefik.http.routers.laravel-app.middlewares=crowdsec-bouncer@file"
     environment:
       DB_CONNECTION: mysql
       DB_HOST: ${DB_HOST}
@@ -76,6 +111,7 @@ services:
       - "traefik.http.routers.node-app.entrypoints=websecure"
       - "traefik.http.routers.node-app.tls.certresolver=myresolver"
       - "traefik.http.services.node-app.loadbalancer.server.port=5000"
+      - "traefik.http.routers.node-app.middlewares=crowdsec-bouncer@file"    
     environment:
       NODE_ENV: production
     restart: always
