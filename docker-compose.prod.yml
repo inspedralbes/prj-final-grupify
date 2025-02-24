@@ -29,7 +29,6 @@ services:
       - crowdsec
       - crowdsec-bouncer
 
-  # CrowdSec main service
   crowdsec:
     image: crowdsecurity/crowdsec:latest
     environment:
@@ -44,7 +43,6 @@ services:
       - app-network
     restart: always
 
-  # CrowdSec bouncer (for Traefik)
   crowdsec-bouncer:
     image: fbonalair/traefik-crowdsec-bouncer:latest
     environment:
