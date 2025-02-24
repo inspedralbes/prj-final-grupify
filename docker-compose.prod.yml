@@ -39,7 +39,6 @@ services:
       - app-network
     restart: unless-stopped
 
-  # Bouncer para Traefik
   traefik-bouncer:
     image: crowdsecurity/traefik-bouncer:latest
     environment:
