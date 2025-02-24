@@ -135,7 +135,7 @@ services:
   traefik-bouncer:
     image: fbonalair/traefik-crowdsec-bouncer:latest
     environment:
-      - CROWDSEC_BOUNCER_API_KEY=mysecureapikey
+      - CROWDSEC_BOUNCER_API_KEY=mysecureapikey #Cambiar
       - CROWDSEC_AGENT_HOST=http://crowdsec:8080
     networks:
       - app-network
