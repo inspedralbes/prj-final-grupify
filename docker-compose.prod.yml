@@ -42,6 +42,8 @@ services:
     networks:
       - app-network
     restart: always
+    labels:
+      - "traefik.enable=false"
 
   crowdsec-bouncer:
     image: fbonalair/traefik-crowdsec-bouncer:latest
@@ -53,6 +55,8 @@ services:
     restart: always
     depends_on:
       - crowdsec
+    labels:
+      - "traefik.enable=false"
 
   nuxt-app:
     image: ghcr.io/adriapedralbes/frontend:v2.5
@@ -100,6 +104,8 @@ services:
     restart: always
     networks:
       - app-network
+    labels:
+      - "traefik.enable=false"
 
   node-app:
     image: ghcr.io/adriapedralbes/nodejs:v2.5
