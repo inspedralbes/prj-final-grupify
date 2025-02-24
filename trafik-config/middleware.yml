@@ -1,0 +1,7 @@
+http:
+  middlewares:
+    crowdsec:
+      plugin:
+        crowdsec:
+          mode: "stream"
+          api_url: "http://crowdsec:8080"
