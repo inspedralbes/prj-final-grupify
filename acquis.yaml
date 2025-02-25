@@ -1,0 +1,9 @@
+filenames:
+  - /var/log/traefik/*.log
+labels:
+  type: traefik
+---
+filenames:
+  - /var/log/nginx/*.log
+labels:
+  type: nginx
