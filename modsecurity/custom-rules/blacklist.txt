@@ -1,0 +1,4 @@
+# Añade aquí IPs maliciosas conocidas o que quieras bloquear
+# Ejemplo:
+# 192.168.1.100
+# 10.0.0.5

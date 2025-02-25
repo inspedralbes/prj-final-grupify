@@ -13,6 +13,9 @@ services:
       - "--certificatesresolvers.myresolver.acme.email=a23adrestmar@inspedralbes.cat"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       - "--log.level=DEBUG"
+      # Middleware para el WAF
+      - "--experimental.plugins.modsecurity.modulename=github.com/traefik/plugin-modsecurity"
+      - "--experimental.plugins.modsecurity.version=v0.3.0"
     ports:
       - "80:80"
       - "443:443"
@@ -20,7 +23,20 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
+      - ./traefik-dynamic.yaml:/etc/traefik/dynamic/config.yaml:ro
     restart: always
+    networks:
+      - app-network
+
+  # ModSecurity WAF
+  modsecurity:
+    image: owasp/modsecurity-crs:apache
+    environment:
+      PARANOIA: 1  # Nivel de paranoia (1-4, donde 4 es el más estricto)
+      ANOMALY_INBOUND: 5  # Umbral de anomalías de entrada
+      ANOMALY_OUTBOUND: 5  # Umbral de anomalías de salida
+    volumes:
+      - ./modsecurity/custom-rules:/etc/modsecurity.d/custom-rules
     networks:
       - app-network
 
@@ -32,6 +48,8 @@ services:
       - "traefik.http.routers.nuxt-app.entrypoints=websecure"
       - "traefik.http.routers.nuxt-app.tls.certresolver=myresolver"
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
+      # Aplicar el middleware WAF a este servicio
+      - "traefik.http.routers.nuxt-app.middlewares=waf-middleware@file"
     environment:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       API_BASE_URL: ${API_BASE_URL}
@@ -48,6 +66,8 @@ services:
       - "traefik.http.routers.laravel-app.entrypoints=websecure"
       - "traefik.http.routers.laravel-app.tls.certresolver=myresolver"
       - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
+      # Aplicar el middleware WAF a este servicio
+      - "traefik.http.routers.laravel-app.middlewares=waf-middleware@file"
     environment:
       DB_CONNECTION: mysql
       DB_HOST: ${DB_HOST}
@@ -62,6 +82,7 @@ services:
     networks:
       - app-network
 
+  # El resto de tus servicios siguen igual...
   queue-worker:
     image: ghcr.io/adriapedralbes/backend:v2.5
     command: "php artisan queue:work redis --tries=3 --timeout=90"
@@ -87,6 +108,8 @@ services:
       - "traefik.http.routers.node-app.entrypoints=websecure"
       - "traefik.http.routers.node-app.tls.certresolver=myresolver"
       - "traefik.http.services.node-app.loadbalancer.server.port=5000"
+      # Aplicar el middleware WAF a este servicio
+      - "traefik.http.routers.node-app.middlewares=waf-middleware@file"
     environment:
       NODE_ENV: production
     restart: always
@@ -101,6 +124,8 @@ services:
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=myresolver"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+      # Aplicar el middleware WAF a este servicio
+      - "traefik.http.routers.adminer.middlewares=waf-middleware@file"
     environment:
       ADMINER_DEFAULT_SERVER: db
     restart: always
@@ -132,6 +157,7 @@ volumes:
   db_data:
   redis_data:
   letsencrypt:
+  modsecurity_data:
 
 networks:
   app-network:
