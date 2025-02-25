@@ -77,7 +77,6 @@ services:
       - "traefik.http.routers.node-app.entrypoints=websecure"
       - "traefik.http.routers.node-app.tls.certresolver=myresolver"
       - "traefik.http.services.node-app.loadbalancer.server.port=5000"
-      - "traefik.http.routers.node-app.middlewares=crowdsec-bouncer@file"
     environment:
       NODE_ENV: production
     restart: always
