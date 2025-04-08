@@ -147,7 +147,7 @@ class CescRelationshipController extends Controller
                                             'peer_id' => optional($relationship->peer)->id,
                                             'peer_name' => optional($relationship->peer)->name,
                                             'peer_last_name' => optional($relationship->peer)->last_name,
-                                            'tag_id' => $relationship->tag_id, 
+                                            'tag_id' => $relationship->tag_id,
                                         ];
                                     }),
                                 ];
@@ -369,9 +369,107 @@ public function verResultados()
 {
     $resultados = CescResult::with(['peer', 'tag'])
     ->get()
-    ->makeHidden(['peer', 'question', 'tag']); 
+    ->makeHidden(['peer', 'question', 'tag']);
 
     return response()->json($resultados);
+}
+
+/**
+ * Obtener datos para gráficos comparativos entre divisiones por curso
+ * con los tags específicos (2: Rebutjat, 5: Víctima)
+ */
+public function getTagsGraphData()
+{
+    try {
+        // Obtener resultados para los tags 2 (Rebutjat) y 5 (Víctima)
+        $resultados = CescResult::whereIn('tag_id', [2, 5])
+            ->with(['peer.courseDivisions', 'tag'])
+            ->get();
+
+        // Verificar si hay resultados
+        if ($resultados->isEmpty()) {
+            return response()->json(['message' => 'No hay resultados disponibles para estos tags'], 404);
+        }
+
+        // Agrupar por curso, división y tag
+        $datosPorCursoDivision = [];
+
+        foreach ($resultados as $resultado) {
+            // Obtener el usuario (peer) y sus relaciones de curso-división
+            $peer = $resultado->peer;
+            if (!$peer || !$peer->courseDivisions) {
+                continue; // Saltar si no hay información de curso-división
+            }
+
+            // Recorrer las relaciones curso-división del usuario
+            foreach ($peer->courseDivisions as $course) {
+                $courseId = $course->id;
+                $courseName = $course->name;
+                $divisionId = $course->pivot->division_id;
+
+                // Obtener el nombre de la división
+                $division = DB::table('divisions')->where('id', $divisionId)->first();
+                if (!$division) {
+                    continue; // Saltar si no se encuentra la división
+                }
+                $divisionName = $division->division;
+
+                // Crear clave única para este curso-división
+                $key = $courseName . '-' . $divisionName;
+
+                // Inicializar el contador si no existe
+                if (!isset($datosPorCursoDivision[$key])) {
+                    $datosPorCursoDivision[$key] = [
+                        'course_id' => $courseId,
+                        'course_name' => $courseName,
+                        'division_id' => $divisionId,
+                        'division_name' => $divisionName,
+                        'tag_2_count' => 0, // Rebutjat
+                        'tag_5_count' => 0, // Víctima
+                        'total_students' => 0
+                    ];
+                }
+
+                // Incrementar el contador del tag correspondiente
+                if ($resultado->tag_id == 2) {
+                    $datosPorCursoDivision[$key]['tag_2_count'] += $resultado->vote_count;
+                } elseif ($resultado->tag_id == 5) {
+                    $datosPorCursoDivision[$key]['tag_5_count'] += $resultado->vote_count;
+                }
+            }
+        }
+
+        // Obtener el total de estudiantes por curso-división
+        foreach ($datosPorCursoDivision as $key => &$data) {
+            $totalStudents = DB::table('course_division_user')
+                ->where('course_id', $data['course_id'])
+                ->where('division_id', $data['division_id'])
+                ->count();
+
+            $data['total_students'] = $totalStudents;
+        }
+
+        // Convertir a array para la respuesta
+        $resultado = array_values($datosPorCursoDivision);
+
+        // Ordenar por curso y división
+        usort($resultado, function($a, $b) {
+            // Primero comparar por curso
+            $courseComparison = strcmp($a['course_name'], $b['course_name']);
+            if ($courseComparison !== 0) {
+                return $courseComparison;
+            }
+            // Si los cursos son iguales, comparar por división
+            return strcmp($a['division_name'], $b['division_name']);
+        });
+
+        return response()->json($resultado, 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error al obtener los datos para gráficos',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 
 }
