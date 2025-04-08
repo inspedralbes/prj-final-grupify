@@ -1,28 +1,9 @@
-<script setup>
-import { EyeIcon } from "@heroicons/vue/24/outline";
-import { useStudentsStore } from "@/stores/studentsStore";
-
-const studentsStore = useStudentsStore();
-
-const viewProfile = (studentId) => {
-  navigateTo(`/professor/studentProfile/${studentId}`);
-};
-
-defineProps({
-  student: {
-    type: Object,
-    required: true,
-  },
-});
-</script>
-
 <template>
   <tr :key="student.id" class="border-b hover:bg-gray-50">
     <!-- Columna: NOM -->
-    <td class="py-4 px-6">
+    <td class="py-3 px-4">
       <div class="flex items-center space-x-3">
         <div class="relative">
-          <!-- Imagen de perfil o inicial -->
           <div v-if="student.image" class="w-10 h-10 rounded-full overflow-hidden">
             <img
               :src="student.image"
@@ -34,15 +15,8 @@ defineProps({
             v-else
             class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"
           >
-            {{
-              student.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()
-            }}
+            {{ student.name.split(" ").map(n => n[0]).join("").toUpperCase() }}
           </div>
-          <!-- Indicador de estado online/offline -->
           <div
             class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white"
             :class="studentsStore.isStudentOnline(student.id) ? 'bg-green-500' : 'bg-gray-400'"
@@ -57,7 +31,7 @@ defineProps({
     </td>
 
     <!-- Columna: ESTAT -->
-    <td class="py-4 px-6">
+    <td class="py-3 px-4">
       <span
         class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
         :class="{
@@ -70,26 +44,44 @@ defineProps({
     </td>
 
     <!-- Columna: CURS -->
-    <td class="py-4 px-6 text-sm text-gray-500">
+    <td class="py-3 px-4 text-sm text-gray-500">
       {{ student.course }}
     </td>
 
     <!-- Columna: CLASSE -->
-    <td class="py-4 px-6 text-sm text-gray-500">
+    <td class="py-3 px-4 text-sm text-gray-500">
       {{ student.division }}
     </td>
 
     <!-- Columna: FITXA -->
-    <td class="py-4 px-6 text-right">
-      <div class="flex space-x-2 justify-end">
-        <button
-          class="p-1 hover:text-primary"
-          @click.stop="viewProfile(student.id)"
-          title="Ver perfil"
-        >
-          <EyeIcon class="w-5 h-5" />
-        </button>
-      </div>
+    <td class="py-3 px-4 text-right">
+      <button
+        class="p-2 hover:text-primary"
+        @click.stop="viewProfile(student.id)"
+        title="Ver perfil"
+      >
+        <EyeIcon class="w-5 h-5" />
+      </button>
     </td>
   </tr>
 </template>
+
+<script setup>
+import { onMounted } from 'vue';
+import { EyeIcon } from "@heroicons/vue/24/outline";
+import { useStudentsStore } from "@/stores/studentsStore";
+import { navigateTo } from "#app";
+
+const studentsStore = useStudentsStore();
+
+const viewProfile = (studentId) => {
+  navigateTo(`/professor/studentProfile/${studentId}`);
+};
+
+defineProps({
+  student: {
+    type: Object,
+    required: true,
+  },
+});
+</script>

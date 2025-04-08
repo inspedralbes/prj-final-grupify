@@ -1,28 +1,13 @@
-<script setup>
-import { useGroupStore } from "@/stores/groupStore"; // Correcta importación del store
-
-// Usar store para grupos
-const groupsStore = useGroupStore();
-
-// Llamar a la API al montar el componente
-onMounted(() => {
-  groupsStore.fetchGroups(); // Cargar los grupos
-});
-
-// Obtener los grupos desde el store
-const groups = computed(() => groupsStore.groups); // Usar la propiedad 'groups' del store
-</script>
-
 <template>
   <div class="card">
     <div class="overflow-x-auto">
-      <table class="w-full">
+      <table class="min-w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left py-3">Nom del grup</th>
-            <th class="text-left py-3">Descripció</th>
-            <th class="text-left py-3">Num de Alumnes</th>
-            <th class="text-left py-3">Fitxa</th>
+            <th class="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase">Nom del grup</th>
+            <th class="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase">Descripció</th>
+            <th class="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase">Num de Alumnes</th>
+            <th class="px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase">Fitxa</th>
           </tr>
         </thead>
         <tbody>
@@ -39,3 +24,16 @@ const groups = computed(() => groupsStore.groups); // Usar la propiedad 'groups'
     </div>
   </div>
 </template>
+
+<script setup>
+import { onMounted, computed } from "vue";
+import { useGroupStore } from "@/stores/groupStore";
+
+const groupsStore = useGroupStore();
+
+onMounted(() => {
+  groupsStore.fetchGroups();
+});
+
+const groups = computed(() => groupsStore.groups);
+</script>

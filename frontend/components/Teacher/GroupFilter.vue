@@ -1,21 +1,7 @@
-<script setup>
-defineProps({
-  searchQuery: String,
-  selectedCourse: String,
-  selectedDivision: String,
-});
-
-defineEmits([
-  "update:searchQuery",
-  "update:selectedCourse",
-  "update:selectedDivision",
-]);
-</script>
-
 <template>
   <div class="bg-white rounded-lg shadow p-4 mb-6">
-    <div class="flex flex-wrap gap-4">
-      <!-- Search Input -->
+    <div class="flex flex-col sm:flex-row flex-wrap gap-4">
+      <!-- Input de búsqueda -->
       <div class="flex-1 min-w-[200px]">
         <input
           :value="searchQuery"
@@ -26,8 +12,8 @@ defineEmits([
         />
       </div>
 
-      <!-- Course Filter -->
-      <div class="flex space-x-4">
+      <!-- Filtros: Curs y Divisió -->
+      <div class="flex flex-col sm:flex-row gap-4">
         <select
           :value="selectedCourse"
           class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -41,8 +27,6 @@ defineEmits([
           <option value="1 BATXILLERAT">1º BATXILLERAT</option>
           <option value="2 BATXILLERAT">2º BATXILLERAT</option>
         </select>
-
-        <!-- Division Filter -->
         <select
           :value="selectedDivision"
           class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -59,3 +43,17 @@ defineEmits([
     </div>
   </div>
 </template>
+
+<script setup>
+defineProps({
+  searchQuery: String,
+  selectedCourse: String,
+  selectedDivision: String,
+});
+
+defineEmits([
+  "update:searchQuery",
+  "update:selectedCourse",
+  "update:selectedDivision",
+]);
+</script>

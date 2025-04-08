@@ -1,21 +1,7 @@
-<script setup>
-defineProps({
-  searchQuery: String,
-  selectedCourse: String,
-  selectedDivision: String,
-});
-
-defineEmits([
-  "update:searchQuery",
-  "update:selectedCourse",
-  "update:selectedDivision",
-]);
-</script>
-
 <template>
   <div class="bg-white rounded-lg shadow p-4 mb-6">
-    <div class="flex flex-wrap gap-4">
-      <div class="flex-1 min-w-[200px]">
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div class="flex-1">
         <input
           :value="searchQuery"
           type="text"
@@ -24,10 +10,10 @@ defineEmits([
           @input="$emit('update:searchQuery', $event.target.value)"
         />
       </div>
-      <div class="flex space-x-4">
+      <div class="flex flex-col sm:flex-row gap-4">
         <select
           :value="selectedCourse"
-          class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           @change="$emit('update:selectedCourse', $event.target.value)"
         >
           <option value="all">Tots els cursos</option>
@@ -35,11 +21,11 @@ defineEmits([
           <option value="2 ESO">2º ESO</option>
           <option value="3 ESO">3º ESO</option>
           <option value="4 ESO">4º ESO</option>
-          <option value="BACHILLERATO">BATXILLERAT</option>
+          <option value="BATXILLERAT">BATXILLERAT</option>
         </select>
         <select
           :value="selectedDivision"
-          class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           @change="$emit('update:selectedDivision', $event.target.value)"
         >
           <option value="all">Totes les classes</option>
@@ -55,3 +41,17 @@ defineEmits([
     </div>
   </div>
 </template>
+
+<script setup>
+defineProps({
+  searchQuery: String,
+  selectedCourse: String,
+  selectedDivision: String,
+});
+
+defineEmits([
+  "update:searchQuery",
+  "update:selectedCourse",
+  "update:selectedDivision",
+]);
+</script>
