@@ -265,5 +265,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
 Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']);
 Route::get('/cesc/graficas-tags', [CescRelationshipController::class, 'getTagsGraphData']);
+//RUTAS PARA OBETENER RESULTADOS DEL AUTOAVALUACIO
 Route::post('/form-attempt', [FormAttemptController::class, 'store']); // Guarda respuestas
 Route::get('/user/{userId}/form/{formId}/performance', [FormAttemptController::class, 'getUserPerformance']); // Obtiene la evolución de las medias

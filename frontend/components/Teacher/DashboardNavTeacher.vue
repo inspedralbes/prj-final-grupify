@@ -2,7 +2,7 @@
 import { useRouter, useRoute } from "vue-router";
 import { ref, onMounted, onUnmounted } from 'vue';
 
-const isFormsOpen = ref(false);
+const openDropdowns = ref({});
 const isMobileMenuOpen = ref(false);
 const isMobileFormsOpen = ref(false);
 const menuItems = [
@@ -18,6 +18,7 @@ const menuItems = [
   },
   {
     type: "dropdown",
+    id: "formularis", // Añadimos un ID único para cada desplegable
     title: "Formularis",
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     items: [
@@ -39,6 +40,30 @@ const menuItems = [
     ]
   },
   {
+    type: "dropdown",
+    id: "grafiques", 
+    title: "Gràfiques",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
+    items: [
+      {
+        title: "Cesc",
+        route: "/professor/graficas",
+        icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+      },
+      {
+        title: "Sociograma",
+        //route:possar la ruta
+        icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
+      },
+      {
+        title: "Autoavaluació",
+        route: "/professor/graficFormAutoavaluacio",
+        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+      }
+    ]
+  },
+
+  {
     title: "Chat IA",
     route: "/professor/assistent",
     icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
@@ -59,32 +84,42 @@ const goHome = () => {
 
 const isActiveRoute = itemRoute => route.path === itemRoute;
 
-const toggleForms = () => {
-  isFormsOpen.value = !isFormsOpen.value;
+// Nueva función para manejar cada desplegable individualmente
+const toggleDropdown = (dropdownId, event) => {
+  // Cerrar todos los otros desplegables
+  for (const key in openDropdowns.value) {
+    if (key !== dropdownId) {
+      openDropdowns.value[key] = false;
+    }
+  }
+  // Toggle el desplegable actual
+  openDropdowns.value[dropdownId] = !openDropdowns.value[dropdownId];
 };
-
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
   isMobileFormsOpen.value = false; // Cerrar el menú desplegable al abrir/cerrar el menú móvil
 };
+
 const toggleMobileForms = () => {
   isMobileFormsOpen.value = !isMobileFormsOpen.value;
 };
 
-// Cerrar el menú cuando se hace clic fuera
-const closeDropdown = (event) => {
+// Cerrar todos los desplegables cuando se hace clic fuera
+const closeDropdowns = (event) => {
   if (!event.target.closest('.dropdown-container')) {
-    isFormsOpen.value = false;
+    for (const key in openDropdowns.value) {
+      openDropdowns.value[key] = false;
+    }
   }
 };
 
 onMounted(() => {
-  document.addEventListener('click', closeDropdown);
+  document.addEventListener('click', closeDropdowns);
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeDropdown);
+  document.removeEventListener('click', closeDropdowns);
 });
 </script>
 
@@ -146,9 +181,9 @@ onUnmounted(() => {
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative dropdown-container">
               <button
-                @click="toggleForms"
+                @click="toggleDropdown(item.id, $event)"
                 class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200 text-blue-50 hover:bg-blue-600 hover:text-white"
-                :class="{ 'bg-blue-700': isFormsOpen }"
+                :class="{ 'bg-blue-700': openDropdowns[item.id] }"
               >
                 <svg
                   class="w-5 h-5"
@@ -166,7 +201,7 @@ onUnmounted(() => {
                 <span>{{ item.title }}</span>
                 <svg
                   class="w-4 h-4 ml-1 transition-transform duration-200"
-                  :class="{ 'transform rotate-180': isFormsOpen }"
+                  :class="{ 'transform rotate-180': openDropdowns[item.id] }"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -182,7 +217,7 @@ onUnmounted(() => {
 
               <!-- Menú desplegable mejorado -->
               <div
-                v-show="isFormsOpen"
+                v-show="openDropdowns[item.id]"
                 class="absolute z-10 right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top transition-all duration-200"
               >
                 <div class="py-2 divide-y divide-gray-100">
@@ -208,8 +243,6 @@ onUnmounted(() => {
                       />
                     </svg>
                     <span class="flex-1">{{ subItem.title }}</span>
-                    
-                   
                   </NuxtLink>
                 </div>
               </div>
@@ -257,14 +290,14 @@ onUnmounted(() => {
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative">
               <button
-                @click="toggleMobileForms"
+                @click="toggleDropdown(item.id, $event)"
                 class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
-                :class="{ 'bg-blue-700': isMobileFormsOpen }"
+                :class="{ 'bg-blue-700': openDropdowns[item.id] }"
               >
                 <span>{{ item.title }}</span>
                 <svg
                   class="w-4 h-4 ml-1 transition-transform duration-200"
-                  :class="{ 'transform rotate-180': isMobileFormsOpen }"
+                  :class="{ 'transform rotate-180': openDropdowns[item.id] }"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -280,7 +313,7 @@ onUnmounted(() => {
 
               <!-- Menú desplegable mejorado -->
               <div
-                v-show="isMobileFormsOpen"
+                v-show="openDropdowns[item.id]"
                 class="pl-4"
               >
                 <NuxtLink
