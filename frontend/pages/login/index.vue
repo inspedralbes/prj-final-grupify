@@ -1,7 +1,11 @@
 <script setup>
 import { useAuthStore } from "~/stores/auth";
+import useAuth from "~//composables/useAuth";
 
 const authStore = useAuthStore();
+
+
+const { HandleLogin } = useAuth()
 
 // Estado reactivo
 const email = ref("");
@@ -42,14 +46,16 @@ const gestioSubmit = async (e) => {
 
   isLoading.value = true;
 
-  try {
-    const response = await $fetch("http://localhost:8000/api/login", {
-      method: "POST",
-      body: { email: email.value, password: password.value },
-    });
+  const userData = {
+    email: email.value,
+    password: password.value,
+  };
 
-    // Usar el store para guardar la autenticación
-    authStore.setAuth(response.token, response.user);
+  try {
+    const response = await HandleLogin(userData);
+
+    // Usa accessToken en lugar de token para coincidir con la estructura de la respuesta
+    authStore.setAuth(response.accessToken, response.user);
 
     // Conexión inmediata del socket después del login
     if (!$socket.connected) {
@@ -68,7 +74,7 @@ const gestioSubmit = async (e) => {
 
     // Para el rol "alumno", usaremos window.location para recargar la página
     if (response.role === "alumno") {
-      window.location.href = dashboardRoutes.alumno;  // Redirige al dashboard de alumno y recarga la página
+      window.location.href = dashboardRoutes.alumno;
     } else {
       // Para los demás roles, usamos navigateTo sin recargar la página
       navigateTo(dashboardRoutes[response.role] || "/");
