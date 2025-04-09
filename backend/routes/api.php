@@ -23,6 +23,8 @@ use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\BitacoraNoteController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\FormAttemptController;
+
 
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 
@@ -262,3 +264,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // RUTAS PARA OBTENER RESULTADOS DEL CESC
 Route::post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
 Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']);
+
+// RUTAS PARA OBTENER RESULTADOS DEL FORMULARIO D'AUTOAVALUACIÓN
+Route::post('/form-attempt', [FormAttemptController::class, 'store']); // Guarda respuestas
+Route::get('/user/{userId}/form/{formId}/performance', [FormAttemptController::class, 'getUserPerformance']); // Obtiene la evolución de las medias
