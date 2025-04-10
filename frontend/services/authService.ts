@@ -40,7 +40,7 @@ export function login(credentials: LoginCredentials): Promise<AuthResponse> {
 }
 
 export function logout(): Promise<void> {
-    return fetch(`${config.apiBaseUrl}/api/auth/logout`, {
+    return fetch(`${config.apiBaseUrl}/api/logout`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
