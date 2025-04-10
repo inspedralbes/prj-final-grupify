@@ -1,4 +1,4 @@
-const config = useRuntimeConfig()
+const config = useRuntimeConfig().public;
 
 interface LoginCredentials {
     email: string;
@@ -40,7 +40,7 @@ export function login(credentials: LoginCredentials): Promise<AuthResponse> {
 }
 
 export function logout(): Promise<void> {
-    return fetch(`${config.API_BASE_URL}/api/auth/logout`, {
+    return fetch(`${config.apiBaseUrl}/api/auth/logout`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
