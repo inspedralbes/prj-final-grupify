@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStudentSearch } from "@/composables/useStudentSearch";
 import { useStudentsStore } from "@/stores/studentsStore";
-import { useAuthStore } from "@/stores/auth"; // Importar el store de auth
+import { useAuthStore } from "~/stores/authStore"; // Importar el store de auth
 
 const studentsStore = useStudentsStore();
 const authStore = useAuthStore();

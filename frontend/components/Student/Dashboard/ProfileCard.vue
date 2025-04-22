@@ -53,7 +53,7 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import { useAuthStore } from '~/stores/auth';
+import { useAuthStore } from '~/stores/authStore';
 
 const authStore = useAuthStore();
 const fileInput = ref(null);

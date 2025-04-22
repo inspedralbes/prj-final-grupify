@@ -11,7 +11,7 @@ export default function useAuth() {
             const data = await login(userData);
             
             // Almacenar el token en localStorage
-            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('token', data.token);
             
             return data;
         } catch (error) {

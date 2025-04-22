@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { useAuthStore } from "~/stores/auth";
+import { useAuthStore } from "~/stores/authStore";
 import { useBitacoraStore } from "~/stores/bitacoraStore";
 
 export const useGroupStore = defineStore("groups", {

@@ -29,9 +29,11 @@ Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 Route::get('/questions/{questionId}/average-rating', [AnswerController::class, 'getAverageRating']);
 
 
-Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-dashboard', [DashboardController::class, 'adminDashboard']);
-Route::middleware(['auth:sanctum', 'role:teacher'])->get('/teacher-dashboard', [DashboardController::class, 'teacherDashboard']);
-Route::middleware(['auth:sanctum', 'role:student'])->get('/student-dashboard', [DashboardController::class, 'studentDashboard']);
+// RURTAS SIN USOO 
+
+// Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-dashboard', [DashboardController::class, 'adminDashboard']);
+// Route::middleware(['auth:sanctum', 'role:teacher'])->get('/teacher-dashboard', [DashboardController::class, 'teacherDashboard']);
+// Route::middleware(['auth:sanctum', 'role:student'])->get('/student-dashboard', [DashboardController::class, 'studentDashboard']);
 
 // Asegurará que la solicitud sea procesada como una solicitud de la API
 Route::middleware('api')->resource('courses', CourseController::class);

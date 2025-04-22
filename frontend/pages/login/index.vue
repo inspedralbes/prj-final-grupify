@@ -1,5 +1,5 @@
 <script setup>
-import { useAuthStore } from "~/stores/auth";
+import { useAuthStore } from "~/stores/authStore";
 import useAuth from "~//composables/useAuth";
 
 const authStore = useAuthStore();
@@ -54,16 +54,23 @@ const gestioSubmit = async (e) => {
   try {
     const response = await HandleLogin(userData);
 
-    // Usa accessToken en lugar de token para coincidir con la estructura de la respuesta
-    authStore.setAuth(response.accessToken, response.user);
+    console.log('Respuesta del login:', response);
 
+    const token = response.token;
+
+    // Guardamos con el nombre correcto
+    authStore.setAuth(token, response.user, response.role);
+    
     // Conexión inmediata del socket después del login
-    if (!$socket.connected) {
+    if (!$socket && !$socket.connected) {
       $socket.connect();
-    }
+    } 
 
     // Registrar usuario en el socket
     $socket.emit("register_user", response.user.id);
+
+    // Determinamos el rol correctamente (verificando ambas estructuras posibles)
+    const userRole = response.role || response.user?.role?.name;
 
     // Redirección basada en roles usando la respuesta del servidor
     const dashboardRoutes = {
@@ -72,14 +79,11 @@ const gestioSubmit = async (e) => {
       alumno: "/alumne/dashboard",
     };
 
-    // Para el rol "alumno", usaremos window.location para recargar la página
-    if (response.role === "alumno") {
-      window.location.href = dashboardRoutes.alumno;
-    } else {
-      // Para los demás roles, usamos navigateTo sin recargar la página
-      navigateTo(dashboardRoutes[response.role] || "/");
-    }
+    // Usamos el mismo método de navegación para todos los roles para evitar problemas
+    navigateTo(dashboardRoutes[userRole] || "/");
+
   } catch (err) {
+    console.error("Error de login:", err);
     msgError.value = "Credencials incorrectes. Si us plau, torna-ho a intentar.";
   } finally {
     isLoading.value = false;
