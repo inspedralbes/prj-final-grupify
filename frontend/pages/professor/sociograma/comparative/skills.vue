@@ -34,14 +34,31 @@ const studentsStore = useStudentsStore();
 
 const isLoading = ref(true);
 const error = ref(null);
-const selectedCourse = ref(null);
-const selectedDivision = ref(null);
+const selectedCourseAndDivision = ref(null); // Combinación de curso y división (ej: "1 ESO A")
 const allCourses = ref([]);
 const highlightedData = ref(null);
 const coursesComparison = ref([]);
 
 // Umbral para considerar a un estudiante destacado (en desviaciones estándar)
 const threshold = ref(1.5);
+
+// Computed property para obtener las opciones del selector combinado
+const courseOptions = computed(() => {
+  if (!allCourses.value || allCourses.value.length === 0) return [];
+  
+  return allCourses.value.map(course => ({
+    value: `${course.courseName}_${course.division.name}`,
+    label: `${course.courseName} ${course.division.name}`
+  }));
+});
+
+// Extraer curso y división del valor seleccionado
+const parseCourseAndDivision = (value) => {
+  if (!value) return { courseName: null, divisionName: null };
+  
+  const [courseName, divisionName] = value.split('_');
+  return { courseName, divisionName };
+};
 
 // Cargar datos iniciales
 onMounted(async () => {
@@ -55,8 +72,7 @@ onMounted(async () => {
     if (allCourses.value.length > 0) {
       // Seleccionar el primer curso por defecto
       const firstCourse = allCourses.value[0];
-      selectedCourse.value = firstCourse.courseName;
-      selectedDivision.value = firstCourse.division.name;
+      selectedCourseAndDivision.value = `${firstCourse.courseName}_${firstCourse.division.name}`;
 
       // Cargar los datos destacados
       loadHighlightedData();
@@ -74,12 +90,15 @@ onMounted(async () => {
 
 // Cargar datos destacados para el curso seleccionado
 const loadHighlightedData = () => {
-  if (!selectedCourse.value || !selectedDivision.value) return;
+  if (!selectedCourseAndDivision.value) return;
+  
+  const { courseName, divisionName } = parseCourseAndDivision(selectedCourseAndDivision.value);
+  if (!courseName || !divisionName) return;
 
   // Usar la función actualizada que devuelve datos específicos del curso
   highlightedData.value = relationshipsStore.getHighlightedStudentsByCourse(
-    selectedCourse.value,
-    selectedDivision.value,
+    courseName,
+    divisionName,
     threshold.value
   ).value; // Acceder al valor del computed
 };
@@ -586,43 +605,26 @@ const getStatsInfo = computed(() => {
 
       <!-- Contenido principal -->
       <div v-else class="space-y-6">
-        <!-- Selector de curso y umbral -->
+        <!-- Selector de curso combinado y umbral -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Selector de curso -->
+            <!-- Selector de curso combinado -->
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2"
-                >Seleccionar curs</label
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar curs i grup
+              </label>
+              <select
+                v-model="selectedCourseAndDivision"
+                class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#0080C0] focus:border-[#0080C0] sm:text-sm rounded-md"
               >
-              <div class="grid grid-cols-2 gap-2">
-                <select
-                  v-model="selectedCourse"
-                  class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#0080C0] focus:border-[#0080C0] sm:text-sm rounded-md"
+                <option
+                  v-for="option in courseOptions"
+                  :key="option.value"
+                  :value="option.value"
                 >
-                  <option
-                    v-for="course in allCourses"
-                    :key="course.id"
-                    :value="course.courseName"
-                  >
-                    {{ course.courseName }}
-                  </option>
-                </select>
-
-                <select
-                  v-model="selectedDivision"
-                  class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#0080C0] focus:border-[#0080C0] sm:text-sm rounded-md"
-                >
-                  <option
-                    v-for="course in allCourses.filter(
-                      c => c.courseName === selectedCourse
-                    )"
-                    :key="course.id"
-                    :value="course.division.name"
-                  >
-                    {{ course.division.name }}
-                  </option>
-                </select>
-              </div>
+                  {{ option.label }}
+                </option>
+              </select>
               <button
                 @click="changeCourse"
                 class="mt-2 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#0080C0] hover:bg-[#006699] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0080C0]"
@@ -769,8 +771,8 @@ const getStatsInfo = computed(() => {
           <h2 class="text-xl font-semibold text-[#0080C0] mb-4">
             Alumnes Destacats ({{ highlightedData.students ? highlightedData.students.length : 0 }})
           </h2>
-<!-- Gráfico de radar para alumnos destacados -->
-<div class="h-96 mb-6">
+          <!-- Gráfico de radar para alumnos destacados -->
+          <div class="h-96 mb-6">
             <v-chart class="w-full h-full" :option="radarOptions" autoresize />
           </div>
 
