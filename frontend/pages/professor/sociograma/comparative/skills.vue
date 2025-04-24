@@ -4,6 +4,7 @@ import { useCoursesStore } from "~/stores/coursesStore";
 import { useRelationshipsStore } from "~/stores/relationships"; 
 import { useStudentsStore } from "~/stores/studentsStore";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
+import CourseFilter from "@/components/Teacher/SociogramaComponents/CourseFilterComponent.vue"; // Importar el nuevo componente
 import { use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { BarChart, RadarChart } from "echarts/charts";
@@ -34,23 +35,13 @@ const studentsStore = useStudentsStore();
 
 const isLoading = ref(true);
 const error = ref(null);
-const selectedCourseAndDivision = ref(null); // Combinación de curso y división (ej: "1 ESO A")
+const selectedCourseAndDivision = ref(null);
 const allCourses = ref([]);
 const highlightedData = ref(null);
 const coursesComparison = ref([]);
 
 // Umbral para considerar a un estudiante destacado (en desviaciones estándar)
 const threshold = ref(1.5);
-
-// Computed property para obtener las opciones del selector combinado
-const courseOptions = computed(() => {
-  if (!allCourses.value || allCourses.value.length === 0) return [];
-  
-  return allCourses.value.map(course => ({
-    value: `${course.courseName}_${course.division.name}`,
-    label: `${course.courseName} ${course.division.name}`
-  }));
-});
 
 // Extraer curso y división del valor seleccionado
 const parseCourseAndDivision = (value) => {
@@ -109,13 +100,17 @@ const generateCoursesComparison = async () => {
   coursesComparison.value = relationshipsStore.generateCoursesComparison(threshold.value);
 };
 
-// Cambiar el curso seleccionado
-const changeCourse = () => {
-  loadHighlightedData();
+// Funciones de actualización que serán llamadas desde el componente hijo
+const updateCourseAndDivision = (value) => {
+  selectedCourseAndDivision.value = value;
 };
 
-// Cambiar el umbral
-const changeThreshold = async () => {
+const updateThreshold = (value) => {
+  threshold.value = value;
+};
+
+// Cargar datos cuando cambian los filtros
+const loadData = async () => {
   loadHighlightedData();
   await generateCoursesComparison();
 };
@@ -605,55 +600,15 @@ const getStatsInfo = computed(() => {
 
       <!-- Contenido principal -->
       <div v-else class="space-y-6">
-        <!-- Selector de curso combinado y umbral -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Selector de curso combinado -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Seleccionar curs i grup
-              </label>
-              <select
-                v-model="selectedCourseAndDivision"
-                class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#0080C0] focus:border-[#0080C0] sm:text-sm rounded-md"
-              >
-                <option
-                  v-for="option in courseOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-              <button
-                @click="changeCourse"
-                class="mt-2 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#0080C0] hover:bg-[#006699] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0080C0]"
-              >
-                Carregar dades
-              </button>
-            </div>
-
-            <!-- Selector de umbral -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Llindar de destacat (desviacions estàndard): {{ threshold }}
-              </label>
-              <input
-                type="range"
-                v-model="threshold"
-                min="0.5"
-                max="3"
-                step="0.1"
-                @change="changeThreshold"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-              <div class="flex justify-between text-xs text-gray-500 mt-1">
-                <span>0.5 (Més inclusiu)</span>
-                <span>3 (Més selectiu)</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Componente de filtro -->
+        <CourseFilter 
+          :allCourses="allCourses"
+          :initialCourseAndDivision="selectedCourseAndDivision"
+          :initialThreshold="threshold"
+          @update:courseAndDivision="updateCourseAndDivision"
+          @update:threshold="updateThreshold"
+          @loadData="loadData"
+        />
 
         <!-- Gráfico comparativo de todos los cursos -->
         <div class="bg-white rounded-lg shadow-md p-6">
