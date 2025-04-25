@@ -4,6 +4,7 @@ import { useCoursesStore } from "~/stores/coursesStore";
 import { useRelationshipsStore } from "~/stores/relationships";
 import { useStudentsStore } from "~/stores/studentsStore";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
+import { useRouter } from "vue-router";
 import { use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { BarChart, PieChart } from "echarts/charts";
@@ -32,9 +33,15 @@ use([
 ]);
 
 
+const router = useRouter();
 const coursesStore = useCoursesStore();
 const relationshipsStore = useRelationshipsStore();
 const studentsStore = useStudentsStore();
+
+// Función para volver a la página anterior
+const goBack = () => {
+  router.push("/professor/sociograma/comparative");
+};
 
 
 const isLoading = ref(true);
@@ -320,15 +327,64 @@ const categoryTotals = computed(() => {
     <DashboardNavTeacher class="w-full" />
 
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Encabezado -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-semibold text-[#0080C0] text-center">
-          GRÀFICS COMPARATIUS DE SOCIOGRAMES
-        </h1>
-        <p class="text-center text-gray-600 mt-2">
-          Anàlisi comparatiu dels nivells de popularitat, aïllament i neutralitat de tots els cursos
-        </p>
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <!-- Botón fijo en esquina para móviles -->
+      <div class="fixed bottom-4 right-4 z-10 md:hidden">
+        <button
+          @click="goBack"
+          class="flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-[#0080C0] hover:bg-[#006699] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0080C0] text-white"
+          aria-label="Tornar"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Encabezado adaptativo -->
+      <div class="flex flex-col sm:flex-row items-center sm:justify-between mb-6">
+        <!-- Botón visible solo en pantallas más grandes -->
+        <button
+          @click="goBack"
+          class="hidden md:inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#0080C0] hover:bg-[#006699] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0080C0] mb-4 sm:mb-0"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          Tornar
+        </button>
+
+        <div class="text-center flex-1">
+          <h1 class="text-2xl md:text-3xl font-semibold text-[#0080C0]">
+            GRÀFICS COMPARATIUS DE SOCIOGRAMES
+          </h1>
+          <p class="text-sm sm:text-base text-gray-600 mt-2">
+            Anàlisi comparatiu dels nivells de popularitat, aïllament i neutralitat de tots els cursos
+          </p>
+        </div>
+        
+        <div class="hidden md:block w-[100px]"></div>
+        <!-- Espacio para equilibrar el layout solo en desktop -->
       </div>
 
 
@@ -375,15 +431,15 @@ const categoryTotals = computed(() => {
         <!-- Resumen general -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <h2 class="text-xl font-semibold text-[#0080C0] mb-4">Resum General</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div
               v-for="(value, key) in categoryTotals"
               :key="key"
-              class="bg-gray-50 rounded-lg p-4 text-center border-t-4"
+              class="bg-gray-50 rounded-lg p-3 sm:p-4 text-center border-t-4"
               :style="{ borderTopColor: key === 'Populars' ? '#4CAF50' : key === 'Aïllats' ? '#F44336' : '#2196F3' }"
             >
-              <h3 class="font-medium text-gray-800">{{ key }}</h3>
-              <p class="text-3xl font-bold mt-2"
+              <h3 class="text-sm sm:text-base font-medium text-gray-800">{{ key }}</h3>
+              <p class="text-2xl sm:text-3xl font-bold mt-1 sm:mt-2"
                  :style="{ color: key === 'Populars' ? '#4CAF50' : key === 'Aïllats' ? '#F44336' : '#2196F3' }"
               >
                 {{ value }}
@@ -392,7 +448,7 @@ const categoryTotals = computed(() => {
           </div>
          
           <!-- Gráfico circular de resumen -->
-          <div class="h-80">
+          <div class="h-64 sm:h-72 md:h-80">
             <v-chart class="w-full h-full" :option="pieChartOptions" autoresize />
           </div>
         </div>
@@ -400,62 +456,71 @@ const categoryTotals = computed(() => {
         <!-- Gráfico comparativo por curso -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <h2 class="text-xl font-semibold text-[#0080C0] mb-4">Comparativa per Cursos</h2>
-          <div class="h-96">
+          <div class="h-72 sm:h-80 md:h-96">
             <v-chart class="w-full h-full" :option="barChartOptions" autoresize />
           </div>
         </div>
        
         <!-- Tabla de datos detallados -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <h2 class="text-xl font-semibold text-[#0080C0] mb-4">Dades Detallades</h2>
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Curs
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Populars
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aïllats
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Neutrals
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="(item, index) in comparativeData" :key="index">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {{ item.course }}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {{ item.Populars || 0 }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                      {{ item.Aïllats || 0 }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {{ item.Neutrals || 0 }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ (item.Populars || 0) + (item.Aïllats || 0) + (item.Neutrals || 0) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          
+          <!-- Tabla responsiva -->
+          <div class="overflow-x-auto -mx-4 sm:mx-0 rounded-lg">
+            <div class="inline-block min-w-full align-middle">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Curs
+                    </th>
+                    <th scope="col" class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Populars
+                    </th>
+                    <th scope="col" class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Aïllats
+                    </th>
+                    <th scope="col" class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Neutrals
+                    </th>
+                    <th scope="col" class="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="(item, index) in comparativeData" :key="index">
+                    <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
+                      {{ item.course }}
+                    </td>
+                    <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {{ item.Populars || 0 }}
+                      </span>
+                    </td>
+                    <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        {{ item.Aïllats || 0 }}
+                      </span>
+                    </td>
+                    <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {{ item.Neutrals || 0 }}
+                      </span>
+                    </td>
+                    <td class="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                      {{ (item.Populars || 0) + (item.Aïllats || 0) + (item.Neutrals || 0) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
+          
+          <!-- Nota para móviles -->
+          <p class="text-xs text-gray-500 italic mt-3 block md:hidden">
+            Desliza horizontalmente para ver más datos
+          </p>
         </div>
       </div>
      
