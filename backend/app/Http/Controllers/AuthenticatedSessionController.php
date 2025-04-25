@@ -64,6 +64,20 @@ class AuthenticatedSessionController extends Controller
         $course_id = $courseDivision ? $courseDivision->pivot->course_id : null;
         $division_id = $courseDivision ? $courseDivision->pivot->division_id : null;
 
+        // Cargar los nombres del curso y división
+        $course_name = null;
+        $division_name = null;
+        
+        if ($course_id) {
+            $course = \App\Models\Course::find($course_id);
+            $course_name = $course ? $course->name : null;
+        }
+        
+        if ($division_id) {
+            $division = \App\Models\Division::find($division_id);
+            $division_name = $division ? $division->division : null;
+        }
+
 
         Mail::to($user->email)->send(new LoginNotificationMail($user));
 
@@ -82,8 +96,10 @@ class AuthenticatedSessionController extends Controller
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
                 'status' => $user->status,
-                'course_id' => $course_id,  // Agregar el course_id aquí
-                'division_id' => $division_id,  // Agregar el division_id aquí
+                'course_id' => $course_id,
+                'division_id' => $division_id,
+                'course_name' => $course_name,  // Nombre del curso
+                'division_name' => $division_name,  // Nombre de la división
                 'forms' => $user->forms,
                 'subjects' => $user->subjects,
                 'role' => $user->role

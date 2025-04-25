@@ -55,6 +55,12 @@ const gestioSubmit = async (e) => {
     const response = await HandleLogin(userData);
 
     console.log('Respuesta del login:', response);
+    
+    // Verificamos si tenemos los nuevos campos
+    if (response.user.course_name || response.user.division_name) {
+      console.log('Curso:', response.user.course_name);
+      console.log('División:', response.user.division_name);
+    }
 
     const token = response.token;
 

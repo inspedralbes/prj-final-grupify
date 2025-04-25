@@ -29,6 +29,8 @@ interface AuthResponse {
         status: number | string;
         course_id: number | null;
         division_id: number | null;
+        course_name: string | null;
+        division_name: string | null;
         forms: any[];
         subjects: any[];
         role: Role;

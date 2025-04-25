@@ -27,6 +27,8 @@ interface User {
   status: number | string;
   course_id: number | null;
   division_id: number | null;
+  course_name: string | null;
+  division_name: string | null;
   forms: Form[];
   subjects: Subject[];
   role: Role;
@@ -63,6 +65,24 @@ export const useAuthStore = defineStore("auth", {
     
     isProfesor: (state): boolean => {
       return state.user?.role?.name === 'profesor';
+    },
+    
+    userCourseName: (state): string | null => {
+      return state.user?.course_name || null;
+    },
+    
+    userDivisionName: (state): string | null => {
+      return state.user?.division_name || null;
+    },
+    
+    userFullCourseInfo: (state): string | null => {
+      if (!state.user?.course_name && !state.user?.division_name) return null;
+      
+      if (state.user.course_name && state.user.division_name) {
+        return `${state.user.course_name} ${state.user.division_name}`;
+      }
+      
+      return state.user.course_name || state.user.division_name;
     }
   },
 
