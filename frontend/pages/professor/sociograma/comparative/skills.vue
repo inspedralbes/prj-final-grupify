@@ -175,11 +175,33 @@ const bubbleRadarOptions = computed(() => {
         type: 'radar',
         symbol: 'circle',
         symbolSize: 18,
+        // Añadir areaStyle con opacidad 0 por defecto
+        areaStyle: {
+          color: data.color,
+          opacity: 0 // Inicialmente invisible
+        },
+        // Añadir líneas con opacidad 0.1 por defecto
         lineStyle: {
-          width: 0 // Sin líneas entre puntos
+          width: 1,
+          color: data.color,
+          opacity: 0.1 // Casi invisibles normalmente
         },
         itemStyle: {
           color: data.color // Color consistente para cada serie
+        },
+        // Configuración para resaltar el área cuando el mouse está sobre cualquier punto
+        emphasis: {
+          areaStyle: {
+            opacity: 0.3 // Visible cuando se resalta
+          },
+          lineStyle: {
+            width: 2,
+            opacity: 0.6 // Más visible cuando se resalta
+          },
+          itemStyle: {
+            borderWidth: 3,
+            borderColor: '#fff'
+          }
         },
         data: [
           {
@@ -216,7 +238,43 @@ const bubbleRadarOptions = computed(() => {
         },
       },
       tooltip: {
-        trigger: "item"
+        trigger: "item",
+        formatter: function(params) {
+          // Comprobar si params tiene datos
+          if (!params.data || !params.data.name) return '';
+          
+          // Buscar el estudiante correspondiente
+          const studentInfo = studentData.find(d => d.name === params.data.name);
+          if (!studentInfo) return '';
+          
+          // Construir el tooltip con información detallada
+          return `<div style="padding: 3px 0; font-weight: bold; color: ${studentInfo.color}">${studentInfo.name}</div>
+                 <table style="width: 100%; border-spacing: 0">
+                   <tr>
+                     <td style="padding: 3px 0; color: ${competenceColors.liderazgo}">Lideratge:</td>
+                     <td style="padding: 3px 0; text-align: right">${studentInfo.student.liderazgo || 0}</td>
+                   </tr>
+                   <tr>
+                     <td style="padding: 3px 0; color: ${competenceColors.creatividad}">Creativitat:</td>
+                     <td style="padding: 3px 0; text-align: right">${studentInfo.student.creatividad || 0}</td>
+                   </tr>
+                   <tr>
+                     <td style="padding: 3px 0; color: ${competenceColors.organizacion}">Organització:</td>
+                     <td style="padding: 3px 0; text-align: right">${studentInfo.student.organizacion || 0}</td>
+                   </tr>
+                   <tr>
+                     <td style="padding: 3px 0; font-weight: bold">Total:</td>
+                     <td style="padding: 3px 0; text-align: right; font-weight: bold">${studentInfo.student.total || 0}</td>
+                   </tr>
+                 </table>`;
+        },
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        padding: 10,
+        textStyle: {
+          color: '#333'
+        }
       },
       legend: {
         data: studentData.map(d => d.name),
@@ -1070,7 +1128,7 @@ const getStatsInfo = computed(() => {
               <li><span class="font-medium">Bombolles</span>: Cada bombolla correspon a un alumne</li>
               <li><span class="font-medium">Colors</span>: Cada alumne té un color únic que es mostra a la llegenda inferior</li>
             </ul>
-            <p class="text-xs text-gray-500 mt-2">Passa el cursor sobre cada bombolla per veure més detalls de l'alumne.</p>
+            <p class="text-xs text-gray-500 mt-2">Passa el cursor sobre cada bombolla per veure més detalls de l'alumne i resaltar totes les seves competències amb un área del mateix color.</p>
           </div>
 
           <!-- Lista de alumnos destacados -->
