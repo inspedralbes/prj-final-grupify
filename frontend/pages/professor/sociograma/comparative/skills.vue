@@ -375,14 +375,23 @@ const coursesComparisonOptions = computed(() => {
 
             tooltip += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:#333;"></span>`;
             tooltip += `<strong>Total: ${total}</strong><br/>`;
+        
             
-            // Añadir información de medias y desviaciones con verificación de nulos
-            if (courseData && courseData.averages) {
-              const averages = courseData.averages;
-              tooltip += `<br/><strong>Medias del curso:</strong><br/>`;
-              tooltip += `Liderazgo: ${averages.liderazgo !== undefined ? averages.liderazgo.toFixed(2) : '0.00'}<br/>`;
-              tooltip += `Creatividad: ${averages.creatividad !== undefined ? averages.creatividad.toFixed(2) : '0.00'}<br/>`;
-              tooltip += `Organización: ${averages.organizacion !== undefined ? averages.organizacion.toFixed(2) : '0.00'}<br/>`;
+            // Añadir nuevas métricas
+            if (courseData && courseData.coeficienteDeVariacion) {
+              const coef = courseData.coeficienteDeVariacion;
+              tooltip += `<br/><strong>Coeficiente de Variación:</strong><br/>`;
+              tooltip += `Liderazgo: ${coef.liderazgo !== undefined ? coef.liderazgo.toFixed(2) : '0.00'}<br/>`;
+              tooltip += `Creatividad: ${coef.creatividad !== undefined ? coef.creatividad.toFixed(2) : '0.00'}<br/>`;
+              tooltip += `Organización: ${coef.organizacion !== undefined ? coef.organizacion.toFixed(2) : '0.00'}<br/>`;
+            }
+            
+            if (courseData && courseData.indiceConcentracion) {
+              const indice = courseData.indiceConcentracion;
+              tooltip += `<br/><strong>Índice de Concentración:</strong><br/>`;
+              tooltip += `Liderazgo: ${indice.liderazgo !== undefined ? indice.liderazgo.toFixed(3) : '0.000'}<br/>`;
+              tooltip += `Creatividad: ${indice.creatividad !== undefined ? indice.creatividad.toFixed(3) : '0.000'}<br/>`;
+              tooltip += `Organización: ${indice.organizacion !== undefined ? indice.organizacion.toFixed(3) : '0.000'}<br/>`;
             }
 
             return tooltip;
@@ -393,8 +402,21 @@ const coursesComparisonOptions = computed(() => {
         },
       },
       legend: {
-        data: ["Lideratge", "Creativitat", "Organització"],
+        data: [
+          "Lideratge", 
+          "Creativitat", 
+          "Organització", 
+          "Mitjana Lideratge", 
+          "Mitjana Creativitat", 
+          "Mitjana Organització"
+        ],
         bottom: "bottom",
+        type: "scroll",
+        itemWidth: 25,
+        itemHeight: 14,
+        textStyle: {
+          fontSize: 12
+        }
       },
       grid: {
         left: "3%",
@@ -412,9 +434,9 @@ const coursesComparisonOptions = computed(() => {
       },
       yAxis: {
         type: "value",
-        name: "Nombre d'alumnes destacats",
       },
       series: [
+        // Series de barras apiladas
         {
           name: "Lideratge",
           type: "bar",
@@ -451,6 +473,68 @@ const coursesComparisonOptions = computed(() => {
             color: "#00BCD4",
           },
         },
+        
+        // Líneas para las medias de cada competencia
+        {
+          name: "Mitjana Lideratge",
+          type: "line",
+          yAxisIndex: 0,
+          symbol: "circle",
+          symbolSize: 6,
+          sampling: "average",
+          itemStyle: {
+            color: "#FF9800"
+          },
+          lineStyle: {
+            color: "#FF9800",
+            width: 2,
+            type: "dashed"
+          },
+          data: coursesComparison.value.map(item => 
+            item.mediasConvencionales && item.mediasConvencionales.liderazgo !== undefined ? 
+            item.mediasConvencionales.liderazgo : 0
+          )
+        },
+        {
+          name: "Mitjana Creativitat",
+          type: "line",
+          yAxisIndex: 0,
+          symbol: "circle",
+          symbolSize: 6,
+          sampling: "average",
+          itemStyle: {
+            color: "#9C27B0"
+          },
+          lineStyle: {
+            color: "#9C27B0",
+            width: 2,
+            type: "dashed"
+          },
+          data: coursesComparison.value.map(item => 
+            item.mediasConvencionales && item.mediasConvencionales.creatividad !== undefined ? 
+            item.mediasConvencionales.creatividad : 0
+          )
+        },
+        {
+          name: "Mitjana Organització",
+          type: "line",
+          yAxisIndex: 0,
+          symbol: "circle",
+          symbolSize: 6,
+          sampling: "average",
+          itemStyle: {
+            color: "#00BCD4"
+          },
+          lineStyle: {
+            color: "#00BCD4",
+            width: 2,
+            type: "dashed"
+          },
+          data: coursesComparison.value.map(item => 
+            item.mediasConvencionales && item.mediasConvencionales.organizacion !== undefined ? 
+            item.mediasConvencionales.organizacion : 0
+          )
+        }
       ],
     };
   } catch (error) {
@@ -472,17 +556,22 @@ const calculatePercentage = (votes, skill) => {
   if (!highlightedData.value || !highlightedData.value.allStudents) return "0";
 
   try {
-    // Número total de estudiantes en esta clase
-    const totalStudents = highlightedData.value.allStudents.length;
+    // Obtener el total de votos para esta habilidad
+    let totalVotes = 0;
+    
+    if (skill === "liderazgo") {
+      totalVotes = highlightedData.value.allStudents.reduce((sum, student) => sum + (student.liderazgo || 0), 0);
+    } else if (skill === "creatividad") {
+      totalVotes = highlightedData.value.allStudents.reduce((sum, student) => sum + (student.creatividad || 0), 0);
+    } else if (skill === "organizacion") {
+      totalVotes = highlightedData.value.allStudents.reduce((sum, student) => sum + (student.organizacion || 0), 0);
+    }
 
-    // Total de votos posibles: 2 por estudiante
-    const totalPossibleVotes = totalStudents * 2;
+    // Si no hay votos, evitar división por cero
+    if (totalVotes === 0) return "0";
 
-    // Si no hay estudiantes, evitar división por cero
-    if (totalPossibleVotes === 0) return "0";
-
-    // Calcular porcentaje
-    const percentage = ((votes || 0) / totalPossibleVotes) * 100;
+    // Calcular porcentaje (ahora basado en los votos reales, no en los posibles)
+    const percentage = ((votes || 0) / totalVotes) * 100;
 
     // Devolver con un decimal
     return percentage.toFixed(1);
@@ -491,6 +580,66 @@ const calculatePercentage = (votes, skill) => {
     return "0";
   }
 };
+
+// Nuevo método para clasificar estudiantes basado en distribución de votos
+const getVoteDistribution = computed(() => {
+  if (!highlightedData.value || !highlightedData.value.studentsWithVotes) return null;
+  
+  try {
+    const students = highlightedData.value.studentsWithVotes;
+    const totalStudents = students.length;
+    
+    // Calcular votos totales por competencia
+    const totalVotes = {
+      liderazgo: students.reduce((sum, s) => sum + (s.liderazgo || 0), 0),
+      creatividad: students.reduce((sum, s) => sum + (s.creatividad || 0), 0),
+      organizacion: students.reduce((sum, s) => sum + (s.organizacion || 0), 0)
+    };
+    
+    // Clasificar estudiantes según concentración de votos
+    const liderazgoDistribution = students
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        last_name: s.last_name,
+        votes: s.liderazgo || 0,
+        percentage: totalVotes.liderazgo > 0 ? ((s.liderazgo || 0) / totalVotes.liderazgo) * 100 : 0
+      }))
+      .sort((a, b) => b.percentage - a.percentage)
+      .slice(0, 5); // Top 5
+      
+    const creatividadDistribution = students
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        last_name: s.last_name,
+        votes: s.creatividad || 0,
+        percentage: totalVotes.creatividad > 0 ? ((s.creatividad || 0) / totalVotes.creatividad) * 100 : 0
+      }))
+      .sort((a, b) => b.percentage - a.percentage)
+      .slice(0, 5); // Top 5
+      
+    const organizacionDistribution = students
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        last_name: s.last_name,
+        votes: s.organizacion || 0,
+        percentage: totalVotes.organizacion > 0 ? ((s.organizacion || 0) / totalVotes.organizacion) * 100 : 0
+      }))
+      .sort((a, b) => b.percentage - a.percentage)
+      .slice(0, 5); // Top 5
+    
+    return {
+      liderazgo: liderazgoDistribution,
+      creatividad: creatividadDistribution,
+      organizacion: organizacionDistribution
+    };
+  } catch (error) {
+    console.error("Error al calcular distribución de votos:", error);
+    return null;
+  }
+});
 
 // Nueva función para mostrar información estadística adicional con manejo de nulos
 const getStatsInfo = computed(() => {
@@ -632,10 +781,39 @@ const getStatsInfo = computed(() => {
               pot destacar en més d'una competència, per això els colors es
               mostren apilats.
             </p>
-            <p class="text-sm text-blue-800">
+            <p class="text-sm text-blue-800 mb-2">
               <span class="font-medium">Important:</span> Cada curs té la seva pròpia mitjana i desviació estàndard. 
               Passa el cursor sobre cada barra per veure aquestes estadístiques específiques.
             </p>
+            <p class="text-sm text-blue-800">
+              <span class="font-medium">Línies discontínues:</span> Les línies discontínues mostren la mitjana convencional de vots
+              per a cada competència a cada curs, permetent comparar fàcilment entre grups.
+            </p>
+          </div>
+          
+          <!-- Nueva sección para métricas alternativas -->
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-yellow-50 p-4 rounded-md">
+              <h3 class="font-semibold text-yellow-800 mb-2">Coeficient de Variació</h3>
+              <p class="text-sm text-yellow-800">
+                Mesura com estan de dispersos els vots. Un valor alt indica que els vots 
+                estan més concentrats en pocs alumnes.
+              </p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-md">
+              <h3 class="font-semibold text-green-800 mb-2">Índex de Concentració</h3>
+              <p class="text-sm text-green-800">
+                Indica com de distribuïts estan els vots: valors propers a 0 signifiquen 
+                distribució uniforme, valors propers a 1 significa alta concentració.
+              </p>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-md">
+              <h3 class="font-semibold text-purple-800 mb-2">Distribució Percentual</h3>
+              <p class="text-sm text-purple-800">
+                Mostra quin percentatge del total de vots ha rebut cada alumne, 
+                facilitant la comparació entre competències.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -684,6 +862,84 @@ const getStatsInfo = computed(() => {
                 Desv. Estàndard: {{ highlightedData.stdDevs && highlightedData.stdDevs.organizacion !== undefined ? 
                                     highlightedData.stdDevs.organizacion.toFixed(2) : '0.00' }}
               </p>
+            </div>
+          </div>
+          
+          <!-- Nuevas métricas - Coeficiente de Variación e Índice de Concentración -->
+          <div class="mt-4 mb-6 bg-white border rounded-lg shadow-sm">
+            <div class="p-4 border-b">
+              <h3 class="font-semibold text-gray-800">Mètriques Alternatives d'Anàlisi</h3>
+              <p class="text-sm text-gray-600">
+                Aquestes mètriques proporcionen una visió més profunda de la distribució dels vots 
+                i complementen la mitjana tradicional
+              </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+              <!-- Coeficiente de Variación -->
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-medium text-gray-800 mb-2">Coeficient de Variació</h4>
+                <p class="text-xs text-gray-600 mb-3">
+                  Mesura la dispersió relativa. Valors alts indiquen distribució menys uniforme.
+                </p>
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="text-center">
+                    <p class="text-xs text-gray-500">Lideratge</p>
+                    <p class="text-xl font-bold text-[#FF9800]">
+                      {{ highlightedData.mediasReales && highlightedData.stdDevs && highlightedData.mediasReales.liderazgo > 0 ? 
+                         (highlightedData.stdDevs.liderazgo / highlightedData.mediasReales.liderazgo).toFixed(2) : '0.00' }}
+                    </p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-xs text-gray-500">Creativitat</p>
+                    <p class="text-xl font-bold text-[#9C27B0]">
+                      {{ highlightedData.mediasReales && highlightedData.stdDevs && highlightedData.mediasReales.creatividad > 0 ? 
+                         (highlightedData.stdDevs.creatividad / highlightedData.mediasReales.creatividad).toFixed(2) : '0.00' }}
+                    </p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-xs text-gray-500">Organització</p>
+                    <p class="text-xl font-bold text-[#00BCD4]">
+                      {{ highlightedData.mediasReales && highlightedData.stdDevs && highlightedData.mediasReales.organizacion > 0 ? 
+                         (highlightedData.stdDevs.organizacion / highlightedData.mediasReales.organizacion).toFixed(2) : '0.00' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Índice de Concentración - Calculado de forma simplificada -->
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-medium text-gray-800 mb-2">Diversitat de Vots</h4>
+                <p class="text-xs text-gray-600 mb-3">
+                  Indica la distribuciò de vots: valor més baix indica concentració en pocs alumnes.
+                </p>
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="text-center">
+                    <p class="text-xs text-gray-500">Lideratge</p>
+                    <p class="text-xl font-bold text-[#FF9800]">
+                      {{ highlightedData.studentsWithVotes ? 
+                         (highlightedData.studentsWithVotes.filter(s => s.liderazgo > 0).length / 
+                          (highlightedData.studentsWithVotes.length || 1) * 100).toFixed(0) + '%' : '0%' }}
+                    </p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-xs text-gray-500">Creativitat</p>
+                    <p class="text-xl font-bold text-[#9C27B0]">
+                      {{ highlightedData.studentsWithVotes ? 
+                         (highlightedData.studentsWithVotes.filter(s => s.creatividad > 0).length / 
+                          (highlightedData.studentsWithVotes.length || 1) * 100).toFixed(0) + '%' : '0%' }}
+                    </p>
+                  </div>
+                  <div class="text-center">
+                    <p class="text-xs text-gray-500">Organització</p>
+                    <p class="text-xl font-bold text-[#00BCD4]">
+                      {{ highlightedData.studentsWithVotes ? 
+                         (highlightedData.studentsWithVotes.filter(s => s.organizacion > 0).length / 
+                          (highlightedData.studentsWithVotes.length || 1) * 100).toFixed(0) + '%' : '0%' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -815,6 +1071,80 @@ const getStatsInfo = computed(() => {
           </p>
         </div>
 
+        <!-- Distribución de votos por estudiante -->
+        <div
+          v-if="getVoteDistribution"
+          class="bg-white rounded-lg shadow-md p-6 mb-6"
+        >
+          <h2 class="text-xl font-semibold text-[#0080C0] mb-4">
+            Distribució de Vots per Competència (Top 5)
+          </h2>
+          
+          <p class="text-sm text-gray-600 mb-4">
+            Aquesta gràfica mostra els alumnes que concentren més vots per cada competència, 
+            indicant quin percentatge del total de vots han rebut.
+          </p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Liderazgo -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="font-medium text-[#FF9800] mb-3">Lideratge</h3>
+              <div class="space-y-3">
+                <div v-for="(student, index) in getVoteDistribution.liderazgo" :key="student.id">
+                  <div class="flex justify-between text-sm">
+                    <span class="truncate">{{ student.name }} {{ student.last_name }}</span>
+                    <span class="font-medium">{{ student.percentage.toFixed(1) }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      class="bg-[#FF9800] h-2 rounded-full" 
+                      :style="`width: ${student.percentage}%`"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Creatividad -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="font-medium text-[#9C27B0] mb-3">Creativitat</h3>
+              <div class="space-y-3">
+                <div v-for="(student, index) in getVoteDistribution.creatividad" :key="student.id">
+                  <div class="flex justify-between text-sm">
+                    <span class="truncate">{{ student.name }} {{ student.last_name }}</span>
+                    <span class="font-medium">{{ student.percentage.toFixed(1) }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      class="bg-[#9C27B0] h-2 rounded-full" 
+                      :style="`width: ${student.percentage}%`"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Organización -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="font-medium text-[#00BCD4] mb-3">Organització</h3>
+              <div class="space-y-3">
+                <div v-for="(student, index) in getVoteDistribution.organizacion" :key="student.id">
+                  <div class="flex justify-between text-sm">
+                    <span class="truncate">{{ student.name }} {{ student.last_name }}</span>
+                    <span class="font-medium">{{ student.percentage.toFixed(1) }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      class="bg-[#00BCD4] h-2 rounded-full" 
+                      :style="`width: ${student.percentage}%`"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <!-- Gráfico comparativo de todos los alumnos -->
         <div
           v-if="highlightedData && highlightedData.allStudents && highlightedData.allStudents.length > 0"
