@@ -73,6 +73,54 @@
             </div>
         </div>
 
+        <!-- Course and Division Assignment (For Teachers) -->
+        <div id="teacher-course-division" style="display: none;">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Assignació de Cursos i Divisions</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Selecciona els cursos i divisions als quals aquest professor tindrà accés:</p>
+                    
+                    <!-- Contenedor para las combinaciones de curso-división -->
+                    <div id="course-division-container">
+                        <!-- Primera combinación (siempre visible) -->
+                        <div class="course-division-pair border rounded p-3 mb-3">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label><strong>Curs:</strong></label>
+                                        <select name="course_division_pairs[0][course_id]" class="form-control course-select">
+                                            <option value="">Selecciona un curs</option>
+                                            @foreach ($courses as $course)
+                                                <option value="{{ $course->id }}">{{ $course->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="form-group">
+                                        <label><strong>Divisió:</strong></label>
+                                        <select name="course_division_pairs[0][division_id]" class="form-control">
+                                            <option value="">Selecciona una divisió</option>
+                                            @foreach($divisions as $division)
+                                                <option value="{{ $division->id }}">{{ $division->division }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Botón para agregar más combinaciones -->
+                    <button type="button" id="add-course-division" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Afegir un altre curs i divisió
+                    </button>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Course and Division Assignment (Only for Students) -->
         <div id="student-fields" style="display: none;">
@@ -111,7 +159,8 @@
     const roleSelect = document.getElementById('role');
     const subjectGroup = document.getElementById('subject-group');
     const studentFields = document.getElementById('student-fields');
-    const divisionGroup = document.getElementById('division-group'); // Asegúrate de que este ID exista en el HTML
+    const divisionGroup = document.getElementById('division-group');
+    const teacherCourseDiv = document.getElementById('teacher-course-division');
 
 
     roleSelect.addEventListener('change', function () {
@@ -121,14 +170,16 @@
         // Mostrar/ocultar campos en función del rol
         subjectGroup.style.display = 'none';
         studentFields.style.display = 'none';
-        divisionGroup.style.display = 'none';  // Añadir esto para ocultar divisiones por defecto
+        divisionGroup.style.display = 'none';
+        teacherCourseDiv.style.display = 'none';
 
 
         if (selectedRole === 1) { // Rol de "Profesor"
             subjectGroup.style.display = 'block';
+            teacherCourseDiv.style.display = 'block'; // Mostrar selector de cursos/divisiones para profesores
         } else if (selectedRole === 2) { // Rol de "Alumno"
             studentFields.style.display = 'block';
-            divisionGroup.style.display = 'block'; // Mostrar divisiones cuando el rol es "Alumno"
+            divisionGroup.style.display = 'block';
         }
         console.log("Rol seleccionado:", selectedRole);
     });
@@ -137,22 +188,74 @@
 
 </script>
 
-<!-- Agregar este script al final -->
+<!-- Script para manejar la adición dinámica de pares curso-división -->
 <script>
-document.getElementById('role').addEventListener('change', function() {
-    const courseDivisionFields = document.getElementById('courseDivisionFields');
-    // Mostrar campos solo para profesores (1) y alumnos (2)
-    if (this.value == '1' || this.value == '2') {
-        courseDivisionFields.style.display = 'block';
-    } else {
-        courseDivisionFields.style.display = 'none';
-    }
-});
-
-// Ejecutar el evento change al cargar la página para manejar el valor inicial
 document.addEventListener('DOMContentLoaded', function() {
+    // Script existente para manejar cambios de rol
     const roleSelect = document.getElementById('role');
-    roleSelect.dispatchEvent(new Event('change'));
+    if (roleSelect) {
+        roleSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Nuevo script para agregar pares curso-división
+    const addButton = document.getElementById('add-course-division');
+    const container = document.getElementById('course-division-container');
+    
+    if (addButton && container) {
+        let pairCount = 1; // Comenzamos en 1 porque ya tenemos un par inicial (índice 0)
+        
+        addButton.addEventListener('click', function() {
+            // Crear un nuevo par curso-división
+            const newPair = document.createElement('div');
+            newPair.className = 'course-division-pair border rounded p-3 mb-3';
+            newPair.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>Nova assignació</strong>
+                    <button type="button" class="btn btn-sm btn-danger remove-pair">
+                        <i class="fas fa-times"></i> Eliminar
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label><strong>Curs:</strong></label>
+                            <select name="course_division_pairs[${pairCount}][course_id]" class="form-control course-select">
+                                <option value="">Selecciona un curs</option>
+                                @foreach ($courses as $course)
+                                    <option value="{{ $course->id }}">{{ $course->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label><strong>Divisió:</strong></label>
+                            <select name="course_division_pairs[${pairCount}][division_id]" class="form-control">
+                                <option value="">Selecciona una divisió</option>
+                                @foreach($divisions as $division)
+                                    <option value="{{ $division->id }}">{{ $division->division }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Agregar el nuevo par al contenedor
+            container.appendChild(newPair);
+            
+            // Incrementar el contador de pares
+            pairCount++;
+            
+            // Configurar el botón de eliminación
+            const removeButton = newPair.querySelector('.remove-pair');
+            if (removeButton) {
+                removeButton.addEventListener('click', function() {
+                    container.removeChild(newPair);
+                });
+            }
+        });
+    }
 });
 </script>
 

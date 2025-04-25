@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-lg shadow p-4 mb-6">
+  <div class="bg-white rounded-lg p-4 mb-6">
     <div class="flex flex-col sm:flex-row gap-4">
       <div class="flex-1">
         <input
@@ -10,7 +10,27 @@
           @input="$emit('update:searchQuery', $event.target.value)"
         />
       </div>
-      <div class="flex flex-col sm:flex-row gap-4">
+
+      <!-- Si el profesor tiene cursos asignados, mostrar un selector personalizado -->
+      <div v-if="teacherCourseDivisions && teacherCourseDivisions.length > 0" class="flex-1">
+        <select 
+          :value="selectedClassGroup"
+          class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+          @change="handleClassGroupSelection($event.target.value)"
+        >
+          <option value="all">Tots els meus cursos i divisions</option>
+          <option 
+            v-for="(cd, index) in teacherCourseDivisions" 
+            :key="index" 
+            :value="`${cd.course_name}-${cd.division_name}`"
+          >
+            {{ cd.course_name }} {{ cd.division_name }}
+          </option>
+        </select>
+      </div>
+      
+      <!-- Si no hay asignaciones específicas, mostrar los filtros tradicionales -->
+      <div v-else class="flex flex-col sm:flex-row gap-4">
         <select
           :value="selectedCourse"
           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -43,15 +63,40 @@
 </template>
 
 <script setup>
-defineProps({
+import { ref, computed } from 'vue';
+
+const props = defineProps({
   searchQuery: String,
   selectedCourse: String,
   selectedDivision: String,
+  teacherCourseDivisions: Array,
 });
 
-defineEmits([
+const emit = defineEmits([
   "update:searchQuery",
   "update:selectedCourse",
   "update:selectedDivision",
 ]);
+
+// Valor para el selector combinado de curso-división
+const selectedClassGroup = computed(() => {
+  if (props.selectedCourse === 'all' || props.selectedDivision === 'all') {
+    return 'all';
+  }
+  return `${props.selectedCourse}-${props.selectedDivision}`;
+});
+
+// Manejar la selección del grupo de clase
+const handleClassGroupSelection = (value) => {
+  if (value === 'all') {
+    // Si se selecciona "Todos", resetear ambos filtros
+    emit('update:selectedCourse', 'all');
+    emit('update:selectedDivision', 'all');
+  } else {
+    // Si se selecciona un grupo específico, extraer curso y división
+    const [course, division] = value.split('-');
+    emit('update:selectedCourse', course);
+    emit('update:selectedDivision', division);
+  }
+};
 </script>

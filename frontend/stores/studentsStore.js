@@ -8,16 +8,55 @@ export const useStudentsStore = defineStore("students", {
     onlineStudents: new Set(), // IDs de estudiantes conectados
   }),
   actions: {
-    async fetchStudents(force = false) {
-      if (!force && this.students.length > 0) {
-        return; // Evitar recarga innecesaria
+    async fetchStudents(force = false, courseId = null, divisionId = null) {
+      if (!force && this.students.length > 0 && !courseId && !divisionId) {
+        return; // Evitar recarga innecesaria si no hay filtros nuevos
       }
 
       this.loading = true;
       this.error = null;
 
+      // Construir la URL con parámetros de filtro
+      let url = "http://localhost:8000/api/get-students";
+      const params = new URLSearchParams();
+      
+      // Manejar tanto IDs individuales como arrays de IDs
+      if (courseId) {
+        if (Array.isArray(courseId)) {
+          // Si es un array, usar course_ids[]
+          courseId.forEach(id => params.append('course_ids[]', id));
+        } else {
+          // Si es un valor individual, mantener compatibilidad
+          params.append('course_id', courseId);
+        }
+      }
+      
+      if (divisionId) {
+        if (Array.isArray(divisionId)) {
+          // Si es un array, usar division_ids[]
+          divisionId.forEach(id => params.append('division_ids[]', id));
+        } else {
+          // Si es un valor individual, mantener compatibilidad
+          params.append('division_id', divisionId);
+        }
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
       try {
-        const response = await fetch("http://localhost:8000/api/get-students");
+        const token = localStorage.getItem('token');
+        const headers = {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(url, { headers });
 
         if (!response.ok) {
           throw new Error(`Error: ${response.statusText}`);
@@ -35,7 +74,6 @@ export const useStudentsStore = defineStore("students", {
           ...student,
           status: student.status ?? 1,
         }));
-
         
       } catch (error) {
         this.error = `Error al cargar estudiantes: ${error.message}`;

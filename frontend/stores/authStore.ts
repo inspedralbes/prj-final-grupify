@@ -14,6 +14,14 @@ interface Subject {
   id: number;
 }
 
+// Interfaz para una asignación de curso y división
+interface CourseDivision {
+  course_id: number;
+  course_name: string;
+  division_id: number;
+  division_name: string;
+}
+
 // Interfaz para el usuario según la estructura exacta que envía el backend
 interface User {
   id: number;
@@ -22,6 +30,7 @@ interface User {
   last_name: string;
   email: string;
   role_id: number;
+  role_name?: string;
   created_at: string;
   updated_at: string;
   status: number | string;
@@ -29,6 +38,7 @@ interface User {
   division_id: number | null;
   course_name: string | null;
   division_name: string | null;
+  course_divisions?: CourseDivision[];
   forms: Form[];
   subjects: Subject[];
   role: Role;
