@@ -21,7 +21,7 @@ import { useRouter } from "vue-router";
 use([
   CanvasRenderer,
   BarChart,
-  RadarChart,
+  RadarChart, 
   TitleComponent,
   TooltipComponent,
   LegendComponent,
@@ -115,8 +115,8 @@ const loadData = async () => {
   await generateCoursesComparison();
 };
 
-// Opciones para el gráfico de radar
-const radarOptions = computed(() => {
+// Opciones para el gráfico de radar mejorado con burbujas
+const bubbleRadarOptions = computed(() => {
   if (!highlightedData.value || !highlightedData.value.hasHighlighted) {
     return {
       title: {
@@ -137,13 +137,75 @@ const radarOptions = computed(() => {
     };
   }
 
-  // Configurar indicadores con manejo de errores
+  // Configurar radar con burbujas
   try {
-    const indicators = [
-      { name: "Lideratge", max: Math.max(...students.map(s => s.liderazgo || 0)) + 1 },
-      { name: "Creativitat", max: Math.max(...students.map(s => s.creatividad || 0)) + 1 },
-      { name: "Organització", max: Math.max(...students.map(s => s.organizacion || 0)) + 1 },
+    // Encontrar el valor máximo para cada habilidad
+    const maxLiderazgo = Math.max(...students.map(s => s.liderazgo || 0));
+    const maxCreatividad = Math.max(...students.map(s => s.creatividad || 0));
+    const maxOrganizacion = Math.max(...students.map(s => s.organizacion || 0));
+
+    // Calcular el máximo absoluto para usar como escala en el radar
+    const maxValue = Math.max(maxLiderazgo, maxCreatividad, maxOrganizacion) + 1;
+
+    // Colores para cada estudiante
+    const colors = [
+      "#FF9800", // Naranja
+      "#9C27B0", // Púrpura
+      "#00BCD4", // Azul claro
+      "#4CAF50", // Verde
+      "#F44336", // Rojo
+      "#2196F3", // Azul
+      "#FFEB3B", // Amarillo
+      "#795548", // Marrón
+      "#607D8B", // Gris azulado
+      "#E91E63", // Rosa
     ];
+
+    // Crear serie de datos para cada estudiante
+    const series = students.map((student, index) => {
+      const color = colors[index % colors.length];
+      
+      return {
+        name: `${student.name || ""} ${student.last_name || ""}`,
+        type: 'radar',
+        symbol: 'circle',
+        symbolSize: 16,
+        lineStyle: {
+          width: 0 // Sin líneas entre puntos
+        },
+        data: [
+          {
+            value: [student.liderazgo || 0, student.creatividad || 0, student.organizacion || 0],
+            name: `${student.name || ""} ${student.last_name || ""}`,
+            label: {
+              show: true,
+              formatter: function() {
+                return student.name.charAt(0) + student.last_name.charAt(0);
+              },
+              color: '#fff',
+              fontSize: 10
+            },
+            // Personalización del punto
+            itemStyle: {
+              color: color,
+              borderColor: '#fff',
+              borderWidth: 2,
+              shadowBlur: 5,
+              shadowColor: 'rgba(0,0,0,0.3)'
+            }
+          }
+        ],
+        tooltip: {
+          formatter: function() {
+            return `<strong>${student.name} ${student.last_name}</strong><br/>
+                    Lideratge: ${student.liderazgo}<br/>
+                    Creativitat: ${student.creatividad}<br/>
+                    Organització: ${student.organizacion}<br/>
+                    Total: ${student.total}`;
+          }
+        }
+      };
+    });
 
     return {
       title: {
@@ -154,48 +216,54 @@ const radarOptions = computed(() => {
         },
       },
       tooltip: {
-        trigger: "item",
+        trigger: "item"
       },
       legend: {
         data: students.map(s => `${s.name || ""} ${s.last_name || ""}`),
         bottom: "bottom",
+        type: "scroll",
+        itemWidth: 25,
+        itemHeight: 14,
+        textStyle: {
+          fontSize: 12
+        }
       },
       radar: {
-        indicator: indicators,
-      },
-      series: [
-        {
-          type: "radar",
-          data: students.map((student, index) => {
-            const colors = [
-              "#FF9800",
-              "#9C27B0",
-              "#00BCD4",
-              "#4CAF50",
-              "#F44336",
-              "#2196F3",
-            ];
-            return {
-              name: `${student.name || ""} ${student.last_name || ""}`,
-              value: [
-                student.liderazgo || 0,
-                student.creatividad || 0,
-                student.organizacion || 0,
-              ],
-              lineStyle: {
-                color: colors[index % colors.length],
-              },
-              areaStyle: {
-                color: colors[index % colors.length],
-                opacity: 0.2,
-              },
-            };
-          }),
+        indicator: [
+          { name: 'Lideratge', max: maxValue, axisLabel: { show: true, color: '#FF9800' } },
+          { name: 'Creativitat', max: maxValue, axisLabel: { show: true, color: '#9C27B0' } },
+          { name: 'Organització', max: maxValue, axisLabel: { show: true, color: '#00BCD4' } }
+        ],
+        center: ['50%', '50%'],
+        radius: '65%',
+        axisName: {
+          formatter: '{value}',
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 'bold'
+          }
         },
-      ],
+        splitArea: {
+          areaStyle: {
+            opacity: 0.1,
+            color: ['#eee']
+          }
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ddd'
+          }
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#ddd'
+          }
+        }
+      },
+      series: series
     };
   } catch (error) {
-    console.error("Error al generar el gráfico de radar:", error);
+    console.error("Error al generar el gráfico de radar con burbujas:", error);
     return {
       title: {
         text: "Error al generar el gráfico",
@@ -984,7 +1052,24 @@ const getStatsInfo = computed(() => {
           </h2>
           <!-- Gráfico de radar para alumnos destacados -->
           <div class="h-96 mb-6">
-            <v-chart class="w-full h-full" :option="radarOptions" autoresize />
+            <v-chart class="w-full h-full" :option="bubbleRadarOptions" autoresize />
+          </div>
+          
+          <!-- Leyenda explicativa del gráfico de radar con burbujas -->
+          <div class="bg-gray-50 p-4 rounded-lg mb-6">
+            <h3 class="font-medium text-gray-800 mb-2">Com interpretar el gràfic de radar</h3>
+            <p class="text-sm text-gray-600 mb-2">
+              Aquest gràfic combina la claredat d'un radar (amb els tres eixos de competències) amb la 
+              visualització individual de cada alumne mitjançant bombolles.
+            </p>
+            <ul class="text-sm text-gray-600 list-disc pl-5 space-y-1">
+              <li><span class="text-[#FF9800] font-medium">Lideratge</span>: Representat a l'eix superior</li>
+              <li><span class="text-[#9C27B0] font-medium">Creativitat</span>: Representat a l'eix inferior dret</li>
+              <li><span class="text-[#00BCD4] font-medium">Organització</span>: Representat a l'eix inferior esquerre</li>
+              <li><span class="font-medium">Bombolles</span>: Cada bombolla correspon a un alumne, amb les seves inicials</li>
+              <li><span class="font-medium">Colors</span>: Cada alumne té un color diferent per facilitar la identificació</li>
+            </ul>
+            <p class="text-xs text-gray-500 mt-2">Passa el cursor sobre cada bombolla per veure més detalls.</p>
           </div>
 
           <!-- Lista de alumnos destacados -->
