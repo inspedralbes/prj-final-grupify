@@ -147,63 +147,63 @@ const bubbleRadarOptions = computed(() => {
     // Calcular el máximo absoluto para usar como escala en el radar
     const maxValue = Math.max(maxLiderazgo, maxCreatividad, maxOrganizacion) + 1;
 
-    // Colores para cada estudiante
-    const colors = [
-      "#FF9800", // Naranja
-      "#9C27B0", // Púrpura
-      "#00BCD4", // Azul claro
-      "#4CAF50", // Verde
-      "#F44336", // Rojo
-      "#2196F3", // Azul
-      "#FFEB3B", // Amarillo
-      "#795548", // Marrón
-      "#607D8B", // Gris azulado
-      "#E91E63", // Rosa
+    // Colores para competencias
+    const competenceColors = {
+      liderazgo: "#FF9800",     // Naranja
+      creatividad: "#9C27B0",   // Púrpura
+      organizacion: "#00BCD4"   // Azul claro
+    };
+    
+    // Colores para cada estudiante - Usando la paleta por defecto de ECharts para asegurar consistencia
+    const studentColors = [
+      '#5470c6', '#91cc75', '#fac858', '#ee6666', 
+      '#73c0de', '#3ba272', '#fc8452', '#9a60b4', 
+      '#ea7ccc', '#c94277'
     ];
 
-    // Crear serie de datos para cada estudiante
-    const series = students.map((student, index) => {
-      const color = colors[index % colors.length];
-      
+    // Para asegurar la consistencia, creamos primero la lista de estudiantes con sus colores
+    const studentData = students.map((student, index) => ({
+      student: student,
+      color: studentColors[index % studentColors.length],
+      name: `${student.name || ""} ${student.last_name || ""}`,
+    }));
+    
+    // Crear las series para cada estudiante usando sus colores asignados
+    const series = studentData.map((data) => {
       return {
-        name: `${student.name || ""} ${student.last_name || ""}`,
+        name: data.name,
         type: 'radar',
         symbol: 'circle',
-        symbolSize: 16,
+        symbolSize: 18,
         lineStyle: {
           width: 0 // Sin líneas entre puntos
         },
+        itemStyle: {
+          color: data.color // Color consistente para cada serie
+        },
         data: [
           {
-            value: [student.liderazgo || 0, student.creatividad || 0, student.organizacion || 0],
-            name: `${student.name || ""} ${student.last_name || ""}`,
+            value: [
+              data.student.liderazgo || 0, 
+              data.student.creatividad || 0, 
+              data.student.organizacion || 0
+            ],
+            name: data.name,
             label: {
-              show: true,
-              formatter: function() {
-                return student.name.charAt(0) + student.last_name.charAt(0);
-              },
-              color: '#fff',
-              fontSize: 10
-            },
-            // Personalización del punto
-            itemStyle: {
-              color: color,
-              borderColor: '#fff',
-              borderWidth: 2,
-              shadowBlur: 5,
-              shadowColor: 'rgba(0,0,0,0.3)'
+              show: false
             }
           }
         ],
         tooltip: {
           formatter: function() {
-            return `<strong>${student.name} ${student.last_name}</strong><br/>
-                    Lideratge: ${student.liderazgo}<br/>
-                    Creativitat: ${student.creatividad}<br/>
-                    Organització: ${student.organizacion}<br/>
-                    Total: ${student.total}`;
+            return `<strong>${data.name}</strong><br/>
+                    Lideratge: ${data.student.liderazgo}<br/>
+                    Creativitat: ${data.student.creatividad}<br/>
+                    Organització: ${data.student.organizacion}<br/>
+                    Total: ${data.student.total}`;
           }
         }
+
       };
     });
 
@@ -219,7 +219,7 @@ const bubbleRadarOptions = computed(() => {
         trigger: "item"
       },
       legend: {
-        data: students.map(s => `${s.name || ""} ${s.last_name || ""}`),
+        data: studentData.map(d => d.name),
         bottom: "bottom",
         type: "scroll",
         itemWidth: 25,
@@ -228,11 +228,12 @@ const bubbleRadarOptions = computed(() => {
           fontSize: 12
         }
       },
+      color: studentColors, // Establecer la paleta de colores global para ECharts
       radar: {
         indicator: [
-          { name: 'Lideratge', max: maxValue, axisLabel: { show: true, color: '#FF9800' } },
-          { name: 'Creativitat', max: maxValue, axisLabel: { show: true, color: '#9C27B0' } },
-          { name: 'Organització', max: maxValue, axisLabel: { show: true, color: '#00BCD4' } }
+          { name: 'Lideratge', max: maxValue, axisLabel: { show: true, color: competenceColors.liderazgo } },
+          { name: 'Creativitat', max: maxValue, axisLabel: { show: true, color: competenceColors.creatividad } },
+          { name: 'Organització', max: maxValue, axisLabel: { show: true, color: competenceColors.organizacion } }
         ],
         center: ['50%', '50%'],
         radius: '65%',
@@ -1060,16 +1061,16 @@ const getStatsInfo = computed(() => {
             <h3 class="font-medium text-gray-800 mb-2">Com interpretar el gràfic de radar</h3>
             <p class="text-sm text-gray-600 mb-2">
               Aquest gràfic combina la claredat d'un radar (amb els tres eixos de competències) amb la 
-              visualització individual de cada alumne mitjançant bombolles.
+              visualització individual de cada alumne mitjançant bombolles de colors.
             </p>
             <ul class="text-sm text-gray-600 list-disc pl-5 space-y-1">
-              <li><span class="text-[#FF9800] font-medium">Lideratge</span>: Representat a l'eix superior</li>
-              <li><span class="text-[#9C27B0] font-medium">Creativitat</span>: Representat a l'eix inferior dret</li>
-              <li><span class="text-[#00BCD4] font-medium">Organització</span>: Representat a l'eix inferior esquerre</li>
-              <li><span class="font-medium">Bombolles</span>: Cada bombolla correspon a un alumne, amb les seves inicials</li>
-              <li><span class="font-medium">Colors</span>: Cada alumne té un color diferent per facilitar la identificació</li>
+              <li><span style="color: #FF9800" class="font-medium">Lideratge</span>: Representat a l'eix superior</li>
+              <li><span style="color: #9C27B0" class="font-medium">Creativitat</span>: Representat a l'eix inferior dret</li>
+              <li><span style="color: #00BCD4" class="font-medium">Organització</span>: Representat a l'eix inferior esquerre</li>
+              <li><span class="font-medium">Bombolles</span>: Cada bombolla correspon a un alumne</li>
+              <li><span class="font-medium">Colors</span>: Cada alumne té un color únic que es mostra a la llegenda inferior</li>
             </ul>
-            <p class="text-xs text-gray-500 mt-2">Passa el cursor sobre cada bombolla per veure més detalls.</p>
+            <p class="text-xs text-gray-500 mt-2">Passa el cursor sobre cada bombolla per veure més detalls de l'alumne.</p>
           </div>
 
           <!-- Lista de alumnos destacados -->
