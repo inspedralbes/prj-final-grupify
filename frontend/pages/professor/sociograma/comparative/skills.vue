@@ -804,12 +804,36 @@ const getStatsInfo = computed(() => {
   <div class="min-h-screen bg-white">
     <DashboardNavTeacher class="w-full" />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Encabezado con botón de regreso -->
-      <div class="flex items-center justify-between mb-6">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <!-- Botón fijo en esquina para móviles -->
+      <div class="fixed bottom-4 right-4 z-10 md:hidden">
         <button
           @click="goBack"
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#0080C0] hover:bg-[#006699] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0080C0]"
+          class="flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-[#0080C0] hover:bg-[#006699] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0080C0] text-white"
+          aria-label="Tornar"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Encabezado adaptativo -->
+      <div class="flex flex-col sm:flex-row items-center sm:justify-between mb-4 sm:mb-6">
+        <!-- Botón visible solo en pantallas más grandes -->
+        <button
+          @click="goBack"
+          class="hidden md:inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#0080C0] hover:bg-[#006699] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0080C0]"
         >
           <svg
             class="w-5 h-5 mr-2"
@@ -827,15 +851,15 @@ const getStatsInfo = computed(() => {
           Tornar
         </button>
 
-        <h1 class="text-3xl font-semibold text-[#0080C0] text-center">
+        <h1 class="text-2xl md:text-3xl font-semibold text-[#0080C0] text-center mb-4 sm:mb-0">
           ALUMNES DESTACATS
         </h1>
 
-        <div class="w-[100px]"></div>
-        <!-- Espacio para equilibrar el layout -->
+        <div class="hidden md:block w-[100px]"></div>
+        <!-- Espacio para equilibrar el layout solo en desktop -->
       </div>
 
-      <p class="text-center text-gray-600 mb-6">
+      <p class="text-center text-gray-600 text-sm sm:text-base mb-4 sm:mb-6 px-2">
         Anàlisi d'alumnes amb competències significativament superiors a la
         mitjana de la seva classe
       </p>
@@ -892,7 +916,7 @@ const getStatsInfo = computed(() => {
             Comparativa de Competències per Curs
           </h2>
 
-          <div class="h-96">
+          <div class="h-72 sm:h-80 md:h-96">
             <v-chart
               class="w-full h-full"
               :option="coursesComparisonOptions"
@@ -901,42 +925,42 @@ const getStatsInfo = computed(() => {
           </div>
 
           <!-- Panel de información estadística -->
-          <div class="mt-4 bg-blue-50 p-4 rounded-md">
-            <p class="text-sm text-blue-800 mb-2">
+          <div class="mt-4 bg-blue-50 p-3 sm:p-4 rounded-md text-xs sm:text-sm">
+            <p class="text-blue-800 mb-2">
               <span class="font-medium">Nota:</span> Aquest gràfic mostra el
               nombre d'alumnes destacats per competència en cada curs. Un alumne
               pot destacar en més d'una competència, per això els colors es
               mostren apilats.
             </p>
-            <p class="text-sm text-blue-800 mb-2">
+            <p class="text-blue-800 mb-2">
               <span class="font-medium">Important:</span> Cada curs té la seva pròpia mitjana i desviació estàndard. 
-              Passa el cursor sobre cada barra per veure aquestes estadístiques específiques.
+              Toca cada barra o passa el cursor per veure aquestes estadístiques específiques.
             </p>
-            <p class="text-sm text-blue-800">
+            <p class="text-blue-800">
               <span class="font-medium">Línies discontínues:</span> Les línies discontínues mostren la mitjana convencional de vots
               per a cada competència a cada curs, permetent comparar fàcilment entre grups.
             </p>
           </div>
           
           <!-- Nueva sección para métricas alternativas -->
-          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-yellow-50 p-4 rounded-md">
-              <h3 class="font-semibold text-yellow-800 mb-2">Coeficient de Variació</h3>
-              <p class="text-sm text-yellow-800">
+          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            <div class="bg-yellow-50 p-3 sm:p-4 rounded-md">
+              <h3 class="font-semibold text-yellow-800 text-sm sm:text-base mb-1 sm:mb-2">Coeficient de Variació</h3>
+              <p class="text-xs sm:text-sm text-yellow-800">
                 Mesura com estan de dispersos els vots. Un valor alt indica que els vots 
                 estan més concentrats en pocs alumnes.
               </p>
             </div>
-            <div class="bg-green-50 p-4 rounded-md">
-              <h3 class="font-semibold text-green-800 mb-2">Índex de Concentració</h3>
-              <p class="text-sm text-green-800">
+            <div class="bg-green-50 p-3 sm:p-4 rounded-md">
+              <h3 class="font-semibold text-green-800 text-sm sm:text-base mb-1 sm:mb-2">Índex de Concentració</h3>
+              <p class="text-xs sm:text-sm text-green-800">
                 Indica com de distribuïts estan els vots: valors propers a 0 signifiquen 
                 distribució uniforme, valors propers a 1 significa alta concentració.
               </p>
             </div>
-            <div class="bg-purple-50 p-4 rounded-md">
-              <h3 class="font-semibold text-purple-800 mb-2">Distribució Percentual</h3>
-              <p class="text-sm text-purple-800">
+            <div class="bg-purple-50 p-3 sm:p-4 rounded-md">
+              <h3 class="font-semibold text-purple-800 text-sm sm:text-base mb-1 sm:mb-2">Distribució Percentual</h3>
+              <p class="text-xs sm:text-sm text-purple-800">
                 Mostra quin percentatge del total de vots ha rebut cada alumne, 
                 facilitant la comparació entre competències.
               </p>
@@ -1110,7 +1134,7 @@ const getStatsInfo = computed(() => {
             Alumnes Destacats ({{ highlightedData.students ? highlightedData.students.length : 0 }})
           </h2>
           <!-- Gráfico de radar para alumnos destacados -->
-          <div class="h-96 mb-6">
+          <div class="h-72 sm:h-80 md:h-96 mb-4 sm:mb-6">
             <v-chart class="w-full h-full" :option="bubbleRadarOptions" autoresize />
           </div>
           
@@ -1298,7 +1322,7 @@ const getStatsInfo = computed(() => {
             Comparativa de Tots els Alumnes
           </h2>
 
-          <div class="h-96">
+          <div class="h-72 sm:h-80 md:h-96">
             <v-chart class="w-full h-full" :option="barOptions" autoresize />
           </div>
         </div>
