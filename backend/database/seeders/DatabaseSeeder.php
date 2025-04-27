@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
             BitacoraSeeder::class,
             BitacoraNotesSeeder::class,
             CourseDivisionSeeder::class,
+            CompetencesSeeder::class
         ]);
     }
 }
