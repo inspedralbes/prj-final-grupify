@@ -106,6 +106,16 @@ class AnswerController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
+        
+        // Verificar el rol del usuario que está accediendo a las respuestas
+        if (auth()->check()) {
+            $currentUserRole = auth()->user()->role->name;
+            
+            // Los tutores no pueden ver las respuestas de los formularios
+            if ($currentUserRole === 'tutor') {
+                return response()->json(['message' => 'Como tutor, no tienes permisos para ver las respuestas de los formularios.'], 403);
+            }
+        }
 
         // Obtener las respuestas del usuario en el formulario específico
         $answers = Answer::where('form_id', $formId)
@@ -126,7 +136,6 @@ class AnswerController extends Controller
                 $answer->answer = $answer->rating; // Mostrar el valor de rating en lugar de `answer`
             }
         });
-
 
         // Devolver las respuestas con el título del formulario
         return response()->json([
@@ -182,6 +191,64 @@ class AnswerController extends Controller
 
         // Devolver la lista de usuarios
         return response()->json($users, 200);
+    }
+    
+    /**
+     * Obtener información de estado de las respuestas de un formulario por curso y división
+     * Esta ruta es accesible por profesores para ver quién ha respondido sin ver las respuestas
+     */
+    public function getFormResponseStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'form_id' => 'required|exists:forms,id',
+            'course_id' => 'required|exists:courses,id',
+            'division_id' => 'required|exists:divisions,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $formId = $request->input('form_id');
+        $courseId = $request->input('course_id');
+        $divisionId = $request->input('division_id');
+
+        // Obtener todos los estudiantes de esta clase
+        $allStudents = User::whereHas('courseDivisions', function ($query) use ($courseId, $divisionId) {
+            $query->where('course_id', $courseId)
+                  ->where('division_id', $divisionId);
+        })
+        ->where('role_id', 2) // Solo estudiantes
+        ->get(['id', 'name', 'last_name', 'email']);
+
+        // Si no hay estudiantes, devolver un mensaje
+        if ($allStudents->isEmpty()) {
+            return response()->json(['message' => 'No hay estudiantes en esta clase'], 404);
+        }
+
+        // Obtener los IDs de los estudiantes que han respondido
+        $respondedStudentIds = User::whereHas('forms', function ($query) use ($formId) {
+            $query->where('form_id', $formId)
+                  ->where('answered', 1);
+        })->pluck('id')->toArray();
+
+        // Agregar el estado de respuesta a cada estudiante
+        $studentsWithStatus = $allStudents->map(function ($student) use ($respondedStudentIds) {
+            return [
+                'id' => $student->id,
+                'name' => $student->name,
+                'last_name' => $student->last_name,
+                'email' => $student->email,
+                'has_answered' => in_array($student->id, $respondedStudentIds)
+            ];
+        });
+
+        return response()->json([
+            'total_students' => count($allStudents),
+            'answered_count' => count($respondedStudentIds),
+            'pending_count' => count($allStudents) - count($respondedStudentIds),
+            'students' => $studentsWithStatus
+        ], 200);
     }
 
     /**

@@ -1,11 +1,15 @@
 <script setup>
 import { useRouter, useRoute } from "vue-router";
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useAuthStore } from '~/stores/authStore';
 
+const authStore = useAuthStore();
 const isFormsOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 const isMobileFormsOpen = ref(false);
-const menuItems = [
+
+// Configuración de los elementos de menú
+const menuItemsConfig = [
   {
     title: "Gestió de Alumnes",
     route: "/professor/alumnes",
@@ -25,16 +29,25 @@ const menuItems = [
         title: "General",
         route: "/professor/formularis",
         icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+        showFor: ['profesor', 'tutor', 'orientador', 'admin'],
+      },
+      {
+        title: "Estat Formularis",
+        route: "/professor/formularis/estat",
+        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+        showFor: ['profesor', 'tutor', 'orientador', 'admin'],
       },
       {
         title: "Sociograma",
         route: "/professor/sociograma/SociogramaView",
         icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
+        showFor: ['orientador', 'admin'],
       },
       {
         title: "Cesc",
         route: "/professor/cesc/CescView",
         icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+        showFor: ['orientador', 'admin'],
       }
     ]
   },
@@ -50,10 +63,65 @@ const menuItems = [
   },
 ];
 
+// Filtrar los elementos del menú según el rol del usuario
+const menuItems = computed(() => {
+  const userRole = authStore.userRole;
+  console.log("User role desde menuItems computed:", userRole);
+  
+  return menuItemsConfig.map(item => {
+    // Si es un menú desplegable, filtramos sus elementos
+    if (item.type === 'dropdown') {
+      return {
+        ...item,
+        items: item.items.filter(subItem => 
+          !subItem.showFor || subItem.showFor.includes(userRole)
+        )
+      };
+    }
+    // Si es un elemento normal, lo devolvemos tal cual
+    return item;
+  });
+});
+
 const router = useRouter();
 const route = useRoute();
 
 const goHome = () => {
+  const userString = localStorage.getItem("user");
+  if (!userString) {
+    router.push("/login");
+    return;
+  }
+
+  try {
+    const user = JSON.parse(userString);
+    console.log("User desde navteacher:", user);
+    
+    if (user && user.role && user.role.name) {
+      // console.log("Role name:", user.role.name);
+      
+      if (user.role.name === "orientador") {
+        router.push("/orientador/dashboard");
+        return;
+      }
+      if (user.role.name === "profesor") {
+        router.push("/professor/dashboard");
+        return;
+      }
+      if (user.role.name === "tutor") {
+        router.push("/tutor/dashboard");
+        return;
+      }
+    } else {
+      console.error("La estructura del objeto usuario no es la esperada:", user);
+    }
+  } catch (error) {
+    console.error("Error al parsear el usuario desde localStorage:", error);
+    router.push("/login");
+    return;
+  }
+  
+  // Por defecto, si no se ha detectado un rol específico
   router.push("/professor/dashboard");
 };
 
@@ -81,6 +149,8 @@ const closeDropdown = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', closeDropdown);
+  // Debug para ver el rol actual
+  console.log("Auth store user role on mount:", authStore.userRole);
 });
 
 onUnmounted(() => {
@@ -208,8 +278,6 @@ onUnmounted(() => {
                       />
                     </svg>
                     <span class="flex-1">{{ subItem.title }}</span>
-                    
-                   
                   </NuxtLink>
                 </div>
               </div>

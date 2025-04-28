@@ -77,6 +77,32 @@ export const useAuthStore = defineStore("auth", {
       return state.user?.role?.name === 'profesor';
     },
     
+    isTutor: (state): boolean => {
+      return state.user?.role?.name === 'tutor';
+    },
+    
+    isOrientador: (state): boolean => {
+      return state.user?.role?.name === 'orientador';
+    },
+    
+    // Verificar si puede ver respuestas de formularios
+    canViewResponses: (state): boolean => {
+      const roleName = state.user?.role?.name;
+      return roleName === 'profesor' || roleName === 'orientador' || roleName === 'admin';
+    },
+    
+    // Verificar si puede asignar formularios
+    canAssignForms: (state): boolean => {
+      const roleName = state.user?.role?.name;
+      return roleName === 'profesor' || roleName === 'tutor' || roleName === 'admin';
+    },
+    
+    // Verificar si puede ver análisis (sociograma, cesc, gráficas)
+    canViewAnalysis: (state): boolean => {
+      const roleName = state.user?.role?.name;
+      return roleName === 'orientador' || roleName === 'admin';
+    },
+    
     userCourseName: (state): string | null => {
       return state.user?.course_name || null;
     },
@@ -155,8 +181,33 @@ export const useAuthStore = defineStore("auth", {
 
     checkRouteAccess(route: string): boolean {
       if (!this.isAuthenticated) return false;
+      
+      // Verificación de rutas por rol
       if (route.includes('/alumne') && !this.isAlumno) return false;
-      if (route.includes('/professor') && !this.isProfesor) return false;
+      
+      // Para las rutas de profesor, tutor y orientador
+      if (route.includes('/professor')) {
+        // Si no es profesor, tutor ni orientador, no tiene acceso
+        const roleName = this.user?.role?.name;
+        if (roleName !== 'profesor' && roleName !== 'tutor' && roleName !== 'orientador' && roleName !== 'admin') {
+          return false;
+        }
+        
+        // Los profesores no pueden acceder a análisis
+        if (roleName === 'profesor' && 
+            (route.includes('/sociogram') || route.includes('/cesc') || route.includes('/grafico'))) {
+          return false;
+        }
+        
+        // Los orientadores no pueden asignar formularios
+        if (roleName === 'orientador' && route.includes('/formularis/assignar')) {
+          return false;
+        }
+      }
+      
+      // Verificación para rutas de admin
+      if (route.includes('/admin') && this.user?.role?.name !== 'admin') return false;
+      
       return true;
     }
   },

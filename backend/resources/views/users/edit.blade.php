@@ -39,7 +39,7 @@
         </div>
 
         <!-- Para profesores: selección de asignaturas -->
-        @if($user->role_id == 1)
+        <div id="professor-options" class="{{ $user->role_id == 1 ? '' : 'd-none' }}">
             <div class="card mb-3">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">Assignació d'Assignatures</h5>
@@ -166,10 +166,61 @@
                     <input type="hidden" id="pair-count" value="{{ $pairCount }}">
                 </div>
             </div>
-        @endif
+        </div>
+
+        <!-- Si el usuario es un tutor, mostrar selección de un solo curso y división -->
+        <div id="tutor-options" class="{{ $user->role_id == 4 ? '' : 'd-none' }}">
+            <div class="card mb-3">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Assignació de Curs i Divisió (Tutor)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Un tutor només pot ser assignat a un curs i divisió:</p>
+                    
+                    @php
+                        // Obtener la asignación actual para tutores
+                        $tutorAssignment = $user->courseDivisionUsers->first();
+                    @endphp
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="tutor_course_id"><strong>Curs:</strong></label>
+                                <select name="course_division_pairs[0][course_id]" id="tutor_course_id" class="form-control">
+                                    <option value="">Selecciona un curs</option>
+                                    @foreach($courses as $course)
+                                        <option value="{{ $course->id }}" {{ $tutorAssignment && $tutorAssignment->course_id == $course->id ? 'selected' : '' }}>
+                                            {{ $course->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="tutor_division_id"><strong>Divisió:</strong></label>
+                                <select name="course_division_pairs[0][division_id]" id="tutor_division_id" class="form-control">
+                                    <option value="">Selecciona una divisió</option>
+                                    @foreach($divisions as $division)
+                                        <option value="{{ $division->id }}" {{ $tutorAssignment && $tutorAssignment->division_id == $division->id ? 'selected' : '' }}>
+                                            {{ $division->division }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> El tutor només tindrà accés al curs i divisió seleccionats.
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Si el usuario es un estudiante, mostrar cursos y divisiones -->
-        @if($user->role_id == 2)
+        <div id="student-options" class="{{ $user->role_id == 2 ? '' : 'd-none' }}">
             <div class="card mb-3">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">Assignació de Curs i Divisió</h5>
@@ -202,13 +253,13 @@
                     </div>
                 </div>
             </div>
-        @endif
+        </div>
 
         <button type="submit" class="btn btn-primary mt-3 w-100">Actualitzar</button>
     </form>
     <a href="{{ route('users.index') }}" class="btn btn-primary mt-3 w-100">Tornar a la Llista d'Usuaris</a>
 </div>
-<!-- Script para manejar la adición dinámica de pares curso-división -->
+<!-- Script para manejar la adición dinámica de pares curso-división y mostrar las opciones según el rol -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Configurar botones de eliminación existentes
@@ -283,6 +334,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Mostrar/ocultar opciones según el rol seleccionado
+    const roleSelect = document.getElementById('role_id');
+    const professorOptions = document.getElementById('professor-options');
+    const tutorOptions = document.getElementById('tutor-options');
+    const studentOptions = document.getElementById('student-options');
+    
+    roleSelect.addEventListener('change', function() {
+        const selectedRole = this.value;
+        
+        // Ocultar todas las opciones primero
+        professorOptions.classList.add('d-none');
+        tutorOptions.classList.add('d-none');
+        studentOptions.classList.add('d-none');
+        
+        // Mostrar las opciones según el rol seleccionado
+        if (selectedRole == 1) { // Profesor
+            professorOptions.classList.remove('d-none');
+        } else if (selectedRole == 4) { // Tutor (asumiendo que su ID es 4)
+            tutorOptions.classList.remove('d-none');
+        } else if (selectedRole == 2) { // Estudiante
+            studentOptions.classList.remove('d-none');
+        }
+    });
 });
 </script>
 @endsection
