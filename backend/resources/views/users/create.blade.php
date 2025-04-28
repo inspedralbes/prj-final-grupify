@@ -121,6 +121,47 @@
             </div>
         </div>
 
+        <!-- Course and Division Assignment (Only for Tutors) -->
+        <div id="tutor-fields" style="display: none;">
+            <div class="card mb-3">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">Assignació de Curs i Divisió (Tutor)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Un tutor només pot ser assignat a un curs i divisió:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="tutor_course_id"><strong>Curs:</strong></label>
+                                <select name="course_division_pairs[0][course_id]" id="tutor_course_id" class="form-control">
+                                    <option value="">Selecciona un curs</option>
+                                    @foreach($courses as $course)
+                                        <option value="{{ $course->id }}">{{ $course->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="tutor_division_id"><strong>Divisió:</strong></label>
+                                <select name="course_division_pairs[0][division_id]" id="tutor_division_id" class="form-control">
+                                    <option value="">Selecciona una divisió</option>
+                                    @foreach($divisions as $division)
+                                        <option value="{{ $division->id }}">{{ $division->division }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> El tutor només tindrà accés al curs i divisió seleccionats.
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Course and Division Assignment (Only for Students) -->
         <div id="student-fields" style="display: none;">
@@ -161,6 +202,7 @@
     const studentFields = document.getElementById('student-fields');
     const divisionGroup = document.getElementById('division-group');
     const teacherCourseDiv = document.getElementById('teacher-course-division');
+    const tutorFields = document.getElementById('tutor-fields');
 
 
     roleSelect.addEventListener('change', function () {
@@ -172,6 +214,7 @@
         studentFields.style.display = 'none';
         divisionGroup.style.display = 'none';
         teacherCourseDiv.style.display = 'none';
+        tutorFields.style.display = 'none';
 
 
         if (selectedRole === 1) { // Rol de "Profesor"
@@ -180,6 +223,8 @@
         } else if (selectedRole === 2) { // Rol de "Alumno"
             studentFields.style.display = 'block';
             divisionGroup.style.display = 'block';
+        } else if (selectedRole === 4) { // Rol de "Tutor" (asumiendo que su ID es 4)
+            tutorFields.style.display = 'block';
         }
         console.log("Rol seleccionado:", selectedRole);
     });

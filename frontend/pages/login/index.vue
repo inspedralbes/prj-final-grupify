@@ -75,10 +75,20 @@ const gestioSubmit = async (e) => {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumno: "/alumne/dashboard",
+      tutor: "/tutor/dashboard",
+      orientador: "/orientador/dashboard"
     };
 
-    // Usamos el mismo método de navegación para todos los roles para evitar problemas
-    navigateTo(dashboardRoutes[userRole] || "/");
+    // Asegurarnos de que estamos usando el rol correcto
+    const route = dashboardRoutes[userRole] || "/";
+    
+    console.log("Rol detectado:", userRole);
+    console.log("Redirigiendo a:", route);
+    
+    // Usar setTimeout para asegurar que la redirección ocurra después de que el store se haya actualizado
+    setTimeout(() => {
+      navigateTo(route);
+    }, 100);
 
   } catch (err) {
     console.error("Error de login:", err);

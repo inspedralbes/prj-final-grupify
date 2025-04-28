@@ -75,6 +75,12 @@ class FormController extends Controller
         }
     
         $form = Form::find($formId);
+        
+        // Verificar el rol del usuario que está asignando el formulario
+        $userRole = auth()->user()->role->name;
+        if ($userRole === 'orientador') {
+            return response()->json(['message' => 'Como orientador, no tienes permisos para asignar formularios.'], 403);
+        }
     
         foreach ($users as $user) {
             if (!$user->forms()->where('form_id', $formId)->exists()) {
@@ -213,6 +219,9 @@ class FormController extends Controller
     //verificar si el formulario esta completo (contestado por todos los alumnos de una clase)
     public function checkClassFormCompletion($course_id, $division_id, $form_id)
     {
+        // Verificar el rol del usuario que está accediendo
+        $userRole = auth()->user()->role->name;
+        
         // Contar el total de estudiantes de la clase
         $studentsCount = DB::table('course_division_user')
             ->join('users', 'course_division_user.user_id', '=', 'users.id')
@@ -220,6 +229,7 @@ class FormController extends Controller
             ->where('course_division_user.division_id', $division_id)
             ->where('users.role_id', 2)  // Filtrar solo estudiantes
             ->count();
+            
         // Contar cuántos estudiantes de esa clase han respondido el formulario
         $answeredCount = DB::table('form_user')
             ->where('form_user.form_id', $form_id)
@@ -227,14 +237,65 @@ class FormController extends Controller
             ->where('form_user.division_id', $division_id)
             ->where('form_user.answered', 1)
             ->count();
-        // Agregamos logs para verificar los conteos
-        // Log::info('Total de estudiantes:', ['studentsCount' => $studentsCount]);
-        // Log::info('Total de estudiantes que respondieron:', ['answeredCount' => $answeredCount]);
-
-        return response()->json([
-            //esta completo si el total alumnos de una clase es igual al total de alumnos que respondieron
-            'all_answered' => $studentsCount === $answeredCount
-        ]);
+            
+        // Obtener la lista de estudiantes que han respondido y que no han respondido
+        if ($userRole !== 'tutor') {
+            // Para profesores, orientadores y administradores, dar información completa
+            $studentsAnswered = DB::table('form_user')
+                ->join('users', 'form_user.user_id', '=', 'users.id')
+                ->where('form_user.form_id', $form_id)
+                ->where('form_user.course_id', $course_id)
+                ->where('form_user.division_id', $division_id)
+                ->where('form_user.answered', 1)
+                ->where('users.role_id', 2) // Solo estudiantes
+                ->select('users.id', 'users.name', 'users.last_name', 'users.email')
+                ->get();
+                
+            $studentsNotAnswered = DB::table('course_division_user')
+                ->join('users', 'course_division_user.user_id', '=', 'users.id')
+                ->leftJoin('form_user', function ($join) use ($form_id) {
+                    $join->on('users.id', '=', 'form_user.user_id')
+                         ->where('form_user.form_id', '=', $form_id)
+                         ->where('form_user.answered', '=', 1);
+                })
+                ->whereNull('form_user.user_id')
+                ->where('course_division_user.course_id', $course_id)
+                ->where('course_division_user.division_id', $division_id)
+                ->where('users.role_id', 2) // Solo estudiantes
+                ->select('users.id', 'users.name', 'users.last_name', 'users.email')
+                ->get();
+                
+            return response()->json([
+                'all_answered' => $studentsCount === $answeredCount,
+                'total_students' => $studentsCount,
+                'answered_count' => $answeredCount,
+                'pending_count' => $studentsCount - $answeredCount,
+                'students_answered' => $studentsAnswered,
+                'students_not_answered' => $studentsNotAnswered
+            ]);
+        } else {
+            // Para tutores, dar información limitada (solo contadores y quién ha respondido)
+            $studentsStatus = DB::table('course_division_user')
+                ->join('users', 'course_division_user.user_id', '=', 'users.id')
+                ->leftJoin('form_user', function ($join) use ($form_id) {
+                    $join->on('users.id', '=', 'form_user.user_id')
+                         ->where('form_user.form_id', '=', $form_id);
+                })
+                ->where('course_division_user.course_id', $course_id)
+                ->where('course_division_user.division_id', $division_id)
+                ->where('users.role_id', 2) // Solo estudiantes
+                ->select('users.id', 'users.name', 'users.last_name', 
+                         DB::raw('CASE WHEN form_user.answered = 1 THEN true ELSE false END as has_answered'))
+                ->get();
+                
+            return response()->json([
+                'all_answered' => $studentsCount === $answeredCount,
+                'total_students' => $studentsCount,
+                'answered_count' => $answeredCount,
+                'pending_count' => $studentsCount - $answeredCount,
+                'students_status' => $studentsStatus
+            ]);
+        }
     }
 
 
