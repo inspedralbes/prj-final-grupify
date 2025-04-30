@@ -30,7 +30,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-gray-800 text-lg">Análisis Comparativo</h3>
-            <p class="text-gray-600 mt-1">Visualiza y compara datos entre diferentes clases para identificar patrones.</p>
+            <p class="text-gray-600 mt-1">Visualiza y compara datos entre diferentes clases para identificar patrones y alumnos en riesgo.</p>
           </div>
         </div>
 
@@ -41,8 +41,8 @@
             </svg>
           </div>
           <div>
-            <h3 class="font-semibold text-gray-800 text-lg">Datos Interactivos</h3>
-            <p class="text-gray-600 mt-1">Interactúa con los gráficos para obtener información detallada de cada clase.</p>
+            <h3 class="font-semibold text-gray-800 text-lg">Datos Detallados</h3>
+            <p class="text-gray-600 mt-1">Haga clic en cada clase para ver información específica de los alumnos que necesitan atención prioritaria.</p>
           </div>
         </div>
 
@@ -54,59 +54,24 @@
           </div>
           <div>
             <h3 class="font-semibold text-gray-800 text-lg">Toma de Decisiones</h3>
-            <p class="text-gray-600 mt-1">Utiliza estos datos para tomar decisiones informadas sobre intervenciones en el aula.</p>
+            <p class="text-gray-600 mt-1">Identifique a los estudiantes que requieren intervención inmediata por estar en riesgo de "Rebutjat" o "Víctima".</p>
           </div>
         </div>
       </div>
+
+      <!-- Separador -->
+      <div class="w-full h-1 bg-gradient-to-r from-blue-200 to-transparent rounded mb-8"></div>
 
       <!-- Sección de gráficos -->
       <div class="grid grid-cols-1 gap-8">
         <!-- Gráfico de Tags CESC -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div class="bg-gray-50 p-6 border-b border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-800">
-              Comparativa de Tags CESC por Clase
-            </h2>
-            <p class="text-gray-600 mt-2">
-              Este gráfico muestra la distribución de estudiantes identificados con los tags "Rebutjat" (ID: 2) y "Víctima" (ID: 5) entre las diferentes clases, desde 1 ESO hasta 4 ESO con sus respectivas divisiones.
-            </p>
-          </div>
 
           <div class="p-1">
             <TagsGraphic />
-          </div>
+          
         </div>
       </div>
 
-      <!-- Sección de ayuda e interpretación -->
-      <div class="mt-8 bg-white rounded-xl shadow-md p-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-[#00ADEC]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Guía de interpretación
-        </h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h3 class="font-medium text-gray-800 mb-2">¿Qué significan estos tags?</h3>
-            <ul class="list-disc pl-5 text-gray-600 space-y-2">
-              <li><span class="font-medium text-blue-600">Rebutjat (ID: 2)</span>: Estudiantes que son rechazados por sus compañeros. Pueden experimentar aislamiento social.</li>
-              <li><span class="font-medium text-amber-600">Víctima (ID: 5)</span>: Estudiantes que son víctimas de comportamientos negativos como intimidación o acoso.</li>
-            </ul>
-          </div>
-
-          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h3 class="font-medium text-gray-800 mb-2">¿Cómo utilizar esta información?</h3>
-            <ul class="list-disc pl-5 text-gray-600 space-y-2">
-              <li>Identifica clases con altos porcentajes de estudiantes rechazados o víctimas.</li>
-              <li>Compara diferentes clases para detectar patrones o tendencias.</li>
-              <li>Utiliza los datos para planificar intervenciones específicas en las clases que lo necesiten.</li>
-              <li>Haz seguimiento de los cambios a lo largo del tiempo para evaluar la efectividad de las intervenciones.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
