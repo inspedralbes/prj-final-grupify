@@ -9,8 +9,9 @@ export const useStudentsStore = defineStore("students", {
   }),
   actions: {
     async fetchStudents(force = false, courseId = null, divisionId = null) {
+      // Si ya tenemos estudiantes y no nos fuerzan a recargar y no hay nuevos filtros, retornamos
       if (!force && this.students.length > 0 && !courseId && !divisionId) {
-        return; // Evitar recarga innecesaria si no hay filtros nuevos
+        return;
       }
 
       this.loading = true;

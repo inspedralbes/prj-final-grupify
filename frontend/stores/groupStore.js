@@ -8,12 +8,30 @@ export const useGroupStore = defineStore("groups", {
   }),
   actions:
    {
-    async fetchGroups() {
+    async fetchGroups(filters = {}) {
       try {
         const authStore = useAuthStore();
         const token = authStore.token;
+        
+        // Construir la URL con parámetros de filtro
+        let url = "http://localhost:8000/api/groups";
+        const params = new URLSearchParams();
+        
+        // Añadir filtros si están definidos
+        if (filters.course_id) {
+          params.append('course_id', filters.course_id);
+        }
+        
+        if (filters.division_id) {
+          params.append('division_id', filters.division_id);
+        }
+        
+        // Añadir parámetros a la URL si existen
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
     
-        const response = await $fetch("http://localhost:8000/api/groups", {
+        const response = await $fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`, 
             "Content-Type": "application/json",
@@ -156,6 +174,11 @@ export const useGroupStore = defineStore("groups", {
       try {
         const authStore = useAuthStore();
         const token = authStore.token;
+        
+        // No necesitamos incluir manualmente creator_id, el backend lo asignará
+        // automáticamente basado en el usuario autenticado
+
+        console.log("Creating group with data:", groupData);
 
         const response = await fetch("http://localhost:8000/api/groups", {
           method: "POST",
@@ -167,15 +190,20 @@ export const useGroupStore = defineStore("groups", {
           body: JSON.stringify(groupData),
         });
 
-        if (!response.ok) throw new Error("Error creando el grupo");
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Server response error:", errorData);
+          throw new Error(`Error creando el grupo: ${errorData.message || response.statusText}`);
+        }
         
         const newGroup = await response.json();
+        console.log("Group created successfully:", newGroup);
 
         await this.fetchGroups();
         
         return newGroup;
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error creating group:", error);
         throw error;
       }
     }

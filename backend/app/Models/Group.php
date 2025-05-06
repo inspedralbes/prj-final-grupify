@@ -13,6 +13,7 @@ class Group extends Model
         'name',
         'description',
         'number_of_students',
+        'creator_id',
     ];
     public function users()
     {
@@ -20,15 +21,15 @@ class Group extends Model
     }
     public function subjects()
     {
-        return $this->belongsToMany(Subject::class, 'group_subject', 'group_id', 'id_subject');
+        return $this->belongsToMany(Subject::class, 'group_subject', 'group_id', 'subject_id');
     }
     public function courses()
     {
-        return $this->belongsToMany(Course::class, 'group_course', 'group_id', 'id_course');
+        return $this->belongsToMany(Course::class, 'group_course', 'group_id', 'course_id');
     }
     public function divisions()
     {
-        return $this->belongsToMany(Division::class, 'group_division', 'group_id', 'id_division');
+        return $this->belongsToMany(Division::class, 'group_division', 'group_id', 'division_id');
     }
     public function comments()
     {
@@ -38,5 +39,9 @@ class Group extends Model
     {
         return $this->hasOne(Bitacora::class);
     }
-
+    
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id');
+    }
 }

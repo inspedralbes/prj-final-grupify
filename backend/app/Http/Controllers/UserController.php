@@ -567,24 +567,30 @@ class UserController extends Controller
 {
     $query = User::where('role_id', 2)
         ->with(['courseDivisionUsers.course', 'courseDivisionUsers.division']);
-        
+    
+    // Verificar si hay parámetros de filtrado
+    $hasCourseFilter = $request->has('course_id') || $request->has('course_ids');
+    $hasDivisionFilter = $request->has('division_id') || $request->has('division_ids');
+    
     // Filtrar por cursos y divisiones si se proporcionan los parámetros
-    if ($request->has('course_ids') || $request->has('division_ids')) {
+    if ($hasCourseFilter || $hasDivisionFilter) {
         $query->whereHas('courseDivisionUsers', function ($q) use ($request) {
-            // Si hay course_ids, filtrar por ellos
-            if ($request->has('course_ids') && is_array($request->course_ids)) {
-                $q->whereIn('course_id', $request->course_ids);
+            // Filtrar por curso
+            if ($request->has('course_ids')) {
+                $courseIds = $request->input('course_ids');
+                $q->whereIn('course_id', $courseIds);
             } elseif ($request->has('course_id')) {
-                // Compatibilidad con el formato anterior
-                $q->where('course_id', $request->course_id);
+                $courseId = $request->input('course_id');
+                $q->where('course_id', $courseId);
             }
             
-            // Si hay division_ids, filtrar por ellos
-            if ($request->has('division_ids') && is_array($request->division_ids)) {
-                $q->whereIn('division_id', $request->division_ids);
+            // Filtrar por división
+            if ($request->has('division_ids')) {
+                $divisionIds = $request->input('division_ids');
+                $q->whereIn('division_id', $divisionIds);
             } elseif ($request->has('division_id')) {
-                // Compatibilidad con el formato anterior
-                $q->where('division_id', $request->division_id);
+                $divisionId = $request->input('division_id');
+                $q->where('division_id', $divisionId);
             }
         });
     }
