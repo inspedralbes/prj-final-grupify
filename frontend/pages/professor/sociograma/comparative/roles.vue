@@ -14,7 +14,8 @@ import {
   LegendComponent,
   GridComponent,
   DatasetComponent,
-  TransformComponent
+  TransformComponent,
+  ToolboxComponent
 } from "echarts/components";
 import VChart from "vue-echarts";
 
@@ -29,8 +30,59 @@ use([
   LegendComponent,
   GridComponent,
   DatasetComponent,
-  TransformComponent
+  TransformComponent,
+  ToolboxComponent
 ]);
+
+// Referencias para los gráficos de ECharts
+const pieChartRef = ref(null);
+const barChartRef = ref(null);
+
+// Función para descargar el gráfico circular como imagen PNG
+const downloadPieChart = () => {
+  if (!pieChartRef.value) return;
+  
+  const chart = pieChartRef.value.chart;
+  if (!chart) return;
+  
+  // Obtener la imagen como data URL
+  const dataURL = chart.getDataURL({
+    type: 'png',
+    pixelRatio: 2, // Para mejor calidad en pantallas de alta resolución
+    backgroundColor: '#fff'
+  });
+  
+  // Crear un enlace para descargar la imagen
+  const link = document.createElement('a');
+  link.download = 'grafic roles sociograma.png';
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// Función para descargar el gráfico de barras como imagen PNG
+const downloadBarChart = () => {
+  if (!barChartRef.value) return;
+  
+  const chart = barChartRef.value.chart;
+  if (!chart) return;
+  
+  // Obtener la imagen como data URL
+  const dataURL = chart.getDataURL({
+    type: 'png',
+    pixelRatio: 2, // Para mejor calidad en pantallas de alta resolución
+    backgroundColor: '#fff'
+  });
+  
+  // Crear un enlace para descargar la imagen
+  const link = document.createElement('a');
+  link.download = 'grafic roles sociograma.png';
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 
 const router = useRouter();
@@ -448,16 +500,34 @@ const categoryTotals = computed(() => {
           </div>
          
           <!-- Gráfico circular de resumen -->
-          <div class="h-64 sm:h-72 md:h-80">
-            <v-chart class="w-full h-full" :option="pieChartOptions" autoresize />
+          <div class="h-64 sm:h-72 md:h-80 relative">
+            <v-chart ref="pieChartRef" class="w-full h-full" :option="pieChartOptions" autoresize />
+            <button 
+              @click="downloadPieChart" 
+              class="absolute top-2 right-2 px-3 py-1.5 bg-[#00ADEC] hover:bg-[#0099CC] text-white font-medium rounded-md shadow flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Descargar
+            </button>
           </div>
         </div>
        
         <!-- Gráfico comparativo por curso -->
         <div class="bg-white rounded-lg shadow-md p-6">
           <h2 class="text-xl font-semibold text-[#0080C0] mb-4">Comparativa per Cursos</h2>
-          <div class="h-72 sm:h-80 md:h-96">
-            <v-chart class="w-full h-full" :option="barChartOptions" autoresize />
+          <div class="h-72 sm:h-80 md:h-96 relative">
+            <v-chart ref="barChartRef" class="w-full h-full" :option="barChartOptions" autoresize />
+            <button 
+              @click="downloadBarChart" 
+              class="absolute top-2 right-2 px-3 py-1.5 bg-[#00ADEC] hover:bg-[#0099CC] text-white font-medium rounded-md shadow flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Descargar
+            </button>
           </div>
         </div>
        
