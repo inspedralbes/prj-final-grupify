@@ -78,6 +78,16 @@ class FormController extends Controller
         
         // Verificar el rol del usuario que está asignando el formulario
         $userRole = auth()->user()->role->name;
+        
+        // Solo tutores y admin pueden asignar formularios de sociograma y CESC
+        $isSociogramOrCesc = stripos($form->title, 'sociograma') !== false || 
+                             stripos($form->title, 'cesc') !== false;
+                             
+        if ($isSociogramOrCesc && $userRole !== 'tutor' && $userRole !== 'admin') {
+            return response()->json(['message' => 'Solo tutores pueden asignar formularios de sociograma y CESC.'], 403);
+        }
+        
+        // Orientadores no pueden asignar formularios, solo crearlos
         if ($userRole === 'orientador') {
             return response()->json(['message' => 'Como orientador, no tienes permisos para asignar formularios.'], 403);
         }
@@ -210,6 +220,18 @@ class FormController extends Controller
             'time_limit' => 'nullable|date_format:H:i',
         ]);
 
+        // Check if this is a self-evaluation form and make it global
+        if (stripos($validatedData['title'], 'autoevaluacion') !== false || 
+            stripos($validatedData['title'], 'autoevaluación') !== false ||
+            stripos($validatedData['title'], 'self-evaluation') !== false) {
+            $validatedData['is_global'] = true;
+        }
+
+        // Set form creator ID
+        if (!isset($validatedData['teacher_id'])) {
+            $validatedData['teacher_id'] = auth()->id();
+        }
+
         Log::info('Validated data: ' . json_encode($validatedData));
 
         $form = $this->formService->createForm($validatedData);
@@ -221,6 +243,30 @@ class FormController extends Controller
     {
         // Verificar el rol del usuario que está accediendo
         $userRole = auth()->user()->role->name;
+        
+        // Obtener información del formulario para verificar si es un sociograma o CESC
+        $form = Form::find($form_id);
+        if (!$form) {
+            return response()->json(['message' => 'Formulario no encontrado'], 404);
+        }
+        
+        $isSociogramOrCesc = stripos($form->title, 'sociograma') !== false || 
+                            stripos($form->title, 'cesc') !== false;
+        
+        // Si es un sociograma o CESC y el usuario no es tutor ni admin, denegar acceso
+        if ($isSociogramOrCesc && $userRole !== 'tutor' && $userRole !== 'admin') {
+            return response()->json(['message' => 'Solo tutores pueden verificar formularios de sociograma y CESC.'], 403);
+        }
+        
+        // Si no es el creador del formulario ni el formulario es global, denegar acceso
+        if ($userRole === 'profesor' && $form->teacher_id != auth()->id() && !$form->is_global) {
+            return response()->json(['message' => 'Solo puedes verificar formularios que has creado.'], 403);
+        }
+        
+        // El orientador solo puede ver los formularios que ha creado él mismo
+        if ($userRole === 'orientador' && $form->teacher_id != auth()->id()) {
+            return response()->json(['message' => 'Como orientador, solo puedes verificar formularios que has creado.'], 403);
+        }
         
         // Contar el total de estudiantes de la clase
         $studentsCount = DB::table('course_division_user')
@@ -239,8 +285,8 @@ class FormController extends Controller
             ->count();
             
         // Obtener la lista de estudiantes que han respondido y que no han respondido
-        if ($userRole !== 'tutor') {
-            // Para profesores, orientadores y administradores, dar información completa
+        // Para tutores (que pueden ver detalles de sociogramas/CESC) y administradores
+        if ($userRole === 'tutor' || $userRole === 'admin') {
             $studentsAnswered = DB::table('form_user')
                 ->join('users', 'form_user.user_id', '=', 'users.id')
                 ->where('form_user.form_id', $form_id)
@@ -274,7 +320,7 @@ class FormController extends Controller
                 'students_not_answered' => $studentsNotAnswered
             ]);
         } else {
-            // Para tutores, dar información limitada (solo contadores y quién ha respondido)
+            // Para profesores y orientadores, dar información limitada (solo contadores y estadísticas)
             $studentsStatus = DB::table('course_division_user')
                 ->join('users', 'course_division_user.user_id', '=', 'users.id')
                 ->leftJoin('form_user', function ($join) use ($form_id) {
@@ -348,20 +394,38 @@ class FormController extends Controller
 
     public function index(Request $request)
     {
-        // Obtener el teacher_id del usuario autenticado o de la solicitud
-        $teacherId = $request->input('teacher_id');
+        // Obtener el usuario autenticado
+        $user = auth()->user();
+        $userRole = $user ? $user->role->name : null;
+        $userId = $user ? $user->id : null;
 
         // Comienza la consulta para obtener los formularios
         $query = Form::with('questions.answers'); // Incluye preguntas y respuestas
 
-        // Filtros:
-        // 1. Filtrar por teacher_id si se pasa en la solicitud
-        if ($teacherId) {
-            $query->where('teacher_id', $teacherId);
+        // Filtros según el rol del usuario:
+        if ($userRole === 'profesor') {
+            // Profesores solo pueden ver sus propios formularios y los globales
+            $query->where(function($q) use ($userId) {
+                $q->where('teacher_id', $userId)
+                  ->orWhere('is_global', 1);
+            });
+        } 
+        elseif ($userRole === 'tutor') {
+            // Tutores pueden ver todos los formularios, incluyendo sociogramas y CESC
+            // No necesita restricción adicional aquí
         }
-
-        // 2. Incluir también los formularios donde is_global es 1
-        $query->orWhere('is_global', 1);
+        elseif ($userRole === 'orientador') {
+            // Orientadores pueden ver sus propios formularios y los globales
+            $query->where(function($q) use ($userId) {
+                $q->where('teacher_id', $userId)
+                  ->orWhere('is_global', 1);
+            });
+        }
+        elseif (!$userRole) {
+            // Si no hay usuario autenticado, solo mostrar formularios globales
+            $query->where('is_global', 1);
+        }
+        // Si es admin, puede ver todos los formularios (no necesita restricción)
 
         // Obtener los formularios filtrados
         $forms = $query->get();
@@ -370,7 +434,7 @@ class FormController extends Controller
         if ($request->expectsJson()) {
             return response()->json($forms, 200);
         }
-        $forms = Form::all();
+        
         // Si no es una solicitud JSON, se devuelve la vista
         return view('forms', compact('forms'));
     }
