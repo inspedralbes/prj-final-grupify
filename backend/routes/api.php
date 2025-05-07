@@ -317,5 +317,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // RUTAS PARA OBTENER RESULTADOS DEL CESC
 Route::middleware(['auth:sanctum', 'role:orientador,admin'])->post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
-Route::middleware(['auth:sanctum', 'role:orientador,admin'])->get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']);
+Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']); // Ruta pública para obtener resultados
 Route::middleware(['auth:sanctum', 'role:orientador,admin'])->get('/cesc/graficas-tags', [CescRelationshipController::class, 'getTagsGraphData']);

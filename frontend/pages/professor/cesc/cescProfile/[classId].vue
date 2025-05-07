@@ -15,8 +15,12 @@
       <div v-else-if="error">{{ error }}</div>
 
       <div v-else>
-        <p v-if="filtered.length === 0" class="text-center text-gray-600">
+        <p v-if="filtered.length === 0" class="text-center p-10 bg-white rounded-lg shadow-md text-gray-600 mb-4">
           No hi ha dades filtrades per a aquest curs i divisió.
+          <br><br>
+          <span class="block text-sm text-red-600">
+            Asegúrate de ejecutar primero "Calcular Resultados" en el panel de administración CESC.
+          </span>
         </p>
 
         <!-- Gráfico ECharts -->

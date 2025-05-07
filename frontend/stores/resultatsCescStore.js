@@ -27,12 +27,16 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
         isLoading.value = true;
         try {
             const response = await fetch("http://localhost:8000/api/cesc/ver-resultados");
-            if (!response.ok) throw new Error("Error al obtener resultados");
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error("Respuesta del servidor:", errorData);
+                throw new Error("Error al obtener resultados");
+            }
             resultsCesc.value = await response.json();
-            // console.log("Datos obtenidos del endpoint:", resultsCesc.value);
+            console.log("Datos obtenidos del endpoint:", resultsCesc.value);
         } catch (err) {
             console.error("Error al cargar resultados:", err);
-            error.value = "Error al cargar resultados";
+            error.value = "Error al cargar resultados: " + err.message;
         } finally {
             isLoading.value = false;
         }

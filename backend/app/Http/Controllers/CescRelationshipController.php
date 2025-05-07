@@ -367,11 +367,27 @@ public function calcularResultados()
 
 public function verResultados()
 {
-    $resultados = CescResult::with(['peer', 'tag'])
-    ->get()
-    ->makeHidden(['peer', 'question', 'tag']);
+    try {
+        $resultados = CescResult::with(['peer', 'tag'])
+            ->get();
+            
+        // Transformar los resultados para incluir información necesaria del peer y tag
+        $transformedResults = $resultados->map(function ($resultado) {
+            return [
+                'id' => $resultado->id,
+                'peer_id' => $resultado->peer_id,
+                'tag_id' => $resultado->tag_id,
+                'vote_count' => $resultado->vote_count,
+                'peer_name' => $resultado->peer ? $resultado->peer->name : 'Desconocido',
+                'peer_last_name' => $resultado->peer ? $resultado->peer->last_name : '',
+                'tag_name' => $resultado->tag ? $resultado->tag->name : 'Desconocido'
+            ];
+        });
 
-    return response()->json($resultados);
+        return response()->json($transformedResults);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Error al obtener resultados: ' . $e->getMessage()], 500);
+    }
 }
 
 /**
