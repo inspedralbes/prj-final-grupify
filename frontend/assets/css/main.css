@@ -74,3 +74,69 @@ body {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 200ms;
 }
+
+/* Clases para centrar resultados CESCS */
+.cesc-results-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  width: 100%;
+}
+
+.cesc-results-card {
+  @apply bg-white rounded-xl shadow-md mx-auto;
+  max-width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cesc-centered-content {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+  max-width: min(100%, 1200px);
+}
+
+.cesc-header {
+  @apply mb-8 bg-white rounded-xl shadow-md p-6 border-l-4 border-[#0080C0] mx-auto;
+  max-width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cesc-visualization {
+  @apply bg-white rounded-xl shadow-md p-6 mx-auto mb-6;
+  max-width: min(100%, 1200px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cesc-table-container {
+  @apply bg-white rounded-xl shadow-md overflow-hidden mx-auto;
+  max-width: min(100%, 1400px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Asegurar que todos los elementos estén centrados correctamente */
+.cesc-results-container > * {
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .cesc-table-container {
+    max-width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 1200px) {
+  .cesc-header,
+  .cesc-visualization,
+  .cesc-results-card {
+    max-width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .cesc-results-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
