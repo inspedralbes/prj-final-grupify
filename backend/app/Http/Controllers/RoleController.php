@@ -10,12 +10,19 @@ class RoleController extends Controller
     /**
      * Muestra todos los roles disponibles
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
         $roles = Role::all();
-        return response()->json($roles);
+        
+        // Si la petición viene de la API, devolver JSON
+        if ($request->is('api/*')) {
+            return response()->json($roles);
+        }
+        
+        // Si es una petición web, devolver la vista
+        return view('roles', compact('roles'));
     }
 
     /**
@@ -36,10 +43,10 @@ class RoleController extends Controller
     }
 
     /**
-     * Crea un nuevo rol (solo administradores)
+     * Crea un nuevo rol
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -50,22 +57,31 @@ class RoleController extends Controller
 
         $role = Role::create($validatedData);
         
-        return response()->json($role, 201);
+        // Si la petición viene de la API, devolver JSON
+        if ($request->is('api/*')) {
+            return response()->json($role, 201);
+        }
+        
+        // Si es una petición web, redirigir
+        return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente');
     }
 
     /**
-     * Actualiza un rol existente (solo administradores)
+     * Actualiza un rol existente
      *
      * @param Request $request
      * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {
         $role = Role::find($id);
         
         if (!$role) {
-            return response()->json(['message' => 'Rol no encontrado'], 404);
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Rol no encontrado'], 404);
+            }
+            return redirect()->route('roles.index')->with('error', 'Rol no encontrado');
         }
 
         $validatedData = $request->validate([
@@ -75,30 +91,48 @@ class RoleController extends Controller
 
         $role->update($validatedData);
         
-        return response()->json($role);
+        // Si la petición viene de la API, devolver JSON
+        if ($request->is('api/*')) {
+            return response()->json($role);
+        }
+        
+        // Si es una petición web, redirigir
+        return redirect()->route('roles.index')->with('success', 'Rol actualizado exitosamente');
     }
 
     /**
-     * Elimina un rol (solo administradores)
+     * Elimina un rol
      *
      * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $role = Role::find($id);
         
         if (!$role) {
-            return response()->json(['message' => 'Rol no encontrado'], 404);
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Rol no encontrado'], 404);
+            }
+            return redirect()->route('roles.index')->with('error', 'Rol no encontrado');
         }
         
         // Verificar si hay usuarios con este rol
         if ($role->users()->count() > 0) {
-            return response()->json(['message' => 'No se puede eliminar este rol porque hay usuarios asignados a él'], 400);
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'No se puede eliminar este rol porque hay usuarios asignados a él'], 400);
+            }
+            return redirect()->route('roles.index')->with('error', 'No se puede eliminar este rol porque hay usuarios asignados a él');
         }
         
         $role->delete();
         
-        return response()->json(['message' => 'Rol eliminado correctamente']);
+        // Si la petición viene de la API, devolver JSON
+        if ($request->is('api/*')) {
+            return response()->json(['message' => 'Rol eliminado correctamente']);
+        }
+        
+        // Si es una petición web, redirigir
+        return redirect()->route('roles.index')->with('success', 'Rol eliminado exitosamente');
     }
 }
