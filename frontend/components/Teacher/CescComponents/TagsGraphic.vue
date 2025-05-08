@@ -381,13 +381,25 @@ const fetchData = async () => {
   error.value = null;
 
   try {
-    const response = await fetch('http://localhost:8000/api/cesc/graficas-tags');
+    const response = await fetch('http://localhost:8000/api/cesc/graficas-tags', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    });
 
     if (!response.ok) {
+      // Intentar obtener los detalles del error
+      const errorText = await response.text();
+      console.error('Error completo:', errorText);
+      console.error('Status:', response.status);
+      console.error('Headers:', [...response.headers.entries()]);
       throw new Error(`Error al cargar los datos: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Datos recibidos:', data);
     graphData.value = data;
 
     if (data.length === 0) {

@@ -7,6 +7,7 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --color-primary: rgb(0, 173, 238);
+  --color-secondary: #6B7280;
   --text-primary: #333;
   --text-secondary: #666;
   --background-gradient: linear-gradient(
@@ -16,33 +17,100 @@
   );
   --input-background: rgba(255, 255, 255, 0.9);
   --card-background: rgba(255, 255, 255, 0.95);
+  --primary-rgb: 0, 173, 238;
+  --secondary-rgb: 107, 114, 128;
 }
 
-body {
-  @apply bg-background min-h-screen;
+@layer base {
+  body {
+    @apply bg-background min-h-screen text-gray-900 antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold leading-tight;
+  }
 }
 
-.card {
-  @apply bg-white rounded-lg shadow-md p-6;
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 inline-flex items-center justify-center;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg transform hover:scale-105;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+  
+  .feature-card {
+    @apply bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1;
+  }
+  
+  .testimonial-card {
+    @apply bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1;
+  }
+  
+  .stat-card {
+    @apply bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1;
+  }
 }
 
-.btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+@layer utilities {
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+  
+  .animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  /* Scroll behavior */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  /* Backdrop blur for older browsers */
+  @supports not (backdrop-filter: blur(10px)) {
+    .backdrop-blur-lg {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+  }
+  
+  /* Gradient animations */
+  .animate-gradient {
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded hover:bg-gray-500;
+  }
 }
 
-.btn-primary {
-  @apply bg-primary text-white hover:bg-primary/90;
-}
-
-/* Animaciones */
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out forwards;
-}
-
+/* Keyframe Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -63,19 +131,55 @@ body {
   }
 }
 
-/* Scroll suave */
-.scroll-smooth {
-  scroll-behavior: smooth;
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-/* Transiciones */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Clases para centrar resultados CESCS */
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Landing page specific styles */
+.landing-section {
+  @apply py-12 md:py-16 lg:py-24;
+}
+
+.section-title {
+  @apply text-3xl lg:text-4xl font-bold text-gray-900 text-center mb-4;
+}
+
+.section-subtitle {
+  @apply text-lg text-gray-600 text-center max-w-2xl mx-auto;
+}
+
+.section-divider {
+  @apply h-1 w-24 bg-gradient-to-r from-primary to-secondary mx-auto mt-4 rounded-full;
+}
+
+/* CESC Results styling */
 .cesc-results-container {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   width: 100%;
@@ -138,5 +242,34 @@ body {
   .cesc-results-container {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  
+  .landing-section {
+    @apply py-8 md:py-12;
+  }
+  
+  .section-title {
+    @apply text-2xl md:text-3xl;
+  }
+}
+
+/* Hover effects */
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-1;
+}
+
+.hover-glow {
+  @apply transition-shadow duration-200 hover:shadow-lg;
+}
+
+/* Focus states */
+.focus-primary {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
   }
 }
