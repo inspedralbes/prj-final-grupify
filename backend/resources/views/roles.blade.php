@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <!-- Encabezado y botón de retorno -->
+    <!-- Encapçalament i botó de retorn -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="display-5 mb-0">Gestió de Rols</h1>
         <a href="{{ route('dashboard') }}" class="btn btn-outline-primary">
@@ -11,16 +11,22 @@
         </a>
     </div>
 
-    <!-- Mensajes de éxito -->
+    <!-- Missatges d'èxit o error -->
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    @elseif (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-times-circle me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
-    <!-- Errores de validación -->
+    <!-- Errors de validació -->
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <ul class="mb-0">
@@ -32,9 +38,8 @@
         </div>
     @endif
 
-    <!-- Grid de dos columnas -->
+    <!-- Llista de Rols -->
     <div class="row">
-        <!-- Lista de roles -->
         <div class="col-lg-8 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-white py-3">
@@ -51,7 +56,7 @@
                                     <th class="px-4">ID</th>
                                     <th>Nom</th>
                                     <th>Descripció</th>
-                                    <th class="text-end px-4">Accions</th>
+                                    <th class="text-end">Accions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -60,27 +65,22 @@
                                         <td class="px-4">{{ $role->id }}</td>
                                         <td>{{ $role->name }}</td>
                                         <td>{{ $role->description ?? 'Sense descripció' }}</td>
-                                        <td class="text-end px-4">
-                                            <!-- Botón para editar rol -->
-                                            <a href="{{ route('roles.index', ['edit' => $role->id]) }}" 
-                                               class="btn btn-sm btn-warning me-2">
-                                                <i class="fas fa-edit me-1"></i>
-                                                Edita
-                                            </a>
-                                            
-                                            <!-- Formulario para eliminar rol -->
-                                            <form action="{{ route('roles.destroy', $role->id) }}" 
-                                                  method="POST" 
-                                                  class="d-inline">
-                                                @method('DELETE')
-                                                @csrf
-                                                <button type="submit" 
-                                                        class="btn btn-sm btn-danger" 
-                                                        onclick="return confirm('Esteu segur d eliminar aquest rol?')">
-                                                    <i class="fas fa-trash-alt me-1"></i>
-                                                    Elimina
-                                                </button>
-                                            </form>
+                                        <td class="text-end">
+                                            <div class="d-flex justify-content-end align-items-center">
+                                                <!-- Botó Editar -->
+                                                <a href="{{ route('roles.index', ['edit' => $role->id]) }}" class="btn btn-warning btn-sm me-2">
+                                                    <i class="fas fa-edit me-1"></i> Editar
+                                                </a>
+
+                                                <!-- Formulari Eliminar -->
+                                                <form action="{{ route('roles.destroy', $role->id) }}" method="POST" class="d-inline">
+                                                    @method('DELETE')
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Estàs segur d'eliminar aquest rol?')">
+                                                        <i class="fas fa-trash-alt me-1"></i> Eliminar
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -91,7 +91,7 @@
             </div>
         </div>
 
-        <!-- Formulario para crear o editar rol -->
+        <!-- Formulari per Crear o Editar -->
         <div class="col-lg-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-white py-3">
@@ -115,7 +115,7 @@
                                    class="form-control" 
                                    id="name" 
                                    name="name" 
-                                   value="{{ isset($_GET['edit']) ? $roles->firstWhere('id', $_GET['edit'])->name : old('name') }}" 
+                                   value="{{ isset($_GET['edit']) ? $roles->firstWhere('id', $_GET['edit'])->name : '' }}" 
                                    required>
                         </div>
 
@@ -124,19 +124,19 @@
                             <textarea class="form-control" 
                                       id="description" 
                                       name="description" 
-                                      rows="3">{{ isset($_GET['edit']) ? $roles->firstWhere('id', $_GET['edit'])->description : old('description') }}</textarea>
+                                      rows="3">{{ isset($_GET['edit']) ? $roles->firstWhere('id', $_GET['edit'])->description : '' }}</textarea>
                         </div>
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save me-2"></i>
-                                {{ isset($_GET['edit']) ? 'Actualitza' : 'Desar' }}
+                                {{ isset($_GET['edit']) ? 'Actualitzar' : 'Desar' }}
                             </button>
 
                             @if(isset($_GET['edit']))
                                 <a href="{{ route('roles.index') }}" class="btn btn-outline-secondary">
                                     <i class="fas fa-times me-2"></i>
-                                    Cancel·la
+                                    Cancel·lar
                                 </a>
                             @endif
                         </div>

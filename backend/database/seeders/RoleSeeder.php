@@ -11,27 +11,27 @@ class RoleSeeder extends Seeder
     {
         Role::updateOrCreate(
             ['name' => 'profesor'],
-            ['description' => 'Puede asignar formularios, ver todas las respuestas, acceder a todos los análisis y gestionar clases.']
+            ['description' => 'Pot assignar formularis, veure totes les respostes, accedir a totes les anàlisis i gestionar classes.']
         );
         
         Role::updateOrCreate(
             ['name' => 'alumno'],
-            ['description' => 'Puede responder formularios asignados y ver su propia información.']
+            ['description' => 'Pot respondre formularis assignats i veure la seva pròpia informació.']
         );
         
         Role::updateOrCreate(
             ['name' => 'admin'],
-            ['description' => 'Tiene acceso completo a todas las funcionalidades del sistema.']
+            ['description' => 'Té accés complet a totes les funcionalitats del sistema.']
         );
         
         Role::updateOrCreate(
             ['name' => 'tutor'],
-            ['description' => 'Similar a un profesor pero solo puede asignar formularios y ver quiénes han respondido. No puede ver las respuestas ni los análisis detallados.']
+            ['description' => 'Similar a un professor però només pot assignar formularis i veure qui ha respost. No pot veure les respostes ni les anàlisis detallades.']
         );
         
         Role::updateOrCreate(
             ['name' => 'orientador'],
-            ['description' => 'Tiene acceso a todos los formularios y sus análisis pero no puede enviar formularios a los alumnos.']
+            ['description' => 'Té accés a tots els formularis i les seves anàlisis però no pot enviar formularis als alumnes.']
         );
     }
 }
