@@ -3,7 +3,32 @@
 @section('content')
 <div class="container">
     <h1 class="mb-4">Usuaris</h1>
-    <a href="{{ route('users.create') }}" class="btn btn-primary mb-3">Afegir Nou Usuari</a>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <a href="{{ route('users.create') }}" class="btn btn-primary">Afegir Nou Usuari</a>
+        </div>
+        <div class="col-md-4">
+            <!-- Filtro por rol -->
+            <form action="{{ route('users.index') }}" method="GET" class="d-flex">
+                <select name="role_id" class="form-control mr-2">
+                    <option value="">Tots els rols</option>
+                    @foreach($roles as $role)
+                    <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
+                        {{ $role->name }}
+                    </option>
+                    @endforeach
+                </select>
+                <button type="submit" class="btn btn-secondary ml-2">Filtrar</button>
+                @if(request('role_id'))
+                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary ml-2">
+                    <i class="fas fa-times"></i> Netejar
+                </a>
+                @endif
+            </form>
+        </div>
+    </div>
+
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -26,10 +51,10 @@
                 <td>
                     <!-- Botó de visualització -->
                     <a href="{{ route('users.show', $user->id) }}" class="btn btn-info btn-sm">Veure</a>
-                    
+
                     <!-- Botó d'edició -->
                     <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning btn-sm">Editar</a>
-                    
+
                     <!-- Botó d'eliminació -->
                     <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline-block;">
                         @csrf
@@ -48,7 +73,7 @@
 
     <!-- Paginació -->
     <div class="d-flex justify-content-center mb-3">
-        {{ $users->links('pagination::bootstrap-4') }}
+        {{ $users->appends(request()->query())->links('pagination::bootstrap-4') }}
     </div>
 
     <!-- Botó de tornar al dashboard -->
