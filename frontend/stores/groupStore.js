@@ -14,7 +14,7 @@ export const useGroupStore = defineStore("groups", {
         const token = authStore.token;
         
         // Construir la URL con parámetros de filtro
-        let url = "http://localhost:8000/api/groups";
+        let url = "https://api.grupify.cat/api/groups";
         const params = new URLSearchParams();
         
         // Añadir filtros si están definidos
@@ -180,7 +180,7 @@ export const useGroupStore = defineStore("groups", {
 
         console.log("Creating group with data:", groupData);
 
-        const response = await fetch("http://localhost:8000/api/groups", {
+        const response = await fetch("http://api.grupify.cat/api/groups", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
