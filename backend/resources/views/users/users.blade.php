@@ -10,8 +10,8 @@
         </div>
         <div class="col-md-4">
             <!-- Filtro por rol -->
-            <form action="{{ route('users.index') }}" method="GET" class="d-flex">
-                <select name="role_id" class="form-control mr-2">
+            <form action="{{ route('users.index') }}" method="GET" class="d-flex align-items-center">
+                <select name="role_id" class="form-control">
                     <option value="">Tots els rols</option>
                     @foreach($roles as $role)
                     <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
@@ -19,10 +19,14 @@
                     </option>
                     @endforeach
                 </select>
-                <button type="submit" class="btn btn-secondary ml-2">Filtrar</button>
+
+                <button type="submit" class="btn mx-3" style="background-color: #00ADEE; color: white;">
+                    Filtrar
+                </button>
+
                 @if(request('role_id'))
-                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary ml-2">
-                    <i class="fas fa-times"></i> Netejar
+                <a href="{{ route('users.index') }}" class="btn" style="background-color: #6C757D; color: white;">
+                    Netejar
                 </a>
                 @endif
             </form>
