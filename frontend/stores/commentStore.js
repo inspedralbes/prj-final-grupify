@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "~/stores/authStore";
 
 export const useCommentStore = defineStore("comment", {
   state: () => ({

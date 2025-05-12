@@ -31,15 +31,63 @@
                 <p>{{ $user->updated_at }}</p>
             </div>
 
-            <!-- Mostrar Curso y División si el usuario tiene asignados -->
-                    <div class="form-group mb-3">
-            <label for="course"><strong>Curs:</strong></label>
-            <p>{{ $user->courses->first()?->name ?? 'Sense curs assignat' }}</p>
-        </div>
-        <div class="form-group mb-3">
-            <label for="division"><strong>Divisió:</strong></label>
-            <p>{{ $user->courses->first()?->divisions->first()?->division ?? 'Sense divisió assignada' }}</p>
-        </div>
+            <!-- Mostrar Rol del usuario -->
+            <div class="form-group mb-3">
+                <label><strong>Rol:</strong></label>
+                <p>{{ $user->role->name ?? 'No especificat' }}</p>
+            </div>
+
+            <!-- Mostrar cursos y divisiones de manera diferente según el rol -->
+            @if($user->role_id == 1) <!-- Si es profesor -->
+                <div class="form-group mb-3">
+                    <label><strong>Cursos i Divisions assignats:</strong></label>
+                    @if($user->courseDivisionUsers->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Curs</th>
+                                        <th>Divisió</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($user->courseDivisionUsers as $cdu)
+                                    <tr>
+                                        <td>{{ $cdu->course->name ?? 'N/A' }}</td>
+                                        <td>{{ $cdu->division->division ?? 'N/A' }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p>Sense cursos ni divisions assignats</p>
+                    @endif
+                </div>
+
+                <!-- Si es profesor, mostrar también las materias -->
+                <div class="form-group mb-3">
+                    <label><strong>Assignatures:</strong></label>
+                    @if($user->subjects->count() > 0)
+                        <ul>
+                            @foreach($user->subjects as $subject)
+                                <li>{{ $subject->name }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p>Sense assignatures assignades</p>
+                    @endif
+                </div>
+            @elseif($user->role_id == 2) <!-- Si es estudiante -->
+                <div class="form-group mb-3">
+                    <label><strong>Curs:</strong></label>
+                    <p>{{ $user->courseDivisionUsers->first()?->course->name ?? 'Sense curs assignat' }}</p>
+                </div>
+                <div class="form-group mb-3">
+                    <label><strong>Divisió:</strong></label>
+                    <p>{{ $user->courseDivisionUsers->first()?->division->division ?? 'Sense divisió assignada' }}</p>
+                </div>
+            @endif
 
 
         </div>

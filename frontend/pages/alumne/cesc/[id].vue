@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "~/stores/authStore";
 import Toast from "@/components/common/Toast.vue";
 
 const route = useRoute();

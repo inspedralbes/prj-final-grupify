@@ -45,7 +45,7 @@
       </h2>
       <p class="text-gray-500 text-sm">{{ userData.email }}</p>
       <p class="text-gray-500 text-sm">
-        Curs: {{ userData.course }} {{ userData.division }}
+        Curs: {{ userData.course_name }} {{ userData.division_name }}
       </p>
     </div>
   </div>
@@ -53,7 +53,7 @@
 
 <script setup>
 import { computed, ref } from 'vue';
-import { useAuthStore } from '~/stores/auth';
+import { useAuthStore } from '~/stores/authStore';
 
 const authStore = useAuthStore();
 const fileInput = ref(null);
@@ -68,8 +68,8 @@ const userData = computed(() => {
       last_name: "",
       email: "",
       image: "",
-      course: "Sense curs",
-      division: "Sense divisió",
+      course_name: "Sense curs",
+      division_name: "Sense divisió",
     };
   }
 
@@ -78,8 +78,8 @@ const userData = computed(() => {
     last_name: user.last_name || "",
     email: user.email || "",
     image: user.image || "",
-    course: user.course || "Sense curs", // Campo del API
-    division: user.division || "Sense divisió", // Campo del API
+    course_name: user.course_name || "Sense curs",
+    division_name: user.division_name || "Sense divisió",
   };
 });
 

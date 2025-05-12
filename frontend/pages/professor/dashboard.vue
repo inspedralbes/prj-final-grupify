@@ -1,61 +1,100 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "~/stores/authStore";
 
 const userData = ref(null);
 const router = useRouter();
+const authStore = useAuthStore();
 
-const menuItems = [
+// Definición completa de todos los elementos del menú
+const allMenuItems = [
   {
     title: "Alumnes",
     icon: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z",
-    route: "/professor/alumnes",
+    route: "/professor/llista-alumnes",
+    requiredPermission: null // Todos pueden ver esto
   },
   {
     title: "Grups",
     icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
     route: "/professor/grups",
+    requiredPermission: null // Todos pueden ver esto
   },
   {
     title: "Formularis",
     icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
     route: "/professor/formularis",
+    requiredPermission: null // Todos pueden ver esto
   },
   {
     title: "Sociograma",
     icon: "M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z",
     route: "/professor/sociograma/SociogramaView",
+    requiredPermission: "canViewAnalysis" // Solo orientadores y admin
   },
   {
     title: "Cesc",
     icon: "M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.25-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z",
     route: "/professor/cesc/CescView",
+    requiredPermission: "canViewAnalysis" // Solo orientadores y admin
   },
   {
-    title: "Chat IA",
+    title: "Gràfiques",
+    icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z",
+    route: "/professor/graficas",
+    requiredPermission: "canViewAnalysis" // Solo orientadores y admin
+  },
+  {
+    title: "Xat IA",
     icon: "M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z",
     route: "/professor/assistent",
+    requiredPermission: null // Todos pueden ver esto
   },
   {
     title: "Notificacions",
     icon: "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5",
     route: "/professor/notificacions",
+    requiredPermission: null // Todos pueden ver esto
+  },
+  {
+    title: "Estat Formularis",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
+    route: "/professor/formularis/estat",
+    requiredPermission: null // Todos pueden ver esto
   },
 ];
 
+// Filtrar menú según permisos
+const menuItems = computed(() => {
+  return allMenuItems.filter(item => {
+    if (item.requiredPermission === null) {
+      return true; // Todos tienen acceso a este elemento
+    }
+    
+    // Verificar si el usuario tiene el permiso requerido
+    return authStore[item.requiredPermission];
+  });
+});
+
 // Cargar el usuario desde el localStorage cuando el componente se monta
 onMounted(() => {
+  // Verificar que sea un profesor o administrador
+  if (!authStore.isProfesor && !authStore.isAdmin) {
+    router.push('/login');
+    return;
+  }
+  
   const storedUser = localStorage.getItem("user");
   if (storedUser) {
     userData.value = JSON.parse(storedUser);
-    console.log("User data loaded:", userData.value); 
+    console.log("Dades d'usuari carregades:", userData.value);
   }
 });
 
 // Función de logout
 const logout = () => {
-  localStorage.removeItem("user");
-  router.push("/professor/tancar-sessio");
+  authStore.logout();
 };
 </script>
 
@@ -103,28 +142,24 @@ const logout = () => {
               alt="Avatar"
               class="w-24 h-24 rounded-full object-cover mb-4"
             />
-              <!-- Información del profesor -->
-  <h1 class="text-3xl font-bold text-gray-800 mb-2">
-    Benvingut, {{ userData.name }} {{ userData.last_name }}!
-  </h1>
-  <p class="text-gray-600">{{ userData.email }}</p>
+            <!-- Información del profesor -->
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+              Benvingut, {{ userData.name }} {{ userData.last_name }}!
+            </h1>
+            <p class="text-gray-600">{{ userData.email }}</p>
 
-<!-- Materias que imparte -->
-<div v-if="userData.subjects && userData.subjects.length > 0" class="mt-4 flex items-center">
-  
-  <div class="flex flex-wrap gap-4">
-    <span 
-      v-for="subject in userData.subjects" 
-      :key="subject.id" 
-      class="text-[#00ADEC] font-normal text-xl"
-    >
-      {{ subject.name }}
-    </span>
-  </div>
-</div>
-
-
-
+            <!-- Materias que imparte -->
+            <div v-if="userData.subjects && userData.subjects.length > 0" class="mt-4 flex items-center">
+              <div class="flex flex-wrap gap-4">
+                <span
+                  v-for="subject in userData.subjects"
+                  :key="subject.id"
+                  class="text-[#00ADEC] font-normal text-xl"
+                >
+                  {{ subject.name }}
+                </span>
+              </div>
+            </div>
             <p v-else class="text-gray-500 mt-4">
               No tens assignatures assignades.
             </p>

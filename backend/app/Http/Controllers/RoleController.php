@@ -4,177 +4,135 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class RoleController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/api/roles",
-     *     summary="Obtener todos los roles",
-     *     tags={"Roles"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Lista de roles obtenida correctamente"
-     *     )
-     * )
+     * Muestra todos los roles disponibles
+     *
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\View\View
      */
     public function index(Request $request)
     {
         $roles = Role::all();
+        
+        // Si la petición viene de la API, devolver JSON
         if ($request->is('api/*')) {
-            return response()->json($roles, 200);
+            return response()->json($roles);
         }
-
+        
+        // Si es una petición web, devolver la vista
         return view('roles', compact('roles'));
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/roles",
-     *     summary="Crear un nuevo rol",
-     *     tags={"Roles"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         description="Datos del nuevo rol",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="Admin")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Rol creado correctamente",
-     *     )
-     * )
+     * Muestra los detalles de un rol específico
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show($id)
+    {
+        $role = Role::find($id);
+        
+        if (!$role) {
+            return response()->json(['message' => 'Rol no encontrado'], 404);
+        }
+        
+        return response()->json($role);
+    }
+
+    /**
+     * Crea un nuevo rol
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
+        $validatedData = $request->validate([
+            'name' => 'required|string|unique:roles,name',
+            'description' => 'nullable|string'
+        ]);
+
+        $role = Role::create($validatedData);
+        
+        // Si la petición viene de la API, devolver JSON
         if ($request->is('api/*')) {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-            ]);
-            if ($validator->fails()) {
-                return response()->json($validator->errors(), 400);
-            }
-            $role = Role::create($validator->validated());
             return response()->json($role, 201);
         }
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-        Role::create($validatedData);
+        
+        // Si es una petición web, redirigir
         return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente');
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/roles/{id}",
-     *     summary="Obtener un rol específico",
-     *     tags={"Roles"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID del rol",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Rol obtenido correctamente",
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Rol no encontrado"
-     *     )
-     * )
+     * Actualiza un rol existente
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    public function show(Request $request, Role $role)
+    public function update(Request $request, $id)
     {
-        if ($request->is('api/*')) {
-            return response()->json($role, 200);
+        $role = Role::find($id);
+        
+        if (!$role) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Rol no encontrado'], 404);
+            }
+            return redirect()->route('roles.index')->with('error', 'Rol no encontrado');
         }
-        return view('roles.show', compact('role'));
+
+        $validatedData = $request->validate([
+            'name' => 'sometimes|required|string|unique:roles,name,' . $id,
+            'description' => 'nullable|string'
+        ]);
+
+        $role->update($validatedData);
+        
+        // Si la petición viene de la API, devolver JSON
+        if ($request->is('api/*')) {
+            return response()->json($role);
+        }
+        
+        // Si es una petición web, redirigir
+        return redirect()->route('roles.index')->with('success', 'Rol actualizado exitosamente');
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/roles/{id}",
-     *     summary="Actualizar un rol existente",
-     *     tags={"Roles"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID del rol",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         description="Datos actualizados del rol",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="User")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Rol actualizado correctamente",
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Rol no encontrado"
-     *     )
-     * )
+     * Elimina un rol
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Role $role)
+    public function destroy(Request $request, $id)
     {
-        if ($request->is('api/*')) {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-            ]);
-            if ($validator->fails()) {
-                return response()->json($validator->errors(), 400);
+        $role = Role::find($id);
+        
+        if (!$role) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'Rol no encontrado'], 404);
             }
-            $role->update($validator->validated());
-            return response()->json($role, 200);
+            return redirect()->route('roles.index')->with('error', 'Rol no encontrado');
         }
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-        $role->update($validatedData);
-        return redirect()->route('roles.index')->with('success', 'Rol actualizado exitosamente');
-    }
-    /**
-     * @OA\Delete(
-     *     path="/api/roles/{id}",
-     *     summary="Eliminar un rol",
-     *     tags={"Roles"},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID del rol",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Rol eliminado correctamente"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Rol no encontrado"
-     *     )
-     * )
-     */
-    public function destroy(Request $request, Role $role)
-    {
+        
+        // Verificar si hay usuarios con este rol
+        if ($role->users()->count() > 0) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'No se puede eliminar este rol porque hay usuarios asignados a él'], 400);
+            }
+            return redirect()->route('roles.index')->with('error', 'No se puede eliminar este rol porque hay usuarios asignados a él');
+        }
+        
         $role->delete();
+        
+        // Si la petición viene de la API, devolver JSON
         if ($request->is('api/*')) {
-            return response()->json(null, 204);
+            return response()->json(['message' => 'Rol eliminado correctamente']);
         }
+        
+        // Si es una petición web, redirigir
         return redirect()->route('roles.index')->with('success', 'Rol eliminado exitosamente');
     }
 }

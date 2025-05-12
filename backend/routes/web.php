@@ -27,7 +27,8 @@ Route::get('/dashboard', function () {
 
 Route::post('/logout', function () {
     Auth::logout();
-    return response()->json(['message' => 'Logged out'], 200);
+    // Redireccionar al login del frontend
+    return redirect('http://localhost:3000/login');
 })->name('logout');
 
 Route::get('/forms/{id}', [FormController::class, 'show'])->name('forms.show');

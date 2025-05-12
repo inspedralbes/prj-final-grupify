@@ -13,7 +13,6 @@ const authStore = useAuthStore();
 
 definePageMeta({
   layout: "alumnes",
-  middleware: ['auth']
 });
 
 // Verificar autenticación al entrar

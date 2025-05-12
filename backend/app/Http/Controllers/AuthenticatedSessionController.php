@@ -56,38 +56,74 @@ class AuthenticatedSessionController extends Controller
         // Crear nuevo token
         $token = $user->createToken('Groupify')->plainTextToken;
 
-        // Cargar las relaciones necesarias (forms, subjects, role, courseDivisions)
-        $user->load(['forms', 'subjects', 'role', 'courseDivisions']);
+        // Cargar las relaciones necesarias
+        $user->load(['forms', 'subjects', 'role', 'courseDivisions', 'courseDivisionUsers.course', 'courseDivisionUsers.division']);
 
-        // Extraer el primer course_id y division_id
+        // Para todos los usuarios: extraer el primer course_id y division_id para compatibilidad
         $courseDivision = $user->courseDivisions->first(); // Obtenemos solo el primer curso/división
         $course_id = $courseDivision ? $courseDivision->pivot->course_id : null;
         $division_id = $courseDivision ? $courseDivision->pivot->division_id : null;
+
+        // Cargar los nombres del curso y división
+        $course_name = null;
+        $division_name = null;
+        
+        if ($course_id) {
+            $course = \App\Models\Course::find($course_id);
+            $course_name = $course ? $course->name : null;
+        }
+        
+        if ($division_id) {
+            $division = \App\Models\Division::find($division_id);
+            $division_name = $division ? $division->division : null;
+        }
+        
+        // Preparar course_divisions para profesores
+        $course_divisions = null;
+        if ($user->role_id == 1) { // Si es profesor
+            $course_divisions = $user->courseDivisionUsers->map(function($cdu) {
+                return [
+                    'course_id' => $cdu->course_id,
+                    'course_name' => $cdu->course?->name ?? null,
+                    'division_id' => $cdu->division_id,
+                    'division_name' => $cdu->division?->division ?? null,
+                ];
+            });
+        }
 
 
         Mail::to($user->email)->send(new LoginNotificationMail($user));
 
 
-        // Preparar la respuesta con los campos que deseas
+        // Preparar la respuesta según el rol
+        $userData = [
+            'id' => $user->id,
+            'image' => $user->image,
+            'name' => $user->name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+            'status' => $user->status,
+            'course_id' => $course_id,
+            'division_id' => $division_id,
+            'course_name' => $course_name,
+            'division_name' => $division_name,
+            'forms' => $user->forms,
+            'subjects' => $user->subjects,
+            'role' => $user->role
+        ];
+        
+        // Si es profesor, agregar course_divisions
+        if ($user->role_id == 1 && $course_divisions !== null) {
+            $userData['course_divisions'] = $course_divisions;
+        }
+        
         return response()->json([
             'token' => $token,
             'role' => $user->role->name,
-            'user' => [
-                'id' => $user->id,
-                'image' => $user->image,
-                'name' => $user->name,
-                'last_name' => $user->last_name,
-                'email' => $user->email,
-                'role_id' => $user->role_id,
-                'created_at' => $user->created_at,
-                'updated_at' => $user->updated_at,
-                'status' => $user->status,
-                'course_id' => $course_id,  // Agregar el course_id aquí
-                'division_id' => $division_id,  // Agregar el division_id aquí
-                'forms' => $user->forms,
-                'subjects' => $user->subjects,
-                'role' => $user->role
-            ]
+            'user' => $userData
         ]);
     }
 

@@ -29,7 +29,7 @@ export const useRelationshipsStore = defineStore("relationships", () => {
 
   // Obtener relaciones por curso y división
   const getRelationshipsByCourseAndDivision = (courseName, divisionName) => {
-    
+
     const studentIds = studentsStore.students
       .filter(
         student =>
@@ -76,8 +76,25 @@ export const useRelationshipsStore = defineStore("relationships", () => {
       .map(student => student.id);
 
     return computed(() => {
+      // Inicializar mapa para TODOS los estudiantes con valores a 0
       const skillsMap = {};
 
+      // Asegurarnos que todos los estudiantes estén en el mapa, incluso los que no reciben votos
+      studentIds.forEach(id => {
+        const student = studentsStore.students.find(s => s.id === id);
+        if (student) {
+          skillsMap[id] = {
+            peer_id: id,
+            peer_name: student.name,
+            peer_last_name: student.last_name,
+            liderazgo: 0,
+            creatividad: 0,
+            organizacion: 0
+          };
+        }
+      });
+
+      // Ahora procesamos los votos recibidos
       relationships.value
         .filter(
           rel =>
@@ -86,27 +103,201 @@ export const useRelationshipsStore = defineStore("relationships", () => {
             [18, 19, 20].includes(rel.question_id)
         )
         .forEach(rel => {
-          const peer = studentsStore.students.find(
-            student => student.id === rel.peer_id
-          );
-          if (peer) {
-            if (!skillsMap[peer.id]) {
-              skillsMap[peer.id] = {
-                peer_id: peer.id,
-                peer_name: peer.name,
-                peer_last_name: peer.last_name,
-                liderazgo: 0,
-                creatividad: 0,
-                organizacion: 0,
-              };
-            }
-            if (rel.question_id === 18) skillsMap[peer.id].liderazgo++;
-            if (rel.question_id === 19) skillsMap[peer.id].creatividad++;
-            if (rel.question_id === 20) skillsMap[peer.id].organizacion++;
+          // Solo incrementamos si el estudiante ya está en el mapa
+          if (skillsMap[rel.peer_id]) {
+            if (rel.question_id === 18) skillsMap[rel.peer_id].liderazgo++;
+            if (rel.question_id === 19) skillsMap[rel.peer_id].creatividad++;
+            if (rel.question_id === 20) skillsMap[rel.peer_id].organizacion++;
           }
         });
 
+      // Retornamos todos los estudiantes, incluso los que no recibieron votos
       return Object.values(skillsMap);
+    });
+  };
+
+  // Función para obtener los alumnos destacados en habilidades por curso y división
+  const getHighlightedStudentsByCourse = (courseName, divisionName, threshold = 1.5) => {
+    // Verificar si los parámetros son válidos
+    if (!courseName || !divisionName) {
+      console.warn('Valores de curso o división inválidos:', { courseName, divisionName });
+      return computed(() => ({ hasHighlighted: false, students: [] }));
+    }
+
+    return computed(() => {
+      // Verificar si los datos han sido cargados
+      if (!studentsStore.students || studentsStore.students.length === 0) {
+        console.warn('No hay datos de estudiantes cargados');
+        return { hasHighlighted: false, students: [] };
+      }
+
+      if (!relationships.value || relationships.value.length === 0) {
+        console.warn('No hay datos de relaciones cargados');
+        return { hasHighlighted: false, students: [] };
+      }
+
+      // Obtener IDs de estudiantes para este curso y división
+      const studentIds = studentsStore.students
+        .filter(student =>
+          student.course === courseName &&
+          student.division === divisionName
+        )
+        .map(student => student.id);
+
+      if (studentIds.length === 0) {
+        console.warn(`No se encontraron estudiantes para ${courseName} - ${divisionName}`);
+        return { hasHighlighted: false, students: [] };
+      }
+
+      // Conseguir los datos de habilidades para todos los estudiantes
+      const skillsMap = {};
+
+      // Inicializar mapa para todos los estudiantes
+      studentIds.forEach(id => {
+        const student = studentsStore.students.find(s => s.id === id);
+        if (student) {
+          skillsMap[id] = {
+            id: student.id,
+            name: student.name,
+            last_name: student.last_name,
+            liderazgo: 0,
+            creatividad: 0,
+            organizacion: 0,
+            total: 0
+          };
+        }
+      });
+
+      // Contar las menciones para cada habilidad
+      relationships.value
+        .filter(
+          rel =>
+            studentIds.includes(rel.user_id) &&
+            studentIds.includes(rel.peer_id) &&
+            [18, 19, 20].includes(rel.question_id)
+        )
+        .forEach(rel => {
+          if (skillsMap[rel.peer_id]) {
+            if (rel.question_id === 18) skillsMap[rel.peer_id].liderazgo++;
+            if (rel.question_id === 19) skillsMap[rel.peer_id].creatividad++;
+            if (rel.question_id === 20) skillsMap[rel.peer_id].organizacion++;
+            skillsMap[rel.peer_id].total++;
+          }
+        });
+
+      // Calcular totales para cada habilidad
+      const totalStudents = Object.keys(skillsMap).length;
+
+      // Suma de puntuaciones para cada habilidad
+      const totals = {
+        liderazgo: 0,
+        creatividad: 0,
+        organizacion: 0,
+        total: 0
+      };
+
+      // Acumular puntuaciones
+      Object.values(skillsMap).forEach(student => {
+        totals.liderazgo += student.liderazgo;
+        totals.creatividad += student.creatividad;
+        totals.organizacion += student.organizacion;
+        totals.total += student.total;
+      });
+
+      // Tabla de estudiantes con votos (incluyendo los que tienen 0 votos)
+      const studentsWithVotes = Object.values(skillsMap).map(student => ({
+        id: student.id,
+        name: student.name,
+        last_name: student.last_name,
+        liderazgo: student.liderazgo,
+        creatividad: student.creatividad,
+        organizacion: student.organizacion,
+        total: student.total
+      }));
+
+      // Calcular medias dividiendo por el número total de estudiantes
+      const averages = {
+        liderazgo: totalStudents > 0 ? totals.liderazgo / totalStudents : 0,
+        creatividad: totalStudents > 0 ? totals.creatividad / totalStudents : 0,
+        organizacion: totalStudents > 0 ? totals.organizacion / totalStudents : 0,
+        total: totalStudents > 0 ? totals.total / totalStudents : 0
+      };
+
+      // Para depurar el problema de las medias iguales a 3
+      console.log(`Datos para ${courseName} ${divisionName}:`);
+      console.log('Total estudiantes:', totalStudents);
+      console.log('Totales acumulados:', totals);
+      console.log('Medias calculadas:', averages);
+      console.log('Puntuaciones individuales:', skillsMap);
+
+      // Calcular medias mejoradas basadas en votos reales
+      const mediasReales = {
+        liderazgo: totalStudents > 0 ? totals.liderazgo / totalStudents : 0,
+        creatividad: totalStudents > 0 ? totals.creatividad / totalStudents : 0,
+        organizacion: totalStudents > 0 ? totals.organizacion / totalStudents : 0,
+        total: totalStudents > 0 ? totals.total / totalStudents : 0
+      };
+
+      // Calcular desviaciones estándar para cada habilidad
+      const sumSquaredDiff = {
+        liderazgo: 0,
+        creatividad: 0,
+        organizacion: 0,
+        total: 0
+      };
+
+      Object.values(skillsMap).forEach(student => {
+        sumSquaredDiff.liderazgo += Math.pow(student.liderazgo - averages.liderazgo, 2);
+        sumSquaredDiff.creatividad += Math.pow(student.creatividad - averages.creatividad, 2);
+        sumSquaredDiff.organizacion += Math.pow(student.organizacion - averages.organizacion, 2);
+        sumSquaredDiff.total += Math.pow(student.total - averages.total, 2);
+      });
+
+      const stdDevs = {
+        liderazgo: totalStudents > 1 ? Math.sqrt(sumSquaredDiff.liderazgo / totalStudents) : 0,
+        creatividad: totalStudents > 1 ? Math.sqrt(sumSquaredDiff.creatividad / totalStudents) : 0,
+        organizacion: totalStudents > 1 ? Math.sqrt(sumSquaredDiff.organizacion / totalStudents) : 0,
+        total: totalStudents > 1 ? Math.sqrt(sumSquaredDiff.total / totalStudents) : 0
+      };
+
+      // Identificar estudiantes destacados (por encima del umbral * desviación estándar)
+      const highlightedStudents = Object.values(skillsMap)
+        .map(student => {
+          // Calcula los Z-scores para cada habilidad
+          const zScores = {
+            liderazgo: stdDevs.liderazgo > 0 ? (student.liderazgo - averages.liderazgo) / stdDevs.liderazgo : 0,
+            creatividad: stdDevs.creatividad > 0 ? (student.creatividad - averages.creatividad) / stdDevs.creatividad : 0,
+            organizacion: stdDevs.organizacion > 0 ? (student.organizacion - averages.organizacion) / stdDevs.organizacion : 0,
+            total: stdDevs.total > 0 ? (student.total - averages.total) / stdDevs.total : 0
+          };
+
+          // Determina en qué habilidades destaca este estudiante
+          const highlightedSkills = [];
+          if (zScores.liderazgo >= threshold) highlightedSkills.push('liderazgo');
+          if (zScores.creatividad >= threshold) highlightedSkills.push('creatividad');
+          if (zScores.organizacion >= threshold) highlightedSkills.push('organizacion');
+
+          return {
+            ...student,
+            zScores,
+            highlightedSkills,
+            isHighlighted: highlightedSkills.length > 0
+          };
+        })
+        .filter(student => student.isHighlighted);
+
+      // Información sobre las medias y destacados
+      return {
+        courseName,
+        divisionName,
+        averages,           // Medias originales
+        mediasReales,       // Nuevas medias calculadas
+        stdDevs,
+        hasHighlighted: highlightedStudents.length > 0,
+        students: highlightedStudents,
+        allStudents: Object.values(skillsMap), // Todos los estudiantes con sus puntuaciones
+        studentsWithVotes   // Nueva tabla con los votos de cada alumno
+      };
     });
   };
 
@@ -122,6 +313,21 @@ export const useRelationshipsStore = defineStore("relationships", () => {
     return computed(() => {
       const rolesMap = {};
 
+      // Inicializar todos los estudiantes
+      studentIds.forEach(id => {
+        const student = studentsStore.students.find(s => s.id === id);
+        if (student) {
+          rolesMap[id] = {
+            peer_id: id,
+            peer_name: student.name,
+            peer_last_name: student.last_name,
+            popularitat: 0,
+            aïllament: 0,
+          };
+        }
+      });
+
+      // Procesar votos
       relationships.value
         .filter(
           rel =>
@@ -130,25 +336,269 @@ export const useRelationshipsStore = defineStore("relationships", () => {
             [17, 21].includes(rel.question_id)
         )
         .forEach(rel => {
-          const peer = studentsStore.students.find(
-            student => student.id === rel.peer_id
-          );
-          if (peer) {
-            if (!rolesMap[peer.id]) {
-              rolesMap[peer.id] = {
-                peer_id: peer.id,
-                peer_name: peer.name,
-                peer_last_name: peer.last_name,
-                popularitat: 0,
-                aïllament: 0,
-              };
-            }
-            if (rel.question_id === 17) rolesMap[peer.id].popularitat++;
-            if (rel.question_id === 21) rolesMap[peer.id].aïllament++;
+          if (rolesMap[rel.peer_id]) {
+            if (rel.question_id === 17) rolesMap[rel.peer_id].popularitat++;
+            if (rel.question_id === 21) rolesMap[rel.peer_id].aïllament++;
           }
         });
+
       return Object.values(rolesMap);
     });
+  };
+
+  //dades comparatius per curs -> popularitat/aillament
+  const getPopularityDataByCourseAndDivision = (courseName, divisionName) => {
+    // Verificar si los parámetros son válidos
+    if (!courseName || !divisionName) {
+      console.warn('Valores de curso o división inválidos:', { courseName, divisionName });
+      return computed(() => []);
+    }
+
+    return computed(() => {
+      // Verificar si los datos han sido cargados
+      if (!studentsStore.students || studentsStore.students.length === 0) {
+        console.warn('No hay datos de estudiantes cargados');
+        return [];
+      }
+
+      if (!relationships.value || relationships.value.length === 0) {
+        console.warn('No hay datos de relaciones cargados');
+        return [];
+      }
+
+      // Obtener IDs de estudiantes para este curso y división
+      const studentIds = studentsStore.students
+        .filter(student =>
+          student.course === courseName &&
+          student.division === divisionName
+        )
+        .map(student => student.id);
+
+      if (studentIds.length === 0) {
+        console.warn(`No se encontraron estudiantes para ${courseName} - ${divisionName}`);
+        // Mostrar valores únicos disponibles para ayudar a depurar
+        const uniqueCourses = [...new Set(studentsStore.students.map(s => s.course))];
+        const uniqueDivisions = [...new Set(studentsStore.students.map(s => s.division))];
+        console.log('Cursos disponibles:', uniqueCourses);
+        console.log('Divisiones disponibles:', uniqueDivisions);
+        return [];
+      }
+
+      // Mapa para contar relaciones positivas y negativas
+      const popularityMap = {};
+
+      // Inicializar mapa para todos los estudiantes
+      studentIds.forEach(id => {
+        popularityMap[id] = {
+          positives: 0,
+          negatives: 0
+        };
+      });
+
+      // Filtrar relaciones relevantes y contar
+      relationships.value.forEach(rel => {
+        if (studentIds.includes(rel.peer_id)) {
+          if (rel.question_id === 15) {
+            popularityMap[rel.peer_id].positives++;
+          }
+          if (rel.question_id === 16) {
+            popularityMap[rel.peer_id].negatives++;
+          }
+        }
+      });
+
+      // Clasificar estudiantes según los valores
+      let popular = 0;
+      let isolated = 0;
+      let neutral = 0;
+
+      Object.values(popularityMap).forEach(({ positives, negatives }) => {
+        if (positives > negatives) popular++;
+        else if (negatives > positives) isolated++;
+        else neutral++;
+      });
+
+      return [
+        { label: "Populares", count: popular },
+        { label: "Aislados", count: isolated },
+        { label: "Neutrales", count: neutral },
+      ];
+    });
+  };
+
+  const generateCoursesComparison = (threshold = 1.5) => {
+    const comparativeData = [];
+
+    // Verificar que las stores estén disponibles
+    if (!studentsStore.students || studentsStore.students.length === 0) {
+      console.warn('No hay datos de estudiantes cargados');
+      return [];
+    }
+
+    // Obtener cursos y divisiones únicos
+    const uniqueCourses = [...new Set(studentsStore.students.map(s => s.course))];
+
+    // Para cada curso y división, obtener los datos destacados
+    uniqueCourses.forEach(courseName => {
+      // Obtener divisiones para este curso
+      const divisionsForCourse = [...new Set(
+        studentsStore.students
+          .filter(s => s.course === courseName)
+          .map(s => s.division)
+      )];
+
+      divisionsForCourse.forEach(divisionName => {
+        if (!courseName || !divisionName) return;
+
+        const courseFullName = `${courseName} ${divisionName}`;
+
+        // Obtener datos destacados para este curso específico
+        const courseDataComputed = getHighlightedStudentsByCourse(
+          courseName,
+          divisionName,
+          threshold
+        );
+
+        // Necesitamos acceder al valor computado
+        const courseData = courseDataComputed.value;
+
+        // Para depurar
+        console.log(`Comparación para ${courseFullName}:`, courseData?.averages);
+
+        if (!courseData) {
+          // Si no hay datos del curso, añadir entrada con valores a cero
+          comparativeData.push({
+            course: courseFullName,
+            liderazgo: 0,
+            creatividad: 0,
+            organizacion: 0,
+            total: 0,
+            averages: { liderazgo: 0, creatividad: 0, organizacion: 0 },
+            stdDevs: { liderazgo: 0, creatividad: 0, organizacion: 0 },
+            studentsWithVotes: []
+          });
+          return; // Continuar con el siguiente
+        }
+
+        // Contar alumnos destacados en cada habilidad
+        let liderazgoCount = 0;
+        let creatividadCount = 0;
+        let organizacionCount = 0;
+
+        // Si hay estudiantes destacados, contar por cada habilidad
+        if (courseData.hasHighlighted) {
+          courseData.students.forEach(student => {
+            if (student.highlightedSkills.includes('liderazgo')) liderazgoCount++;
+            if (student.highlightedSkills.includes('creatividad')) creatividadCount++;
+            if (student.highlightedSkills.includes('organizacion')) organizacionCount++;
+          });
+        }
+
+        // Obtener lista de estudiantes con sus votos
+        const studentsWithVotes = courseData.allStudents || [];
+        
+        // Total de estudiantes que participaron
+        const totalStudents = studentsWithVotes.length;
+        
+        // Calcular el total de votos por competencia
+        const competenciasTotales = {
+          liderazgo: 0,
+          creatividad: 0,
+          organizacion: 0,
+          total: 0
+        };
+        
+        // Sumar todos los votos
+        studentsWithVotes.forEach(student => {
+          competenciasTotales.liderazgo += student.liderazgo;
+          competenciasTotales.creatividad += student.creatividad;
+          competenciasTotales.organizacion += student.organizacion;
+          competenciasTotales.total += student.total;
+        });
+        
+        // Calcular métricas alternativas
+        
+        // 1. Medias convencionales (votos totales / número de alumnos)
+        const mediasConvencionales = {
+          liderazgo: totalStudents > 0 ? competenciasTotales.liderazgo / totalStudents : 0,
+          creatividad: totalStudents > 0 ? competenciasTotales.creatividad / totalStudents : 0,
+          organizacion: totalStudents > 0 ? competenciasTotales.organizacion / totalStudents : 0,
+          total: totalStudents > 0 ? competenciasTotales.total / totalStudents : 0
+        };
+        
+        // 2. Calcular distribución porcentual de votos
+        const studentsWithDistribucion = studentsWithVotes.map(student => {
+          return {
+            ...student,
+            porcentaje_liderazgo: competenciasTotales.liderazgo > 0 
+              ? (student.liderazgo / competenciasTotales.liderazgo) * 100 : 0,
+            porcentaje_creatividad: competenciasTotales.creatividad > 0 
+              ? (student.creatividad / competenciasTotales.creatividad) * 100 : 0,
+            porcentaje_organizacion: competenciasTotales.organizacion > 0 
+              ? (student.organizacion / competenciasTotales.organizacion) * 100 : 0,
+            porcentaje_total: competenciasTotales.total > 0 
+              ? (student.total / competenciasTotales.total) * 100 : 0
+          };
+        });
+        
+        // 3. Calcular el coeficiente de variación (desviación estándar / media)
+        // Esto mide cuán dispersos están los votos (mayor valor = distribución menos uniforme)
+        const coeficienteDeVariacion = {
+          liderazgo: mediasConvencionales.liderazgo > 0 
+            ? courseData.stdDevs.liderazgo / mediasConvencionales.liderazgo : 0,
+          creatividad: mediasConvencionales.creatividad > 0 
+            ? courseData.stdDevs.creatividad / mediasConvencionales.creatividad : 0,
+          organizacion: mediasConvencionales.organizacion > 0 
+            ? courseData.stdDevs.organizacion / mediasConvencionales.organizacion : 0,
+          total: mediasConvencionales.total > 0 
+            ? courseData.stdDevs.total / mediasConvencionales.total : 0
+        };
+        
+        // 4. Índice de concentración (suma de cuadrados de los porcentajes)
+        // Similar al índice Herfindahl-Hirschman, mayor valor = más concentración
+        const indiceConcentracion = {
+          liderazgo: studentsWithDistribucion.reduce((sum, student) => 
+            sum + Math.pow(student.porcentaje_liderazgo / 100, 2), 0),
+          creatividad: studentsWithDistribucion.reduce((sum, student) => 
+            sum + Math.pow(student.porcentaje_creatividad / 100, 2), 0),
+          organizacion: studentsWithDistribucion.reduce((sum, student) => 
+            sum + Math.pow(student.porcentaje_organizacion / 100, 2), 0),
+          total: studentsWithDistribucion.reduce((sum, student) => 
+            sum + Math.pow(student.porcentaje_total / 100, 2), 0)
+        };
+
+        // Añadir datos al comparativo incluyendo las métricas calculadas
+        comparativeData.push({
+          course: courseFullName,
+          liderazgo: liderazgoCount,
+          creatividad: creatividadCount,
+          organizacion: organizacionCount,
+          total: liderazgoCount + creatividadCount + organizacionCount,
+          // Métricas calculadas
+          averages: courseData.averages,             // Medias originales
+          mediasConvencionales: mediasConvencionales,// Medias calculadas
+          coeficienteDeVariacion: coeficienteDeVariacion, // Coeficiente de variación
+          indiceConcentracion: indiceConcentracion,  // Índice de concentración
+          stdDevs: courseData.stdDevs,
+          studentsWithDistribucion: studentsWithDistribucion // Estudiantes con porcentajes
+        });
+      });
+    });
+
+    // Ordenar por nombre de curso
+    comparativeData.sort((a, b) => a.course.localeCompare(b.course));
+
+    // Para depurar
+    console.log('Datos comparativos finales:', comparativeData);
+    console.log('Estudiantes con distribución (primer curso):', 
+      comparativeData[0]?.studentsWithDistribucion?.slice(0, 3) || 'No hay datos');
+    console.log('Métricas calculadas (primer curso):', {
+      mediasConvencionales: comparativeData[0]?.mediasConvencionales,
+      coeficienteVariacion: comparativeData[0]?.coeficienteDeVariacion,
+      indiceConcentracion: comparativeData[0]?.indiceConcentracion
+    });
+
+    return comparativeData;
   };
 
   return {
@@ -159,5 +609,8 @@ export const useRelationshipsStore = defineStore("relationships", () => {
     getRelationshipsByCourseAndDivision,
     getSkillsByCourseAndDivision,
     getRolesByCourseAndDivision,
+    getPopularityDataByCourseAndDivision,
+    getHighlightedStudentsByCourse,
+    generateCoursesComparison,
   };
 });

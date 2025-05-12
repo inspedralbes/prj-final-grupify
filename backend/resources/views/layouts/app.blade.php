@@ -136,6 +136,52 @@
         .navbar-brand:hover {
             color: var(--primary-hover);
         }
+
+        /* Estilos para el modal de logout */
+        #logoutModal .modal-content {
+            border-radius: 0.5rem;
+            border: none;
+        }
+
+        #logoutModal .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+            border-bottom: none;
+        }
+
+        #logoutModal .modal-header .btn-close {
+            filter: invert(1);
+        }
+
+        #logoutModal .modal-title {
+            font-weight: bold;
+        }
+
+        #logoutModal .modal-body {
+            padding: 2rem;
+        }
+
+        #logoutModal .modal-footer {
+            border-top: 1px solid rgba(0,0,0,.125);
+            padding: 1rem;
+        }
+
+        #logoutModal .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        #logoutModal .btn-primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        #logoutModal .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
                 
     </style>
 </head>
@@ -211,11 +257,13 @@
     </div>
 </div>
         <!-- Botón de cierre de sesión -->
-        <form id="logout-form" action="{{ route('logout') }}" method="POST">
+        <a href="{{ route('logout') }}" 
+           onclick="event.preventDefault(); submitLogoutForm('logout-header-form');" 
+           class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Tancar Sessió
+        </a>
+        <form id="logout-header-form" action="{{ route('logout') }}" method="POST" style="display: none;">
             @csrf
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Tancar Sessió
-            </button>
         </form>
     </nav>
     @endif
@@ -225,14 +273,44 @@
     <header class="dashboard-header">
         <div class="dashboard-title">Panell d'Administrador</div>
         <!-- Botón de cierre de sesión -->
-        <form id="logout-form" action="{{ route('logout') }}" method="POST">
+        <a href="{{ route('logout') }}" 
+           onclick="event.preventDefault(); submitLogoutForm('logout-dashboard-form');" 
+           class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Tancar Sessió
+        </a>
+        <form id="logout-dashboard-form" action="{{ route('logout') }}" method="POST" style="display: none;">
             @csrf
-            <button type="submit" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Tancar Sessió
-            </button>
         </form>
     </header>
     @endif
+
+    <!-- Modal de confirmación de logout -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel">
+                        <i class="fas fa-sign-out-alt"></i> Tancar Sessió
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                        <p class="fs-5">Estàs segur que vols tancar la sessió?</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel·lar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmLogout">
+                        <i class="fas fa-sign-out-alt"></i> Sí, tancar sessió
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Contenido principal -->
     <div class="content">
@@ -240,5 +318,29 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentLogoutFormId = null;
+
+        function submitLogoutForm(formId) {
+            // Guardar el ID del formulario actual
+            currentLogoutFormId = formId;
+            
+            // Mostrar el modal de confirmación
+            const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
+            logoutModal.show();
+        }
+
+        // Manejar el click en el botón de confirmación
+        document.getElementById('confirmLogout').addEventListener('click', function() {
+            if (currentLogoutFormId) {
+                // Cerrar el modal
+                const logoutModal = bootstrap.Modal.getInstance(document.getElementById('logoutModal'));
+                logoutModal.hide();
+                
+                // Enviar el formulario
+                document.getElementById(currentLogoutFormId).submit();
+            }
+        });
+    </script>
 </body>
 </html>

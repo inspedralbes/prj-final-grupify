@@ -58,7 +58,7 @@
 </template>
 
 <script setup>
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "~/stores/authStore";
 
 const authStore = useAuthStore();
 const forms = ref([]);

@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '~/stores/authStore';
 
 export default {
   name: "TancarSessio",

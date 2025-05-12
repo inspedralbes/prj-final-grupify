@@ -48,12 +48,39 @@
           {{ errorMessage }}
         </p>
       </div>
+      
+      <!-- Sección destacada de selección de curso/división -->
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border-l-4 border-blue-500">
+        <h2 class="text-lg font-semibold mb-4">Selecciona un curs i divisió:</h2>
+        
+        <div v-if="teacherAssignments.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div v-for="assignment in teacherAssignments" :key="`${assignment.courseId}-${assignment.divisionId}`"
+               @click="selectAssignment(assignment.courseId, assignment.divisionId)"
+               :class="[
+                 'p-4 rounded-lg cursor-pointer transition-all duration-200 border-2',
+                 (selectedCourseId === assignment.courseId && selectedDivisionId === assignment.divisionId) 
+                   ? 'border-blue-500 bg-blue-50' 
+                   : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+               ]">
+            <div class="font-medium">{{ assignment.courseName }} - {{ assignment.divisionName }}</div>
+          </div>
+          
+          <div @click="resetFilters" 
+               class="p-4 rounded-lg cursor-pointer transition-all duration-200 border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50">
+            <div class="font-medium text-gray-500">Mostrar tots</div>
+          </div>
+        </div>
+        
+        <div v-else class="text-gray-500">
+          No tens cap curs assignat. Contacta amb l'administrador.
+        </div>
+      </div>
 
       <!-- Filters Section -->
       <div class="bg-white rounded-xl shadow-sm mb-6">
-        <div class="p-4 flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
+        <div class="p-4 flex flex-wrap gap-4">
           <!-- Input de búsqueda -->
-          <div class="flex-1 relative">
+          <div class="flex-1 relative min-w-[200px]">
             <input v-model="searchQuery" type="text" placeholder="Buscar grups..."
               class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24"
@@ -62,8 +89,29 @@
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <!-- Filtros de estado y fecha -->
-          <div class="flex flex-col sm:flex-row gap-4">
+          
+          <!-- Filtros de curso y división -->
+          <div class="flex flex-wrap gap-4">
+            <!-- Selector de Curso -->
+            <select v-model="selectedCourseId" @change="onCourseChange"
+              class="px-4 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option :value="null">Tots els cursos</option>
+              <option v-for="course in availableCourses" :key="course.id" :value="course.id">
+                {{ course.name }}
+              </option>
+            </select>
+            
+            <!-- Selector de División -->
+            <select v-model="selectedDivisionId" @change="onFilterChange"
+              class="px-4 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              :disabled="!selectedCourseId">
+              <option :value="null">Totes les divisions</option>
+              <option v-for="division in availableDivisions" :key="division.id" :value="division.id">
+                {{ division.name }}
+              </option>
+            </select>
+            
+            <!-- Filtros de estado y fecha -->
             <select v-model="selectedStatus"
               class="px-4 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="all">Tots els estats</option>
@@ -77,8 +125,21 @@
               <option value="week">Aquesta setmana</option>
               <option value="month">Aquest mes</option>
             </select>
+            
+            <!-- Botón para limpiar filtros -->
+            <button @click="resetFilters" 
+              class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
           </div>
         </div>
+      </div>
+      
+      <!-- Indicador de carga -->
+      <div v-if="isLoading" class="flex justify-center my-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
 
       <!-- Table Section (con scroll horizontal en móviles) -->
@@ -159,11 +220,13 @@
 import { ref, computed, onMounted } from "vue";
 import { useStudentsStore } from "@/stores/studentsStore";
 import { useGroupStore } from "@/stores/groupStore";
+import { useAuthStore } from "@/stores/authStore";
 import { useGroupSearch } from "@/composables/useGroupSearch";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
 const studentsStore = useStudentsStore();
 const groupStore = useGroupStore();
+const authStore = useAuthStore();
 
 const errorMessage = ref("");
 const successMessage = ref("");
@@ -177,14 +240,65 @@ const goToGroup = groupId => {
   navigateTo(`/professor/grups/${groupId}`);
 };
 
-onMounted(() => {
-  studentsStore.fetchStudents();
-  groupStore.fetchGroups();
+onMounted(async () => {
+  // Verificar que el usuario está autenticado y cargar su información
+  if (authStore.isAuthenticated && !authStore.user) {
+    await authStore.checkAuth();
+  }
+  
+  // Cargar estudiantes
+  await studentsStore.fetchStudents();
+  
+  // Inicialmente cargar todos los grupos del profesor
+  await groupStore.fetchGroups();
 });
 
-const students = computed(() => studentsStore.students);
 const groups = computed(() => groupStore.groups);
-const { searchQuery, filteredGroups } = useGroupSearch(groups);
+
+// Usar el composable mejorado que ahora gestiona los cursos y divisiones
+const { 
+  searchQuery, 
+  filteredGroups, 
+  setFilters, 
+  selectedCourseId, 
+  selectedDivisionId, 
+  availableCourses, 
+  availableDivisions, 
+  teacherAssignments,
+  isLoading,
+  resetFilters 
+} = useGroupSearch(groups);
+
+// Seleccionar un curso y división específicos desde las tarjetas
+const selectAssignment = async (courseId, divisionId) => {
+  await setFilters(courseId, divisionId);
+  
+  // Mostrar mensaje informativo
+  successMessage.value = `Mostrant grups de ${
+    teacherAssignments.value.find(a => 
+      a.courseId === courseId && a.divisionId === divisionId
+    )?.courseName || 'curs'
+  } ${
+    teacherAssignments.value.find(a => 
+      a.courseId === courseId && a.divisionId === divisionId
+    )?.divisionName || 'divisió'
+  }`;
+  
+  setTimeout(() => {
+    successMessage.value = "";
+  }, 3000);
+};
+
+// Manejar cambio de curso
+const onCourseChange = () => {
+  selectedDivisionId.value = null; // Resetear la división al cambiar el curso
+  onFilterChange();
+};
+
+// Manejar cambio de filtros
+const onFilterChange = async () => {
+  await setFilters(selectedCourseId.value, selectedDivisionId.value);
+};
 
 const confirmDelete = (groupId, groupName) => {
   groupToDelete.value = groupId;
@@ -197,6 +311,13 @@ const handleDeleteGroup = async () => {
     await groupStore.deleteGroup(groupToDelete.value);
     successMessage.value = "Grup eliminat correctament";
     showDeleteModal.value = false;
+    
+    // Recargar grupos con los filtros actuales
+    await groupStore.fetchGroups({
+      course_id: selectedCourseId.value,
+      division_id: selectedDivisionId.value
+    });
+    
     setTimeout(() => {
       successMessage.value = "";
     }, 3000);

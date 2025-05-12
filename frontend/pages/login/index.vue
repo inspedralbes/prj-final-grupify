@@ -1,7 +1,11 @@
 <script setup>
-import { useAuthStore } from "~/stores/auth";
+import { useAuthStore } from "~/stores/authStore";
+import useAuth from "~//composables/useAuth";
 
 const authStore = useAuthStore();
+
+
+const { HandleLogin } = useAuth()
 
 // Estado reactivo
 const email = ref("");
@@ -42,38 +46,52 @@ const gestioSubmit = async (e) => {
 
   isLoading.value = true;
 
+  const userData = {
+    email: email.value,
+    password: password.value,
+  };
+
   try {
-    const response = await $fetch("https://api.grupify.cat/api/login", {
-      method: "POST",
-      body: { email: email.value, password: password.value },
-    });
+    const response = await HandleLogin(userData);
 
-    // Usar el store para guardar la autenticación
-    authStore.setAuth(response.token, response.user);
+    const token = response.token;
 
+    // Guardamos con el nombre correcto
+    authStore.setAuth(token, response.user, response.role);
+    
     // Conexión inmediata del socket después del login
-    if (!$socket.connected) {
+    if (!$socket && !$socket.connected) {
       $socket.connect();
-    }
+    } 
 
     // Registrar usuario en el socket
     $socket.emit("register_user", response.user.id);
+
+    // Determinamos el rol correctamente (verificando ambas estructuras posibles)
+    const userRole = response.role || response.user?.role?.name;
 
     // Redirección basada en roles usando la respuesta del servidor
     const dashboardRoutes = {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumno: "/alumne/dashboard",
+      tutor: "/tutor/dashboard",
+      orientador: "/orientador/dashboard"
     };
 
-    // Para el rol "alumno", usaremos window.location para recargar la página
-    if (response.role === "alumno") {
-      window.location.href = dashboardRoutes.alumno;  // Redirige al dashboard de alumno y recarga la página
-    } else {
-      // Para los demás roles, usamos navigateTo sin recargar la página
-      navigateTo(dashboardRoutes[response.role] || "/");
-    }
+    // Asegurarnos de que estamos usando el rol correcto
+    const route = dashboardRoutes[userRole] || "/";
+    
+    console.log("Rol detectado:", userRole);
+    console.log("Redirigiendo a:", route);
+    
+    // Usar setTimeout para asegurar que la redirección ocurra después de que el store se haya actualizado
+    setTimeout(() => {
+      navigateTo(route);
+    }, 100);
+
   } catch (err) {
+    console.error("Error de login:", err);
     msgError.value = "Credencials incorrectes. Si us plau, torna-ho a intentar.";
   } finally {
     isLoading.value = false;

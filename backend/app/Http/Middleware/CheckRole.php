@@ -7,12 +7,24 @@ use Illuminate\Support\Facades\Auth;
 
 class CheckRole
 {
-    public function handle(Request $request, Closure $next, $role)
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (Auth::check() && Auth::user()->role->name === $role) {
+        if (!Auth::check()) {
+            return response()->json(['message' => 'No autenticado'], 401);
+        }
+
+        $userRole = Auth::user()->role->name;
+        
+        // Si no se especifican roles, cualquier usuario autenticado puede acceder
+        if (empty($roles)) {
+            return $next($request);
+        }
+        
+        // Comprobar si el rol del usuario está en la lista de roles permitidos
+        if (in_array($userRole, $roles)) {
             return $next($request);
         }
 
-        return response()->json(['message' => 'Access Denied'], 403);
+        return response()->json(['message' => 'Acceso denegado. No tienes permisos suficientes.'], 403);
     }
 }
