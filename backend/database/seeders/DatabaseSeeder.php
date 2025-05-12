@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             SubjectSeeder::class,
             RoleSeeder::class,
             UserSeeder::class,
+            TutorSeeder::class,       // Seeder para tutores
+            OrientadorSeeder::class,  // Seeder para orientadores
             DivisionSeeder::class,
             GroupSeeder::class,
             GroupDivisionSeeder::class,
@@ -37,6 +39,7 @@ class DatabaseSeeder extends Seeder
             GroupSubjectSeeder::class,
             GroupCourseSeeder::class,
             FormSeeder::class,   // Crear formularios primero
+            TutorFormSeeder::class, // Formularios específicos para tutores
             QuestionSeeder::class, // Crear preguntas después
             OptionSeeder::class,
             CourseUserSeeder::class,
