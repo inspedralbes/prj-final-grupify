@@ -21,9 +21,43 @@ export default defineNuxtRouteMiddleware(async (to) => {
   });
   
   // Inicializamos solo si hay token pero no hay usuario
-  if (authStore.token && !authStore.user) {
-    console.log("Initializing auth store...");
-    await authStore.initialize();
+  if (authStore.token) {
+    // Verificamos si no hay usuario O si hay usuario pero no tiene role (incompleto)
+    if (!authStore.user || !authStore.user.role) {
+      console.log("User data incomplete, loading from localStorage and server...");
+      
+      // Intenta cargar el usuario desde localStorage primero
+      const userFromStorage = localStorage.getItem("user");
+      if (userFromStorage) {
+        try {
+          const parsedUser = JSON.parse(userFromStorage);
+          console.log("User data loaded from localStorage:", parsedUser.role?.name);
+          
+          // Si tenemos datos en localStorage pero no en el store, inicializar
+          if (parsedUser && parsedUser.role && !authStore.user) {
+            console.log("Setting user from localStorage");
+            authStore.user = parsedUser;
+          }
+        } catch (e) {
+          console.error("Error parsing user from localStorage:", e);
+        }
+      }
+      
+      // De todas formas, intentamos inicializar desde el servidor
+      await authStore.initialize();
+      
+      // Si después de inicializar aún no hay usuario o role, intentamos checkAuth
+      if (!authStore.user || !authStore.user.role) {
+        console.log("Still missing user data, running checkAuth...");
+        try {
+          await authStore.checkAuth();
+        } catch (e) {
+          console.error("Error in checkAuth:", e);
+        }
+      }
+    } else {
+      console.log("User data complete:", authStore.user.role.name);
+    }
   }
 
   // Verificación de autenticación para todas las rutas no públicas

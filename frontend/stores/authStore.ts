@@ -124,22 +124,88 @@ export const useAuthStore = defineStore("auth", {
 
   actions: {
     initialize(): void {
-      if (this.token && (!this.user || !this.user.role)) {
-        this.checkAuth();
+      // Si no hay token, no podemos inicializar
+      if (!this.token) return;
+      
+      // Si ya tenemos un usuario con rol, no es necesario inicializar
+      if (this.user && this.user.role && this.user.role.name) {
+        console.log("AuthStore: User already initialized with role:", this.user.role.name);
+        return;
       }
+      
+      // Intentar cargar el usuario desde localStorage si no está en el store
+      if (!this.user) {
+        try {
+          const userString = localStorage.getItem("user");
+          if (userString) {
+            const parsedUser = JSON.parse(userString);
+            if (parsedUser && parsedUser.role) {
+              this.user = parsedUser;
+              console.log("AuthStore: User loaded from localStorage:", parsedUser.role.name);
+              // No retornamos aquí para asegurarnos de que los datos son actuales
+            }
+          }
+        } catch (error) {
+          console.error("Error loading user from localStorage:", error);
+        }
+      }
+      
+      // Incluso si cargamos desde localStorage, verificamos con el servidor para tener datos actualizados
+      this.checkAuth();
     },
 
     async checkAuth(): Promise<void> {
       try {
+        console.log("AuthStore: Checking authentication with server...");
+        
+        if (!this.token) {
+          console.log("AuthStore: No token available, cannot check auth");
+          throw new Error("No authentication token");
+        }
+        
         const response = await $fetch<{ user: User }>('http://localhost:8000/api/user', {
           headers: { Authorization: `Bearer ${this.token}` }
         });
 
         if (response.user) {
+          console.log("AuthStore: User data received from server:", response.user.role?.name);
+          
+          // Asegurarse de que el usuario tenga todos los datos necesarios
+          if (!response.user.role) {
+            console.error("AuthStore: Server returned user without role!");
+            // Intentar preservar el rol actual si existe
+            if (this.user?.role) {
+              response.user.role = this.user.role;
+              console.log("AuthStore: Using existing role from store:", this.user.role.name);
+            }
+          }
+          
           this.user = response.user;
           localStorage.setItem("user", JSON.stringify(response.user));
+          
+          // Forzar isAuthenticated a true
+          this.isAuthenticated = true;
+        } else {
+          console.error("AuthStore: Server returned success but no user data");
         }
       } catch (error) {
+        console.error("AuthStore: Error checking auth:", error);
+        
+        // Intentar usar datos del localStorage como fallback
+        const userString = localStorage.getItem("user");
+        if (userString && this.token) {
+          try {
+            const user = JSON.parse(userString);
+            console.log("AuthStore: Using localStorage fallback for user:", user.role?.name);
+            this.user = user;
+            this.isAuthenticated = true;
+            return; // Mantenemos la sesión con datos de localStorage
+          } catch (e) {
+            console.error("AuthStore: Error parsing user from localStorage:", e);
+          }
+        }
+        
+        // Si no se puede obtener del localStorage o no hay token, hacer logout
         this.logout();
       }
     },

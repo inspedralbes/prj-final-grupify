@@ -10,7 +10,11 @@ export default {
         warning: "#F59E0B",
         danger: "#EF4444",
         background: "#F3F4F6",
-        'editor-bg': "#282c34"
+        'editor-bg': "#282c34",
+        'dark-bg': "#0b0e14",
+        'dark-card': "#1e2230",
+        'dark-active': "#2a2e3c",
+        'purple-accent': "#a855f7"
       },
     },
   },

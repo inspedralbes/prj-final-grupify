@@ -90,8 +90,40 @@ const menuItemsConfig = [
 
 // Filtrar los elementos del menú según el rol del usuario
 const menuItems = computed(() => {
+  // Asegurarnos de inicializar el authStore antes de acceder a los datos
+  if (authStore.token && (!authStore.user || !authStore.user.role)) {
+    console.log("NavTeacher: authStore not initialized, initializing...");
+    authStore.initialize();
+  }
+  
   const userRole = authStore.userRole;
-  console.log("User role desde menuItems computed:", userRole);
+  console.log("NavTeacher: User role for menu filtering:", userRole);
+  
+  // Si no hay rol, intentar cargar desde localStorage
+  if (!userRole && authStore.token) {
+    console.log("NavTeacher: No role detected, trying localStorage...");
+    try {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        const user = JSON.parse(userString);
+        console.log("NavTeacher: User from localStorage:", user?.role?.name);
+        if (user && user.role && user.role.name) {
+          // Forzar la actualización del authStore
+          authStore.user = user;
+        }
+      }
+    } catch (e) {
+      console.error("NavTeacher: Error loading user from localStorage:", e);
+    }
+  }
+  
+  // Obtener el rol, potencialmente actualizado
+  const effectiveRole = authStore.userRole || 
+                       (authStore.user?.role?.name) || 
+                       JSON.parse(localStorage.getItem("user") || "{}")?.role?.name || 
+                       'profesor'; // Fallback
+  
+  console.log("NavTeacher: Effective role for menu:", effectiveRole);
   
   return menuItemsConfig.map(item => {
     // Si es un menú desplegable, filtramos sus elementos
@@ -99,7 +131,7 @@ const menuItems = computed(() => {
       return {
         ...item,
         items: item.items.filter(subItem => 
-          !subItem.showFor || subItem.showFor.includes(userRole)
+          !subItem.showFor || subItem.showFor.includes(effectiveRole)
         )
       };
     }
@@ -184,6 +216,21 @@ const closeDropdowns = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', closeDropdowns);
+  
+  // Inicializar el authStore para asegurar que los datos del usuario estén cargados
+  authStore.initialize();
+  
+  // Verificar y mostrar información del rol para depuración
+  if (authStore.user && authStore.user.role) {
+    console.log("Rol de usuario en NavTeacher:", authStore.user.role.name);
+  } else {
+    console.log("Usuario o rol no disponible en NavTeacher, cargando desde localStorage");
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log("Datos de usuario desde localStorage:", user);
+    }
+  }
 });
 
 onUnmounted(() => {
