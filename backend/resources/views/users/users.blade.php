@@ -2,8 +2,15 @@
 
 @section('content')
 <div class="container">
-    <h1 class="mb-4">Usuaris</h1>
-
+    <!-- Encapçalament i botó de retorn -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5 mb-0">Usuaris</h1>
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>
+            Tornar al panell
+        </a>
+    </div>
+    
     <div class="row mb-4">
         <div class="col-md-8">
             <a href="{{ route('users.create') }}" class="btn btn-primary">Afegir Nou Usuari</a>
@@ -14,25 +21,25 @@
                 <select name="role_id" class="form-control">
                     <option value="">Tots els rols</option>
                     @foreach($roles as $role)
-                    <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
-                        {{ $role->name }}
-                    </option>
+                        <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
+                            {{ $role->name }}
+                        </option>
                     @endforeach
                 </select>
-
+                
                 <button type="submit" class="btn mx-3" style="background-color: #00ADEE; color: white;">
                     Filtrar
                 </button>
-
+                
                 @if(request('role_id'))
-                <a href="{{ route('users.index') }}" class="btn" style="background-color: #6C757D; color: white;">
-                    Netejar
-                </a>
+                    <a href="{{ route('users.index') }}" class="btn" style="background-color: #6C757D; color: white;">
+                        Netejar
+                    </a>
                 @endif
             </form>
         </div>
     </div>
-
+    
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -55,10 +62,10 @@
                 <td>
                     <!-- Botó de visualització -->
                     <a href="{{ route('users.show', $user->id) }}" class="btn btn-info btn-sm">Veure</a>
-
+                    
                     <!-- Botó d'edició -->
                     <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning btn-sm">Editar</a>
-
+                    
                     <!-- Botó d'eliminació -->
                     <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline-block;">
                         @csrf
@@ -79,8 +86,5 @@
     <div class="d-flex justify-content-center mb-3">
         {{ $users->appends(request()->query())->links('pagination::bootstrap-4') }}
     </div>
-
-    <!-- Botó de tornar al dashboard -->
-    <a href="{{ route('dashboard') }}" class="btn btn-primary mt-3 w-100">Tornar al Panell</a>
 </div>
 @endsection
