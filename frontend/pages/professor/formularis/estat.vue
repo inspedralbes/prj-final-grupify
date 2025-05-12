@@ -418,7 +418,7 @@ onMounted(async () => {
 // Cargar cursos
 async function loadCourses() {
   try {
-    const response = await $fetch('http://localhost:8000/api/courses', {
+    const response = await $fetch('https://api.grupify.cat/api/courses', {
       headers: {
         Authorization: `Bearer ${authStore.token}`
       }
@@ -433,7 +433,7 @@ async function loadCourses() {
 watch(selectedCourse, async (newValue) => {
   if (newValue) {
     try {
-      const response = await $fetch(`http://localhost:8000/api/course-divisions?course_id=${newValue}`, {
+      const response = await $fetch(`https://api.grupify.cat/api/course-divisions?course_id=${newValue}`, {
         headers: {
           Authorization: `Bearer ${authStore.token}`
         }
@@ -453,7 +453,7 @@ watch(selectedCourse, async (newValue) => {
 watch(selectedDivision, async (newValue) => {
   if (newValue && selectedCourse.value) {
     try {
-      const response = await $fetch('http://localhost:8000/api/forms/active', {
+      const response = await $fetch('https://api.grupify.cat/api/forms/active', {
         headers: {
           Authorization: `Bearer ${authStore.token}`
         }
@@ -475,7 +475,7 @@ async function getResponseStatus() {
   isLoading.value = true;
   
   try {
-    const response = await $fetch('http://localhost:8000/api/forms/response-status', {
+    const response = await $fetch('https://api.grupify.cat/api/forms/response-status', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authStore.token}`,

@@ -18,7 +18,7 @@ export const useStudentsStore = defineStore("students", {
       this.error = null;
 
       // Construir la URL con parámetros de filtro
-      let url = "http://localhost:8000/api/get-students";
+      let url = "https://api.grupify.cat/api/get-students";
       const params = new URLSearchParams();
       
       // Manejar tanto IDs individuales como arrays de IDs

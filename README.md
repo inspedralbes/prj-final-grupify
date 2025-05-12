@@ -87,7 +87,7 @@ Abans de començar, assegura't de tenir instal·lat el següent component:
     cd ~/prj-final-grupify/frontend
     cp .env.example .env
     GOOGLE_CLIENT_ID=
-    API_BASE_URL=http://localhost:8000 #URL de Laravel
+    API_BASE_URL=https://api.grupify.cat #URL de Laravel
 **Aixeca els serveis per desenvolupament de forma senzilla (Nuxt, Node, Laravel, Redis, MySQL, Adminer)**
 - Les **comandes principals** per obrir el projecte de forma ràpida i segura.
     ```bash

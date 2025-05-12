@@ -381,7 +381,7 @@ const fetchData = async () => {
   error.value = null;
 
   try {
-    const response = await fetch('http://localhost:8000/api/cesc/graficas-tags', {
+    const response = await fetch('https://api.grupify.cat/api/cesc/graficas-tags', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
