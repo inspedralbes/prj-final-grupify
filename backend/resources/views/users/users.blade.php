@@ -6,12 +6,12 @@
     <div class="card border-0 shadow-sm mb-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="p-4 bg-gradient-primary text-white" style="background: linear-gradient(135deg, #00ADEE 0%, #0078A0 100%);">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                     <div>
                         <h1 class="h2 mb-2 fw-bold">Gestió d'Usuaris</h1>
                         <p class="mb-0 opacity-75">Administra els usuaris del sistema i els seus rols</p>
                     </div>
-                    <a href="{{ route('dashboard') }}" class="btn btn-light btn-lg rounded-pill shadow-sm px-4 d-flex align-items-center">
+                    <a href="{{ route('dashboard') }}" class="btn btn-light rounded-pill shadow-sm px-4 py-2 d-inline-flex align-items-center align-self-start">
                         <i class="fas fa-arrow-left me-2"></i>
                         Tornar
                     </a>
@@ -64,8 +64,8 @@
         </div>
     </div>
 
-    <!-- Card de tabla de usuarios -->
-    <div class="card border-0 shadow-sm">
+    <!-- Versión para escritorio: Tabla de usuarios -->
+    <div class="card border-0 shadow-sm d-none d-md-block">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -137,6 +137,60 @@
         </div>
     </div>
 
+    <!-- Versión para móviles: Tarjetas de usuarios -->
+    <div class="d-md-none">
+        @forelse($users as $user)
+        <div class="card border-0 shadow-sm mb-3 user-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <span class="user-id me-2">{{ $user->id }}</span>
+                        {{ $user->name }} {{ $user->last_name }}
+                    </h5>
+                    <span class="badge rounded-pill bg-light text-dark border">
+                        <i class="fas fa-user-tag me-1" style="color: #00ADEE;"></i>
+                        {{ $user->role ? $user->role->name : 'Sense rol' }}
+                    </span>
+                </div>
+
+                <p class="card-text mb-3">
+                    <i class="fas fa-envelope text-muted me-2"></i>
+                    {{ $user->email }}
+                </p>
+
+                <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                    <a href="{{ route('users.show', $user->id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye me-1"></i> Veure
+                    </a>
+                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-outline-warning">
+                        <i class="fas fa-edit me-1"></i> Editar
+                    </a>
+                    <form action="{{ route('users.destroy', $user->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-outline-danger"
+                            onclick="return confirm('Estàs segur que vols eliminar aquest usuari?')">
+                            <i class="fas fa-trash-alt me-1"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-users text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h5 class="fw-light text-muted">No s'han trobat usuaris</h5>
+                @if(request('role_id'))
+                <a href="{{ route('users.index') }}" class="btn btn-outline-primary mt-3">
+                    <i class="fas fa-filter me-1"></i> Eliminar filtres
+                </a>
+                @endif
+            </div>
+        </div>
+        @endforelse
+    </div>
+
     <!-- Paginación -->
     <div class="d-flex justify-content-center mt-4">
         {{ $users->appends(request()->query())->links('pagination::bootstrap-4') }}
@@ -173,37 +227,28 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
-    /* Ajustes responsivos */
-    @media (max-width: 768px) {
-        .table-responsive {
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
+    /* Estilos para las tarjetas de móvil */
+    .user-card {
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+    }
 
-        .table {
-            width: 100%;
-            min-width: 650px;
-            /* Asegura que la tabla tenga un ancho mínimo para desplazamiento */
-        }
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+    }
 
-        .card-body {
-            padding: 1rem;
-        }
-
-        /* Mejora de botones para móvil */
-        .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.95rem;
-        }
-
-        /* Mejora para la visualización de botones de filtro en móvil */
-        select.form-select {
-            height: 42px;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-        }
+    .user-id {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 600;
     }
 
     /* Animación sutil para filas */
@@ -213,6 +258,18 @@
 
     tbody tr:hover {
         background-color: rgba(0, 173, 238, 0.05) !important;
+    }
+
+    /* Ajustes adicionales para responsividad */
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1rem;
+        }
+
+        .btn {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.9rem;
+        }
     }
 </style>
 @endsection
