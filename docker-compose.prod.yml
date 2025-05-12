@@ -65,7 +65,7 @@ services:
     restart: always
     networks:
       - app-network
-
+#
   queue-worker:
     image: ghcr.io/adriapedralbes/backend:v2.5
     command: "php artisan queue:work redis --tries=3 --timeout=90"
