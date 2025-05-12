@@ -18,8 +18,16 @@ const checkFormCompletion = async (course) => {
   }
 
   try {
+    // Usar la nueva ruta pública
     const response = await fetch(
-      `http://localhost:8000/api/check-form-completion/${course.courseId}/${course.division.id}/3`
+      `http://localhost:8000/api/check-form-completion-public/${course.courseId}/${course.division.id}/3`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }
+      }
     );
 
     if (!response.ok) {

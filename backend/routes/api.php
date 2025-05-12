@@ -27,7 +27,9 @@ use App\Http\Controllers\InvitationController;
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 
 Route::get('/questions/{questionId}/average-rating', [AnswerController::class, 'getAverageRating']);
-
+// Ruta pública (sin autenticación) para verificar si el formulario ha sido completado
+Route::get('/check-form-completion-public/{course_id}/{division_id}/{form_id}', 
+    [App\Http\Controllers\FormController::class, 'checkFormCompletionPublic']);
 
 // RURTAS SIN USOO 
 
