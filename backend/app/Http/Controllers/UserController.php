@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -186,157 +187,219 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        // Validación base para todos los usuarios
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role_id' => 'required|exists:roles,id',
-            'image' => 'nullable|string|max:255', // Imagen opcional
-            'courses' => 'nullable|array',
-            'divisions' => 'nullable|array',
-            'subjects' => 'nullable|array',
-            'course_division_pairs' => 'nullable|array',
-            'course_division_pairs.*.course_id' => 'required_with:course_division_pairs|exists:courses,id',
-            'course_division_pairs.*.division_id' => 'required_with:course_division_pairs|exists:divisions,id'
-        ]);
+        // Log para depuración - registrar los datos recibidos
+        \Log::info('Datos recibidos en store de usuario:', $request->all());
+        
+        try {
+            // Validación base para todos los usuarios
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8',
+                'role_id' => 'required|exists:roles,id',
+                'image' => 'nullable|string|max:255', // Imagen opcional
+                'courses' => 'nullable|array',
+                'divisions' => 'nullable|array',
+                'subjects' => 'nullable|array',
+                'course_division_pairs' => 'nullable|array',
+                'course_division_pairs.*.course_id' => 'required_with:course_division_pairs|exists:courses,id',
+                'course_division_pairs.*.division_id' => 'required_with:course_division_pairs|exists:divisions,id'
+            ]);
 
-        // Si la validación falla, retorna errores
-        if ($validator->fails()) {
+            // Si la validación falla, retorna errores
+            if ($validator->fails()) {
+                \Log::warning('Validación fallida en creación de usuario:', $validator->errors()->toArray());
+                
+                if ($request->wantsJson()) {
+                    return response()->json(['errors' => $validator->errors()], 400);
+                } else {
+                    return redirect()->back()->withErrors($validator)->withInput();
+                }
+            }
+
+            // Crear el usuario
+            $user = User::create([
+                'name' => $request->name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role_id' => $request->role_id,
+                'image' => $request->image ?? null,
+            ]);
+            
+            \Log::info('Usuario básico creado con ID: ' . $user->id);
+
+            // Si se ha proporcionado una imagen, agregarla a los datos del usuario
+            if ($request->has('image')) {
+                $user->image = $request->image;
+                $user->save();
+            }
+
+            // Si el usuario es Profesor o Tutor u Orientador, manejar asignaciones
+            if (in_array($request->role_id, [1, 4, 5])) {
+                \Log::info('Procesando usuario de tipo Profesor/Tutor/Orientador (role_id: ' . $request->role_id . ')');
+                
+                // Asociar materias si se han seleccionado (solo para profesores)
+                if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
+                    $user->subjects()->sync($request->subjects);
+                    \Log::info('Asignaturas asociadas al profesor: ' . implode(', ', $request->subjects));
+                }
+
+                // Procesar los pares curso-división
+                if ($request->has('course_division_pairs') && is_array($request->course_division_pairs)) {
+                    \Log::info('Procesando pares curso-división: ', $request->course_division_pairs);
+                    
+                    foreach ($request->course_division_pairs as $pair) {
+                        // Verificar que ambos valores existan
+                        if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
+                            \App\Models\CourseDivisionUser::create([
+                                'course_id' => $pair['course_id'],
+                                'division_id' => $pair['division_id'],
+                                'user_id' => $user->id,
+                            ]);
+
+                            // También agregar a la tabla course_user para mantener compatibilidad
+                            $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            
+                            \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al usuario');
+                        } else {
+                            \Log::warning('Par curso-división incompleto: ', $pair);
+                        }
+                    }
+                } else {
+                    \Log::warning('No se encontraron pares curso-división en la solicitud');
+                }
+                
+                // Mantener compatibilidad con el formato anterior (por si acaso)
+                if (
+                    $request->has('courses') && is_array($request->courses) &&
+                    $request->has('divisions') && is_array($request->divisions)
+                ) {
+                    \Log::info('Usando formato anterior de courses y divisions arrays');
+                    
+                    foreach ($request->courses as $courseId) {
+                        foreach ($request->divisions as $divisionId) {
+                            \App\Models\CourseDivisionUser::create([
+                                'course_id' => $courseId,
+                                'division_id' => $divisionId,
+                                'user_id' => $user->id,
+                            ]);
+
+                            // También agregar a la tabla course_user para mantener compatibilidad
+                            $user->courses()->syncWithoutDetaching([$courseId]);
+                            
+                            \Log::info('Asociado curso:' . $courseId . ' y división:' . $divisionId . ' al usuario');
+                        }
+                    }
+                }
+                
+                // Si hay específicamente tutor_course_id y tutor_division_id
+                if ($request->has('tutor_course_id') && $request->has('tutor_division_id')) {
+                    \Log::info('Usando tutor_course_id y tutor_division_id');
+                    
+                    \App\Models\CourseDivisionUser::create([
+                        'course_id' => $request->tutor_course_id,
+                        'division_id' => $request->tutor_division_id,
+                        'user_id' => $user->id,
+                    ]);
+
+                    // También agregar a la tabla course_user para mantener compatibilidad
+                    $user->courses()->syncWithoutDetaching([$request->tutor_course_id]);
+                    
+                    \Log::info('Asociado curso:' . $request->tutor_course_id . ' y división:' . $request->tutor_division_id . ' al usuario');
+                }
+            }
+
+            // Si el usuario es Alumno, asociar curso y división
+            elseif ($request->role_id == 2) {
+                \Log::info('Procesando usuario de tipo Alumno');
+                
+                // Procesar los pares curso-división (si existen)
+                if ($request->has('course_division_pairs') && is_array($request->course_division_pairs)) {
+                    \Log::info('Procesando pares curso-división para alumno: ', $request->course_division_pairs);
+                    
+                    foreach ($request->course_division_pairs as $pair) {
+                        if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
+                            \App\Models\CourseDivisionUser::create([
+                                'course_id' => $pair['course_id'],
+                                'division_id' => $pair['division_id'],
+                                'user_id' => $user->id,
+                            ]);
+
+                            // También agregar a la tabla course_user para mantener compatibilidad
+                            $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            
+                            \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al alumno');
+                        } else {
+                            \Log::warning('Par curso-división incompleto para alumno: ', $pair);
+                        }
+                    }
+                } else {
+                    \Log::warning('No se encontraron pares curso-división en la solicitud para el alumno');
+                }
+                
+                // Si hay campos individuales course_id y division_id
+                if ($request->has('course_id') && $request->has('division_id')) {
+                    \Log::info('Usando course_id y division_id individuales para alumno');
+                    
+                    \App\Models\CourseDivisionUser::create([
+                        'course_id' => $request->course_id,
+                        'division_id' => $request->division_id,
+                        'user_id' => $user->id,
+                    ]);
+
+                    // También agregar a la tabla course_user para mantener compatibilidad
+                    $user->courses()->syncWithoutDetaching([$request->course_id]);
+                    
+                    \Log::info('Asociado curso:' . $request->course_id . ' y división:' . $request->division_id . ' al alumno');
+                }
+                
+                // Mantener compatibilidad con formato anterior
+                if (
+                    $request->has('courses') && is_array($request->courses) &&
+                    $request->has('divisions') && is_array($request->divisions)
+                ) {
+                    \Log::info('Usando formato anterior de courses y divisions arrays para alumno');
+                    
+                    foreach ($request->courses as $courseId) {
+                        foreach ($request->divisions as $divisionId) {
+                            \App\Models\CourseDivisionUser::create([
+                                'course_id' => $courseId,
+                                'division_id' => $divisionId,
+                                'user_id' => $user->id,
+                            ]);
+
+                            // También agregar a la tabla course_user para mantener compatibilidad
+                            $user->courses()->syncWithoutDetaching([$courseId]);
+                            
+                            \Log::info('Asociado curso:' . $courseId . ' y división:' . $divisionId . ' al alumno');
+                        }
+                    }
+                }
+            }
+
+            \Log::info('Usuario creado correctamente');
+            
             if ($request->wantsJson()) {
-                return response()->json(['errors' => $validator->errors()], 400);
-            } else {
-                return redirect()->back()->withErrors($validator)->withInput();
+                return response()->json(
+                    $user->load(['courses', 'subjects', 'courseDivisionUsers.course', 'courseDivisionUsers.division']),
+                    201
+                );
             }
+
+            return redirect()->route('users.index')->with('success', 'Usuari creat correctament');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error al crear usuario: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Error al crear usuario: ' . $e->getMessage()], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Error al crear usuari: ' . $e->getMessage())->withInput();
         }
-
-        // Crear el usuario
-        $user = User::create([
-            'name' => $request->name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role_id' => $request->role_id,
-            'image' => $request->image ?? null,
-        ]);
-
-        // Si se ha proporcionado una imagen, agregarla a los datos del usuario
-        if ($request->has('image')) {
-            $user->image = $request->image;
-            $user->save();
-        }
-
-        // Si el usuario es Profesor o Tutor u Orientador, manejar asignaciones
-        if (in_array($request->role_id, [1, 4, 5])) {
-            // Asociar materias si se han seleccionado (solo para profesores)
-            if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
-                $user->subjects()->sync($request->subjects);
-            }
-
-            // Procesar los pares curso-división
-            if ($request->has('course_division_pairs') && is_array($request->course_division_pairs)) {
-                foreach ($request->course_division_pairs as $pair) {
-                    // Verificar que ambos valores existan
-                    if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
-                        \App\Models\CourseDivisionUser::create([
-                            'course_id' => $pair['course_id'],
-                            'division_id' => $pair['division_id'],
-                            'user_id' => $user->id,
-                        ]);
-
-                        // También agregar a la tabla course_user para mantener compatibilidad
-                        $user->courses()->syncWithoutDetaching([$pair['course_id']]);
-                    }
-                }
-            }
-            // Mantener compatibilidad con el formato anterior (por si acaso)
-            elseif (
-                $request->has('courses') && is_array($request->courses) &&
-                $request->has('divisions') && is_array($request->divisions)
-            ) {
-                foreach ($request->courses as $courseId) {
-                    foreach ($request->divisions as $divisionId) {
-                        \App\Models\CourseDivisionUser::create([
-                            'course_id' => $courseId,
-                            'division_id' => $divisionId,
-                            'user_id' => $user->id,
-                        ]);
-
-                        // También agregar a la tabla course_user para mantener compatibilidad
-                        $user->courses()->syncWithoutDetaching([$courseId]);
-                    }
-                }
-            }
-            // Si hay específicamente tutor_course_id y tutor_division_id
-            elseif ($request->has('tutor_course_id') && $request->has('tutor_division_id')) {
-                \App\Models\CourseDivisionUser::create([
-                    'course_id' => $request->tutor_course_id,
-                    'division_id' => $request->tutor_division_id,
-                    'user_id' => $user->id,
-                ]);
-
-                // También agregar a la tabla course_user para mantener compatibilidad
-                $user->courses()->syncWithoutDetaching([$request->tutor_course_id]);
-            }
-        }
-
-        // Si el usuario es Alumno, asociar curso y división
-        elseif ($request->role_id == 2) {
-            // Procesar los pares curso-división (si existen)
-            if ($request->has('course_division_pairs') && is_array($request->course_division_pairs)) {
-                foreach ($request->course_division_pairs as $pair) {
-                    if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
-                        \App\Models\CourseDivisionUser::create([
-                            'course_id' => $pair['course_id'],
-                            'division_id' => $pair['division_id'],
-                            'user_id' => $user->id,
-                        ]);
-
-                        // También agregar a la tabla course_user para mantener compatibilidad
-                        $user->courses()->syncWithoutDetaching([$pair['course_id']]);
-                    }
-                }
-            }
-            // Si hay campos individuales course_id y division_id
-            elseif ($request->has('course_id') && $request->has('division_id')) {
-                \App\Models\CourseDivisionUser::create([
-                    'course_id' => $request->course_id,
-                    'division_id' => $request->division_id,
-                    'user_id' => $user->id,
-                ]);
-
-                // También agregar a la tabla course_user para mantener compatibilidad
-                $user->courses()->syncWithoutDetaching([$request->course_id]);
-            }
-            // Mantener compatibilidad con formato anterior
-            elseif (
-                $request->has('courses') && is_array($request->courses) &&
-                $request->has('divisions') && is_array($request->divisions)
-            ) {
-                foreach ($request->courses as $courseId) {
-                    foreach ($request->divisions as $divisionId) {
-                        \App\Models\CourseDivisionUser::create([
-                            'course_id' => $courseId,
-                            'division_id' => $divisionId,
-                            'user_id' => $user->id,
-                        ]);
-
-                        // También agregar a la tabla course_user para mantener compatibilidad
-                        $user->courses()->syncWithoutDetaching([$courseId]);
-                    }
-                }
-            }
-        }
-
-        if ($request->wantsJson()) {
-            return response()->json(
-                $user->load(['courses', 'subjects', 'courseDivisionUsers.course', 'courseDivisionUsers.division']),
-                201
-            );
-        }
-
-        return redirect()->route('users.index')->with('success', 'Usuario creado correctamente');
     }
 
 
@@ -607,12 +670,53 @@ class UserController extends Controller
         $user = User::find($id);
 
         if (is_null($user)) {
-            return response()->json(['message' => 'User not found'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+            return redirect()->route('users.index')->with('error', 'Usuario no encontrado');
         }
 
-        $user->delete();
+        try {
+            // Intento de eliminar el usuario
+            $user->delete();
 
-        return response()->json(null, 204);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Usuari eliminat correctament'], 200);
+            }
+            return redirect()->route('users.index')->with('success', 'Usuari eliminat correctament');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Verificar si el error es de restricción de clave foránea relacionada con grupos
+            if ($e->getCode() == "23000" && strpos($e->getMessage(), 'group_user_user_id_foreign') !== false) {
+                // Obtener los grupos asociados al usuario
+                $groups = DB::table('group_user')
+                    ->join('groups', 'group_user.group_id', '=', 'groups.id')
+                    ->where('group_user.user_id', $id)
+                    ->select('groups.id', 'groups.name')
+                    ->get();
+
+                $groupNames = $groups->pluck('name')->implode(', ');
+                $errorMessage = 'No es pot eliminar usuari perquè pertany als següents grups: ' . $groupNames;
+
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'error' => true,
+                        'message' => $errorMessage
+                    ], 409);
+                }
+                return redirect()->route('users.index')->with('error', $errorMessage);
+            }
+
+            // Si es otro tipo de error, devolver un mensaje genérico
+            $errorMessage = 'Error al eliminar el usuario: ' . $e->getMessage();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'error' => true,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            return redirect()->route('users.index')->with('error', $errorMessage);
+        }
     }
 
     public function getStudents(Request $request)
