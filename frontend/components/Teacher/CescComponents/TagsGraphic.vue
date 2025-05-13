@@ -198,9 +198,9 @@
                   <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_1_count }} estudiantes</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-green-600 h-2.5 rounded-full" :style="{ width: `${(selectedClass.tag_1_count / selectedClass.total_students) * 100}%` }"></div>
+                  <div class="bg-green-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_1_count / selectedClass.total_students) * 100, 100)}%` }"></div>
                 </div>
-                <p class="text-green-600 text-sm mt-2">{{ ((selectedClass.tag_1_count / selectedClass.total_students) * 100).toFixed(1) }}% de la clase</p>
+                <p class="text-green-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_1_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
               </div>
 
               <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
@@ -209,9 +209,9 @@
                   <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_2_count }} estudiantes</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${(selectedClass.tag_2_count / selectedClass.total_students) * 100}%` }"></div>
+                  <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_2_count / selectedClass.total_students) * 100, 100)}%` }"></div>
                 </div>
-                <p class="text-blue-600 text-sm mt-2">{{ ((selectedClass.tag_2_count / selectedClass.total_students) * 100).toFixed(1) }}% de la clase</p>
+                <p class="text-blue-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_2_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
               </div>
 
               <div class="bg-red-50 p-4 rounded-lg border border-red-100">
@@ -220,9 +220,9 @@
                   <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_3_count }} estudiantes</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-red-600 h-2.5 rounded-full" :style="{ width: `${(selectedClass.tag_3_count / selectedClass.total_students) * 100}%` }"></div>
+                  <div class="bg-red-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_3_count / selectedClass.total_students) * 100, 100)}%` }"></div>
                 </div>
-                <p class="text-red-600 text-sm mt-2">{{ ((selectedClass.tag_3_count / selectedClass.total_students) * 100).toFixed(1) }}% de la clase</p>
+                <p class="text-red-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_3_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
               </div>
 
               <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
@@ -231,9 +231,9 @@
                   <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_4_count }} estudiantes</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-purple-600 h-2.5 rounded-full" :style="{ width: `${(selectedClass.tag_4_count / selectedClass.total_students) * 100}%` }"></div>
+                  <div class="bg-purple-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_4_count / selectedClass.total_students) * 100, 100)}%` }"></div>
                 </div>
-                <p class="text-purple-600 text-sm mt-2">{{ ((selectedClass.tag_4_count / selectedClass.total_students) * 100).toFixed(1) }}% de la clase</p>
+                <p class="text-purple-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_4_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
               </div>
 
               <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
@@ -242,9 +242,9 @@
                   <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_5_count }} estudiantes</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-amber-500 h-2.5 rounded-full" :style="{ width: `${(selectedClass.tag_5_count / selectedClass.total_students) * 100}%` }"></div>
+                  <div class="bg-amber-500 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_5_count / selectedClass.total_students) * 100, 100)}%` }"></div>
                 </div>
-                <p class="text-amber-600 text-sm mt-2">{{ ((selectedClass.tag_5_count / selectedClass.total_students) * 100).toFixed(1) }}% de la clase</p>
+                <p class="text-amber-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_5_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
               </div>
             </div>
 
@@ -336,19 +336,69 @@ const totalVictima = computed(() => {
 const filteredSeries = computed(() => {
   const series = [];
   
+  // Primera pasada: calcular totales para cada categoría para poder hacer porcentajes relativos
+  const categoryTotals = graphData.value.map(item => {
+    const socialTotal = item.tag_1_count + item.tag_4_count;
+    const violentoTotal = item.tag_3_count;
+    const afectadoTotal = item.tag_2_count + item.tag_5_count;
+    const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+    
+    return {
+      socialTotal: socialTotal,
+      violentoTotal: violentoTotal,
+      afectadoTotal: afectadoTotal,
+      allTotal: allTotal
+    };
+  });
+  
   if (props.categoria === 'all' || props.categoria === 'social') {
+    // Calculamos el total para la categoría 'social' usando la suma de ambos tags
+    const socialTotals = graphData.value.map(item => item.tag_1_count + item.tag_4_count);
+    
     series.push({
       name: 'Popular (A)',
       type: 'bar',
       stack: chartType.value === 'grouped' ? undefined : 'total',
       emphasis: { focus: 'series' },
       itemStyle: { color: '#22c55e' }, // Verde
-      data: graphData.value.map(item => {
+      data: graphData.value.map((item, index) => {
         if (chartType.value === 'percentage') {
-          return item.total_students > 0 ? (item.tag_1_count / item.total_students) * 100 : 0;
+          // Para la categoría 'social', calculamos el porcentaje relativo a la suma de ambos tags
+          if (props.categoria === 'social') {
+            const total = item.tag_1_count + item.tag_4_count;
+            return total > 0 ? (item.tag_1_count / total) * 100 : 0;
+          } else {
+            // Para 'all', calculamos respecto al total de todos los tags
+            const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+            return allTotal > 0 ? (item.tag_1_count / allTotal) * 100 : 0;
+          }
         }
         return item.tag_1_count;
-      })
+      }),
+      label: {
+        show: true,
+        position: 'inside',
+        formatter: function(params) {
+          const item = graphData.value[params.dataIndex];
+          const tagCount = item.tag_1_count;
+          
+          if (chartType.value === 'percentage') {
+            // Para calcular el porcentaje correcto según la categoría
+            if (props.categoria === 'social') {
+              const total = item.tag_1_count + item.tag_4_count;
+              const percentage = total > 0 ? (tagCount / total) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            } else {
+              const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+              const percentage = allTotal > 0 ? (tagCount / allTotal) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            }
+          } else {
+            // Para modos no porcentuales
+            return tagCount > 0 ? tagCount : '';
+          }
+        }
+      }
     });
     
     series.push({
@@ -357,12 +407,44 @@ const filteredSeries = computed(() => {
       stack: chartType.value === 'grouped' ? undefined : 'total',
       emphasis: { focus: 'series' },
       itemStyle: { color: '#a855f7' }, // Púrpura
-      data: graphData.value.map(item => {
+      data: graphData.value.map((item, index) => {
         if (chartType.value === 'percentage') {
-          return item.total_students > 0 ? (item.tag_4_count / item.total_students) * 100 : 0;
+          // Para la categoría 'social', calculamos el porcentaje relativo a la suma de ambos tags
+          if (props.categoria === 'social') {
+            const total = item.tag_1_count + item.tag_4_count;
+            return total > 0 ? (item.tag_4_count / total) * 100 : 0;
+          } else {
+            // Para 'all', calculamos respecto al total de todos los tags
+            const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+            return allTotal > 0 ? (item.tag_4_count / allTotal) * 100 : 0;
+          }
         }
         return item.tag_4_count;
-      })
+      }),
+      label: {
+        show: true,
+        position: 'inside',
+        formatter: function(params) {
+          const item = graphData.value[params.dataIndex];
+          const tagCount = item.tag_4_count;
+          
+          if (chartType.value === 'percentage') {
+            // Para calcular el porcentaje correcto según la categoría
+            if (props.categoria === 'social') {
+              const total = item.tag_1_count + item.tag_4_count;
+              const percentage = total > 0 ? (tagCount / total) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            } else {
+              const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+              const percentage = allTotal > 0 ? (tagCount / allTotal) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            }
+          } else {
+            // Para modos no porcentuales
+            return tagCount > 0 ? tagCount : '';
+          }
+        }
+      }
     });
   }
   
@@ -373,28 +455,90 @@ const filteredSeries = computed(() => {
       stack: chartType.value === 'grouped' ? undefined : 'total',
       emphasis: { focus: 'series' },
       itemStyle: { color: '#ef4444' }, // Rojo
-      data: graphData.value.map(item => {
+      data: graphData.value.map((item, index) => {
         if (chartType.value === 'percentage') {
-          return item.total_students > 0 ? (item.tag_3_count / item.total_students) * 100 : 0;
+          // Si es la única categoría, usamos el porcentaje relativo al total de tags
+          const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+          return allTotal > 0 ? (item.tag_3_count / allTotal) * 100 : 0;
         }
         return item.tag_3_count;
-      })
+      }),
+      label: {
+        show: true,
+        position: 'inside',
+        formatter: function(params) {
+          const item = graphData.value[params.dataIndex];
+          const tagCount = item.tag_3_count;
+          
+          if (chartType.value === 'percentage') {
+            // En caso de 'violento', como es el único tag, mostramos el % respecto al total de tags
+            if (props.categoria === 'violento') {
+              // Usamos el total de tags en lugar del total de estudiantes
+              const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+              const percentage = allTotal > 0 ? (tagCount / allTotal) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            } else {
+              const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+              const percentage = allTotal > 0 ? (tagCount / allTotal) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            }
+          } else {
+            // Para modos no porcentuales
+            return tagCount > 0 ? tagCount : '';
+          }
+        }
+      }
     });
   }
   
   if (props.categoria === 'all' || props.categoria === 'afectado') {
+    // Calculamos el total para la categoría 'afectado' usando la suma de ambos tags
+    const afectadoTotals = graphData.value.map(item => item.tag_2_count + item.tag_5_count);
+    
     series.push({
       name: 'Rebutjat (C)',
       type: 'bar',
       stack: chartType.value === 'grouped' ? undefined : 'total',
       emphasis: { focus: 'series' },
       itemStyle: { color: '#3b82f6' }, // Azul
-      data: graphData.value.map(item => {
+      data: graphData.value.map((item, index) => {
         if (chartType.value === 'percentage') {
-          return item.total_students > 0 ? (item.tag_2_count / item.total_students) * 100 : 0;
+          // Para la categoría 'afectado', calculamos el porcentaje relativo a la suma de ambos tags
+          if (props.categoria === 'afectado') {
+            const total = item.tag_2_count + item.tag_5_count;
+            return total > 0 ? (item.tag_2_count / total) * 100 : 0;
+          } else {
+            // Para 'all', calculamos respecto al total de todos los tags
+            const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+            return allTotal > 0 ? (item.tag_2_count / allTotal) * 100 : 0;
+          }
         }
         return item.tag_2_count;
-      })
+      }),
+      label: {
+        show: true,
+        position: 'inside',
+        formatter: function(params) {
+          const item = graphData.value[params.dataIndex];
+          const tagCount = item.tag_2_count;
+          
+          if (chartType.value === 'percentage') {
+            // Para calcular el porcentaje correcto según la categoría
+            if (props.categoria === 'afectado') {
+              const total = item.tag_2_count + item.tag_5_count;
+              const percentage = total > 0 ? (tagCount / total) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            } else {
+              const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+              const percentage = allTotal > 0 ? (tagCount / allTotal) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            }
+          } else {
+            // Para modos no porcentuales
+            return tagCount > 0 ? tagCount : '';
+          }
+        }
+      }
     });
     
     series.push({
@@ -403,12 +547,44 @@ const filteredSeries = computed(() => {
       stack: chartType.value === 'grouped' ? undefined : 'total',
       emphasis: { focus: 'series' },
       itemStyle: { color: '#f59e0b' }, // Amarillo
-      data: graphData.value.map(item => {
+      data: graphData.value.map((item, index) => {
         if (chartType.value === 'percentage') {
-          return item.total_students > 0 ? (item.tag_5_count / item.total_students) * 100 : 0;
+          // Para la categoría 'afectado', calculamos el porcentaje relativo a la suma de ambos tags
+          if (props.categoria === 'afectado') {
+            const total = item.tag_2_count + item.tag_5_count;
+            return total > 0 ? (item.tag_5_count / total) * 100 : 0;
+          } else {
+            // Para 'all', calculamos respecto al total de todos los tags
+            const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+            return allTotal > 0 ? (item.tag_5_count / allTotal) * 100 : 0;
+          }
         }
         return item.tag_5_count;
-      })
+      }),
+      label: {
+        show: true,
+        position: 'inside',
+        formatter: function(params) {
+          const item = graphData.value[params.dataIndex];
+          const tagCount = item.tag_5_count;
+          
+          if (chartType.value === 'percentage') {
+            // Para calcular el porcentaje correcto según la categoría
+            if (props.categoria === 'afectado') {
+              const total = item.tag_2_count + item.tag_5_count;
+              const percentage = total > 0 ? (tagCount / total) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            } else {
+              const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+              const percentage = allTotal > 0 ? (tagCount / allTotal) * 100 : 0;
+              return `${tagCount} (${percentage.toFixed(1)}%)`;
+            }
+          } else {
+            // Para modos no porcentuales
+            return tagCount > 0 ? tagCount : '';
+          }
+        }
+      }
     });
   }
   
@@ -457,22 +633,51 @@ const chartOptions = computed(() => {
         const item = graphData.value[dataIndex];
         let html = `<div style="font-weight:bold;margin-bottom:5px;">${item.course_name} ${item.division_name}</div>`;
 
+        // Calcular los totales para cada categoría para poder mostrar porcentajes relativos
+        const socialTotal = item.tag_1_count + item.tag_4_count;
+        const afectadoTotal = item.tag_2_count + item.tag_5_count;
+        const allTagsTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
+
         params.forEach(param => {
           const color = param.color;
           const seriesName = param.seriesName;
           const value = param.value;
           const totalStudents = item.total_students;
+          const tagCount = getTagCountByName(seriesName, item);
 
           if (chartType.value === 'percentage') {
+            // Calculamos el porcentaje relativo según la categoría
+            let categoryTotal;
+            let percentage;
+            
+            if (props.categoria === 'social' && (seriesName === 'Popular (A)' || seriesName === 'Prosocial (A)')) {
+              categoryTotal = socialTotal;
+              percentage = categoryTotal > 0 ? (tagCount / categoryTotal) * 100 : 0;
+            } 
+            else if (props.categoria === 'afectado' && (seriesName === 'Rebutjat (C)' || seriesName === 'Víctima (C)')) {
+              categoryTotal = afectadoTotal;
+              percentage = categoryTotal > 0 ? (tagCount / categoryTotal) * 100 : 0;
+            }
+            else if (props.categoria === 'violento' && seriesName === 'Agressiu (B)') {
+              // Para 'violento', mostramos el porcentaje respecto al total de estudiantes
+              percentage = totalStudents > 0 ? (tagCount / totalStudents) * 100 : 0;
+              categoryTotal = totalStudents;
+            }
+            else {
+              // Para 'all', mostramos el porcentaje respecto al total de todos los tags
+              categoryTotal = allTagsTotal;
+              percentage = categoryTotal > 0 ? (tagCount / categoryTotal) * 100 : 0;
+            }
+            
             html += `<div style="display:flex;align-items:center;margin:5px 0;">
                       <span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:50%;margin-right:5px;"></span>
-                      <span>${seriesName}: ${value.toFixed(1)}% (${chartType.value === 'percentage' ? Math.round(value * totalStudents / 100) : value} de ${totalStudents} estudiantes)</span>
+                      <span>${seriesName}: ${percentage.toFixed(1)}% (${tagCount} de ${categoryTotal} tags)</span>
                     </div>`;
           } else {
-            const percentage = totalStudents > 0 ? ((value / totalStudents) * 100).toFixed(1) : 0;
+            // Para gráficos no porcentuales, mostramos solo el valor absoluto sin calcular porcentaje
             html += `<div style="display:flex;align-items:center;margin:5px 0;">
                       <span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:50%;margin-right:5px;"></span>
-                      <span>${seriesName}: ${value} (${percentage}% de ${totalStudents} estudiantes)</span>
+                      <span>${seriesName}: ${value} estudiantes</span>
                     </div>`;
           }
         });
@@ -569,6 +774,24 @@ const fetchData = async () => {
     error.value = err.message || 'Error al cargar los datos';
   } finally {
     isLoading.value = false;
+  }
+};
+
+// Función auxiliar para obtener el contador correcto según el nombre del tag
+const getTagCountByName = (tagName, item) => {
+  switch (tagName) {
+    case 'Popular (A)':
+      return item.tag_1_count;
+    case 'Rebutjat (C)':
+      return item.tag_2_count;
+    case 'Agressiu (B)':
+      return item.tag_3_count;
+    case 'Prosocial (A)':
+      return item.tag_4_count;
+    case 'Víctima (C)':
+      return item.tag_5_count;
+    default:
+      return 0;
   }
 };
 
