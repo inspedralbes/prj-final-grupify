@@ -619,9 +619,9 @@ class UserController extends Controller
             $user->delete();
 
             if (request()->wantsJson()) {
-                return response()->json(['message' => 'Usuario eliminado con éxito'], 200);
+                return response()->json(['message' => 'Usuari eliminat correctament'], 200);
             }
-            return redirect()->route('users.index')->with('success', 'Usuario eliminado con éxito');
+            return redirect()->route('users.index')->with('success', 'Usuari eliminat correctament');
         } catch (\Illuminate\Database\QueryException $e) {
             // Verificar si el error es de restricción de clave foránea relacionada con grupos
             if ($e->getCode() == "23000" && strpos($e->getMessage(), 'group_user_user_id_foreign') !== false) {
@@ -633,7 +633,7 @@ class UserController extends Controller
                     ->get();
 
                 $groupNames = $groups->pluck('name')->implode(', ');
-                $errorMessage = 'No es pot eliminar usuari perquè pertany als següents grups:' . $groupNames;
+                $errorMessage = 'No es pot eliminar usuari perquè pertany als següents grups: ' . $groupNames;
 
                 if (request()->wantsJson()) {
                     return response()->json([
