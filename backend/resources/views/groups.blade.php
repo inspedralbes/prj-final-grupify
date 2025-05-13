@@ -69,13 +69,35 @@
                                         </td>
                                         <td class="fw-semibold">{{ $group->name }}</td>
                                         <td>
-                                            @if ($group->users->isEmpty())
-                                                <span class="badge bg-light text-dark border">Sense integrants</span>
-                                            @else
-                                                <span class="badge bg-primary rounded-pill">
-                                                    {{ $group->users->count() }} integrants
-                                                </span>
-                                            @endif
+                                            <div class="d-flex flex-column">
+                                                <div>
+                                                    <span class="badge bg-info rounded-pill me-2">
+                                                        <i class="fas fa-users-cog me-1"></i> {{ $group->number_of_students }} places
+                                                    </span>
+                                                    
+                                                    @if ($group->users->isEmpty())
+                                                        <span class="badge bg-light text-dark border">
+                                                            <i class="fas fa-user-slash me-1"></i> Sense integrants
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-success rounded-pill">
+                                                            <i class="fas fa-user-check me-1"></i> {{ $group->users->count() }} assignats
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                
+                                                @if (!$group->users->isEmpty())
+                                                <div class="mt-2 small">
+                                                    <span class="text-muted">Integrants: </span>
+                                                    @foreach ($group->users->take(2) as $user)
+                                                        <span class="fw-semibold">{{ $user->name }}</span>@if (!$loop->last), @endif
+                                                    @endforeach
+                                                    @if ($group->users->count() > 2)
+                                                        <span class="text-muted">i {{ $group->users->count() - 2 }} més</span>
+                                                    @endif
+                                                </div>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td class="text-end px-4">
                                             <div class="d-flex justify-content-end align-items-center gap-2">
@@ -124,13 +146,21 @@
                                 <span class="group-id me-2">{{ $group->id }}</span>
                                 {{ $group->name }}
                             </h5>
-                            @if ($group->users->isEmpty())
-                                <span class="badge bg-light text-dark border">Sense integrants</span>
-                            @else
-                                <span class="badge bg-primary rounded-pill">
-                                    {{ $group->users->count() }} integrants
+                            <div>
+                                <span class="badge bg-info rounded-pill me-1">
+                                    <i class="fas fa-users-cog me-1"></i> {{ $group->number_of_students }} places
                                 </span>
-                            @endif
+                                <br class="d-sm-none">
+                                @if ($group->users->isEmpty())
+                                    <span class="badge bg-light text-dark border mt-1 mt-sm-0">
+                                        <i class="fas fa-user-slash me-1"></i> Sense integrants
+                                    </span>
+                                @else
+                                    <span class="badge bg-success rounded-pill mt-1 mt-sm-0">
+                                        <i class="fas fa-user-check me-1"></i> {{ $group->users->count() }} assignats
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         @if (!$group->users->isEmpty())
@@ -225,7 +255,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="number_of_students" class="form-label fw-semibold">Nombre d'Estudiants</label>
+                            <label for="number_of_students" class="form-label fw-semibold">Places Disponibles</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">
                                     <i class="fas fa-user-graduate text-primary"></i>
@@ -235,11 +265,14 @@
                                        id="number_of_students" 
                                        name="number_of_students" 
                                        value="{{ isset($_GET['edit']) ? $groups->firstWhere('id', $_GET['edit'])->number_of_students : '' }}" 
-                                       placeholder="Núm. d'estudiants"
+                                       placeholder="Núm. de places"
                                        min="1"
                                        required>
                             </div>
-                            <div class="form-text">Indica el nombre màxim d'estudiants per a aquest grup</div>
+                            <div class="form-text">
+                                Indica el nombre màxim d'estudiants que poden formar part d'aquest grup.
+                                <span class="text-info"><i class="fas fa-info-circle me-1"></i>Els estudiants s'han d'assignar després de crear el grup.</span>
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2 mt-4">
