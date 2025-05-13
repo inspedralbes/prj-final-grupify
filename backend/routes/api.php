@@ -127,7 +127,8 @@ Route::get('/forms/all-responses-sociogram', [SociogramRelationshipController::c
 Route::get('/forms/all-responses-cesc', [CescRelationshipController::class, 'getAllResponses']);
 
 // RUTA PARA ASIGNAR FORMULARIO SEGUN CURSO Y DIVISION
-Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/forms/assign-to-course-division', [FormController::class, 'assignFormToCourseAndDivision']);
+Route::post('/forms/assign-to-course-division', [FormController::class, 'assignFormToCourseAndDivision']);
+
 //RUTA PARA VER SI UN FORMULARIO ESTA CONTESTADO POR TODOS LOS ALUMNOS DE UNA CLASE
 Route::middleware(['auth:sanctum'])->get('/check-form-completion/{course_id}/{division_id}/{form_id}', [FormController::class, 'checkClassFormCompletion']);
 

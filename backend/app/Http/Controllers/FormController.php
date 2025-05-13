@@ -76,22 +76,7 @@ class FormController extends Controller
         }
 
         $form = Form::find($formId);
-
-        // Verificar el rol del usuario que está asignando el formulario
-        $userRole = auth()->user()->role->name;
-
-        // Solo tutores y admin pueden asignar formularios de sociograma y CESC
-        $isSociogramOrCesc = stripos($form->title, 'sociograma') !== false ||
-            stripos($form->title, 'cesc') !== false;
-
-        if ($isSociogramOrCesc && $userRole !== 'tutor' && $userRole !== 'admin') {
-            return response()->json(['message' => 'Solo tutores pueden asignar formularios de sociograma y CESC.'], 403);
-        }
-
-        // Orientadores no pueden asignar formularios, solo crearlos
-        if ($userRole === 'orientador') {
-            return response()->json(['message' => 'Como orientador, no tienes permisos para asignar formularios.'], 403);
-        }
+    
 
         foreach ($users as $user) {
             if (!$user->forms()->where('form_id', $formId)->exists()) {
