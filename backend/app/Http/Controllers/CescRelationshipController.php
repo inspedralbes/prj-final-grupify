@@ -392,13 +392,13 @@ public function verResultados()
 
 /**
  * Obtener datos para gráficos comparativos entre divisiones por curso
- * con los tags específicos (2: Rebutjat, 5: Víctima)
+ * con todos los tags CESC (1: Popular, 2: Rebutjat, 3: Agressiu, 4: Prosocial, 5: Víctima)
  */
 public function getTagsGraphData()
 {
     try {
-        // Obtener resultados para los tags 2 (Rebutjat) y 5 (Víctima)
-        $resultados = CescResult::whereIn('tag_id', [2, 5])
+        // Obtener resultados para todos los tags CESC (1-5)
+        $resultados = CescResult::whereIn('tag_id', [1, 2, 3, 4, 5])
             ->with(['peer.courseDivisions', 'tag'])
             ->get();
 
@@ -440,17 +440,19 @@ public function getTagsGraphData()
                         'course_name' => $courseName,
                         'division_id' => $divisionId,
                         'division_name' => $divisionName,
+                        'tag_1_count' => 0, // Popular
                         'tag_2_count' => 0, // Rebutjat
+                        'tag_3_count' => 0, // Agressiu
+                        'tag_4_count' => 0, // Prosocial
                         'tag_5_count' => 0, // Víctima
                         'total_students' => 0
                     ];
                 }
 
                 // Incrementar el contador del tag correspondiente
-                if ($resultado->tag_id == 2) {
-                    $datosPorCursoDivision[$key]['tag_2_count'] += $resultado->vote_count;
-                } elseif ($resultado->tag_id == 5) {
-                    $datosPorCursoDivision[$key]['tag_5_count'] += $resultado->vote_count;
+                $tagKey = 'tag_' . $resultado->tag_id . '_count';
+                if (isset($datosPorCursoDivision[$key][$tagKey])) {
+                    $datosPorCursoDivision[$key][$tagKey] += $resultado->vote_count;
                 }
             }
         }
