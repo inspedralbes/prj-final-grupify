@@ -479,7 +479,7 @@
     @if (request()->routeIs('dashboard'))
     <header class="dashboard-header">
         <div class="dashboard-title">
-            <i class="fas fa-th-large"></i> Grupify - Panell d'Administració
+            <i class="fas fa-th-large"></i> Grupify
         </div>
 
         <!-- Botón de cierre de sesión -->
