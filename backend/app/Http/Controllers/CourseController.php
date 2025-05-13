@@ -98,7 +98,7 @@ class CourseController extends Controller
         ]);
 
         Course::create($validatedData);
-        return redirect()->route('courses.index')->with('success', 'Curso creado exitosamente');
+        return redirect()->route('courses.index')->with('success', 'Curs creat correctament');
     }
 
 
@@ -172,7 +172,7 @@ class CourseController extends Controller
             'name' => 'required|string|max:255',
         ]);
         $course->update($validatedData);
-        return redirect()->route('courses.index')->with('success', 'Curso actualizado exitosamente');
+        return redirect()->route('courses.index')->with('success', 'Curs actualitzat correctament');
     }
 
 
@@ -204,7 +204,7 @@ class CourseController extends Controller
         if ($request->is('api/*')) {
             return response()->json(null, 204);
         }
-        return redirect()->route('courses.index')->with('success', 'Curso eliminado exitosamente');
+        return redirect()->route('courses.index')->with('success', 'Curs eliminat correctament');
     }
     //obtenir els cursos amb les divisions
     public function getCoursesWithDivisions()
