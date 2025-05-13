@@ -11,56 +11,57 @@
         </NuxtLink>
       </div>
 
-      <!-- Desktop Navigation -->
-      <div class="hidden md:flex items-center space-x-1">
-        <NuxtLink to="#features" class="nav-link">
-          Funcionalitats
-        </NuxtLink>
-        <NuxtLink to="#education" class="nav-link">
-          Graus
-        </NuxtLink>
-        <NuxtLink to="#about" class="nav-link">
-          Qui som
-        </NuxtLink>
-        <button @click="$emit('show-contact')" class="nav-link">
-          Contacte
-        </button>
-      </div>
+      <!-- Desktop Navigation - Solo mostrar si no estamos en /login -->
+      <template v-if="!isLoginPage">
+        <div class="hidden md:flex items-center space-x-1">
+          <NuxtLink to="#features" class="nav-link">
+            Funcionalitats
+          </NuxtLink>
+          <NuxtLink to="#education" class="nav-link">
+            Graus
+          </NuxtLink>
+          <NuxtLink to="#about" class="nav-link">
+            Qui som
+          </NuxtLink>
+          <button @click="$emit('show-contact')" class="nav-link">
+            Contacte
+          </button>
+        </div>
 
-      <!-- Action Buttons -->
-      <div class="hidden md:flex items-center space-x-4">
-        
-        <NuxtLink
-          to="/login"
-          class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-secondary rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-        >
-        Iniciar sessió
-      </NuxtLink>
-      </div>
+        <!-- Action Buttons - Solo mostrar si no estamos en /login -->
+        <div class="hidden md:flex items-center space-x-4">
+          <NuxtLink
+            to="/login"
+            class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-secondary rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            Iniciar sessió
+          </NuxtLink>
+        </div>
 
-      <!-- Mobile menu button -->
-      <div class="md:hidden">
-        <button
-          type="button"
-          class="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-primary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-all"
-          @click="toggleMenu"
-        >
-          <span class="sr-only">Menú principal</span>
-          <Transition name="rotate">
-            <svg v-if="!isMenuOpen" key="menu" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            <svg v-else key="close" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </Transition>
-        </button>
-      </div>
+        <!-- Mobile menu button - Solo mostrar si no estamos en /login -->
+        <div class="md:hidden">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:text-primary hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-all"
+            @click="toggleMenu"
+          >
+            <span class="sr-only">Menú principal</span>
+            <Transition name="rotate">
+              <svg v-if="!isMenuOpen" key="menu" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg v-else key="close" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </Transition>
+          </button>
+        </div>
+      </template>
     </nav>
 
-    <!-- Mobile menu -->
+    <!-- Mobile menu - Solo mostrar si no estamos en /login -->
     <Transition name="slide">
-      <div v-show="isMenuOpen" class="md:hidden border-t border-gray-100">
+      <div v-if="!isLoginPage && isMenuOpen" class="md:hidden border-t border-gray-100">
         <div class="px-4 py-2 space-y-1 bg-white">
           <NuxtLink
             to="#features"
@@ -121,8 +122,16 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+
 const isMenuOpen = ref(false)
 const emit = defineEmits(['show-contact'])
+const route = useRoute()
+
+const isLoginPage = computed(() => {
+  return route.path === '/login'
+})
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
