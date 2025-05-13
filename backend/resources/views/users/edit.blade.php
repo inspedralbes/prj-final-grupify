@@ -2,6 +2,33 @@
 
 @section('content')
 <div class="container py-4">
+    <!-- Mensajes de alerta -->
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if ($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i> Hi ha hagut errors en el formulari:
+        <ul class="mt-2 mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <!-- Cabecera con información básica -->
     <div class="card border-0 shadow-sm mb-4 overflow-hidden">
         <div class="card-body p-0">
@@ -292,12 +319,18 @@
                 </div>
             </div>
             <div class="card-body">
+                @php
+                // Obtener la asignación actual para estudiantes
+                $studentAssignment = $user->courseDivisionUsers->first();
+                @endphp
+                
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="course_id" class="form-label fw-medium">Curs:</label>
-                        <select name="course_id" id="course_id" class="form-select">
+                        <label for="student_course_id" class="form-label fw-medium">Curs:</label>
+                        <select name="course_division_pairs[0][course_id]" id="student_course_id" class="form-select">
+                            <option value="">Selecciona un curs</option>
                             @foreach($courses as $course)
-                            <option value="{{ $course->id }}" {{ $user->courses->contains($course->id) ? 'selected' : '' }}>
+                            <option value="{{ $course->id }}" {{ $studentAssignment && $studentAssignment->course_id == $course->id ? 'selected' : '' }}>
                                 {{ $course->name }}
                             </option>
                             @endforeach
@@ -305,19 +338,21 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="division_id" class="form-label fw-medium">Divisió:</label>
-                        <select name="division_id" id="division_id" class="form-select">
-                            @php
-                            // Obtener ID de la división asignada a este estudiante
-                            $userDivisionId = $user->courseDivisionUsers->first()?->division_id;
-                            @endphp
+                        <label for="student_division_id" class="form-label fw-medium">Divisió:</label>
+                        <select name="course_division_pairs[0][division_id]" id="student_division_id" class="form-select">
+                            <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
-                            <option value="{{ $division->id }}" {{ $userDivisionId == $division->id ? 'selected' : '' }}>
+                            <option value="{{ $division->id }}" {{ $studentAssignment && $studentAssignment->division_id == $division->id ? 'selected' : '' }}>
                                 {{ $division->division }}
                             </option>
                             @endforeach
                         </select>
                     </div>
+                </div>
+                
+                <div class="alert alert-info d-flex align-items-center mt-3">
+                    <i class="fas fa-info-circle fs-5 me-3"></i>
+                    <span>L'alumne només serà assignat al curs i divisió seleccionats.</span>
                 </div>
             </div>
         </div>
@@ -581,11 +616,98 @@
             if (selectedRole == 1) { // Profesor
                 professorOptions.classList.remove('d-none');
                 professorOptionsCourses.classList.remove('d-none');
-            } else if (selectedRole == 4) { // Tutor (asumiendo que su ID es 4)
+            } else if (selectedRole == 4 || selectedRole == 5) { // Tutor u Orientador
                 tutorOptions.classList.remove('d-none');
             } else if (selectedRole == 2) { // Estudiante
                 studentOptions.classList.remove('d-none');
             }
+        });
+
+        // Validación del formulario antes de enviar
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(event) {
+            // Prevenir el envío por defecto para validación
+            event.preventDefault();
+            
+            // Verificar que hay al menos un curso y división según el rol
+            const selectedRole = parseInt(roleSelect.value);
+            let isValid = true;
+            
+            // Eliminar selectores de cursos y divisiones vacíos para evitar errores de validación
+            const allSelectsCD = document.querySelectorAll('select[name^="course_division_pairs"]');
+            allSelectsCD.forEach(select => {
+                // Si el campo está vacío, deshabilitarlo para que no se envíe
+                if (!select.value) {
+                    select.disabled = true;
+                }
+            });
+            
+            // Crear alerta
+            function showAlert(message) {
+                // Eliminar alertas previas
+                const existingAlerts = document.querySelectorAll('.alert-danger:not(.d-none)');
+                existingAlerts.forEach(el => el.remove());
+                
+                // Crear nueva alerta
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show mb-4';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                form.prepend(alertDiv);
+                window.scrollTo(0, 0);
+            }
+            
+            if (selectedRole === 1) { // Profesor
+                // Verificar si hay al menos un par curso-división válido
+                const courseDivPairs = [...document.querySelectorAll('#professor-options-courses .course-division-pair')];
+                const validPair = courseDivPairs.some(pair => {
+                    const courseSelect = pair.querySelector('select[name$="[course_id]"]');
+                    const divisionSelect = pair.querySelector('select[name$="[division_id]"]');
+                    return courseSelect && divisionSelect && courseSelect.value && divisionSelect.value;
+                });
+                
+                if (!validPair) {
+                    showAlert('Cal seleccionar almenys un curs i divisió per al professor.');
+                    isValid = false;
+                }
+            } else if (selectedRole === 2) { // Alumno
+                const studentCourseSelect = document.getElementById('student_course_id');
+                const studentDivisionSelect = document.getElementById('student_division_id');
+                
+                if (!studentCourseSelect.value || !studentDivisionSelect.value) {
+                    showAlert('Cal seleccionar un curs i divisió per a l\'alumne.');
+                    isValid = false;
+                } else {
+                    // Habilitar para asegurar que se envíen
+                    studentCourseSelect.disabled = false;
+                    studentDivisionSelect.disabled = false;
+                }
+            } else if (selectedRole === 4 || selectedRole === 5) { // Tutor u Orientador
+                const tutorCourseSelect = document.getElementById('tutor_course_id');
+                const tutorDivisionSelect = document.getElementById('tutor_division_id');
+                
+                if (!tutorCourseSelect.value || !tutorDivisionSelect.value) {
+                    showAlert('Cal seleccionar un curs i divisió per al tutor/orientador.');
+                    isValid = false;
+                } else {
+                    // Habilitar para asegurar que se envíen
+                    tutorCourseSelect.disabled = false;
+                    tutorDivisionSelect.disabled = false;
+                }
+            }
+            
+            if (!isValid) {
+                return;
+            }
+            
+            // Si pasa todas las validaciones, mostrar indicador de carga y enviar
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processant...';
+            
+            form.submit();
         });
     });
 </script>
