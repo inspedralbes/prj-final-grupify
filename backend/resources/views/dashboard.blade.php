@@ -85,26 +85,6 @@
                 </div>
             </a>
         </div>
-
-        <!-- Divisiones -->
-        <div class="col-md-6 col-lg-4 col-xl-3">
-            <a href="{{ route('divisions.index') }}" class="text-decoration-none text-dark">
-                <div class="card h-100 border-0 shadow-sm dashboard-card">
-                    <div class="card-body text-center p-4">
-                        <div class="icon-container mb-3">
-                            <i class="fas fa-sitemap fa-3x" style="color: #9C27B0;"></i>
-                        </div>
-                        <h5 class="card-title fw-bold">Divisions</h5>
-                        <p class="card-text text-muted">Estructura les classes i grups</p>
-                    </div>
-                    <div class="card-footer bg-transparent border-0 text-center pb-4">
-                        <span class="badge bg-light text-primary shadow-sm px-3 py-2 rounded-pill">
-                            <i class="fas fa-arrow-right me-1"></i> Accedir
-                        </span>
-                    </div>
-                </div>
-            </a>
-        </div>
     </div>
 
     <!-- Secciones académicas -->
@@ -121,6 +101,26 @@
                         </div>
                         <h5 class="card-title fw-bold">Cursos</h5>
                         <p class="card-text text-muted">Administra anys acadèmics</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center pb-4">
+                        <span class="badge bg-light text-primary shadow-sm px-3 py-2 rounded-pill">
+                            <i class="fas fa-arrow-right me-1"></i> Accedir
+                        </span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Divisiones -->
+        <div class="col-md-6 col-lg-4 col-xl-3">
+            <a href="{{ route('divisions.index') }}" class="text-decoration-none text-dark">
+                <div class="card h-100 border-0 shadow-sm dashboard-card">
+                    <div class="card-body text-center p-4">
+                        <div class="icon-container mb-3">
+                            <i class="fas fa-sitemap fa-3x" style="color: #9C27B0;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Divisions</h5>
+                        <p class="card-text text-muted">Estructura les classes i grups</p>
                     </div>
                     <div class="card-footer bg-transparent border-0 text-center pb-4">
                         <span class="badge bg-light text-primary shadow-sm px-3 py-2 rounded-pill">
