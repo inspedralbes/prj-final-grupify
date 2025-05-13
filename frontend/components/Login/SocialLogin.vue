@@ -80,7 +80,7 @@ const sendToBackend = async (userData) => {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumno: "/alumne/dashboard",
-      tutor: "/tutor/dashboard",
+      tutor: "/professor/dashboard", // Los tutores usan el mismo dashboard que los profesores
       orientador: "/orientador/dashboard"
     };
 
@@ -128,7 +128,7 @@ onMounted(async () => {
     <div v-if="errorMessage" class="error-message">
       {{ errorMessage }}
     </div>
-    
+
     <button class="social-button" aria-label="Entra amb Google" @click="gestioGoogleLogin">
       <img src="/icons/google.svg" alt="Google icon" />
       <span>Google / @inspedralbes.cat</span>

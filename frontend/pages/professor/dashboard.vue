@@ -100,7 +100,7 @@ const menuItems = computed(() => {
     if (item.requiredPermission === null) {
       return true; // Todos tienen acceso a este elemento
     }
-    
+
     // Verificar si el usuario tiene el permiso requerido
     return authStore[item.requiredPermission];
   });
@@ -115,7 +115,7 @@ const favoriteItems = computed(() => {
 const formCompletionAverage = computed(() => {
   const forms = Object.values(dashboardState.formCompletion);
   if (forms.length === 0) return 0;
-  
+
   const sum = forms.reduce((acc, form) => acc + form.percentage, 0);
   return Math.round(sum / forms.length);
 });
@@ -138,19 +138,19 @@ const loadClassesData = async () => {
   try {
     // Primero, obtenemos datos actualizados del usuario
     await fetchUserData();
-    
+
     // Cargar cursos disponibles
     await coursesStore.fetchCourses();
-    
+
     // Si el profesor tiene course_divisions en su perfil, usamos esos datos
     if (authStore.user?.course_divisions && authStore.user.course_divisions.length > 0) {
       // Array para almacenar todas las promesas de carga de estudiantes
       const studentsPromises = [];
       const studentsStore = useStudentsStore();
-      
+
       // Crear un mapa para almacenar la cantidad de estudiantes por curso/división
       const studentCountMap = new Map();
-      
+
       // Para cada course_division, cargar los estudiantes correspondientes
       for (const cd of authStore.user.course_divisions) {
         const promise = studentsStore.fetchStudents(true, cd.course_id, cd.division_id)
@@ -159,33 +159,33 @@ const loadClassesData = async () => {
             const studentsInClass = studentsStore.students.filter(
               student => student.course_id === cd.course_id && student.division_id === cd.division_id
             );
-            
+
             // Guardar el conteo en el mapa
             const key = `${cd.course_id}-${cd.division_id}`;
             studentCountMap.set(key, studentsInClass.length);
-            
+
             return studentsInClass.length;
           })
           .catch(error => {
             console.error(`Error al cargar estudiantes para ${cd.course_name} ${cd.division_name}:`, error);
             return 0;
           });
-        
+
         studentsPromises.push(promise);
       }
-      
+
       // Esperar a que se carguen todos los datos de estudiantes
       await Promise.all(studentsPromises);
-      
+
       // Transformar course_divisions en el formato requerido para currentClasses
       dashboardState.currentClasses = authStore.user.course_divisions.map(cd => {
         // Generar nombre de clase combinando curso y división
         const className = `${cd.course_name} ${cd.division_name}`;
-        
+
         // Obtener número de estudiantes del mapa o usar 0 como valor por defecto
         const key = `${cd.course_id}-${cd.division_id}`;
         const students = studentCountMap.get(key) || 0;
-        
+
         // Loguear para depuración
         console.log("Añadiendo clase:", {
           className,
@@ -194,7 +194,7 @@ const loadClassesData = async () => {
           courseName: cd.course_name,
           divisionName: cd.division_name
         });
-        
+
         return {
           name: className,
           students: students,
@@ -208,10 +208,10 @@ const loadClassesData = async () => {
     } else {
       console.log("No se encontraron course_divisions en el perfil del usuario");
     }
-    
+
     // Cargar grupos asignados al profesor
     await fetchTeacherGroups();
-    
+
   } catch (error) {
     console.error("Error al cargar datos de clases:", error);
   }
@@ -222,33 +222,33 @@ const fetchTeacherGroups = async () => {
   try {
     // Obtener los grupos del profesor
     await groupStore.fetchGroups();
-    
+
     // Actualizar el número de grupos activos
     dashboardState.activeGroups = groupStore.groups.length;
-    
+
     // Calcular el número total de estudiantes en todos los grupos
     let totalStudents = groupStore.groups.reduce(
-      (total, group) => total + (group.number_of_students || 0), 
+      (total, group) => total + (group.number_of_students || 0),
       0
     );
-    
+
     // Si hay datos de estudiantes en authStore, usar esos datos
     if (authStore.user?.student_count) {
       dashboardState.totalStudents = authStore.user.student_count;
     } else if (totalStudents > 0) {
       dashboardState.totalStudents = totalStudents;
     }
-    
+
     // Si hay datos de formularios completados en authStore, usar esos datos
     if (authStore.user?.completed_forms_count) {
       dashboardState.completedForms = authStore.user.completed_forms_count;
     }
-    
+
     // Si hay datos de formularios pendientes en authStore, usar esos datos
     if (authStore.user?.pending_forms_count) {
       dashboardState.pendingForms = authStore.user.pending_forms_count;
     }
-    
+
     // Si no hay clases en currentClasses, usar los grupos como clases
     if (dashboardState.currentClasses.length === 0 && groupStore.groups.length > 0) {
       dashboardState.currentClasses = groupStore.groups.map(group => ({
@@ -267,33 +267,35 @@ const fetchTeacherGroups = async () => {
 const getNextClassTime = () => {
   const days = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres'];
   const hours = ['09:00', '10:15', '11:30', '12:45', '15:30', '16:45'];
-  
+
   // 25% de probabilidad de que la clase sea "Avui"
   if (Math.random() < 0.25) {
     return `Avui ${hours[Math.floor(Math.random() * hours.length)]}`;
   }
-  
+
   const randomDay = days[Math.floor(Math.random() * days.length)];
   const randomHour = hours[Math.floor(Math.random() * hours.length)];
-  
+
   return `${randomDay} ${randomHour}`;
 };
 
 // Cargar el usuario y los datos desde el localStorage cuando el componente se monta
 onMounted(async () => {
-  // Verificar que sea un profesor o administrador
-  if (!authStore.isProfesor && !authStore.isAdmin) {
+  // Verificar que sea un profesor, tutor o administrador
+  if (!authStore.isProfesor && !authStore.isTutor && !authStore.isAdmin) {
+    console.log("Usuario no autorizado para acceder al dashboard de profesor");
     router.push('/login');
     return;
   }
-  
+  console.log("Usuario autorizado para acceder al dashboard de profesor:", authStore.userRole);
+
   // Cargar datos del usuario
   const storedUser = localStorage.getItem("user");
   if (storedUser) {
     userData.value = JSON.parse(storedUser);
     console.log("Dades d'usuari carregades:", userData.value);
   }
-  
+
   // Cargar datos reales de clases
   await loadClassesData();
 });
@@ -310,20 +312,20 @@ const selectCourseAndDivision = async (courseName, divisionName) => {
     const assignment = authStore.user?.course_divisions?.find(
       cd => cd.course_name === courseName && cd.division_name === divisionName
     );
-    
+
     // Si encontramos la asignación, navegar a la lista de alumnos con los parámetros
     if (assignment) {
-      console.log("Navegando a lista de alumnos con:", { 
-        courseName, 
-        divisionName, 
-        courseId: assignment.course_id, 
-        divisionId: assignment.division_id 
+      console.log("Navegando a lista de alumnos con:", {
+        courseName,
+        divisionName,
+        courseId: assignment.course_id,
+        divisionId: assignment.division_id
       });
-      
+
       // Navegar a la lista de alumnos con los parámetros necesarios
       router.push({
         path: '/professor/llista-alumnes',
-        query: { 
+        query: {
           course_name: courseName,
           division_name: divisionName,
           course_id: assignment.course_id,
@@ -342,7 +344,7 @@ const selectCourseAndDivision = async (courseName, divisionName) => {
 // Función para navegar a una clase específica
 const navigateToClass = (classItem) => {
   console.log("Navegando a clase:", classItem);
-  
+
   // Si tenemos datos específicos de curso y división, usamos la nueva función
   if (classItem.courseId && classItem.divisionId) {
     // Si tenemos los nombres almacenados directamente en el objeto, usarlos
@@ -350,23 +352,23 @@ const navigateToClass = (classItem) => {
       selectCourseAndDivision(classItem.courseName, classItem.divisionName);
       return;
     }
-    
+
     // Plan B: Obtener directamente la información del curso y división de authStore
     const courseDiv = authStore.user?.course_divisions?.find(
       cd => cd.course_id === classItem.courseId && cd.division_id === classItem.divisionId
     );
-    
+
     if (courseDiv) {
       // Si encontramos coincidencia directa, usar esos nombres
       selectCourseAndDivision(courseDiv.course_name, courseDiv.division_name);
       return;
     }
-    
+
     // Plan C: Extraer el nombre del curso y división de la propiedad name
     const nameParts = classItem.name.split(' ');
     let courseName = '';
     let divisionName = '';
-    
+
     if (nameParts.length >= 2) {
       // Si hay al menos dos partes, la última es la división
       divisionName = nameParts[nameParts.length - 1];
@@ -376,15 +378,15 @@ const navigateToClass = (classItem) => {
       // Si solo hay una parte, usamos esa como nombre del curso
       courseName = classItem.name;
     }
-    
+
     // Usar la nueva función que preselecciona el curso y división y carga los estudiantes
     selectCourseAndDivision(courseName, divisionName);
-    
+
   } else if (classItem.groupId) {
     // Si es un grupo, navegamos directamente a la vista de ese grupo
     router.push({
       path: '/professor/grups',
-      query: { 
+      query: {
         group_id: classItem.groupId
       }
     });
@@ -416,7 +418,7 @@ const getCurrentDate = () => {
               <span class="ml-2 text-xl font-semibold text-gray-900">Grupify</span>
             </div>
           </div>
-          
+
           <!-- Búsqueda -->
           <div class="hidden sm:flex flex-1 max-w-xl px-4">
             <div class="w-full">
@@ -431,7 +433,7 @@ const getCurrentDate = () => {
               </div>
             </div>
           </div>
-          
+
           <!-- Herramientas de usuario -->
           <div class="flex items-center space-x-4">
             <!-- Notificaciones -->
@@ -442,7 +444,7 @@ const getCurrentDate = () => {
               </svg>
               <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
             </button>
-            
+
             <!-- Perfil de usuario -->
             <div class="flex items-center">
               <div v-if="userData" class="flex items-center">
@@ -475,7 +477,7 @@ const getCurrentDate = () => {
           </span>
         </div>
       </div>
-      
+
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <!-- Alumnos totales -->
@@ -491,7 +493,7 @@ const getCurrentDate = () => {
             <p v-else class="text-2xl font-bold">{{ dashboardState.totalStudents }}</p>
           </div>
         </div>
-        
+
         <!-- Grupos activos -->
         <div class="bg-white rounded-lg shadow p-5 flex items-center">
           <div class="rounded-full bg-green-100 p-3 mr-4">
@@ -505,7 +507,7 @@ const getCurrentDate = () => {
             <p v-else class="text-2xl font-bold">{{ dashboardState.activeGroups }}</p>
           </div>
         </div>
-        
+
         <!-- Formularios completados -->
         <div class="bg-white rounded-lg shadow p-5 flex items-center">
           <div class="rounded-full bg-indigo-100 p-3 mr-4">
@@ -522,7 +524,7 @@ const getCurrentDate = () => {
           </div>
         </div>
       </div>
-      
+
       <!-- Main Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column -->
@@ -557,9 +559,9 @@ const getCurrentDate = () => {
             </div>
             <!-- Lista de clases -->
             <div v-else class="divide-y divide-gray-200">
-              <div 
-                v-for="(classItem, index) in dashboardState.currentClasses" 
-                :key="index" 
+              <div
+                v-for="(classItem, index) in dashboardState.currentClasses"
+                :key="index"
                 class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
                 @click="navigateToClass(classItem)"
               >
@@ -583,7 +585,7 @@ const getCurrentDate = () => {
               </div>
             </div>
           </div>
-          
+
           <!-- Form Completion Status -->
           <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -599,7 +601,7 @@ const getCurrentDate = () => {
                   <span class="font-medium">{{ form.completed }}/{{ form.total }} ({{ form.percentage }}%)</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="h-2 rounded-full" 
+                  <div class="h-2 rounded-full"
                        :class="{
                          'bg-green-500': form.percentage >= 80,
                          'bg-yellow-500': form.percentage >= 50 && form.percentage < 80,
@@ -611,7 +613,7 @@ const getCurrentDate = () => {
             </div>
           </div>
         </div>
-        
+
         <!-- Right Column -->
         <div class="space-y-6">
           <!-- Todas las herramientas -->
@@ -621,7 +623,7 @@ const getCurrentDate = () => {
             </div>
             <div class="p-6">
               <div class="grid grid-cols-1 gap-2">
-                <NuxtLink v-for="item in menuItems" :key="item.title" :to="item.route" 
+                <NuxtLink v-for="item in menuItems" :key="item.title" :to="item.route"
                   class="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
                   <svg class="h-5 w-5 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
