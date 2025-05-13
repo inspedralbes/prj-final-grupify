@@ -66,19 +66,27 @@ const sendToBackend = async (userData) => {
   console.log('Datos enviados al backend:', postData); // Para depuración
 
   try {
-    const { token, user } = await $fetch('http://localhost:8000/api/google-login', {
+    const { token, user, role } = await $fetch('http://localhost:8000/api/google-login', {
       method: 'POST',
       body: postData,
     });
 
-    authStore.setAuth(token, user);
+    // Actualizar para incluir el role
+    authStore.setAuth(token, user, role || user?.role?.name);
 
-    // Redirigir con recarga completa a la ruta correspondiente
-    if (user.role_id === 2) {
-      window.location.href = '/alumne/dashboard';
-    } else {
-      navigateTo('/professor/dashboard');
-    }
+    // Determinar la ruta del dashboard basada en el rol
+    const userRole = role || user?.role?.name;
+    const dashboardRoutes = {
+      admin: "/admin/dashboard",
+      profesor: "/professor/dashboard",
+      alumno: "/alumne/dashboard",
+      tutor: "/tutor/dashboard",
+      orientador: "/orientador/dashboard"
+    };
+
+    // Redirigir al dashboard correspondiente
+    const route = dashboardRoutes[userRole] || '/login';
+    window.location.href = route;
   } catch (error) {
     console.error('Error en el login:', error);
     if (error.response && error.response.status === 400) {
