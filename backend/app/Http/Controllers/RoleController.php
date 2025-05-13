@@ -97,7 +97,7 @@ class RoleController extends Controller
         }
         
         // Si es una petición web, redirigir
-        return redirect()->route('roles.index')->with('success', 'Rol actualizado exitosamente');
+        return redirect()->route('roles.index')->with('success', 'Rol actualizat correctament');
     }
 
     /**
