@@ -386,46 +386,68 @@ class FormController extends Controller
 
     public function index(Request $request)
     {
-        // Obtener el usuario autenticado
-        $user = auth()->user();
-        $userRole = $user ? $user->role->name : null;
-        $userId = $user ? $user->id : null;
+        try {
+            // Obtener el usuario autenticado
+            $user = auth()->user();
+            $userRole = $user && $user->role ? $user->role->name : null;
+            $userId = $user ? $user->id : null;
 
-        // Comienza la consulta para obtener los formularios
-        $query = Form::with('questions.answers'); // Incluye preguntas y respuestas
+            // Depuración
+            \Illuminate\Support\Facades\Log::info('User info', [
+                'user_id' => $userId,
+                'role' => $userRole
+            ]);
 
-        // Filtros según el rol del usuario:
-        if ($userRole === 'profesor') {
-            // Profesores solo pueden ver sus propios formularios y los globales
-            $query->where(function ($q) use ($userId) {
-                $q->where('teacher_id', $userId)
-                    ->orWhere('is_global', 1);
-            });
-        } elseif ($userRole === 'tutor') {
-            // Tutores pueden ver todos los formularios, incluyendo sociogramas y CESC
-            // No necesita restricción adicional aquí
-        } elseif ($userRole === 'orientador') {
-            // Orientadores pueden ver sus propios formularios y los globales
-            $query->where(function ($q) use ($userId) {
-                $q->where('teacher_id', $userId)
-                    ->orWhere('is_global', 1);
-            });
-        } elseif (!$userRole) {
-            // Si no hay usuario autenticado, solo mostrar formularios globales
-            $query->where('is_global', 1);
+            // Comienza la consulta para obtener los formularios
+            $query = Form::with(['teacher', 'questions.answers']); // Incluye profesor, preguntas y respuestas
+
+            // Para pruebas, temporalmente eliminar filtros de rol
+            /*
+            // Filtros según el rol del usuario:
+            if ($userRole === 'profesor') {
+                // Profesores solo pueden ver sus propios formularios y los globales
+                $query->where(function ($q) use ($userId) {
+                    $q->where('teacher_id', $userId)
+                        ->orWhere('is_global', 1);
+                });
+            } elseif ($userRole === 'tutor') {
+                // Tutores pueden ver todos los formularios, incluyendo sociogramas y CESC
+                // No necesita restricción adicional aquí
+            } elseif ($userRole === 'orientador') {
+                // Orientadores pueden ver sus propios formularios y los globales
+                $query->where(function ($q) use ($userId) {
+                    $q->where('teacher_id', $userId)
+                        ->orWhere('is_global', 1);
+                });
+            } elseif (!$userRole) {
+                // Si no hay usuario autenticado, solo mostrar formularios globales
+                $query->where('is_global', 1);
+            }
+            // Si es admin, puede ver todos los formularios (no necesita restricción)
+            */
+
+            // Obtener los formularios filtrados
+            $forms = $query->get();
+
+            // Depuración
+            \Illuminate\Support\Facades\Log::info('Forms count: ' . $forms->count());
+
+            // Verificar si la solicitud espera una respuesta JSON
+            if ($request->expectsJson()) {
+                return response()->json($forms, 200);
+            }
+
+            // Si no es una solicitud JSON, se devuelve la vista
+            return view('forms', compact('forms'));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error en index de formularios: ' . $e->getMessage());
+            
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Error al cargar los formularios: ' . $e->getMessage()], 500);
+            }
+            
+            return redirect()->route('dashboard')->with('error', 'Error al cargar los formularios: ' . $e->getMessage());
         }
-        // Si es admin, puede ver todos los formularios (no necesita restricción)
-
-        // Obtener los formularios filtrados
-        $forms = $query->get();
-
-        // Verificar si la solicitud espera una respuesta JSON
-        if ($request->expectsJson()) {
-            return response()->json($forms, 200);
-        }
-
-        // Si no es una solicitud JSON, se devuelve la vista
-        return view('forms', compact('forms'));
     }
 
 
@@ -517,18 +539,26 @@ class FormController extends Controller
     {
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'date_limit' => 'required|date',
         ]);
 
+        // Agregar campos adicionales
+        $validatedData['status'] = 1; // Activo por defecto
+        $validatedData['teacher_id'] = auth()->id(); // Asignar el profesor actual
+        $validatedData['is_global'] = false; // Por defecto no es global
 
+        // Crear el formulario
         $form = Form::create($validatedData);
 
+        // Depuración para verificar la creación
+        \Illuminate\Support\Facades\Log::info('Formulario creado: ', ['form' => $form]);
 
         if ($request->expectsJson()) {
             return response()->json($form, 201);
         }
 
-
-        return redirect()->route('forms.index')->with('success', 'Formulario creado correctamente');
+        return redirect()->route('forms.index')->with('success', 'Formulari creat correctament');
     }
 
 
@@ -563,41 +593,34 @@ class FormController extends Controller
     {
         $form = Form::find($id);
 
-
         if (is_null($form)) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Formulario no encontrado'], 404);
+                return response()->json(['message' => 'Formulari no trobat'], 404);
             }
 
-
-            return redirect()->route('forms.index')->with('error', 'Formulario no encontrado');
+            return redirect()->route('forms.index')->with('error', 'Formulari no trobat');
         }
-
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
+            'date_limit' => 'required|date',
         ]);
-
 
         if ($validator->fails()) {
             if ($request->expectsJson()) {
                 return response()->json($validator->errors(), 400);
             }
 
-
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-
         $form->update($validator->validated());
-
 
         if ($request->expectsJson()) {
             return response()->json($form, 200);
         }
 
-
-        return redirect()->route('forms.index')->with('success', 'Formulario actualizado correctamente');
+        return redirect()->route('forms.index')->with('success', 'Formulari actualitzat correctament');
     }
 
 
@@ -646,7 +669,7 @@ class FormController extends Controller
         }
 
 
-        return redirect()->route('forms.index')->with('success', 'Formulario eliminado correctamente');
+        return redirect()->route('forms.index')->with('success', 'Formulari eliminado correctament');
     }
     public function checkFormCompletionPublic($course_id, $division_id, $form_id)
     {
