@@ -2,6 +2,27 @@
 
 @section('content')
 <div class="container py-4">
+    <!-- Alertas para mensajes de sesión flash -->
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4 shadow-sm" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>{{ session('success') }}</strong>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4 shadow-sm" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>{{ session('error') }}</strong>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <!-- Card de encabezado -->
     <div class="card border-0 shadow-sm mb-4 overflow-hidden">
         <div class="card-body p-0">

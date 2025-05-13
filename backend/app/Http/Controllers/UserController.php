@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -607,12 +608,53 @@ class UserController extends Controller
         $user = User::find($id);
 
         if (is_null($user)) {
-            return response()->json(['message' => 'User not found'], 404);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+            return redirect()->route('users.index')->with('error', 'Usuario no encontrado');
         }
 
-        $user->delete();
+        try {
+            // Intento de eliminar el usuario
+            $user->delete();
 
-        return response()->json(null, 204);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Usuario eliminado con éxito'], 200);
+            }
+            return redirect()->route('users.index')->with('success', 'Usuario eliminado con éxito');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Verificar si el error es de restricción de clave foránea relacionada con grupos
+            if ($e->getCode() == "23000" && strpos($e->getMessage(), 'group_user_user_id_foreign') !== false) {
+                // Obtener los grupos asociados al usuario
+                $groups = DB::table('group_user')
+                    ->join('groups', 'group_user.group_id', '=', 'groups.id')
+                    ->where('group_user.user_id', $id)
+                    ->select('groups.id', 'groups.name')
+                    ->get();
+
+                $groupNames = $groups->pluck('name')->implode(', ');
+                $errorMessage = 'No es pot eliminar usuari perquè pertany als següents grups:' . $groupNames;
+
+                if (request()->wantsJson()) {
+                    return response()->json([
+                        'error' => true,
+                        'message' => $errorMessage
+                    ], 409);
+                }
+                return redirect()->route('users.index')->with('error', $errorMessage);
+            }
+
+            // Si es otro tipo de error, devolver un mensaje genérico
+            $errorMessage = 'Error al eliminar el usuario: ' . $e->getMessage();
+
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'error' => true,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            return redirect()->route('users.index')->with('error', $errorMessage);
+        }
     }
 
     public function getStudents(Request $request)
