@@ -1,152 +1,368 @@
-
 @extends('layouts.app')
 
-
 @section('content')
-<div class="container">
-    <h1>Crear nou usuari</h1>
-    <form action="{{ route('users.store') }}" method="POST">
-        @csrf
-        <div class="form-group">
-            <label for="name">Nom:</label>
-            <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}" required>
-        </div>
-        <div class="form-group">
-            <label for="last_name">Cognom:</label>
-            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ old('last_name') }}" required>
-        </div>
-
-
-        <div class="form-group">
-            <label for="email">Gmail:</label>
-            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
-        </div>
-
-
-        <div class="form-group">
-            <label for="password">Contrasenya:</label>
-            <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
-            @error('password')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
-            @enderror
-        </div>
-
-
-        <div class="form-group">
-            <label for="image">Imatge URL:</label>
-            <input type="url" class="form-control" id="image" name="image" value="{{ old('image') }}">
-        </div>
-
-
-        <div class="form-group">
-            <label for="role">Rol:</label>
-            <select name="role_id" id="role" class="form-control" required>
-                <option value="">Selecciona un rol</option>
-                @foreach ($roles as $role)
-                    <option value="{{ $role->id }}">{{ $role->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <!-- Subject Assignment (Only for Teachers) -->
-        <div class="mb-3" id="subject-group" style="display: none;">
-            <label class="form-label"><strong>Asignaturas:</strong></label>
-            <div class="form-check-container border rounded p-3 bg-light">
-                @foreach ($subjects as $subject)
-                    <div class="form-check">
-                        <input 
-                            type="checkbox" 
-                            class="form-check-input" 
-                            id="subject_{{ $subject->id }}" 
-                            name="subjects[]" 
-                            value="{{ $subject->id }}">
-                        <label 
-                            class="form-check-label" 
-                            for="subject_{{ $subject->id }}" 
-                            style="margin-left: 8px;">
-                            {{ $subject->name }}
-                        </label>
+<div class="container py-4">
+    <!-- Tarjeta de encabezado -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-0">
+            <div class="p-4 bg-gradient-primary text-white" style="background: linear-gradient(135deg, #00ADEE 0%, #0078A0 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-2 fw-bold">Crear Nou Usuari</h1>
+                        <p class="mb-0 opacity-75">Introdueix les dades per afegir un nou usuari al sistema</p>
                     </div>
-                @endforeach
+                    <a href="{{ route('users.index') }}" class="btn btn-light rounded-pill shadow-sm px-4 py-2">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Tornar
+                    </a>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Course and Division Assignment (For Teachers) -->
-        <div id="teacher-course-division" style="display: none;">
-            <div class="card mb-3">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Assignació de Cursos i Divisions</h5>
+    <!-- Mostrar errores de validación -->
+    @if ($errors->any())
+    <div class="alert alert-danger mb-4">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    <!-- Alertas de sesión -->
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+    
+    <!-- Contenedor de alertas dinámicas -->
+    <div id="alert-container"></div>
+
+    <form action="{{ route('users.store') }}" method="POST" id="userForm">
+        @csrf
+        <div class="row">
+            <!-- Información básica -->
+            <div class="col-md-12">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light py-3">
+                        <h3 class="card-title mb-0 h5">Informació Bàsica</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Nom:</label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ old('name') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">Cognoms:</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ old('last_name') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Correu electrònic:</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">Contrasenya:</label>
+                                <input type="password" class="form-control" id="password" name="password" minlength="8">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="image" class="form-label">URL d'imatge (opcional):</label>
+                                <input type="url" class="form-control" id="image" name="image" value="{{ old('image') }}">
+                                <div class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i> Introdueix la URL d'una imatge de perfil.
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="role" class="form-label">Rol:</label>
+                                <select name="role_id" id="role" class="form-select">
+                                    <option value="">Selecciona un rol</option>
+                                    @foreach ($roles as $role)
+                                        <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                                            {{ $role->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3">Selecciona els cursos i divisions als quals aquest professor tindrà accés:</p>
-                    
-                    <!-- Contenedor para las combinaciones de curso-división -->
-                    <div id="course-division-container">
-                        <!-- Primera combinación (siempre visible) -->
-                        <div class="course-division-pair border rounded p-3 mb-3">
-                            <div class="row">
-                                <div class="col-md-5">
-                                    <div class="form-group">
-                                        <label><strong>Curs:</strong></label>
-                                        <select name="course_division_pairs[0][course_id]" class="form-control course-select">
-                                            <option value="">Selecciona un curs</option>
-                                            @foreach ($courses as $course)
-                                                <option value="{{ $course->id }}">{{ $course->name }}</option>
-                                            @endforeach
-                                        </select>
+            </div>
+
+            <!-- Sección para Profesores -->
+            <div class="col-md-12 role-section" id="teacher-section" style="display: none;">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h3 class="card-title mb-0 h5">Informació del Professor</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Asignaturas -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Assignatures:</strong></label>
+                            <div class="border rounded p-3 bg-light">
+                                <div class="row">
+                                @foreach ($subjects as $subject)
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="subject_{{ $subject->id }}" name="subjects[]" value="{{ $subject->id }}" {{ (is_array(old('subjects')) && in_array($subject->id, old('subjects'))) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="subject_{{ $subject->id }}">
+                                                {{ $subject->name }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                                </div>
+                            </div>
+                            <div class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle me-1"></i> Selecciona les assignatures que impartirà el professor.
+                            </div>
+                        </div>
+
+                        <!-- Cursos y divisiones -->
+                        <div class="mt-4">
+                            <label class="form-label"><strong>Assignació de Cursos i Divisions:</strong></label>
+                            <div id="teacher-course-division-container">
+                                <div class="course-division-pair border rounded p-3 mb-3">
+                                    <div class="row">
+                                        <div class="col-md-5">
+                                            <div class="mb-3">
+                                                <label class="form-label">Curs:</label>
+                                                <select name="course_division_pairs[0][course_id]" class="form-select">
+                                                    <option value="">Selecciona un curs</option>
+                                                    @foreach ($courses as $course)
+                                                        <option value="{{ $course->id }}">{{ $course->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <div class="mb-3">
+                                                <label class="form-label">Divisió:</label>
+                                                <select name="course_division_pairs[0][division_id]" class="form-select">
+                                                    <option value="">Selecciona una divisió</option>
+                                                    @foreach($divisions as $division)
+                                                        <option value="{{ $division->id }}">{{ $division->division }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-5">
-                                    <div class="form-group">
-                                        <label><strong>Divisió:</strong></label>
-                                        <select name="course_division_pairs[0][division_id]" class="form-control">
-                                            <option value="">Selecciona una divisió</option>
-                                            @foreach($divisions as $division)
-                                                <option value="{{ $division->id }}">{{ $division->division }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                            </div>
+                            
+                            <button type="button" id="add-teacher-course-division" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Afegir una altra assignació
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección para Alumnos -->
+            <div class="col-md-12 role-section" id="student-section" style="display: none;">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white py-3">
+                        <h3 class="card-title mb-0 h5">Informació de l'Alumne</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Selecciona el curs i la divisió per a aquest alumne
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="student_course_id" class="form-label">Curs:</label>
+                                    <select name="course_division_pairs[0][course_id]" id="student_course_id" class="form-select">
+                                        <option value="">Selecciona un curs</option>
+                                        @foreach($courses as $course)
+                                            <option value="{{ $course->id }}" {{ old('course_division_pairs.0.course_id') == $course->id ? 'selected' : '' }}>
+                                                {{ $course->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="student_division_id" class="form-label">Divisió:</label>
+                                    <select name="course_division_pairs[0][division_id]" id="student_division_id" class="form-select">
+                                        <option value="">Selecciona una divisió</option>
+                                        @foreach($divisions as $division)
+                                            <option value="{{ $division->id }}" {{ old('course_division_pairs.0.division_id') == $division->id ? 'selected' : '' }}>
+                                                {{ $division->division }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Botón para agregar más combinaciones -->
-                    <button type="button" id="add-course-division" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Afegir un altre curs i divisió
-                    </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Course and Division Assignment (Only for Tutors) -->
-        <div id="tutor-fields" style="display: none;">
-            <div class="card mb-3">
-                <div class="card-header bg-warning text-white">
-                    <h5 class="mb-0">Assignació de Curs i Divisió (Tutor)</h5>
+            <!-- Sección para Tutores y Orientadores -->
+            <div class="col-md-12 role-section" id="tutor-section" style="display: none;">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-warning text-white py-3">
+                        <h3 class="card-title mb-0 h5" id="tutor-section-title">Informació del Tutor</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Selecciona el curs i la divisió per a aquest tutor
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tutor_course_id" class="form-label">Curs:</label>
+                                    <select name="course_division_pairs[0][course_id]" id="tutor_course_id" class="form-select">
+                                        <option value="">Selecciona un curs</option>
+                                        @foreach($courses as $course)
+                                            <option value="{{ $course->id }}" {{ old('course_division_pairs.0.course_id') == $course->id ? 'selected' : '' }}>
+                                                {{ $course->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tutor_division_id" class="form-label">Divisió:</label>
+                                    <select name="course_division_pairs[0][division_id]" id="tutor_division_id" class="form-select">
+                                        <option value="">Selecciona una divisió</option>
+                                        @foreach($divisions as $division)
+                                            <option value="{{ $division->id }}" {{ old('course_division_pairs.0.division_id') == $division->id ? 'selected' : '' }}>
+                                                {{ $division->division }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3">Un tutor només pot ser assignat a un curs i divisió:</p>
-                    
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="col-12 mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary py-2 px-4">
+                    <i class="fas fa-save me-2"></i> Crear Usuari
+                </button>
+                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary py-2 px-4">
+                    <i class="fas fa-times me-2"></i> Cancel·lar
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos principales
+        const form = document.getElementById('userForm');
+        const roleSelect = document.getElementById('role');
+        const roleSections = document.querySelectorAll('.role-section');
+        const teacherSection = document.getElementById('teacher-section');
+        const studentSection = document.getElementById('student-section');
+        const tutorSection = document.getElementById('tutor-section');
+        const tutorSectionTitle = document.getElementById('tutor-section-title');
+        const alertContainer = document.getElementById('alert-container');
+        
+        // Función para mostrar alertas
+        function showAlert(message, type = 'danger') {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                <i class="fas fa-${type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            // Eliminar alertas anteriores
+            const oldAlerts = alertContainer.querySelectorAll('.alert');
+            oldAlerts.forEach(a => a.remove());
+            
+            // Agregar la nueva alerta
+            alertContainer.appendChild(alert);
+            
+            // Desplazarse al principio para ver la alerta
+            window.scrollTo(0, 0);
+        }
+        
+        // Función para mostrar u ocultar secciones según el rol
+        function handleRoleChange() {
+            // Ocultar todas las secciones
+            roleSections.forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Obtener el valor seleccionado (rol)
+            const selectedValue = roleSelect.value.trim();
+            if (!selectedValue) return;
+            
+            // Convertir a número
+            const selectedRole = parseInt(selectedValue);
+            if (isNaN(selectedRole)) return;
+            
+            // Mostrar la sección correspondiente
+            if (selectedRole === 1) { // Professor
+                teacherSection.style.display = 'block';
+            } else if (selectedRole === 2) { // Alumne
+                studentSection.style.display = 'block';
+            } else if (selectedRole === 4 || selectedRole === 5) { // Tutor o Orientador
+                tutorSection.style.display = 'block';
+                // Cambiar el título según sea tutor u orientador
+                tutorSectionTitle.textContent = selectedRole === 4 ? 'Informació del Tutor' : 'Informació de l\'Orientador';
+            }
+        }
+        
+        // Gestión de pares curso-división para profesores
+        const addTeacherButton = document.getElementById('add-teacher-course-division');
+        const teacherContainer = document.getElementById('teacher-course-division-container');
+        
+        let teacherPairCount = 1; // Comenzamos en 1 porque ya tenemos un par inicial (índice 0)
+        
+        if (addTeacherButton && teacherContainer) {
+            addTeacherButton.addEventListener('click', function() {
+                // Crear un nuevo par curso-división
+                const newPair = document.createElement('div');
+                newPair.className = 'course-division-pair border rounded p-3 mb-3';
+                newPair.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Nova assignació</strong>
+                        <button type="button" class="btn btn-sm btn-danger remove-pair">
+                            <i class="fas fa-times"></i> Eliminar
+                        </button>
+                    </div>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="tutor_course_id"><strong>Curs:</strong></label>
-                                <select name="course_division_pairs[0][course_id]" id="tutor_course_id" class="form-control">
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label class="form-label">Curs:</label>
+                                <select name="course_division_pairs[${teacherPairCount}][course_id]" class="form-select">
                                     <option value="">Selecciona un curs</option>
-                                    @foreach($courses as $course)
+                                    @foreach ($courses as $course)
                                         <option value="{{ $course->id }}">{{ $course->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
-
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label for="tutor_division_id"><strong>Divisió:</strong></label>
-                                <select name="course_division_pairs[0][division_id]" id="tutor_division_id" class="form-control">
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label class="form-label">Divisió:</label>
+                                <select name="course_division_pairs[${teacherPairCount}][division_id]" class="form-select">
                                     <option value="">Selecciona una divisió</option>
                                     @foreach($divisions as $division)
                                         <option value="{{ $division->id }}">{{ $division->division }}</option>
@@ -155,172 +371,135 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> El tutor només tindrà accés al curs i divisió seleccionats.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Course and Division Assignment (Only for Students) -->
-        <div id="student-fields" style="display: none;">
-            <div class="form-group">
-                <label for="course">Curs:</label>
-                <select name="courses[]" id="course" class="form-control" multiple>
-                <option value="">Selecciona un curs</option>
-                    @foreach ($courses as $course)
-                        <option value="{{ $course->id }}">{{ $course->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-
-            <!-- Division Selection for Students -->
-            <div class="form-group" id="division-group">
-            <label for="divisions">Divisions</label>
-            <select name="divisions[]" id="divisions" class="form-control" multiple>
-                @foreach($divisions as $division)
-                    <option value="{{ $division->id }}">{{ $division->division }}</option>
-                @endforeach
-            </select>
-        </div>
-        </div>
-
-        
-
-        <button type="submit" class="btn btn-primary mt-3">Crear Usuari</button>
-    </form>
-    <a href="{{ route('users.index') }}" class="btn btn-primary mt-3">Tornar a la llista d'usuaris</a>
-</div>
-
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-    const roleSelect = document.getElementById('role');
-    const subjectGroup = document.getElementById('subject-group');
-    const studentFields = document.getElementById('student-fields');
-    const divisionGroup = document.getElementById('division-group');
-    const teacherCourseDiv = document.getElementById('teacher-course-division');
-    const tutorFields = document.getElementById('tutor-fields');
-
-
-    roleSelect.addEventListener('change', function () {
-        const selectedRole = parseInt(this.value);
-
-
-        // Mostrar/ocultar campos en función del rol
-        subjectGroup.style.display = 'none';
-        studentFields.style.display = 'none';
-        divisionGroup.style.display = 'none';
-        teacherCourseDiv.style.display = 'none';
-        tutorFields.style.display = 'none';
-
-
-        if (selectedRole === 1) { // Rol de "Profesor"
-            subjectGroup.style.display = 'block';
-            teacherCourseDiv.style.display = 'block'; // Mostrar selector de cursos/divisiones para profesores
-        } else if (selectedRole === 2) { // Rol de "Alumno"
-            studentFields.style.display = 'block';
-            divisionGroup.style.display = 'block';
-        } else if (selectedRole === 4) { // Rol de "Tutor" (asumiendo que su ID es 4)
-            tutorFields.style.display = 'block';
+                `;
+                
+                // Agregar el nuevo par al contenedor
+                teacherContainer.appendChild(newPair);
+                
+                // Incrementar el contador de pares
+                teacherPairCount++;
+                
+                // Configurar el botón de eliminación
+                const removeButton = newPair.querySelector('.remove-pair');
+                if (removeButton) {
+                    removeButton.addEventListener('click', function() {
+                        teacherContainer.removeChild(newPair);
+                    });
+                }
+            });
         }
-        console.log("Rol seleccionado:", selectedRole);
-    });
-});
-
-
-</script>
-
-<!-- Script para manejar la adición dinámica de pares curso-división -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Script existente para manejar cambios de rol
-    const roleSelect = document.getElementById('role');
-    if (roleSelect) {
-        roleSelect.dispatchEvent(new Event('change'));
-    }
-    
-    // Nuevo script para agregar pares curso-división
-    const addButton = document.getElementById('add-course-division');
-    const container = document.getElementById('course-division-container');
-    
-    if (addButton && container) {
-        let pairCount = 1; // Comenzamos en 1 porque ya tenemos un par inicial (índice 0)
         
-        addButton.addEventListener('click', function() {
-            // Crear un nuevo par curso-división
-            const newPair = document.createElement('div');
-            newPair.className = 'course-division-pair border rounded p-3 mb-3';
-            newPair.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <strong>Nova assignació</strong>
-                    <button type="button" class="btn btn-sm btn-danger remove-pair">
-                        <i class="fas fa-times"></i> Eliminar
-                    </button>
-                </div>
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label><strong>Curs:</strong></label>
-                            <select name="course_division_pairs[${pairCount}][course_id]" class="form-control course-select">
-                                <option value="">Selecciona un curs</option>
-                                @foreach ($courses as $course)
-                                    <option value="{{ $course->id }}">{{ $course->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label><strong>Divisió:</strong></label>
-                            <select name="course_division_pairs[${pairCount}][division_id]" class="form-control">
-                                <option value="">Selecciona una divisió</option>
-                                @foreach($divisions as $division)
-                                    <option value="{{ $division->id }}">{{ $division->division }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            `;
+        // Escuchar cambios en el selector de rol
+        roleSelect.addEventListener('change', handleRoleChange);
+        
+        // Inicializar la vista según el rol actual (en caso de que haya uno preseleccionado)
+        handleRoleChange();
+        
+        // Validación básica del formulario
+        form.addEventListener('submit', function(event) {
+            // Prevenir envío por defecto para validación personalizada
+            event.preventDefault();
             
-            // Agregar el nuevo par al contenedor
-            container.appendChild(newPair);
+            // Validación de campos obligatorios
+            const name = document.getElementById('name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const role = roleSelect.value.trim();
             
-            // Incrementar el contador de pares
-            pairCount++;
-            
-            // Configurar el botón de eliminación
-            const removeButton = newPair.querySelector('.remove-pair');
-            if (removeButton) {
-                removeButton.addEventListener('click', function() {
-                    container.removeChild(newPair);
-                });
+            if (!name || !lastName || !email || !password || !role) {
+                showAlert('Cal omplir tots els camps obligatoris (nom, cognoms, correu, contrasenya i rol).');
+                return;
             }
-        });
-    }
-});
-</script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const passwordInput = document.getElementById('password');
-        const errorDiv = document.createElement('div');
-        errorDiv.classList.add('invalid-feedback');
-        passwordInput.parentNode.appendChild(errorDiv);
-
-        passwordInput.addEventListener('input', function () {
-            if (passwordInput.value.length < 8) {
-                passwordInput.classList.add('is-invalid');
-                errorDiv.textContent = 'La contrasenya ha de tenir almenys 8 caràcters.';
-            } else {
-                passwordInput.classList.remove('is-invalid');
-                errorDiv.textContent = '';
+            
+            if (password.length < 8) {
+                showAlert('La contrasenya ha de tenir almenys 8 caràcters.');
+                return;
             }
+            
+            // Validar según el rol
+            const selectedRole = parseInt(role);
+            let isValid = true;
+            
+            // SOLUCIÓN CRÍTICA: Eliminar campos vacíos de course_division_pairs 
+            // para evitar el error de validación del servidor
+            const allCoursePairs = document.querySelectorAll('[name^="course_division_pairs"]');
+            allCoursePairs.forEach(select => {
+                // Si el campo está vacío, deshabilitarlo para que no se envíe
+                if (!select.value) {
+                    select.disabled = true;
+                }
+            });
+            
+            if (selectedRole === 1) { // Professor
+                const courseSelect = document.querySelector('select[name="course_division_pairs[0][course_id]"]');
+                const divisionSelect = document.querySelector('select[name="course_division_pairs[0][division_id]"]');
+                
+                // Asegurarse de que ambos estén habilitados si tienen valor
+                if (courseSelect && divisionSelect) {
+                    if (courseSelect.value && divisionSelect.value) {
+                        courseSelect.disabled = false;
+                        divisionSelect.disabled = false;
+                    } else if (!courseSelect.value && !divisionSelect.value) {
+                        // Si ambos están vacíos, dejarlos deshabilitados
+                        courseSelect.disabled = true;
+                        divisionSelect.disabled = true;
+                    } else {
+                        // Si solo uno tiene valor, mostrar error
+                        showAlert('Cal seleccionar tant el curs com la divisió per al professor.');
+                        isValid = false;
+                        courseSelect.disabled = false;
+                        divisionSelect.disabled = false;
+                    }
+                }
+            } else if (selectedRole === 2) { // Alumne
+                const courseSelect = document.getElementById('student_course_id');
+                const divisionSelect = document.getElementById('student_division_id');
+                
+                if (courseSelect && divisionSelect) {
+                    if (courseSelect.value && divisionSelect.value) {
+                        courseSelect.disabled = false;
+                        divisionSelect.disabled = false;
+                    } else if (!courseSelect.value && !divisionSelect.value) {
+                        courseSelect.disabled = true;
+                        divisionSelect.disabled = true;
+                    } else {
+                        showAlert('Cal seleccionar tant el curs com la divisió per a l\'alumne.');
+                        isValid = false;
+                        courseSelect.disabled = false;
+                        divisionSelect.disabled = false;
+                    }
+                }
+            } else if (selectedRole === 4 || selectedRole === 5) { // Tutor o Orientador
+                const courseSelect = document.getElementById('tutor_course_id');
+                const divisionSelect = document.getElementById('tutor_division_id');
+                
+                if (courseSelect && divisionSelect) {
+                    if (courseSelect.value && divisionSelect.value) {
+                        courseSelect.disabled = false;
+                        divisionSelect.disabled = false;
+                    } else if (!courseSelect.value && !divisionSelect.value) {
+                        courseSelect.disabled = true;
+                        divisionSelect.disabled = true;
+                    } else {
+                        showAlert('Cal seleccionar tant el curs com la divisió per al tutor/orientador.');
+                        isValid = false;
+                        courseSelect.disabled = false;
+                        divisionSelect.disabled = false;
+                    }
+                }
+            }
+            
+            if (!isValid) return;
+            
+            // Si pasa todas las validaciones, enviar el formulario
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processant...';
+            
+            // Ahora ya podemos enviar el formulario con seguridad
+            form.submit();
         });
     });
 </script>
-
 @endsection

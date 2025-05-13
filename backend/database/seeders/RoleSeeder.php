@@ -10,17 +10,17 @@ class RoleSeeder extends Seeder
     public function run()
     {
         Role::updateOrCreate(
-            ['name' => 'profesor'],
+            ['name' => 'professor'],
             ['description' => 'Pot assignar formularis, veure totes les respostes, accedir a totes les anàlisis i gestionar classes.']
         );
         
         Role::updateOrCreate(
-            ['name' => 'alumno'],
+            ['name' => 'alumne'],
             ['description' => 'Pot respondre formularis assignats i veure la seva pròpia informació.']
         );
         
         Role::updateOrCreate(
-            ['name' => 'admin'],
+            ['name' => 'administrador'],
             ['description' => 'Té accés complet a totes les funcionalitats del sistema.']
         );
         
