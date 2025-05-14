@@ -104,9 +104,9 @@
                   <div class="absolute bottom-0 left-0 right-0 p-6">
                     <div class="flex items-center space-x-2 text-white">
                       <div class="flex -space-x-2">
-                        <div class="w-8 h-8 bg-white rounded-full border-2 border-white shadow-sm"></div>
-                        <div class="w-8 h-8 bg-gray-200 rounded-full border-2 border-white shadow-sm"></div>
-                        <div class="w-8 h-8 bg-gray-300 rounded-full border-2 border-white shadow-sm"></div>
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Usuario 1" class="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover" />
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Usuario 2" class="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover" />
+                        <img src="https://randomuser.me/api/portraits/men/55.jpg" alt="Usuario 3" class="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover" />
                       </div>
                       <span class="text-sm font-medium">En ús per 15,000+ estudiants</span>
                     </div>
