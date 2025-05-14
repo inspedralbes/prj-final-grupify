@@ -164,24 +164,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Call to Action -->
-      <div class="mt-16 text-center rounded-2xl p-8">
-        <h3 class="text-2xl font-bold text-gray-900 mb-4">
-          Vols formar part del nostre viatge?
-        </h3>
-        <p class="text-gray-600 mb-8 max-w-2xl mx-auto">
-          Estem sempre buscant professionals apassionats per l'educació i la tecnologia per unir-se al nostre equip i comunitat.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <button class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-            Úneix-te a l'equip
-          </button>
-          <button class="px-6 py-3 bg-white text-gray-700 border-2 border-gray-200 rounded-lg font-medium hover:bg-gray-50 hover:border-primary transition-all duration-200">
-            Comunitat de desenvolupadors
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
