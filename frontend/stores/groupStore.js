@@ -31,6 +31,8 @@ export const useGroupStore = defineStore("groups", {
           url += `?${params.toString()}`;
         }
     
+        console.log("Fetching groups from URL:", url);
+        
         const response = await $fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`, 
@@ -38,12 +40,23 @@ export const useGroupStore = defineStore("groups", {
             Accept: "application/json",
           }
         });
+        
+        console.log("Groups received from backend:", response.length);
     
         this.groups = response.map(group => ({
           ...group,
-          members: (group.users || []).filter(user => user.role === "alumno"), // Solo estudiantes
-          number_of_students: (group.users || []).filter(user => user.role === "alumno").length
+          members: (group.users || []).filter(user => {
+            // Aceptar cualquier variación del rol de alumno
+            const userRole = user.role?.name || user.role;
+            return userRole === "alumno" || userRole === "alumne";
+          }),
+          number_of_students: (group.users || []).filter(user => {
+            const userRole = user.role?.name || user.role;
+            return userRole === "alumno" || userRole === "alumne";
+          }).length
         }));
+        
+        console.log("Processed groups:", this.groups.length);
     
       } catch (error) {
         console.error("Error fetching groups:", error);
