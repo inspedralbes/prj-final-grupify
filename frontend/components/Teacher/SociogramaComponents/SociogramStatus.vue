@@ -20,7 +20,7 @@ const checkFormCompletion = async (course) => {
   try {
     // Usar la nueva ruta pública
     const response = await fetch(
-      `http://localhost:8000/api/check-form-completion-public/${course.courseId}/${course.division.id}/3`,
+      `https://api.grupify.cat/api/check-form-completion-public/${course.courseId}/${course.division.id}/3`,
       {
         method: 'GET',
         headers: {

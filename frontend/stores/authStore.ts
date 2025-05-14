@@ -163,7 +163,7 @@ export const useAuthStore = defineStore("auth", {
           throw new Error("No authentication token");
         }
 
-        const response = await $fetch<{ user: User }>('http://localhost:8000/api/user', {
+        const response = await $fetch<{ user: User }>('https://api.grupify.cat/api/user', {
           headers: { Authorization: `Bearer ${this.token}` }
         });
 
