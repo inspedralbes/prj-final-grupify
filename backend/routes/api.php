@@ -23,6 +23,13 @@ use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\BitacoraNoteController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\CompetenceController;
+
+// Rutas para competencias
+Route::get('/competences', [CompetenceController::class, 'index']);
+Route::get('/competences/{id}', [CompetenceController::class, 'show']);
+Route::get('/students/{id}/competences', [CompetenceController::class, 'getStudentCompetences']);
+Route::post('/competences/store-user-competence', [CompetenceController::class, 'storeUserCompetence']);
 
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 

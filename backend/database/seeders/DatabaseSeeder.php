@@ -54,6 +54,7 @@ class DatabaseSeeder extends Seeder
             BitacoraSeeder::class,
             BitacoraNotesSeeder::class,
             CourseDivisionSeeder::class,
+            CompetenceAnswerSeeder::class, // Seeder para generar datos de autoavaluación de competencias
         ]);
     }
 }
