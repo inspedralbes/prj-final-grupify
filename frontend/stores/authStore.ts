@@ -70,7 +70,7 @@ export const useAuthStore = defineStore("auth", {
     },
 
     isAlumno: (state): boolean => {
-      return state.user?.role?.name === 'alumno';
+      return state.user?.role?.name === 'alumne';
     },
 
     isProfesor: (state): boolean => {

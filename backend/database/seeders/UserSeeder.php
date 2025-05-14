@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
         $tokens['profesor'] = $profesor->createToken('Groupify')->plainTextToken;
 
         // Verificar y obtener el rol de alumno
-        $rolAlumno = Role::where('name', 'alumno')->first();
+        $rolAlumno = Role::where('name', 'alumne')->first();
         
         if (!$rolAlumno) {
             $this->command->error('El rol de alumno no existe. Ejecuta primero RoleSeeder.');
