@@ -43,9 +43,7 @@ function previousQuestion() {
 }
 
 onMounted(() => {
-  if (formId === '4') {
-    fetchFormWithQuestions();
-  }
+  fetchFormWithQuestions();
 });
 
 // Función para obtener preguntas desde el backend
