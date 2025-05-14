@@ -18,7 +18,7 @@ const reasons = ["Falta de assistència", "Baixa voluntària", "Altres motius"];
 const comments = ref([]);
 const newComment = ref(""); // Ensure newComment is defined
 const editingComment = ref(null); // Ensure editingComment is defined
-const isFormVisible = ref(false);
+const isFormVisible = ref(false); // Inicialmente cerrado
 const hasAnsweredForm5 = ref(false); // Estado para saber si ha respondido el formulario 5
 
 // Definir todas las competencias, incluso las que están en el formulario equivocado
@@ -353,8 +353,8 @@ onMounted(async () => {
       const respuestas = await obtenerDatosAlumno(studentId);
       console.log("Respuestas recibidas en onMounted:", respuestas);
 
-      // Esperar a que el DOM esté listo
-      isFormVisible.value = true;
+      // No mostramos automáticamente el formulario al cargar
+      // Esperamos a que el usuario haga clic en el botón
       await nextTick();
       // Actualizar el gráfico con las respuestas
       if (respuestas && respuestas.length > 0) {
@@ -721,22 +721,27 @@ const cancelEdit = () => {
             <h3 class="text-xl font-semibold text-gray-800">
               Gràfic d'autoavaluació
             </h3>
-            <button
-              @click="isFormVisible = !isFormVisible"
-              :class="{
-                'bg-[rgb(0,173,238)]': isFormVisible,
-                'bg-gray-200': !isFormVisible,
-              }"
-              class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
-            >
-              <span
+            <div class="flex items-center">
+              <span class="text-sm text-gray-500 mr-2">
+                {{ isFormVisible ? '' : '' }}
+              </span>
+              <button
+                @click="isFormVisible = !isFormVisible"
                 :class="{
-                  'translate-x-6': isFormVisible,
-                  'translate-x-1': !isFormVisible,
+                  'bg-[rgb(0,173,238)]': isFormVisible,
+                  'bg-gray-200': !isFormVisible,
                 }"
-                class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
-              ></span>
-            </button>
+                class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
+              >
+                <span
+                  :class="{
+                    'translate-x-6': isFormVisible,
+                    'translate-x-1': !isFormVisible,
+                  }"
+                  class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
+                ></span>
+              </button>
+            </div>
           </div>
         </div>
 
