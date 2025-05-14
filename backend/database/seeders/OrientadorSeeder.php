@@ -22,13 +22,21 @@ class OrientadorSeeder extends Seeder
             $tokens = json_decode(file_get_contents(storage_path('tokens.json')), true) ?? [];
         }
 
+        // Verificar y obtener el rol de orientador
+        $rolOrientador = Role::where('name', 'orientador')->first();
+        
+        if (!$rolOrientador) {
+            $this->command->error('El rol de orientador no existe. Ejecuta primero RoleSeeder.');
+            return;
+        }
+        
         // Crear usuario orientador
         $orientador = User::create([
             'name' => 'Orientador',
             'last_name' => 'Escolar',
             'email' => 'orientador@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'orientador')->first()->id,
+            'role_id' => $rolOrientador->id,
             'remember_token' => Str::random(60),
             'image' => 'https://i.pravatar.cc/150?img='.rand(1, 70)
         ]);

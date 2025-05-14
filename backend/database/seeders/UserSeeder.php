@@ -25,26 +25,42 @@ class UserSeeder extends Seeder
         // Array para almacenar tokens - útil para pruebas
         $tokens = [];
 
+        // Verificar y obtener el rol de profesor
+        $rolProfesor = Role::where('name', 'profesor')->first();
+        
+        if (!$rolProfesor) {
+            $this->command->error('El rol de profesor no existe. Ejecuta primero RoleSeeder.');
+            return;
+        }
+        
         // Crear usuario profesor
         $profesor = User::create([
             'name' => 'profesor',
             'last_name' => 'profesor',
             'email' => 'profesor@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'profesor')->first()->id,
+            'role_id' => $rolProfesor->id,
             'remember_token' => Str::random(60), // Añadir remember_token
         ]);
 
         // Generar token para profesor
         $tokens['profesor'] = $profesor->createToken('Groupify')->plainTextToken;
 
+        // Verificar y obtener el rol de alumno
+        $rolAlumno = Role::where('name', 'alumno')->first();
+        
+        if (!$rolAlumno) {
+            $this->command->error('El rol de alumno no existe. Ejecuta primero RoleSeeder.');
+            return;
+        }
+        
         // Crear usuario Lucas
         $lucas = User::create([
             'name' => 'Lucas',
             'last_name' => 'Benitez',
             'email' => 'lucas@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQGPp0Yrjkv_DQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1714931862069?e=1744848000&v=beta&t=uBmxp5nw0Li0eBmwUiur6AsXsNf7NSgSKUcbrtclHJA'
         ]);
@@ -58,7 +74,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Stevez',
             'email' => 'adri@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQH1WwSOsPAnmw/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1689523295036?e=1744848000&v=beta&t=_ygufCfSmMDLV6Bdeok5rVBrmxwbAi2QIP9c30KP8EE'
         ]);
@@ -72,7 +88,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Joselito',
             'email' => 'joselito@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQEdFtig7c-woQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1682366266997?e=1744848000&v=beta&t=B_XULbr-qSGAJFNQGGgUUA-WXMuudQkrr2tpptD7jxM'
         ]);
@@ -86,7 +102,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Minaya',
             'email' => 'ale@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQESIlLlguI6sA/profile-displayphoto-shrink_400_400/B4DZOGXw62HcAk-/0/1733126197378?e=1744848000&v=beta&t=I6fLRblAncYVYI7sSkO9ol5SvjevBPr61mc_PEjQa7E'
         ]);
@@ -100,7 +116,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Pacheco',
             'email' => 'ara@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://media.licdn.com/dms/image/v2/D4D03AQHgqZ8mMp5enQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1694774589516?e=1744848000&v=beta&t=anV8DGNUfA18T7Zkbcty53xTe_AZ_o1briGnsonrKEc'
         ]);

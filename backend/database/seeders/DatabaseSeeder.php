@@ -24,11 +24,11 @@ class DatabaseSeeder extends Seeder
     public function run()
 
     {
-        // Llama a otros seeders si es necesario
+        // Asegurarse de que RoleSeeder se ejecute primero
         $this->call([
+            RoleSeeder::class,       // IMPORTANTE: Roles deben crearse primero
             CourseSeeder::class,
             SubjectSeeder::class,
-            RoleSeeder::class,
             UserSeeder::class,
             TutorSeeder::class,       // Seeder para tutores
             OrientadorSeeder::class,  // Seeder para orientadores

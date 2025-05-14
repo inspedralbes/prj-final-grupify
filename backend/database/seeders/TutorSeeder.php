@@ -24,13 +24,21 @@ class TutorSeeder extends Seeder
             $tokens = json_decode(file_get_contents(storage_path('tokens.json')), true) ?? [];
         }
 
+        // Verificar y obtener el rol de tutor
+        $rolTutor = Role::where('name', 'tutor')->first();
+        
+        if (!$rolTutor) {
+            $this->command->error('El rol de tutor no existe. Ejecuta primero RoleSeeder.');
+            return;
+        }
+        
         // Crear usuario tutor
         $tutor = User::create([
             'name' => 'Tutor',
             'last_name' => 'Principal',
             'email' => 'tutor@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'tutor')->first()->id,
+            'role_id' => $rolTutor->id,
             'remember_token' => Str::random(60),
             'image' => 'https://i.pravatar.cc/150?img='.rand(1, 70)
         ]);
@@ -41,7 +49,7 @@ class TutorSeeder extends Seeder
             'last_name' => 'Secundario',
             'email' => 'tutor2@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'tutor')->first()->id,
+            'role_id' => $rolTutor->id,
             'remember_token' => Str::random(60),
             'image' => 'https://i.pravatar.cc/150?img='.rand(1, 70)
         ]);
