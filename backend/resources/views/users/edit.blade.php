@@ -206,7 +206,7 @@
                                     </option>
                                     @endforeach
                                 </select>
-                                <input type="hidden" name="course_id" value="{{ $pair->course_id }}" id="course_id_value">
+                                <!-- Campo eliminado para evitar conflictos -->
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Divisió:</label>
@@ -218,7 +218,7 @@
                                     </option>
                                     @endforeach
                                 </select>
-                                <input type="hidden" name="division_id" value="{{ $pair->division_id }}" id="division_id_value">
+                                <!-- Campo eliminado para evitar conflictos -->
                             </div>
                         </div>
                     </div>
@@ -229,7 +229,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Curs:</label>
-                                <select name="course_division_pairs[0][course_id]" class="form-select course-select">
+                                <select name="course_division_pairs[0][course_id]" class="form-select course-select direct-update">
                                     <option value="">Selecciona un curs</option>
                                     @foreach ($courses as $course)
                                     <option value="{{ $course->id }}">{{ $course->name }}</option>
@@ -238,7 +238,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Divisió:</label>
-                                <select name="course_division_pairs[0][division_id]" class="form-select">
+                                <select name="course_division_pairs[0][division_id]" class="form-select direct-update">
                                     <option value="">Selecciona una divisió</option>
                                     @foreach($divisions as $division)
                                     <option value="{{ $division->id }}">{{ $division->division }}</option>
@@ -283,7 +283,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="tutor_course_id" class="form-label fw-medium">Curs:</label>
-                        <select name="course_division_pairs[0][course_id]" id="tutor_course_id" class="form-select">
+                        <select name="tutor_course_id" id="tutor_course_id" class="form-select direct-update">
                             <option value="">Selecciona un curs</option>
                             @foreach($courses as $course)
                             <option value="{{ $course->id }}" {{ $tutorAssignment && $tutorAssignment->course_id == $course->id ? 'selected' : '' }}>
@@ -295,7 +295,7 @@
 
                     <div class="col-md-6">
                         <label for="tutor_division_id" class="form-label fw-medium">Divisió:</label>
-                        <select name="course_division_pairs[0][division_id]" id="tutor_division_id" class="form-select">
+                        <select name="tutor_division_id" id="tutor_division_id" class="form-select direct-update">
                             <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
                             <option value="{{ $division->id }}" {{ $tutorAssignment && $tutorAssignment->division_id == $division->id ? 'selected' : '' }}>
@@ -332,7 +332,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="student_course_id" class="form-label fw-medium">Curs:</label>
-                        <select name="course_division_pairs[0][course_id]" id="student_course_id" class="form-select">
+                        <select name="student_course_id" id="student_course_id" class="form-select direct-update">
                             <option value="">Selecciona un curs</option>
                             @foreach($courses as $course)
                             <option value="{{ $course->id }}" {{ $studentAssignment && $studentAssignment->course_id == $course->id ? 'selected' : '' }}>
@@ -344,7 +344,7 @@
 
                     <div class="col-md-6">
                         <label for="student_division_id" class="form-label fw-medium">Divisió:</label>
-                        <select name="course_division_pairs[0][division_id]" id="student_division_id" class="form-select">
+                        <select name="student_division_id" id="student_division_id" class="form-select direct-update">
                             <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
                             <option value="{{ $division->id }}" {{ $studentAssignment && $studentAssignment->division_id == $division->id ? 'selected' : '' }}>
@@ -532,37 +532,6 @@
 <!-- Script para manejar la adición dinámica de pares curso-división y mostrar las opciones según el rol -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Función para actualizar los campos hidden con los valores actuales
-        function updateHiddenFields() {
-            // Obtener los selectores de curso y división actuales
-            const courseSelects = document.querySelectorAll('.course-select');
-            const divisionSelects = document.querySelectorAll('select[name$="[division_id]"]');
-            
-            // Establecer los valores en los campos ocultos
-            if (courseSelects.length > 0 && courseSelects[0].value) {
-                document.getElementById('course_id_value').value = courseSelects[0].value;
-            }
-            
-            if (divisionSelects.length > 0 && divisionSelects[0].value) {
-                document.getElementById('division_id_value').value = divisionSelects[0].value;
-            }
-            
-            console.log("Campos actualizados:", {
-                course_id: document.getElementById('course_id_value').value,
-                division_id: document.getElementById('division_id_value').value
-            });
-        }
-        
-        // Configurar eventos de cambio para todos los selectores
-        document.querySelectorAll('.direct-update').forEach(select => {
-            select.addEventListener('change', function() {
-                updateHiddenFields();
-            });
-        });
-        
-        // Actualizar al cargar la página
-        updateHiddenFields();
-        
         // Configurar botones de eliminación existentes
         const existingRemoveButtons = document.querySelectorAll('.remove-pair');
         existingRemoveButtons.forEach(button => {
@@ -570,8 +539,6 @@
                 const pair = this.closest('.course-division-pair');
                 if (pair) {
                     pair.parentNode.removeChild(pair);
-                    // Actualizar campos después de eliminar
-                    updateHiddenFields();
                 }
             });
         });
@@ -580,9 +547,6 @@
         const addButton = document.getElementById('add-course-division');
         const container = document.getElementById('course-division-container');
         const pairCountInput = document.getElementById('pair-count');
-        // Se ha eliminado la referencia al botón de depuración
-
-        // Se eliminó el código del botón de depuración
 
         if (addButton && container && pairCountInput) {
             let pairCount = parseInt(pairCountInput.value);
@@ -601,19 +565,19 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-medium">Curs:</label>
-                        <select name="course_division_pairs[${pairCount}][course_id]" class="form-select course-select">
+                        <select name="course_division_pairs[${pairCount}][course_id]" class="form-select course-select direct-update">
                             <option value="">Selecciona un curs</option>
                             @foreach ($courses as $course)
-                                <option value="{{ $course->id }}">{{ $course->name }} (ID: {{ $course->id }})</option>
+                                <option value="{{ $course->id }}">{{ $course->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-medium">Divisió:</label>
-                        <select name="course_division_pairs[${pairCount}][division_id]" class="form-select">
+                        <select name="course_division_pairs[${pairCount}][division_id]" class="form-select direct-update">
                             <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
-                                <option value="{{ $division->id }}">{{ $division->division }} (ID: {{ $division->id }})</option>
+                                <option value="{{ $division->id }}">{{ $division->division }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -674,15 +638,6 @@
             const selectedRole = parseInt(roleSelect.value);
             let isValid = true;
             
-            // Eliminar selectores de cursos y divisiones vacíos para evitar errores de validación
-            const allSelectsCD = document.querySelectorAll('select[name^="course_division_pairs"]');
-            allSelectsCD.forEach(select => {
-                // Si el campo está vacío, deshabilitarlo para que no se envíe
-                if (!select.value) {
-                    select.disabled = true;
-                }
-            });
-            
             // Crear alerta
             function showAlert(message) {
                 // Eliminar alertas previas
@@ -720,10 +675,6 @@
                 if (!studentCourseSelect.value || !studentDivisionSelect.value) {
                     showAlert('Cal seleccionar un curs i divisió per a l\'alumne.');
                     isValid = false;
-                } else {
-                    // Habilitar para asegurar que se envíen
-                    studentCourseSelect.disabled = false;
-                    studentDivisionSelect.disabled = false;
                 }
             } else if (selectedRole === 4 || selectedRole === 5) { // Tutor u Orientador
                 const tutorCourseSelect = document.getElementById('tutor_course_id');
@@ -732,10 +683,6 @@
                 if (!tutorCourseSelect.value || !tutorDivisionSelect.value) {
                     showAlert('Cal seleccionar un curs i divisió per al tutor/orientador.');
                     isValid = false;
-                } else {
-                    // Habilitar para asegurar que se envíen
-                    tutorCourseSelect.disabled = false;
-                    tutorDivisionSelect.disabled = false;
                 }
             }
             

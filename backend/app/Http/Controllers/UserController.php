@@ -597,30 +597,53 @@ class UserController extends Controller
             // Procesar las asignaciones de curso/división
             $courseDivisionCreated = false;
             
-            // Verificar si tenemos campos course_id/division_id directos
-            if ($request->filled('course_id') && $request->filled('division_id')) {
-                $course_id = intval($request->course_id);
-                $division_id = intval($request->division_id);
+            // Procesar los campos según el rol del usuario
+            if ($user->role_id == 4 || $user->role_id == 5) { // Tutor u Orientador
+                $tutorCourseId = $request->input('tutor_course_id');
+                $tutorDivisionId = $request->input('tutor_division_id');
                 
-                \Log::info("Encontrados campos course_id/division_id directos: course_id={$course_id}, division_id={$division_id}");
+                if ($tutorCourseId && $tutorDivisionId) {
+                    \Log::info("Usando campos específicos de tutor (rol {$user->role_id}): course_id={$tutorCourseId}, division_id={$tutorDivisionId}");
+                    
+                    // Crear la asignación en course_division_user
+                    \App\Models\CourseDivisionUser::create([
+                        'user_id' => $user->id,
+                        'course_id' => $tutorCourseId,
+                        'division_id' => $tutorDivisionId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    
+                    // Actualizar la tabla course_user
+                    $user->courses()->syncWithoutDetaching([$tutorCourseId]);
+                    $courseDivisionCreated = true;
+                }
+            } 
+            else if ($user->role_id == 2) { // Estudiante
+                $studentCourseId = $request->input('student_course_id');
+                $studentDivisionId = $request->input('student_division_id');
                 
-                // Crear asignación directa
-                \App\Models\CourseDivisionUser::create([
-                    'user_id' => $user->id,
-                    'course_id' => $course_id,
-                    'division_id' => $division_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                
-                // Sincronizar con course_user
-                $user->courses()->syncWithoutDetaching([$course_id]);
-                
-                \Log::info("Asignación creada con campos directos");
-                $courseDivisionCreated = true;
+                if ($studentCourseId && $studentDivisionId) {
+                    \Log::info("Usando campos específicos de estudiante (rol {$user->role_id}): course_id={$studentCourseId}, division_id={$studentDivisionId}");
+                    
+                    // Crear la asignación en course_division_user
+                    \App\Models\CourseDivisionUser::create([
+                        'user_id' => $user->id,
+                        'course_id' => $studentCourseId,
+                        'division_id' => $studentDivisionId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    
+                    // Actualizar la tabla course_user
+                    $user->courses()->syncWithoutDetaching([$studentCourseId]);
+                    $courseDivisionCreated = true;
+                }
             }
-            // Si no hay campos directos, procesar los pares curso-división
-            elseif ($request->has('course_division_pairs')) {
+            else if ($user->role_id == 1) // Profesor
+            
+            // Procesar los pares curso-división (siempre preferir esta estructura)
+            if ($request->has('course_division_pairs')) {
                 \Log::info("Estructura de course_division_pairs:", ['datos' => $request->course_division_pairs]);
                 
                 // Asegurarnos de que es un array
@@ -645,7 +668,7 @@ class UserController extends Controller
                             $pairKey = "{$course_id}-{$division_id}";
                             
                             if (!in_array($pairKey, $processedPairs)) {
-                                \Log::info("Creando asignación: course_id={$course_id}, division_id={$division_id}");
+                                \Log::info("Creando asignación de profesor: course_id={$course_id}, division_id={$division_id}");
                                 
                                 // Crear la asignación en course_division_user
                                 \App\Models\CourseDivisionUser::create([
