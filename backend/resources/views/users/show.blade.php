@@ -170,6 +170,41 @@
                     @endif
                 </div>
             </div>
+            @elseif($user->role_id == 4 || $user->role_id == 5) <!-- Si es tutor u orientador -->
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-user-tie me-2 text-primary"></i>
+                        Informació {{ $user->role_id == 4 ? 'del Tutor' : "de l'Orientador" }}
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="row g-4 text-center">
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-4 bg-light">
+                                <div class="display-6 mb-3 text-{{ $user->role_id == 4 ? 'warning' : 'info' }}">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <h6 class="mb-2 text-muted">Curs Assignat</h6>
+                                <div class="fs-5 fw-medium">
+                                    {{ $user->courseDivisionUsers->first()?->course->name ?? 'Sense curs assignat' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-4 bg-light">
+                                <div class="display-6 mb-3 text-{{ $user->role_id == 4 ? 'warning' : 'info' }}">
+                                    <i class="fas fa-sitemap"></i>
+                                </div>
+                                <h6 class="mb-2 text-muted">Divisió Assignada</h6>
+                                <div class="fs-5 fw-medium">
+                                    {{ $user->courseDivisionUsers->first()?->division->division ?? 'Sense divisió assignada' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             @elseif($user->role_id == 2) <!-- Si es estudiante -->
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-0">

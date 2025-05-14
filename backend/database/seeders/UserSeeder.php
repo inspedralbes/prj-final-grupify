@@ -25,13 +25,21 @@ class UserSeeder extends Seeder
         // Array para almacenar tokens - útil para pruebas
         $tokens = [];
 
+        // Verificar y obtener el rol de profesor
+        $rolProfesor = Role::where('name', 'profesor')->first();
+        
+        if (!$rolProfesor) {
+            $this->command->error('El rol de profesor no existe. Ejecuta primero RoleSeeder.');
+            return;
+        }
+        
         // Crear usuario profesor
         $profesor = User::create([
             'name' => 'profesor',
             'last_name' => 'profesor',
             'email' => 'profesor@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'profesor')->first()->id,
+            'role_id' => $rolProfesor->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://i.pravatar.cc/400?u=profesor@gmail.com'
         ]);
@@ -39,13 +47,21 @@ class UserSeeder extends Seeder
         // Generar token para profesor
         $tokens['profesor'] = $profesor->createToken('Groupify')->plainTextToken;
 
+        // Verificar y obtener el rol de alumno
+        $rolAlumno = Role::where('name', 'alumno')->first();
+        
+        if (!$rolAlumno) {
+            $this->command->error('El rol de alumno no existe. Ejecuta primero RoleSeeder.');
+            return;
+        }
+        
         // Crear usuario Lucas
         $lucas = User::create([
             'name' => 'Lucas',
             'last_name' => 'Benitez',
             'email' => 'lucas@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://i.pravatar.cc/400?u=lucas@gmail.com'
         ]);
@@ -59,7 +75,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Stevez',
             'email' => 'adri@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://i.pravatar.cc/400?u=adri@gmail.com'
         ]);
@@ -73,7 +89,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Joselito',
             'email' => 'joselito@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://i.pravatar.cc/400?u=joselito@gmail.com'
         ]);
@@ -87,7 +103,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Minaya',
             'email' => 'ale@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://i.pravatar.cc/400?u=ale@gmail.com'
         ]);
@@ -101,7 +117,7 @@ class UserSeeder extends Seeder
             'last_name' => 'Pacheco',
             'email' => 'ara@gmail.com',
             'password' => Hash::make('password'),
-            'role_id' => Role::where('name', 'alumno')->first()->id,
+            'role_id' => $rolAlumno->id,
             'remember_token' => Str::random(60), // Añadir remember_token
             'image' => 'https://i.pravatar.cc/400?u=ara@gmail.com'
         ]);
