@@ -34,15 +34,15 @@
 
       <div v-if="expandedGroups.includes(group.id)" class="space-y-3">
         <div 
-          v-for="member in group.users" 
+          v-for="member in group.users || group.members" 
           :key="member.id" 
           class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
 
           <div class="flex items-center space-x-3">
             <div class="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-medium text-primary">
-              {{ member.initials }}
+              {{ getInitials(member) }}
             </div>
-            <span class="text-sm md:text-base">{{ member.name }}</span>
+            <span class="text-sm md:text-base">{{ member.name }} {{ member.last_name }}</span>
           </div>
         </div>
       </div>
@@ -71,13 +71,34 @@ const toggleMembers = groupId => {
   }
 };
 
+const getInitials = (member) => {
+  if (member.initials) return member.initials;
+  
+  // Si no hay initials, las generamos del nombre y apellido
+  const name = member.name || "";
+  const lastName = member.last_name || "";
+  
+  let initials = "";
+  if (name) initials += name.charAt(0).toUpperCase();
+  if (lastName) initials += lastName.charAt(0).toUpperCase();
+  
+  return initials || "?";
+};
+
 const navigateToBitacora = (groupId) => {
   router.push(`/alumne/bitacora/${groupId}`);
 };
 
 onMounted(async () => {
   try {
+    console.log("Iniciando carga de grupos para alumno...");
     await groupStore.fetchGroups();
+    console.log(`Grupos cargados: ${groupStore.groups.length}`);
+    
+    // Verificar si algún grupo está vacío
+    groupStore.groups.forEach((group, index) => {
+      console.log(`Grupo ${index + 1}: ID=${group.id}, Nombre=${group.name}, Miembros=${(group.users || []).length}`);
+    });
   } catch (error) {
     console.error("Error loading groups:", error);
   }

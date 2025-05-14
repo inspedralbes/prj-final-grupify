@@ -12,11 +12,26 @@ class GroupUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Obtener el ID del rol "alumno"
-        $alumnoRoleId = Role::where('name', 'alumno')->first()->id;
-
+        // Obtener el rol "alumno"
+        $alumnoRole = Role::where('name', 'alumno')->first();
+        
+        // Verificar si el rol alumno existe
+        if (!$alumnoRole) {
+            $this->command->error('El rol de alumno no existe. Ejecuta primero RoleSeeder.');
+            return;
+        }
+        
+        // Obtener el ID del rol
+        $alumnoRoleId = $alumnoRole->id;
+        
         // Obtener solo los usuarios con el rol "alumno"
         $alumnos = User::where('role_id', $alumnoRoleId)->pluck('id')->toArray();
+        
+        // Verificar si hay alumnos disponibles
+        if (empty($alumnos)) {
+            $this->command->error('No hay usuarios con rol de alumno. Ejecuta primero UserSeeder.');
+            return;
+        }
 
         // Obtener todos los grupos con su número de estudiantes requerido
         $grupos = Group::all();

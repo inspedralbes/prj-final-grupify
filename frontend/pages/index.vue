@@ -28,7 +28,7 @@
     <LandingPageStatsSection />
     
     <!-- Footer -->
-    <LandingPageFooter class="mt-auto" />
+    <LandingPageFooter />
   </div>
 </template>
 

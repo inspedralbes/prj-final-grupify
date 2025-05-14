@@ -58,11 +58,11 @@ const gestioSubmit = async (e) => {
 
     // Guardamos con el nombre correcto
     authStore.setAuth(token, response.user, response.role);
-    
+
     // Conexión inmediata del socket después del login
     if (!$socket && !$socket.connected) {
       $socket.connect();
-    } 
+    }
 
     // Registrar usuario en el socket
     $socket.emit("register_user", response.user.id);
@@ -75,16 +75,16 @@ const gestioSubmit = async (e) => {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumno: "/alumne/dashboard",
-      tutor: "/tutor/dashboard",
+      tutor: "/professor/dashboard", // Los tutores usan el mismo dashboard que los profesores
       orientador: "/orientador/dashboard"
     };
 
     // Asegurarnos de que estamos usando el rol correcto
     const route = dashboardRoutes[userRole] || "/";
-    
+
     console.log("Rol detectado:", userRole);
     console.log("Redirigiendo a:", route);
-    
+
     // Usar setTimeout para asegurar que la redirección ocurra después de que el store se haya actualizado
     setTimeout(() => {
       navigateTo(route);

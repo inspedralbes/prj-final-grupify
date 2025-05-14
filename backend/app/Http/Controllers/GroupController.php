@@ -36,15 +36,53 @@ class GroupController extends Controller
             // Obtener el usuario autenticado
             $user = $request->user();
             
+            // Debug: Registrar información sobre el usuario actual
+            \Log::info('GroupController@index - Usuario', [
+                'user_id' => $user ? $user->id : 'no user',
+                'role_id' => $user ? $user->role_id : 'no role_id',
+                'role_name' => $user && $user->role ? $user->role->name : 'no role name'
+            ]);
+            
             // Iniciar consulta con relaciones
             $query = Group::with(['users', 'courses', 'divisions']);
             
             // Verificar si la columna creator_id existe
             $hasCreatorId = \Schema::hasColumn('groups', 'creator_id');
             
-            // Si la columna existe y el usuario es profesor, filtrar por creator_id
-            if ($hasCreatorId && $user && $user->role_id == 1) {
-                $query->where('creator_id', $user->id);
+            // Si el usuario existe, cargar la relación de rol (por si no está cargada)
+            if ($user) {
+                if (!$user->relationLoaded('role')) {
+                    $user->load('role');
+                }
+                
+                // Obtener el nombre del rol (podría ser 'alumne' o 'alumno' dependiendo de la configuración)
+                $userRole = $user->role ? $user->role->name : null;
+                $roleId = $user->role_id;
+                
+                \Log::info('GroupController@index - Rol del usuario', [
+                    'role_id' => $roleId,
+                    'role_name' => $userRole
+                ]);
+                
+                // Si el usuario es alumno (verificando tanto por nombre como por ID de rol)
+                // Asumimos que role_id 2 o 3 es para alumnos basado en el código que hemos visto
+                if ($userRole === 'alumne' || $userRole === 'alumno' || $roleId == 2 || $roleId == 3) {
+                    \Log::info('GroupController@index - Filtrando grupos para alumno', ['user_id' => $user->id]);
+                    
+                    // Filtrar solo los grupos donde el usuario está como miembro
+                    $query->whereHas('users', function($q) use ($user) {
+                        $q->where('users.id', $user->id);
+                    });
+                    
+                    // Debug: Ver cuántos grupos deberían mostrarse
+                    $groupCount = $query->count();
+                    \Log::info('GroupController@index - Número de grupos del alumno', ['count' => $groupCount]);
+                }
+                // Si es profesor o tutor, filtrar por creator_id
+                elseif ($hasCreatorId && ($userRole === 'professor' || $userRole === 'profesor' || $userRole === 'tutor' || $roleId == 1 || $roleId == 4)) {
+                    $query->where('creator_id', $user->id);
+                    \Log::info('GroupController@index - Filtrando grupos para profesor/tutor', ['creator_id' => $user->id]);
+                }
             }
             
             // Filtrar por curso y división si se especifican
@@ -63,6 +101,12 @@ class GroupController extends Controller
             }
             
             $groups = $query->get();
+            
+            // Debug: Ver cuántos grupos se están devolviendo
+            \Log::info('GroupController@index - Grupos devueltos', [
+                'count' => count($groups),
+                'ids' => $groups->pluck('id')->toArray()
+            ]);
 
             // Si la solicitud es AJAX o espera JSON, devuelve JSON
             if ($request->expectsJson()) {
@@ -72,6 +116,10 @@ class GroupController extends Controller
             // Si no, devuelve la vista
             return view('groups', compact('groups'));
         } catch (\Exception $e) {
+            \Log::error('GroupController@index - Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json(['message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
         }
     }
@@ -148,9 +196,21 @@ class GroupController extends Controller
             $bitacora->description = "Bitácora asociada al grupo " . $group->name;
             $bitacora->save();
 
-            return response()->json($group, 201);
+            // Si la solicitud espera JSON, devolver JSON
+            if ($request->expectsJson()) {
+                return response()->json($group, 201);
+            }
+            
+            // Si no, redirigir con mensaje flash
+            return redirect()->route('groups.index')->with('success', 'Grup creat correctament');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error al crear el grupo: ' . $e->getMessage()], 500);
+            // Si la solicitud espera JSON, devolver error en JSON
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Error al crear el grupo: ' . $e->getMessage()], 500);
+            }
+            
+            // Si no, redirigir con mensaje de error
+            return redirect()->route('groups.index')->with('error', 'Error al crear el grup: ' . $e->getMessage());
         }
     }
 
@@ -183,11 +243,45 @@ class GroupController extends Controller
 
         // Verificar si el usuario tiene permiso para ver este grupo
         $user = $request->user();
-        $hasCreatorId = \Schema::hasColumn('groups', 'creator_id');
         
-        // Verificar permisos solo si la columna creator_id existe
-        if ($hasCreatorId && $user && $user->role_id == 1 && $group->creator_id != $user->id) {
-            return response()->json(['message' => 'No tienes permiso para ver este grupo'], 403);
+        if ($user) {
+            // Cargar relación de rol si no está cargada
+            if (!$user->relationLoaded('role')) {
+                $user->load('role');
+            }
+            
+            $userRole = $user->role ? $user->role->name : null;
+            $roleId = $user->role_id;
+            
+            // Si es alumno (verificando tanto por nombre como por ID)
+            if ($userRole === 'alumne' || $userRole === 'alumno' || $roleId == 2 || $roleId == 3) {
+                // Verificar que el alumno pertenezca al grupo
+                $userBelongsToGroup = $group->users()->where('users.id', $user->id)->exists();
+                
+                \Log::info('GroupController@show - Verificando permisos de alumno', [
+                    'user_id' => $user->id,
+                    'group_id' => $group->id,
+                    'belongs_to_group' => $userBelongsToGroup
+                ]);
+                
+                if (!$userBelongsToGroup) {
+                    return response()->json(['message' => 'No tienes permiso para ver este grupo'], 403);
+                }
+            }
+            // Si es profesor, verificar que sea el creador (si la columna existe)
+            elseif ($userRole === 'professor' || $userRole === 'profesor' || $userRole === 'tutor' || $roleId == 1 || $roleId == 4) {
+                $hasCreatorId = \Schema::hasColumn('groups', 'creator_id');
+                
+                \Log::info('GroupController@show - Verificando permisos de profesor', [
+                    'user_id' => $user->id,
+                    'group_creator_id' => $group->creator_id,
+                    'has_creator_column' => $hasCreatorId
+                ]);
+                
+                if ($hasCreatorId && $group->creator_id != $user->id) {
+                    return response()->json(['message' => 'No tienes permiso para ver este grupo'], 403);
+                }
+            }
         }
 
         // Renombrar users a members para consistencia
@@ -235,7 +329,7 @@ class GroupController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Grupo no encontrado'], 404);
             }
-            return redirect()->route('groups.index')->with('error', 'Grupo no encontrado');
+            return redirect()->route('groups.index')->with('error', 'Grup no trobat');
         }
 
         // Verificar si el usuario es el creador del grupo (si la columna existe)
@@ -246,7 +340,7 @@ class GroupController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'No tienes permiso para modificar este grupo'], 403);
             }
-            return redirect()->route('groups.index')->with('error', 'No tienes permiso para modificar este grupo');
+            return redirect()->route('groups.index')->with('error', 'No tens permís per modificar aquest grup');
         }
 
         $validated = $request->validate([
@@ -261,7 +355,7 @@ class GroupController extends Controller
             return response()->json($group);
         }
 
-        return redirect()->route('groups.index')->with('success', 'Grupo actualizado correctamente');
+        return redirect()->route('groups.index')->with('success', 'Grup editat correctament');
     }
 
     /**
@@ -296,7 +390,10 @@ class GroupController extends Controller
             $hasCreatorId = \Schema::hasColumn('groups', 'creator_id');
             
             if ($hasCreatorId && $user && $user->role_id == 1 && $group->creator_id != $user->id) {
-                return response()->json(['message' => 'No tienes permiso para eliminar este grupo'], 403);
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'No tienes permiso para eliminar este grupo'], 403);
+                }
+                return redirect()->route('groups.index')->with('error', 'No tens permís per eliminar aquest grup');
             }
 
             // Eliminar relaciones en la tabla pivot
@@ -318,11 +415,21 @@ class GroupController extends Controller
             // Eliminar el grupo
             $group->delete();
 
-            return response()->json(['message' => 'Grupo eliminado correctamente'], 200);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Grupo eliminado correctamente'], 200);
+            }
+            
+            return redirect()->route('groups.index')->with('success', 'Grup eliminat correctament');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Grupo no encontrado'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Grupo no encontrado'], 404);
+            }
+            return redirect()->route('groups.index')->with('error', 'Grup no trobat');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+            }
+            return redirect()->route('groups.index')->with('error', 'Error intern del servidor: ' . $e->getMessage());
         }
     }
 
@@ -334,12 +441,47 @@ class GroupController extends Controller
             return response()->json(['message' => 'Grupo no encontrado'], 404);
         }
 
-        // Verificar si el usuario es el creador del grupo (si la columna existe)
+        // Verificar si el usuario tiene permiso para ver este grupo
         $user = $request->user();
-        $hasCreatorId = \Schema::hasColumn('groups', 'creator_id');
         
-        if ($hasCreatorId && $user && $user->role_id == 1 && $group->creator_id != $user->id) {
-            return response()->json(['message' => 'No tienes permiso para ver los miembros de este grupo'], 403);
+        if ($user) {
+            // Cargar relación de rol si no está cargada
+            if (!$user->relationLoaded('role')) {
+                $user->load('role');
+            }
+            
+            $userRole = $user->role ? $user->role->name : null;
+            $roleId = $user->role_id;
+            
+            // Si es alumno (verificando tanto por nombre como por ID)
+            if ($userRole === 'alumne' || $userRole === 'alumno' || $roleId == 2 || $roleId == 3) {
+                // Verificar que el alumno pertenezca al grupo
+                $userBelongsToGroup = $group->users()->where('users.id', $user->id)->exists();
+                
+                \Log::info('GroupController@getMembers - Verificando permisos de alumno', [
+                    'user_id' => $user->id,
+                    'group_id' => $group->id,
+                    'belongs_to_group' => $userBelongsToGroup
+                ]);
+                
+                if (!$userBelongsToGroup) {
+                    return response()->json(['message' => 'No tienes permiso para ver los miembros de este grupo'], 403);
+                }
+            }
+            // Si es profesor, verificar que sea el creador (si la columna existe)
+            elseif ($userRole === 'professor' || $userRole === 'profesor' || $userRole === 'tutor' || $roleId == 1 || $roleId == 4) {
+                $hasCreatorId = \Schema::hasColumn('groups', 'creator_id');
+                
+                \Log::info('GroupController@getMembers - Verificando permisos de profesor', [
+                    'user_id' => $user->id,
+                    'group_creator_id' => $group->creator_id,
+                    'has_creator_column' => $hasCreatorId
+                ]);
+                
+                if ($hasCreatorId && $group->creator_id != $user->id) {
+                    return response()->json(['message' => 'No tienes permiso para ver los miembros de este grupo'], 403);
+                }
+            }
         }
 
         $members = $group->users;

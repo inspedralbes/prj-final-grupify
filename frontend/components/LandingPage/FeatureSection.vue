@@ -215,21 +215,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Call to Action -->
-      <div class="mt-16 text-center">
-        <h3 class="text-2xl font-bold text-gray-900 mb-6">
-          Descobreix tot el potencial de Grupify
-        </h3>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <button 
-            @click="requestDemo"
-            class="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-          >
-            Sol·licitar demostració
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>

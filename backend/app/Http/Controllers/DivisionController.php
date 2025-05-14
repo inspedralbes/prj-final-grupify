@@ -165,7 +165,7 @@ class DivisionController extends Controller
             return response()->json($division, 200);
         }
 
-        return redirect()->route('divisions.index')->with('success', 'División actualizada correctamente');
+        return redirect()->route('divisions.index')->with('success', 'Divisió actualitzada correctament');
     }
 
     /**
