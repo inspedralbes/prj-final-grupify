@@ -3,34 +3,81 @@ import { ref, onMounted, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "~/stores/authStore";
 import { useStudentsStore } from "~/stores/studentsStore";
-import { useFormStore } from "~/stores/formStore";
 import { useCoursesStore } from "~/stores/coursesStore";
 
 const userData = ref(null);
 const router = useRouter();
 const authStore = useAuthStore();
 const studentsStore = useStudentsStore();
-const formStore = useFormStore();
 const coursesStore = useCoursesStore();
 
 // Estado del dashboard para el orientador con valores iniciales
 const dashboardState = reactive({
-  pendingForms: 0,
-  completedForms: 0,
   totalStudents: 0,
-  totalForms: 0,
   currentClasses: [],
-  formCompletion: {}
+  cescData: {
+    social: { completed: 0, total: 0 },
+    violent: { completed: 0, total: 0 },
+    affected: { completed: 0, total: 0 }
+  },
+  sociogramData: {
+    completed: 0,
+    total: 0
+  },
+  academicResults: {
+    excellent: 25,
+    notable: 40,
+    sufficient: 25,
+    insufficient: 10
+  },
+  followupIndicators: {
+    individualPlans: 8,
+    tutorialSessions: 24,
+    familyMeetings: 15,
+    psychoPedEvaluations: 6,
+    completedCESC: 3,
+    activeSociograms: 4
+  },
+  schoolClimate: {
+    general: 85,
+    belongingSense: 92,
+    studentRelations: 78,
+    conflictCases: 5,
+    interventions: 12
+  },
+  calendarActivities: [
+    {
+      title: "Reunió d'avaluació",
+      group: "3r ESO B",
+      date: "Demà, 10:00",
+      type: "calendar"
+    },
+    {
+      title: "Tutoria individualitzada",
+      group: "Marc Fernández",
+      date: "Divendres, 12:30",
+      type: "users"
+    }
+  ]
 });
 
-// Calcular progreso global de formularios
-const formCompletionAverage = computed(() => {
-  const forms = Object.values(dashboardState.formCompletion);
-  if (forms.length === 0) return 0;
+// Funciones para cargar datos específicos de CESC y Sociograma (simulados)
+const updateCescData = () => {
+  // Simular datos de CESC
+  dashboardState.cescData = {
+    social: { completed: Math.floor(Math.random() * 25), total: 25 },
+    violent: { completed: Math.floor(Math.random() * 25), total: 25 },
+    affected: { completed: Math.floor(Math.random() * 25), total: 25 }
+  };
+};
 
-  const sum = forms.reduce((acc, form) => acc + form.percentage, 0);
-  return Math.round(sum / forms.length);
-});
+const updateSociogramData = () => {
+  // Simular datos de sociograma
+  dashboardState.sociogramData = {
+    completed: Math.floor(Math.random() * 25),
+    total: 25
+  };
+};
 
 // Menú con solo los elementos a los que tiene acceso el orientador
 const menuItems = [
@@ -59,12 +106,6 @@ const menuItems = [
     description: "Visualitza dades i tendències"
   },
   {
-    title: "Formularis",
-    icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-    route: "/professor/formularis",
-    description: "Crea i gestiona formularis"
-  },
-  {
     title: "Notificacions",
     icon: "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5",
     route: "/professor/notificacions",
@@ -84,49 +125,15 @@ const fetchStudents = async () => {
   }
 };
 
-// Función para cargar formularios
-const fetchForms = async () => {
+// Función para cargar datos de CESC y Sociograma
+const fetchGraphData = async () => {
   try {
-    await formStore.fetchForms();
-    dashboardState.totalForms = formStore.forms.length;
-    
-    // Contar formularios completados
-    const completedForms = formStore.forms.filter(form => form.status === 'completed');
-    dashboardState.completedForms = completedForms.length;
-    
-    // Actualizar información de estado de formularios
-    if (formStore.forms.length > 0) {
-      const formStats = {};
-      formStore.forms.forEach(form => {
-        if (!formStats[form.title]) {
-          formStats[form.title] = {
-            completed: 0,
-            total: 0,
-            percentage: 0
-          };
-        }
-        
-        formStats[form.title].total++;
-        if (form.status === 'completed') {
-          formStats[form.title].completed++;
-        }
-      });
-      
-      // Calcular porcentajes
-      Object.keys(formStats).forEach(title => {
-        const stat = formStats[title];
-        stat.percentage = Math.round((stat.completed / stat.total) * 100);
-      });
-      
-      dashboardState.formCompletion = formStats;
-    }
-    
-    console.log("Formularios cargados:", dashboardState.totalForms);
-    console.log("Formularios completados:", dashboardState.completedForms);
+    // Actualizar datos de CESC y Sociograma
+    updateCescData();
+    updateSociogramData();
+    console.log("Datos de gráficas cargados");
   } catch (error) {
-    console.error("Error al cargar formularios:", error);
-    dashboardState.totalForms = 0;
-    dashboardState.completedForms = 0;
+    console.error("Error al cargar datos de gráficas:", error);
   }
 };
 
@@ -201,7 +208,7 @@ onMounted(async () => {
     
     // Cargar datos reales
     await fetchStudents();
-    await fetchForms();
+    await fetchGraphData();
     await fetchAssignedClasses();
   }
 });
@@ -310,36 +317,29 @@ const getCurrentDate = () => {
           </div>
         </div>
 
-        <!-- Formularios disponibles -->
+        <!-- CESC -->
         <div class="bg-white rounded-lg shadow p-5 flex items-center">
           <div class="rounded-full bg-green-100 p-3 mr-4">
             <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.25-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
             </svg>
           </div>
           <div>
-            <p class="text-gray-500 text-sm">Formularis Disponibles</p>
-            <div v-if="formStore.loading" class="h-8 w-8 animate-pulse bg-gray-200 rounded"></div>
-            <p v-else class="text-2xl font-bold">{{ dashboardState.totalForms }}</p>
+            <p class="text-gray-500 text-sm">Avaluació CESC</p>
+            <p class="text-2xl font-bold">{{ dashboardState.totalStudents > 0 ? "Disponible" : "No disponible" }}</p>
           </div>
         </div>
 
-        <!-- Formularios completados -->
+        <!-- Sociograma -->
         <div class="bg-white rounded-lg shadow p-5 flex items-center">
           <div class="rounded-full bg-indigo-100 p-3 mr-4">
             <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
             </svg>
           </div>
           <div>
-            <p class="text-gray-500 text-sm">Formularis Completats</p>
-            <div v-if="formStore.loading" class="h-8 w-12 animate-pulse bg-gray-200 rounded"></div>
-            <div v-else class="flex items-baseline">
-              <p class="text-2xl font-bold">{{ dashboardState.completedForms }}</p>
-              <p v-if="dashboardState.totalForms > 0" class="ml-2 text-sm text-green-600">
-                {{ Math.round((dashboardState.completedForms / dashboardState.totalForms) * 100) }}%
-              </p>
-            </div>
+            <p class="text-gray-500 text-sm">Sociograma</p>
+            <p class="text-2xl font-bold">{{ dashboardState.totalStudents > 0 ? "Disponible" : "No disponible" }}</p>
           </div>
         </div>
       </div>
@@ -399,45 +399,62 @@ const getCurrentDate = () => {
               </div>
             </div>
           </div>
-
-          <!-- Form Completion Status -->
+          
+          <!-- CESC y Sociograma (versión reducida) - Movido debajo de Classes Assignades -->
           <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 class="text-lg font-medium text-gray-900">Estat dels Formularis</h2>
-              <NuxtLink to="/professor/formularis/estat" class="text-sm text-primary hover:text-primary-dark">
-                Veure complet
-              </NuxtLink>
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-medium text-gray-900">Eines d'Avaluació</h2>
             </div>
-            
-            <!-- Estado de carga -->
-            <div v-if="formStore.loading" class="py-10 flex justify-center items-center">
-              <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
-            </div>
-            
-            <!-- Estado vacío -->
-            <div v-else-if="Object.keys(dashboardState.formCompletion).length === 0" class="py-10 text-center">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">No hi ha dades de formularis</h3>
-              <p class="mt-1 text-sm text-gray-500">No s'han trobat formularis al sistema.</p>
-            </div>
-            
-            <!-- Datos de formularios -->
-            <div v-else class="p-6 space-y-4">
-              <div v-for="(form, name) in dashboardState.formCompletion" :key="name" class="space-y-2">
-                <div class="flex justify-between text-sm">
-                  <span>{{ name }}</span>
-                  <span class="font-medium">{{ form.completed }}/{{ form.total }} ({{ form.percentage }}%)</span>
+            <div class="p-4">
+              <!-- CESC mini card -->
+              <div class="border border-gray-200 rounded-lg p-3 mb-3">
+                <div class="flex items-center">
+                  <div class="rounded-full bg-green-100 p-2 mr-3">
+                    <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.25-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-medium">CESC - Avaluació</h3>
+                    <div class="flex items-center mt-1">
+                      <div class="flex space-x-1">
+                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                      </div>
+                      <span class="text-xs text-gray-500 ml-2">3 classes actives</span>
+                    </div>
+                  </div>
+                  <div class="ml-auto">
+                    <NuxtLink to="/orientador/graficas" class="text-xs text-primary hover:underline">
+                      Detalls
+                    </NuxtLink>
+                  </div>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="h-2 rounded-full"
-                       :class="{
-                         'bg-green-500': form.percentage >= 80,
-                         'bg-yellow-500': form.percentage >= 50 && form.percentage < 80,
-                         'bg-red-500': form.percentage < 50
-                       }"
-                       :style="`width: ${form.percentage}%`"></div>
+              </div>
+              
+              <!-- Sociograma mini card -->
+              <div class="border border-gray-200 rounded-lg p-3">
+                <div class="flex items-center">
+                  <div class="rounded-full bg-indigo-100 p-2 mr-3">
+                    <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-medium">Sociograma</h3>
+                    <div class="flex items-center mt-1">
+                      <div class="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="bg-indigo-500 h-full" style="width: 75%"></div>
+                      </div>
+                      <span class="text-xs text-gray-500 ml-2">75% completat</span>
+                    </div>
+                  </div>
+                  <div class="ml-auto">
+                    <NuxtLink to="/professor/sociograma/SociogramaView" class="text-xs text-primary hover:underline">
+                      Detalls
+                    </NuxtLink>
+                  </div>
                 </div>
               </div>
             </div>
