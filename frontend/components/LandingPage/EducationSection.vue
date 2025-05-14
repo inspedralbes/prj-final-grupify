@@ -87,15 +87,6 @@
         <h3 class="text-xl font-semibold text-gray-900 mb-4">
           Preparat per transformar la teva aula?
         </h3>
-        <router-link
-          to="/register"
-          class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-        >
-          Començar prova gratuïta
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </router-link>
       </div>
     </div>
   </div>

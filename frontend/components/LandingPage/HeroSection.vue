@@ -1,12 +1,11 @@
 <template>
   <div class="relative bg-white overflow-hidden">
     <div class="max-w-7xl mx-auto">
-      <div class="relative z-10 bg-white">
+      <div class="relative z-10">
         <div class="relative overflow-hidden">
-          <!-- Background gradient overlay -->
-          <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+          <!-- Removed redundant bg-white class -->
           
-          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative z-10">
+          <div class="px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <!-- Content Section -->
               <div class="text-left space-y-6">
@@ -86,9 +85,6 @@
 
               <!-- Image Section with Enhanced Design -->
               <div class="relative lg:pl-12">
-                <!-- Background decoration -->
-                <div class="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full blur-3xl" />
-                <div class="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-secondary/20 to-primary/20 rounded-full blur-3xl" />
                 
                 <!-- Main image container -->
                 <div class="relative z-10 bg-white rounded-2xl shadow-2xl overflow-hidden transform rotate-6 hover:rotate-0 transition-transform duration-500">
@@ -97,16 +93,15 @@
                       <div
                         v-for="(image, index) in images"
                         :key="index"
-                        class="carousel-item"
+                        class="carousel-item bg-white" 
                       >
                         <img :src="image.url" :alt="image.alt" class="carousel-image" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                       </div>
                     </div>
                   </div>
                   
                   <!-- Image overlay content -->
-                  <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
+                  <div class="absolute bottom-0 left-0 right-0 p-6">
                     <div class="flex items-center space-x-2 text-white">
                       <div class="flex -space-x-2">
                         <div class="w-8 h-8 bg-white rounded-full border-2 border-white shadow-sm"></div>
@@ -140,8 +135,6 @@
             </button>
           </div>
         </div>
-        
-        <!-- Main content has been moved up to the grid container above -->
       </div>
     </div>
   </div>
@@ -192,6 +185,7 @@ const scrollToSection = () => {
   flex: 0 0 100%;
   position: relative;
   height: 100%;
+  background-color: white;
 }
 
 .carousel-image {

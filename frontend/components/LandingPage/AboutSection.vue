@@ -1,5 +1,5 @@
 <template>
-  <div id="about" class="py-24 bg-gray-50">
+  <div id="about" class="pb-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Section Header -->
       <div class="text-center max-w-3xl mx-auto mb-16">
@@ -166,7 +166,7 @@
       </div>
 
       <!-- Call to Action -->
-      <div class="mt-16 text-center bg-gradient-to-r from-primary/5 to-secondary/5 rounded-2xl p-8">
+      <div class="mt-16 text-center rounded-2xl p-8">
         <h3 class="text-2xl font-bold text-gray-900 mb-4">
           Vols formar part del nostre viatge?
         </h3>
