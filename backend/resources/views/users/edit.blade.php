@@ -176,6 +176,7 @@
             <div class="card-body">
                 <p class="text-muted mb-3">Selecciona els cursos i divisions als quals aquest professor tindrà accés:</p>
 
+
                 <!-- Contenedor para las combinaciones de curso-división -->
                 <div id="course-division-container">
                     @php
@@ -197,7 +198,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Curs:</label>
-                                <select name="course_division_pairs[{{ $pairCount }}][course_id]" class="form-select course-select">
+                                <select name="course_division_pairs[{{ $pairCount }}][course_id]" class="form-select course-select direct-update" id="course_select_{{ $pairCount }}" data-pair-index="{{ $pairCount }}">
                                     <option value="">Selecciona un curs</option>
                                     @foreach ($courses as $course)
                                     <option value="{{ $course->id }}" {{ $pair->course_id == $course->id ? 'selected' : '' }}>
@@ -205,10 +206,11 @@
                                     </option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="course_id" value="{{ $pair->course_id }}" id="course_id_value">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Divisió:</label>
-                                <select name="course_division_pairs[{{ $pairCount }}][division_id]" class="form-select">
+                                <select name="course_division_pairs[{{ $pairCount }}][division_id]" class="form-select direct-update" id="division_select_{{ $pairCount }}" data-pair-index="{{ $pairCount }}">
                                     <option value="">Selecciona una divisió</option>
                                     @foreach($divisions as $division)
                                     <option value="{{ $division->id }}" {{ $pair->division_id == $division->id ? 'selected' : '' }}>
@@ -216,6 +218,7 @@
                                     </option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="division_id" value="{{ $pair->division_id }}" id="division_id_value">
                             </div>
                         </div>
                     </div>
@@ -247,6 +250,8 @@
                     @php $pairCount = 1; @endphp
                     @endforelse
                 </div>
+
+                <!-- Se eliminó el botón de depuración -->
 
                 <!-- Botón para agregar más combinaciones -->
                 <button type="button" id="add-course-division" class="btn btn-primary">
@@ -527,6 +532,37 @@
 <!-- Script para manejar la adición dinámica de pares curso-división y mostrar las opciones según el rol -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Función para actualizar los campos hidden con los valores actuales
+        function updateHiddenFields() {
+            // Obtener los selectores de curso y división actuales
+            const courseSelects = document.querySelectorAll('.course-select');
+            const divisionSelects = document.querySelectorAll('select[name$="[division_id]"]');
+            
+            // Establecer los valores en los campos ocultos
+            if (courseSelects.length > 0 && courseSelects[0].value) {
+                document.getElementById('course_id_value').value = courseSelects[0].value;
+            }
+            
+            if (divisionSelects.length > 0 && divisionSelects[0].value) {
+                document.getElementById('division_id_value').value = divisionSelects[0].value;
+            }
+            
+            console.log("Campos actualizados:", {
+                course_id: document.getElementById('course_id_value').value,
+                division_id: document.getElementById('division_id_value').value
+            });
+        }
+        
+        // Configurar eventos de cambio para todos los selectores
+        document.querySelectorAll('.direct-update').forEach(select => {
+            select.addEventListener('change', function() {
+                updateHiddenFields();
+            });
+        });
+        
+        // Actualizar al cargar la página
+        updateHiddenFields();
+        
         // Configurar botones de eliminación existentes
         const existingRemoveButtons = document.querySelectorAll('.remove-pair');
         existingRemoveButtons.forEach(button => {
@@ -534,6 +570,8 @@
                 const pair = this.closest('.course-division-pair');
                 if (pair) {
                     pair.parentNode.removeChild(pair);
+                    // Actualizar campos después de eliminar
+                    updateHiddenFields();
                 }
             });
         });
@@ -542,6 +580,9 @@
         const addButton = document.getElementById('add-course-division');
         const container = document.getElementById('course-division-container');
         const pairCountInput = document.getElementById('pair-count');
+        // Se ha eliminado la referencia al botón de depuración
+
+        // Se eliminó el código del botón de depuración
 
         if (addButton && container && pairCountInput) {
             let pairCount = parseInt(pairCountInput.value);
@@ -563,7 +604,7 @@
                         <select name="course_division_pairs[${pairCount}][course_id]" class="form-select course-select">
                             <option value="">Selecciona un curs</option>
                             @foreach ($courses as $course)
-                                <option value="{{ $course->id }}">{{ $course->name }}</option>
+                                <option value="{{ $course->id }}">{{ $course->name }} (ID: {{ $course->id }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -572,7 +613,7 @@
                         <select name="course_division_pairs[${pairCount}][division_id]" class="form-select">
                             <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
-                                <option value="{{ $division->id }}">{{ $division->division }}</option>
+                                <option value="{{ $division->id }}">{{ $division->division }} (ID: {{ $division->id }})</option>
                             @endforeach
                         </select>
                     </div>

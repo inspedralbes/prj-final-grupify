@@ -585,65 +585,130 @@ class UserController extends Controller
                 \Log::info('Materias del profesor actualizadas');
             }
 
-            // Eliminar asignaciones previas de curso/división
+            // Gestión completa de las relaciones curso-división y course_user
+            // 1. Eliminar todas las asignaciones antiguas
+            \Log::info('Eliminando asignaciones previas para el usuario ID: ' . $user->id);
             \App\Models\CourseDivisionUser::where('user_id', $user->id)->delete();
-            \Log::info('Eliminadas asignaciones previas de curso/división');
-
-            // Para procesar los pares curso-división
-            if ($request->has('course_division_pairs')) {
-                $hasValidPairs = false;
+            
+            // 2. Eliminar también las relaciones en course_user para mantener consistencia
+            $user->courses()->detach();
+            \Log::info('Eliminadas asignaciones previas de curso/división y course_user');
+            
+            // Procesar las asignaciones de curso/división
+            $courseDivisionCreated = false;
+            
+            // Verificar si tenemos campos course_id/division_id directos
+            if ($request->filled('course_id') && $request->filled('division_id')) {
+                $course_id = intval($request->course_id);
+                $division_id = intval($request->division_id);
                 
-                foreach ($request->course_division_pairs as $index => $pair) {
-                    // Verificar que ambos valores existan y no sean vacíos
-                    if (isset($pair['course_id']) && isset($pair['division_id']) && 
-                        !empty($pair['course_id']) && !empty($pair['division_id'])) {
-                        
-                        \App\Models\CourseDivisionUser::create([
-                            'user_id' => $user->id,
-                            'course_id' => $pair['course_id'],
-                            'division_id' => $pair['division_id'],
-                        ]);
-
-                        // También mantener la compatibilidad con course_user
-                        if (!$user->courses()->where('courses.id', $pair['course_id'])->exists()) {
-                            $user->courses()->attach($pair['course_id']);
-                        }
-                        
-                        $hasValidPairs = true;
-                        \Log::info("Asignación creada: Curso {$pair['course_id']}, División {$pair['division_id']}");
-                    }
-                }
+                \Log::info("Encontrados campos course_id/division_id directos: course_id={$course_id}, division_id={$division_id}");
                 
-                if (!$hasValidPairs) {
-                    \Log::warning("No se encontraron pares curso-división válidos");
-                }
-            }
-            // Si no hay pares pero hay course_id y division_id individuales (formato antiguo)
-            elseif ($request->has('course_id') && $request->has('division_id')) {
+                // Crear asignación directa
                 \App\Models\CourseDivisionUser::create([
                     'user_id' => $user->id,
-                    'course_id' => $request->course_id,
-                    'division_id' => $request->division_id,
+                    'course_id' => $course_id,
+                    'division_id' => $division_id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
-
-                // También mantener la compatibilidad con course_user
-                if (!$user->courses()->where('courses.id', $request->course_id)->exists()) {
-                    $user->courses()->attach($request->course_id);
-                }
                 
-                \Log::info("Usando campos individuales: Curso {$request->course_id}, División {$request->division_id}");
+                // Sincronizar con course_user
+                $user->courses()->syncWithoutDetaching([$course_id]);
+                
+                \Log::info("Asignación creada con campos directos");
+                $courseDivisionCreated = true;
             }
+            // Si no hay campos directos, procesar los pares curso-división
+            elseif ($request->has('course_division_pairs')) {
+                \Log::info("Estructura de course_division_pairs:", ['datos' => $request->course_division_pairs]);
+                
+                // Asegurarnos de que es un array
+                if (is_array($request->course_division_pairs) || is_object($request->course_division_pairs)) {
+                    $processedPairs = []; // Para evitar duplicados
+                    
+                    foreach ($request->course_division_pairs as $index => $pair) {
+                        // Obtener valores curso/división
+                        $course_id = null;
+                        $division_id = null;
+                        
+                        if (is_array($pair)) {
+                            $course_id = isset($pair['course_id']) ? intval($pair['course_id']) : null;
+                            $division_id = isset($pair['division_id']) ? intval($pair['division_id']) : null;
+                        } elseif (is_object($pair)) {
+                            $course_id = isset($pair->course_id) ? intval($pair->course_id) : null;
+                            $division_id = isset($pair->division_id) ? intval($pair->division_id) : null;
+                        }
+                        
+                        // Verificación estricta y evitar duplicados
+                        if ($course_id > 0 && $division_id > 0) {
+                            $pairKey = "{$course_id}-{$division_id}";
+                            
+                            if (!in_array($pairKey, $processedPairs)) {
+                                \Log::info("Creando asignación: course_id={$course_id}, division_id={$division_id}");
+                                
+                                // Crear la asignación en course_division_user
+                                \App\Models\CourseDivisionUser::create([
+                                    'user_id' => $user->id,
+                                    'course_id' => $course_id,
+                                    'division_id' => $division_id,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+                                
+                                // Actualizar la tabla course_user
+                                $user->courses()->syncWithoutDetaching([$course_id]);
+                                
+                                $processedPairs[] = $pairKey;
+                                \Log::info("Asignación creada con éxito");
+                                $courseDivisionCreated = true;
+                            } else {
+                                \Log::info("Par duplicado ignorado: {$pairKey}");
+                            }
+                        } else {
+                            \Log::warning("Par inválido en índice {$index}: course_id={$course_id}, division_id={$division_id}");
+                        }
+                    }
+                } else {
+                    \Log::warning("course_division_pairs no es un array ni un objeto");
+                }
+            }
+            
+            // Verificar que se hayan creado asignaciones
+            $newAssignments = \App\Models\CourseDivisionUser::where('user_id', $user->id)->get();
+            \Log::info("Asignaciones creadas: " . $newAssignments->count(), [
+                'asignaciones' => $newAssignments->toArray()
+            ]);
+            
+            // Refrescar el usuario para asegurarnos de tener los datos más recientes
+            $user->refresh();
+            
+            // Ya no es necesario este bloque, ya que tratamos los campos course_id/division_id al inicio
 
             \Log::info('Usuario actualizado correctamente');
+            
+            // Asegurarnos de que el usuario tiene la relación cargada correctamente
+            $user = User::with(['courses', 'subjects', 'courseDivisionUsers.course', 'courseDivisionUsers.division'])->find($user->id);
+            
+            // Verificar explícitamente que hay asignaciones
+            $assignments = $user->courseDivisionUsers;
+            if ($assignments->isEmpty()) {
+                \Log::warning("ADVERTENCIA: El usuario {$user->id} no tiene asignaciones después de guardar");
+            } else {
+                \Log::info("Asignaciones confirmadas para usuario {$user->id}: " . $assignments->count());
+                foreach ($assignments as $idx => $assignment) {
+                    \Log::info("Asignación #{$idx}: Curso {$assignment->course_id}, División {$assignment->division_id}");
+                }
+            }
             
             if ($request->wantsJson()) {
                 return response()->json([
                     'message' => 'Usuari actualitzat correctament',
-                    'user' => $user->load(['courses', 'subjects', 'courseDivisionUsers.course', 'courseDivisionUsers.division'])
+                    'user' => $user
                 ], 200);
             }
 
-            return redirect()->route('users.index')->with('success', 'Usuari actualitzat correctament');
+            return redirect()->route('users.show', $user->id)->with('success', 'Usuari actualitzat correctament');
             
         } catch (\Exception $e) {
             \Log::error('Error al actualizar usuario: ' . $e->getMessage());
