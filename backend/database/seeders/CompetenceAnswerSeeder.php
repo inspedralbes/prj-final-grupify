@@ -17,10 +17,9 @@ class CompetenceAnswerSeeder extends Seeder
      */
     public function run()
     {
-        // Obtener todos los estudiantes
-        $students = User::whereHas('roles', function ($query) {
-            $query->where('name', 'student');
-        })->get();
+        // Obtener todos los estudiantes que tienen rol de estudiante
+        $studentRoleId = \DB::table('roles')->where('name', 'student')->value('id');
+        $students = User::where('role_id', $studentRoleId)->get();
 
         // Obtener todas las competencias
         $competences = Competence::all();

@@ -434,20 +434,18 @@ const selectStudent = async (student) => {
 // Fetch datos de competencias del estudiante
 const fetchStudentCompetenciasData = async (studentId) => {
   try {
-    // Obtener datos reales de la API
-    const response = await fetch(`http://localhost:8000/api/students/${studentId}/competences`, {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    });
+    console.log(`Realizando petición a: http://localhost:8000/api/students/${studentId}/competences`);
+    
+    // Intentar primero sin autenticación para depuración
+    const response = await fetch(`http://localhost:8000/api/students/${studentId}/competences`);
     
     if (!response.ok) {
+      console.error(`Error HTTP: ${response.status} ${response.statusText}`);
       throw new Error(`Error al obtener datos de competencias: ${response.status}`);
     }
     
     const data = await response.json();
+    console.log("Datos recibidos:", data);
     
     // Verificar si hay datos disponibles
     if (data && data.years && data.years.length > 0 && data.competenciasData && data.competenciasData.length > 0) {
@@ -456,6 +454,7 @@ const fetchStudentCompetenciasData = async (studentId) => {
       hasStudentData.value = true;
       return;
     } else {
+      console.warn("Respuesta con formato incorrecto o sin datos:", data);
       // Si no hay datos en el formato esperado, lanzar un error
       throw new Error("No hay datos disponibles para este estudiante");
     }
@@ -463,6 +462,7 @@ const fetchStudentCompetenciasData = async (studentId) => {
     console.error("Error al obtener datos de competencias:", error);
     
     // En caso de error, generar datos aleatorios
+    console.log("Generando datos aleatorios como fallback...");
     generateRandomData();
     hasStudentData.value = true; // Aseguramos que siempre se muestren los datos, incluso aleatorios
   }
