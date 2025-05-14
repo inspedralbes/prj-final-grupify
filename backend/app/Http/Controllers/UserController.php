@@ -236,9 +236,67 @@ class UserController extends Controller
                 $user->save();
             }
 
-            // Si el usuario es Profesor o Tutor u Orientador, manejar asignaciones
-            if (in_array($request->role_id, [1, 4, 5])) {
-                \Log::info('Procesando usuario de tipo Profesor/Tutor/Orientador (role_id: ' . $request->role_id . ')');
+            // Si el usuario es Orientador (rol 5)
+            if ($request->role_id == 5) {
+                \Log::info('Procesando usuario de tipo Orientador (role_id: 5)');
+                
+                // Procesar nivel educativo para orientadores
+                $nivelEducativo = $request->input('nivel_educativo');
+                
+                if ($nivelEducativo) {
+                    \Log::info("Procesando nivel educativo para orientador: {$nivelEducativo}");
+                    
+                    // Obtener cursos según el nivel seleccionado
+                    $cursos = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Obtenemos cursos de ESO por nombre
+                        $cursos = Course::whereIn('name', ['1 ESO', '2 ESO', '3 ESO', '4 ESO'])
+                                        ->orWhere('name', 'like', '%ESO%')
+                                        ->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Obtenemos cursos de Bachillerato por nombre
+                        $cursos = Course::whereIn('name', ['1 BATX', '2 BATX'])
+                                        ->orWhere('name', 'like', '%BATX%')
+                                        ->orWhere('name', 'like', '%BACHILLER%')
+                                        ->pluck('id')->toArray();
+                    }
+                    
+                    // Obtener las divisiones apropiadas según el nivel educativo
+                    $divisiones = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Para ESO, usar solo las divisiones con IDs 3 al 7 (A, B, C, D, E)
+                        $divisiones = Division::whereBetween('id', [3, 7])->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Para Bachillerato, usar solo las divisiones 1 y 2
+                        $divisiones = Division::whereIn('id', [1, 2])->pluck('id')->toArray();
+                    }
+                    
+                    \Log::info("Divisiones seleccionadas para {$nivelEducativo}: " . implode(', ', $divisiones));
+                    
+                    // Crear todas las combinaciones posibles de curso y división
+                    $combinacionesCreadas = 0;
+                    foreach ($cursos as $cursoId) {
+                        foreach ($divisiones as $divisionId) {
+                            \App\Models\CourseDivisionUser::create([
+                                'user_id' => $user->id,
+                                'course_id' => $cursoId,
+                                'division_id' => $divisionId,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                            
+                            // Actualizar la tabla course_user
+                            $user->courses()->syncWithoutDetaching([$cursoId]);
+                            $combinacionesCreadas++;
+                        }
+                    }
+                    
+                    \Log::info("Asignadas {$combinacionesCreadas} combinaciones para el orientador");
+                }
+            }
+            // Si el usuario es Profesor (rol 1) o Tutor (rol 4), manejar asignaciones
+            else if (in_array($request->role_id, [1, 4])) {
+                \Log::info('Procesando usuario de tipo Profesor/Tutor (role_id: ' . $request->role_id . ')');
                 
                 // Asociar materias si se han seleccionado (solo para profesores)
                 if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
@@ -598,7 +656,62 @@ class UserController extends Controller
             $courseDivisionCreated = false;
             
             // Procesar los campos según el rol del usuario
-            if ($user->role_id == 4 || $user->role_id == 5) { // Tutor u Orientador
+            if ($user->role_id == 5) { // Orientador
+                $nivelEducativo = $request->input('nivel_educativo');
+                
+                if ($nivelEducativo) {
+                    \Log::info("Procesando nivel educativo para orientador: {$nivelEducativo}");
+                    
+                    // Obtener cursos según el nivel seleccionado
+                    $cursos = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Obtenemos cursos de ESO por nombre
+                        $cursos = Course::whereIn('name', ['1 ESO', '2 ESO', '3 ESO', '4 ESO'])
+                                        ->orWhere('name', 'like', '%ESO%')
+                                        ->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Obtenemos cursos de Bachillerato por nombre
+                        $cursos = Course::whereIn('name', ['1 BATX', '2 BATX'])
+                                        ->orWhere('name', 'like', '%BATX%')
+                                        ->orWhere('name', 'like', '%BACHILLER%')
+                                        ->pluck('id')->toArray();
+                    }
+                    
+                    // Obtener las divisiones apropiadas según el nivel educativo
+                    $divisiones = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Para ESO, usar solo las divisiones con IDs 3 al 7 (A, B, C, D, E)
+                        $divisiones = Division::whereBetween('id', [3, 7])->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Para Bachillerato, usar solo las divisiones 1 y 2
+                        $divisiones = Division::whereIn('id', [1, 2])->pluck('id')->toArray();
+                    }
+                    
+                    \Log::info("Divisiones seleccionadas para {$nivelEducativo}: " . implode(', ', $divisiones));
+                    
+                    // Crear todas las combinaciones posibles de curso y división
+                    $combinacionesCreadas = 0;
+                    foreach ($cursos as $cursoId) {
+                        foreach ($divisiones as $divisionId) {
+                            \App\Models\CourseDivisionUser::create([
+                                'user_id' => $user->id,
+                                'course_id' => $cursoId,
+                                'division_id' => $divisionId,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                            
+                            // Actualizar la tabla course_user
+                            $user->courses()->syncWithoutDetaching([$cursoId]);
+                            $combinacionesCreadas++;
+                        }
+                    }
+                    
+                    \Log::info("Asignadas {$combinacionesCreadas} combinaciones para el orientador");
+                    $courseDivisionCreated = true;
+                }
+            }
+            else if ($user->role_id == 4) { // Tutor
                 $tutorCourseId = $request->input('tutor_course_id');
                 $tutorDivisionId = $request->input('tutor_division_id');
                 

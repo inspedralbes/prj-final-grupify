@@ -212,11 +212,11 @@
                 </div>
             </div>
 
-            <!-- Sección para Tutores y Orientadores -->
+            <!-- Sección para Tutores -->
             <div class="col-md-12 role-section" id="tutor-section" style="display: none;">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-warning text-white py-3">
-                        <h3 class="card-title mb-0 h5" id="tutor-section-title">Informació del Tutor</h3>
+                        <h3 class="card-title mb-0 h5">Informació del Tutor</h3>
                     </div>
                     <div class="card-body p-4">
                         <div class="alert alert-info">
@@ -227,10 +227,10 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="tutor_course_id" class="form-label">Curs:</label>
-                                    <select name="course_division_pairs[0][course_id]" id="tutor_course_id" class="form-select">
+                                    <select name="tutor_course_id" id="tutor_course_id" class="form-select">
                                         <option value="">Selecciona un curs</option>
                                         @foreach($courses as $course)
-                                            <option value="{{ $course->id }}" {{ old('course_division_pairs.0.course_id') == $course->id ? 'selected' : '' }}>
+                                            <option value="{{ $course->id }}" {{ old('tutor_course_id') == $course->id ? 'selected' : '' }}>
                                                 {{ $course->name }}
                                             </option>
                                         @endforeach
@@ -241,13 +241,40 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="tutor_division_id" class="form-label">Divisió:</label>
-                                    <select name="course_division_pairs[0][division_id]" id="tutor_division_id" class="form-select">
+                                    <select name="tutor_division_id" id="tutor_division_id" class="form-select">
                                         <option value="">Selecciona una divisió</option>
                                         @foreach($divisions as $division)
-                                            <option value="{{ $division->id }}" {{ old('course_division_pairs.0.division_id') == $division->id ? 'selected' : '' }}>
+                                            <option value="{{ $division->id }}" {{ old('tutor_division_id') == $division->id ? 'selected' : '' }}>
                                                 {{ $division->division }}
                                             </option>
                                         @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección para Orientadores -->
+            <div class="col-md-12 role-section" id="orientador-section" style="display: none;">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-info text-white py-3">
+                        <h3 class="card-title mb-0 h5">Informació de l'Orientador</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Selecciona el nivell educatiu per a aquest orientador
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mx-auto">
+                                <div class="mb-3">
+                                    <label for="nivel_educativo" class="form-label">Nivell Educatiu:</label>
+                                    <select name="nivel_educativo" id="nivel_educativo" class="form-select">
+                                        <option value="">Selecciona un nivell</option>
+                                        <option value="eso" {{ old('nivel_educativo') == 'eso' ? 'selected' : '' }}>ESO Complet</option>
+                                        <option value="bachillerato" {{ old('nivel_educativo') == 'bachillerato' ? 'selected' : '' }}>Batxillerat Complet</option>
                                     </select>
                                 </div>
                             </div>
@@ -278,7 +305,7 @@
         const teacherSection = document.getElementById('teacher-section');
         const studentSection = document.getElementById('student-section');
         const tutorSection = document.getElementById('tutor-section');
-        const tutorSectionTitle = document.getElementById('tutor-section-title');
+        const orientadorSection = document.getElementById('orientador-section');
         const alertContainer = document.getElementById('alert-container');
         
         // Función para mostrar alertas
@@ -322,10 +349,10 @@
                 teacherSection.style.display = 'block';
             } else if (selectedRole === 2) { // Alumne
                 studentSection.style.display = 'block';
-            } else if (selectedRole === 4 || selectedRole === 5) { // Tutor o Orientador
+            } else if (selectedRole === 4) { // Tutor
                 tutorSection.style.display = 'block';
-                // Cambiar el título según sea tutor u orientador
-                tutorSectionTitle.textContent = selectedRole === 4 ? 'Informació del Tutor' : 'Informació de l\'Orientador';
+            } else if (selectedRole === 5) { // Orientador
+                orientadorSection.style.display = 'block';
             }
         }
         
@@ -470,7 +497,7 @@
                         divisionSelect.disabled = false;
                     }
                 }
-            } else if (selectedRole === 4 || selectedRole === 5) { // Tutor o Orientador
+            } else if (selectedRole === 4) { // Tutor
                 const courseSelect = document.getElementById('tutor_course_id');
                 const divisionSelect = document.getElementById('tutor_division_id');
                 
@@ -482,10 +509,19 @@
                         courseSelect.disabled = true;
                         divisionSelect.disabled = true;
                     } else {
-                        showAlert('Cal seleccionar tant el curs com la divisió per al tutor/orientador.');
+                        showAlert('Cal seleccionar tant el curs com la divisió per al tutor.');
                         isValid = false;
                         courseSelect.disabled = false;
                         divisionSelect.disabled = false;
+                    }
+                }
+            } else if (selectedRole === 5) { // Orientador
+                const nivelSelect = document.getElementById('nivel_educativo');
+                
+                if (nivelSelect) {
+                    if (!nivelSelect.value) {
+                        showAlert('Cal seleccionar un nivell educatiu per a l\'orientador.');
+                        isValid = false;
                     }
                 }
             }
