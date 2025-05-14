@@ -148,9 +148,21 @@ class GroupController extends Controller
             $bitacora->description = "Bitácora asociada al grupo " . $group->name;
             $bitacora->save();
 
-            return response()->json($group, 201);
+            // Si la solicitud espera JSON, devolver JSON
+            if ($request->expectsJson()) {
+                return response()->json($group, 201);
+            }
+            
+            // Si no, redirigir con mensaje flash
+            return redirect()->route('groups.index')->with('success', 'Grup creat correctament');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error al crear el grupo: ' . $e->getMessage()], 500);
+            // Si la solicitud espera JSON, devolver error en JSON
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Error al crear el grupo: ' . $e->getMessage()], 500);
+            }
+            
+            // Si no, redirigir con mensaje de error
+            return redirect()->route('groups.index')->with('error', 'Error al crear el grup: ' . $e->getMessage());
         }
     }
 
@@ -235,7 +247,7 @@ class GroupController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Grupo no encontrado'], 404);
             }
-            return redirect()->route('groups.index')->with('error', 'Grupo no encontrado');
+            return redirect()->route('groups.index')->with('error', 'Grup no trobat');
         }
 
         // Verificar si el usuario es el creador del grupo (si la columna existe)
@@ -246,7 +258,7 @@ class GroupController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'No tienes permiso para modificar este grupo'], 403);
             }
-            return redirect()->route('groups.index')->with('error', 'No tienes permiso para modificar este grupo');
+            return redirect()->route('groups.index')->with('error', 'No tens permís per modificar aquest grup');
         }
 
         $validated = $request->validate([
@@ -261,7 +273,7 @@ class GroupController extends Controller
             return response()->json($group);
         }
 
-        return redirect()->route('groups.index')->with('success', 'Grupo actualizado correctamente');
+        return redirect()->route('groups.index')->with('success', 'Grup editat correctament');
     }
 
     /**
@@ -296,7 +308,10 @@ class GroupController extends Controller
             $hasCreatorId = \Schema::hasColumn('groups', 'creator_id');
             
             if ($hasCreatorId && $user && $user->role_id == 1 && $group->creator_id != $user->id) {
-                return response()->json(['message' => 'No tienes permiso para eliminar este grupo'], 403);
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'No tienes permiso para eliminar este grupo'], 403);
+                }
+                return redirect()->route('groups.index')->with('error', 'No tens permís per eliminar aquest grup');
             }
 
             // Eliminar relaciones en la tabla pivot
@@ -318,11 +333,21 @@ class GroupController extends Controller
             // Eliminar el grupo
             $group->delete();
 
-            return response()->json(['message' => 'Grupo eliminado correctamente'], 200);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Grupo eliminado correctamente'], 200);
+            }
+            
+            return redirect()->route('groups.index')->with('success', 'Grup eliminat correctament');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['message' => 'Grupo no encontrado'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Grupo no encontrado'], 404);
+            }
+            return redirect()->route('groups.index')->with('error', 'Grup no trobat');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Error interno del servidor: ' . $e->getMessage()], 500);
+            }
+            return redirect()->route('groups.index')->with('error', 'Error intern del servidor: ' . $e->getMessage());
         }
     }
 

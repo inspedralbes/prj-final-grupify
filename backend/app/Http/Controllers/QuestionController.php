@@ -131,7 +131,7 @@ class QuestionController extends Controller
         }
 
         // Redirigir a la lista de preguntas con un mensaje de éxito
-        return redirect()->route('questions.index')->with('success', 'Pregunta creada correctamente');
+        return redirect()->route('questions.index')->with('success', 'Pregunta creada correctament');
     }
 
     /**
@@ -184,7 +184,7 @@ class QuestionController extends Controller
         }
 
         // Redirigir a la lista de preguntas con un mensaje de éxito
-        return redirect()->route('questions.index')->with('success', 'Pregunta actualizada correctamente');
+        return redirect()->route('questions.index')->with('success', 'Pregunta actualitzada correctamente');
     }
 
     /**

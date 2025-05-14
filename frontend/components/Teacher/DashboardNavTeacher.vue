@@ -38,18 +38,18 @@ const menuItemsConfig = [
         icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
         showFor: ['profesor', 'tutor', 'orientador', 'admin'],
       },
-      {
-        title: "Sociograma",
-        route: "/professor/sociograma/SociogramaView",
-        icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
-        showFor: ['orientador', 'admin'],
-      },
-      {
-        title: "Cesc",
-        route: "/professor/cesc/CescView",
-        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
-        showFor: ['orientador', 'admin'],
-      }
+      // {
+      //   title: "Sociograma",
+      //   route: "/professor/sociograma/SociogramaView",
+      //   icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
+      //   showFor: ['orientador', 'admin'],
+      // },
+      // {
+      //   title: "Cesc",
+      //   route: "/professor/cesc/CescView",
+      //   icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+      //   showFor: ['orientador', 'admin'],
+      // }
     ]
   },
   {
@@ -58,16 +58,16 @@ const menuItemsConfig = [
     title: "Gràfiques",
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     items: [
-      {
-        title: "Cesc",
-        route: "/professor/graficas",
-        icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-      },
-      {
-        title: "Sociograma",
-        route:"/professor/sociograma/comparative",
-        icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
-      },
+      // {
+      //   title: "Cesc",
+      //   route: "/professor/graficas",
+      //   icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+      // },
+      // {
+      //   title: "Sociograma",
+      //   route:"/professor/sociograma/comparative",
+      //   icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
+      // },
       {
         title: "Autoavaluació",
         route: "/professor/graficFormAutoavaluacio",
@@ -90,8 +90,40 @@ const menuItemsConfig = [
 
 // Filtrar los elementos del menú según el rol del usuario
 const menuItems = computed(() => {
+  // Asegurarnos de inicializar el authStore antes de acceder a los datos
+  if (authStore.token && (!authStore.user || !authStore.user.role)) {
+    console.log("NavTeacher: authStore not initialized, initializing...");
+    authStore.initialize();
+  }
+  
   const userRole = authStore.userRole;
-  console.log("User role desde menuItems computed:", userRole);
+  console.log("NavTeacher: User role for menu filtering:", userRole);
+  
+  // Si no hay rol, intentar cargar desde localStorage
+  if (!userRole && authStore.token) {
+    console.log("NavTeacher: No role detected, trying localStorage...");
+    try {
+      const userString = localStorage.getItem("user");
+      if (userString) {
+        const user = JSON.parse(userString);
+        console.log("NavTeacher: User from localStorage:", user?.role?.name);
+        if (user && user.role && user.role.name) {
+          // Forzar la actualización del authStore
+          authStore.user = user;
+        }
+      }
+    } catch (e) {
+      console.error("NavTeacher: Error loading user from localStorage:", e);
+    }
+  }
+  
+  // Obtener el rol, potencialmente actualizado
+  const effectiveRole = authStore.userRole || 
+                       (authStore.user?.role?.name) || 
+                       JSON.parse(localStorage.getItem("user") || "{}")?.role?.name || 
+                       'profesor'; // Fallback
+  
+  console.log("NavTeacher: Effective role for menu:", effectiveRole);
   
   return menuItemsConfig.map(item => {
     // Si es un menú desplegable, filtramos sus elementos
@@ -99,7 +131,7 @@ const menuItems = computed(() => {
       return {
         ...item,
         items: item.items.filter(subItem => 
-          !subItem.showFor || subItem.showFor.includes(userRole)
+          !subItem.showFor || subItem.showFor.includes(effectiveRole)
         )
       };
     }
@@ -184,6 +216,21 @@ const closeDropdowns = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', closeDropdowns);
+  
+  // Inicializar el authStore para asegurar que los datos del usuario estén cargados
+  authStore.initialize();
+  
+  // Verificar y mostrar información del rol para depuración
+  if (authStore.user && authStore.user.role) {
+    console.log("Rol de usuario en NavTeacher:", authStore.user.role.name);
+  } else {
+    console.log("Usuario o rol no disponible en NavTeacher, cargando desde localStorage");
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      const user = JSON.parse(userData);
+      console.log("Datos de usuario desde localStorage:", user);
+    }
+  }
 });
 
 onUnmounted(() => {

@@ -239,9 +239,13 @@ class RegisteredUserController extends Controller
             // Generar token de autenticación
             $token = $user->createToken('GroupifyToken')->plainTextToken;
 
+            // Cargar la relación del role
+            $user->load('role');
+
             return response()->json([
                 'token' => $token,
-                'user'  => $user, // Incluye role_id para redirección en frontend
+                'user'  => $user,
+                'role' => $user->role->name
             ], 200);
         } catch (\Exception $e) {
             \Log::error('Google Login Error: ' . $e->getMessage());

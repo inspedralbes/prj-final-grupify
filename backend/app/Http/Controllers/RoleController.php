@@ -15,12 +15,12 @@ class RoleController extends Controller
     public function index(Request $request)
     {
         $roles = Role::all();
-        
+
         // Si la petición viene de la API, devolver JSON
         if ($request->is('api/*')) {
             return response()->json($roles);
         }
-        
+
         // Si es una petición web, devolver la vista
         return view('roles', compact('roles'));
     }
@@ -34,11 +34,11 @@ class RoleController extends Controller
     public function show($id)
     {
         $role = Role::find($id);
-        
+
         if (!$role) {
             return response()->json(['message' => 'Rol no encontrado'], 404);
         }
-        
+
         return response()->json($role);
     }
 
@@ -56,14 +56,14 @@ class RoleController extends Controller
         ]);
 
         $role = Role::create($validatedData);
-        
+
         // Si la petición viene de la API, devolver JSON
         if ($request->is('api/*')) {
             return response()->json($role, 201);
         }
-        
+
         // Si es una petición web, redirigir
-        return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente');
+        return redirect()->route('roles.index')->with('success', 'Rol creat correctament');
     }
 
     /**
@@ -76,7 +76,7 @@ class RoleController extends Controller
     public function update(Request $request, $id)
     {
         $role = Role::find($id);
-        
+
         if (!$role) {
             if ($request->is('api/*')) {
                 return response()->json(['message' => 'Rol no encontrado'], 404);
@@ -90,14 +90,14 @@ class RoleController extends Controller
         ]);
 
         $role->update($validatedData);
-        
+
         // Si la petición viene de la API, devolver JSON
         if ($request->is('api/*')) {
             return response()->json($role);
         }
-        
+
         // Si es una petición web, redirigir
-        return redirect()->route('roles.index')->with('success', 'Rol actualizado exitosamente');
+        return redirect()->route('roles.index')->with('success', 'Rol actualizat correctament');
     }
 
     /**
@@ -109,14 +109,14 @@ class RoleController extends Controller
     public function destroy(Request $request, $id)
     {
         $role = Role::find($id);
-        
+
         if (!$role) {
             if ($request->is('api/*')) {
                 return response()->json(['message' => 'Rol no encontrado'], 404);
             }
             return redirect()->route('roles.index')->with('error', 'Rol no encontrado');
         }
-        
+
         // Verificar si hay usuarios con este rol
         if ($role->users()->count() > 0) {
             if ($request->is('api/*')) {
@@ -124,15 +124,15 @@ class RoleController extends Controller
             }
             return redirect()->route('roles.index')->with('error', 'No se puede eliminar este rol porque hay usuarios asignados a él');
         }
-        
+
         $role->delete();
-        
+
         // Si la petición viene de la API, devolver JSON
         if ($request->is('api/*')) {
-            return response()->json(['message' => 'Rol eliminado correctamente']);
+            return response()->json(['message' => 'Rol eliminat correctament']);
         }
-        
+
         // Si es una petición web, redirigir
-        return redirect()->route('roles.index')->with('success', 'Rol eliminado exitosamente');
+        return redirect()->route('roles.index')->with('success', 'Rol eliminat correctament');
     }
 }
