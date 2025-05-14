@@ -19,8 +19,8 @@
     <div v-else-if="graphData.length > 0" class="bg-white rounded-2xl shadow-xl overflow-hidden">
       <!-- Cabecera con información -->
       <div class="bg-gradient-to-r from-[#00ADEC] to-[#0080C0] text-white p-6">
-        <h2 class="text-2xl font-bold mb-2">Comparativa de Tags CESC por Clase</h2>
-        <p class="opacity-90">Análisis de la distribución de tipos de estudiantes según las categorías CESC: Popular (A), Rebutjat (C), Agressiu (B), Prosocial (A) y Víctima (C)</p>
+        <h2 class="text-2xl font-bold mb-2">Comparativa de Puntos por Tags CESC por Clase</h2>
+        <p class="opacity-90">Análisis de la distribución de puntuaciones según las categorías CESC: Popular (A), Rebutjat (C), Agressiu (B), Prosocial (A) y Víctima (C)</p>
       </div>
 
       <!-- Tarjetas de resumen de los TAGS CESC -->
@@ -107,23 +107,23 @@
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-green-500">Total Popular (A)</p>
-              <p class="text-xl font-bold text-green-600">{{ totalPopular }}</p>
+              <p class="text-xl font-bold text-green-600">{{ totalPopular }} puntos</p>
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-blue-500">Total Rebutjat (C)</p>
-              <p class="text-xl font-bold text-blue-600">{{ totalRebutjat }}</p>
+              <p class="text-xl font-bold text-blue-600">{{ totalRebutjat }} puntos</p>
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-red-500">Total Agressiu (B)</p>
-              <p class="text-xl font-bold text-red-600">{{ totalAgressiu }}</p>
+              <p class="text-xl font-bold text-red-600">{{ totalAgressiu }} puntos</p>
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-purple-500">Total Prosocial (A)</p>
-              <p class="text-xl font-bold text-purple-600">{{ totalProsocial }}</p>
+              <p class="text-xl font-bold text-purple-600">{{ totalProsocial }} puntos</p>
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-amber-500">Total Víctima (C)</p>
-              <p class="text-xl font-bold text-amber-600">{{ totalVictima }}</p>
+              <p class="text-xl font-bold text-amber-600">{{ totalVictima }} puntos</p>
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@
               </div>
               <div class="bg-gray-50 p-4 rounded-lg">
                 <p class="text-sm text-gray-500">Total tags asignados</p>
-                <p class="text-2xl font-bold text-gray-800">{{ selectedClass.tag_1_count + selectedClass.tag_2_count + selectedClass.tag_3_count + selectedClass.tag_4_count + selectedClass.tag_5_count }}</p>
+                <p class="text-2xl font-bold text-gray-800">{{ selectedClass.tag_1_count + selectedClass.tag_2_count + selectedClass.tag_3_count + selectedClass.tag_4_count + selectedClass.tag_5_count }} puntos</p>
               </div>
             </div>
 
@@ -195,7 +195,7 @@
               <div class="bg-green-50 p-4 rounded-lg border border-green-100">
                 <div class="flex justify-between items-center mb-2">
                   <h4 class="font-medium text-green-800">Popular (A)</h4>
-                  <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_1_count }} estudiantes</span>
+                  <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_1_count }} puntos</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
                   <div class="bg-green-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_1_count / selectedClass.total_students) * 100, 100)}%` }"></div>
@@ -206,7 +206,7 @@
               <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <div class="flex justify-between items-center mb-2">
                   <h4 class="font-medium text-blue-800">Rebutjat (C)</h4>
-                  <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_2_count }} estudiantes</span>
+                  <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_2_count }} puntos</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
                   <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_2_count / selectedClass.total_students) * 100, 100)}%` }"></div>
@@ -217,7 +217,7 @@
               <div class="bg-red-50 p-4 rounded-lg border border-red-100">
                 <div class="flex justify-between items-center mb-2">
                   <h4 class="font-medium text-red-800">Agressiu (B)</h4>
-                  <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_3_count }} estudiantes</span>
+                  <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_3_count }} puntos</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
                   <div class="bg-red-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_3_count / selectedClass.total_students) * 100, 100)}%` }"></div>
@@ -228,7 +228,7 @@
               <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
                 <div class="flex justify-between items-center mb-2">
                   <h4 class="font-medium text-purple-800">Prosocial (A)</h4>
-                  <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_4_count }} estudiantes</span>
+                  <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_4_count }} puntos</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
                   <div class="bg-purple-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_4_count / selectedClass.total_students) * 100, 100)}%` }"></div>
@@ -239,7 +239,7 @@
               <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
                 <div class="flex justify-between items-center mb-2">
                   <h4 class="font-medium text-amber-800">Víctima (C)</h4>
-                  <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_5_count }} estudiantes</span>
+                  <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_5_count }} puntos</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2.5">
                   <div class="bg-amber-500 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_5_count / selectedClass.total_students) * 100, 100)}%` }"></div>
@@ -671,13 +671,13 @@ const chartOptions = computed(() => {
             
             html += `<div style="display:flex;align-items:center;margin:5px 0;">
                       <span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:50%;margin-right:5px;"></span>
-                      <span>${seriesName}: ${percentage.toFixed(1)}% (${tagCount} de ${categoryTotal} tags)</span>
+                      <span>${seriesName}: ${percentage.toFixed(1)}% (${tagCount} de ${categoryTotal} puntos)</span>
                     </div>`;
           } else {
             // Para gráficos no porcentuales, mostramos solo el valor absoluto sin calcular porcentaje
             html += `<div style="display:flex;align-items:center;margin:5px 0;">
                       <span style="display:inline-block;width:10px;height:10px;background:${color};border-radius:50%;margin-right:5px;"></span>
-                      <span>${seriesName}: ${value} estudiantes</span>
+                      <span>${seriesName}: ${value} puntos</span>
                     </div>`;
           }
         });
@@ -708,7 +708,7 @@ const chartOptions = computed(() => {
     },
     yAxis: {
       type: 'value',
-      name: chartType.value === 'percentage' ? 'Porcentaje (%)' : 'Número de estudiantes',
+      name: chartType.value === 'percentage' ? 'Porcentaje (%)' : 'Número de puntos',
       nameLocation: 'middle',
       nameGap: 40,
       axisLabel: {

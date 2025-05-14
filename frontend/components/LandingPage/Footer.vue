@@ -160,22 +160,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Funding Attribution -->
-    <div class="bg-gray-800 border-t border-gray-700">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-          <div class="flex items-center justify-center space-x-2">
-            <span class="text-xs text-gray-400">Finançat per:</span>
-            <div class="flex space-x-2">
-              <img src="/img/logo2.png" alt="Ministeri" class="h-6" />
-              <img src="/img/logo3.png" alt="UE" class="h-6" />
-              <img src="/img/logo4.jpg" alt="NextGenUE" class="h-6" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </footer>
 </template>
 
