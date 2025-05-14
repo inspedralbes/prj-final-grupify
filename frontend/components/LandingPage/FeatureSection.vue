@@ -215,13 +215,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Call to Action -->
-      <div class="mt-16 text-center">
-        <h3 class="text-2xl font-bold text-gray-900 mb-6">
-          Descobreix tot el potencial de Grupify
-        </h3>
-      </div>
     </div>
   </div>
 </template>
