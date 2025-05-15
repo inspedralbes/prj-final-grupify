@@ -362,3 +362,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/check-data-integrity', [DiagnosticController::class, 'checkDataIntegrity']);
     Route::post('/fix-data-issues', [DiagnosticController::class, 'fixDataIssues']);
 });
+
+// Ruta para obtener las asignaciones de un orientador
+Route::middleware(['auth:sanctum'])->get('/orientador-assignments/{id}', [UserController::class, 'getOrientadorAssignments']);
