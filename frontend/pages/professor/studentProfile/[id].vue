@@ -18,18 +18,19 @@ const reasons = ["Falta de assistència", "Baixa voluntària", "Altres motius"];
 const comments = ref([]);
 const newComment = ref(""); // Ensure newComment is defined
 const editingComment = ref(null); // Ensure editingComment is defined
-const isFormVisible = ref(false);
-const hasAnsweredForm4 = ref(false); // Estado para saber si ha respondido el formulario 4
+const isFormVisible = ref(false); // Inicialmente cerrado
+const hasAnsweredForm5 = ref(false); // Estado para saber si ha respondido el formulario 5
 
+// Definir todas las competencias, incluso las que están en el formulario equivocado
 const competences = [
-  { id: 22, name: "Responsabilitat" },
-  { id: 23, name: "Treball en equip" },
-  { id: 24, name: "Gestió del temps" },
-  { id: 25, name: "Comunicació" },
-  { id: 26, name: "Adaptabilitat" },
-  { id: 27, name: "Lideratge" },
-  { id: 28, name: "Creativitat" },
-  { id: 29, name: "Proactivitat" },
+  { id: 34, name: "Responsabilitat" },
+  { id: 35, name: "Treball en equip" },
+  { id: 36, name: "Gestió del temps" },
+  { id: 37, name: "Comunicació" },
+  { id: 38, name: "Adaptabilitat" },
+  { id: 39, name: "Lideratge" },
+  { id: 40, name: "Creativitat" },
+  { id: 41, name: "Proactivitat" },
 ];
 
 let teacherId = null;
@@ -46,37 +47,76 @@ if (storedUser) {
 // Función para obtener las respuestas del alumno
 async function obtenerDatosAlumno(studentId) {
   try {
-    const url = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `Error en la respuesta de la API: ${response.statusText}`
-      );
+    console.log("Obteniendo datos del estudiante con ID:", studentId);
+    
+    // Array para almacenar todas las preguntas y respuestas
+    let allQuestionsWithAnswers = [];
+    
+    // Obtener preguntas y respuestas del formulario 5 (contiene las competencias 34 y 35)
+    try {
+      const form5Response = await fetch(`http://localhost:8000/api/forms/5/questions`);
+      
+      if (form5Response.ok) {
+        const form5Data = await form5Response.json();
+        allQuestionsWithAnswers = [...allQuestionsWithAnswers, ...(form5Data.questions || [])];
+        console.log("Datos obtenidos del formulario 5");
+      }
+    } catch (form5Error) {
+      console.error("Error al obtener datos del formulario 5:", form5Error);
     }
-
-    const data = await response.json();
-    console.log("Respuesta del servidor:", data);
-
-    if (data && Array.isArray(data.answers)) {
-      // Mapear las respuestas para que coincidan con las competencias
-      const mappedAnswers = competences.map(competence => {
-        // Buscar la respuesta correspondiente a la competencia
-        const answer = data.answers.find(a => a.question_id === competence.id);
+    
+    // Obtener preguntas y respuestas del formulario 4 (contiene las competencias 36-41)
+    try {
+      const form4Response = await fetch(`http://localhost:8000/api/forms/4/questions`);
+      
+      if (form4Response.ok) {
+        const form4Data = await form4Response.json();
+        allQuestionsWithAnswers = [...allQuestionsWithAnswers, ...(form4Data.questions || [])];
+        console.log("Datos obtenidos del formulario 4");
+      }
+    } catch (form4Error) {
+      console.error("Error al obtener datos del formulario 4:", form4Error);
+    }
+    
+    console.log(`Se obtuvieron ${allQuestionsWithAnswers.length} preguntas de los formularios`);
+    
+    // Mapear las respuestas para el estudiante específico y las 8 competencias
+    const studentResponses = competences.map(competence => {
+      // Buscar la pregunta correspondiente a esta competencia en todas las preguntas obtenidas
+      const question = allQuestionsWithAnswers.find(q => q.id === competence.id);
+      
+      if (!question) {
+        console.log(`No se encontró la pregunta para la competencia ${competence.name} (ID ${competence.id})`);
         return {
-          ...competence, // Incluir los datos de la competencia
-          rating: answer ? answer.rating : 0, // Usar 0 si no hay respuesta
+          ...competence,
+          rating: 0 // Si no hay pregunta, asignar 0
         };
-      });
-
-      console.log("Respuestas mapeadas:", mappedAnswers);
-      return mappedAnswers;
-    }
-
-    return [];
+      }
+      
+      // Buscar la respuesta del estudiante específico
+      const studentAnswer = question.answers?.find(a => Number(a.user_id) === Number(studentId));
+      
+      if (!studentAnswer) {
+        console.log(`El estudiante ${studentId} no ha respondido a la pregunta ${competence.id} (${competence.name})`);
+        return {
+          ...competence,
+          rating: 0 // Si no hay respuesta, asignar 0
+        };
+      }
+      
+      // Si hay respuesta, devolver el rating
+      console.log(`Respuesta encontrada para ${competence.name}: ${studentAnswer.rating}`);
+      return {
+        ...competence,
+        rating: parseInt(studentAnswer.rating)
+      };
+    });
+    
+    console.log("Respuestas procesadas del estudiante:", studentResponses);
+    return studentResponses;
   } catch (error) {
-    console.error("Error al obtener datos del alumno:", error);
-    return [];
+    console.error("Error general al obtener datos del alumno:", error);
+    return competences.map(comp => ({...comp, rating: 0})); // Devolver competencias con rating 0 en caso de error
   }
 }
 // Función para actualizar el gráfico
@@ -103,6 +143,24 @@ function actualizarGrafico(respuestas) {
   // Ajustar el radio base y el factor de escala
   const baseRadius = 80; // Radio máximo del gráfico
   const centerPoint = 100; // Centro del SVG
+  
+  // Mostrar un mensaje si no hay datos
+  if (!respuestas || respuestas.length === 0 || respuestas.every(r => r.rating === 0)) {
+    console.warn("No hay datos de competencias para mostrar en el gráfico");
+    
+    // Crear un elemento de texto para indicar que no hay datos
+    const noDataText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    noDataText.setAttribute("x", centerPoint);
+    noDataText.setAttribute("y", centerPoint);
+    noDataText.setAttribute("text-anchor", "middle");
+    noDataText.setAttribute("fill", "#888");
+    noDataText.setAttribute("font-size", "12");
+    noDataText.textContent = "No hi ha dades disponibles";
+    
+    dataPointsElement.appendChild(noDataText);
+    areaDataElement.setAttribute("d", ""); // Limpiar el área
+    return;
+  }
 
   // Coordenadas base para cada dirección (normalizada)
   const coordenadas = [
@@ -137,9 +195,25 @@ function actualizarGrafico(respuestas) {
   });
 
   respuestasOrdenadas.forEach((respuesta, index) => {
+    // Comprobar si el índice está dentro del rango de coordenadas
+    if (index >= coordenadas.length) {
+      console.warn(`Índice ${index} fuera de rango para las coordenadas`);
+      return;
+    }
+    
     const rating = respuesta.rating || 0;
+    // Si el rating es 0, significa que no hay datos para esta competencia, así que no dibujamos el punto
+    if (rating === 0) {
+      console.log(`La competencia ${respuesta.name} no tiene datos (rating 0)`);
+      return;
+    }
+    
+    // Asegurar que el rating esté entre 1 y 5
+    const ratingNormalizado = Math.max(1, Math.min(5, rating));
+    console.log(`Rating normalizado para ${respuesta.name}: ${ratingNormalizado}`);
+    
     // Calcular el radio exacto basado en una escala de 1-5
-    const radio = (rating / 5) * baseRadius;
+    const radio = (ratingNormalizado / 5) * baseRadius;
 
     // Calcular las coordenadas exactas desde el centro
     const x = centerPoint + coordenadas[index].x * radio;
@@ -273,14 +347,14 @@ onMounted(async () => {
       error.value = "Estudiant no trobat";
     } else {
       await fetchComments(studentId); // Fetch comments after student is loaded
-      await checkForm4Status(studentId); // Comprobar si ha respondido al formulario 4
+      await checkForm5Status(studentId); // Comprobar si ha respondido al formulario 5
 
       // Obtener las respuestas del formulario 4
       const respuestas = await obtenerDatosAlumno(studentId);
       console.log("Respuestas recibidas en onMounted:", respuestas);
 
-      // Esperar a que el DOM esté listo
-      isFormVisible.value = true;
+      // No mostramos automáticamente el formulario al cargar
+      // Esperamos a que el usuario haga clic en el botón
       await nextTick();
       // Actualizar el gráfico con las respuestas
       if (respuestas && respuestas.length > 0) {
@@ -298,15 +372,15 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
-const checkForm4Status = async studentId => {
+const checkForm5Status = async studentId => {
   try {
     console.log(
-      "Verificando respuesta del formulario 4 para el estudiante:",
+      "Verificando respuesta del formulario 5 para el estudiante:",
       studentId
     );
 
-    // Llamada a la ruta correcta para obtener los usuarios que han respondido el formulario 4
-    const response = await fetch(`http://localhost:8000/api/forms/4/users`, {
+    // Llamada a la ruta correcta para obtener los usuarios que han respondido el formulario 5
+    const response = await fetch(`http://localhost:8000/api/forms/5/users`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -320,7 +394,7 @@ const checkForm4Status = async studentId => {
     }
 
     const data = await response.json();
-    console.log("Respuesta del servidor para el formulario 4:", data); // Imprime la respuesta
+    console.log("Respuesta del servidor para el formulario 5:", data); // Imprime la respuesta
 
     // Asegúrate de que estamos comparando los IDs correctamente (convirtiéndolos a números si es necesario)
     const hasAnswered = data.some(
@@ -330,10 +404,10 @@ const checkForm4Status = async studentId => {
     console.log("¿El estudiante ha respondido?", hasAnswered); // Depuración adicional
 
     // Verifica si el estudiante ha respondido y actualiza el estado
-    hasAnsweredForm4.value = hasAnswered;
+    hasAnsweredForm5.value = hasAnswered;
   } catch (error) {
-    console.error("Error en checkForm4Status:", error);
-    hasAnsweredForm4.value = false; // En caso de error, asumimos que no ha respondido
+    console.error("Error en checkForm5Status:", error);
+    hasAnsweredForm5.value = false; // En caso de error, asumimos que no ha respondido
   }
 };
 
@@ -647,22 +721,27 @@ const cancelEdit = () => {
             <h3 class="text-xl font-semibold text-gray-800">
               Gràfic d'autoavaluació
             </h3>
-            <button
-              @click="isFormVisible = !isFormVisible"
-              :class="{
-                'bg-[rgb(0,173,238)]': isFormVisible,
-                'bg-gray-200': !isFormVisible,
-              }"
-              class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
-            >
-              <span
+            <div class="flex items-center">
+              <span class="text-sm text-gray-500 mr-2">
+                {{ isFormVisible ? '' : '' }}
+              </span>
+              <button
+                @click="isFormVisible = !isFormVisible"
                 :class="{
-                  'translate-x-6': isFormVisible,
-                  'translate-x-1': !isFormVisible,
+                  'bg-[rgb(0,173,238)]': isFormVisible,
+                  'bg-gray-200': !isFormVisible,
                 }"
-                class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
-              ></span>
-            </button>
+                class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
+              >
+                <span
+                  :class="{
+                    'translate-x-6': isFormVisible,
+                    'translate-x-1': !isFormVisible,
+                  }"
+                  class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
+                ></span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -736,7 +815,7 @@ const cancelEdit = () => {
 
           <!-- Mostrar si el formulario ha sido contestado o no -->
           <div class="mt-4 text-center text-gray-700">
-            <span v-if="hasAnsweredForm4" class="text-green-600 font-semibold"
+            <span v-if="hasAnsweredForm5" class="text-green-600 font-semibold"
               >Contestat ✅</span
             >
             <span v-else class="text-red-600 font-semibold"
