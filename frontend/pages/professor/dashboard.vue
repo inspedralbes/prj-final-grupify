@@ -140,7 +140,8 @@ const loadClassesData = async () => {
     await fetchUserData();
 
     // Cargar cursos disponibles
-    await coursesStore.fetchCourses();
+    const userId = authStore.user?.id;
+    await coursesStore.fetchCourses(true, userId);
 
     // Si el profesor tiene course_divisions en su perfil, usamos esos datos
     if (authStore.user?.course_divisions && authStore.user.course_divisions.length > 0) {
