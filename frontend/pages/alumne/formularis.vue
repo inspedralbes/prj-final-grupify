@@ -72,12 +72,19 @@ onMounted(() => {
 
 // Manejador del clic en el formulario
 const handleFormClick = formId => {
-  if (formId === 2) {
-    navigateTo(`/alumne/cesc/${formId}`); // Redirige a la ruta del cesc si el formId es 2
-  } else if (formId === 3) {
-    navigateTo(`/alumne/sociograma/${formId}`); // Redirige a la ruta correspondiente para cualquier otro formId
+  // Encontrar el formulario por su ID para acceder a su título
+  const form = forms.value.find(f => f.id === formId);
+  if (form) {
+    const title = form.title.toLowerCase();
+    if (title.includes('cesc')) {
+      navigateTo(`/alumne/cesc/${formId}`); // Redirige a la ruta del CESC
+    } else if (title.includes('sociograma') || title.includes('sociomètric')) {
+      navigateTo(`/alumne/sociograma/${formId}`); // Redirige a la ruta del sociograma
+    } else {
+      navigateTo(`/alumne/forms/${formId}`); // Redirige a la ruta para otros formularios
+    }
   } else {
-    navigateTo(`/alumne/forms/${formId}`); // Redirige a la ruta correspondiente para cualquier otro formId
+    navigateTo(`/alumne/forms/${formId}`); // Fallback si no se encuentra el formulario
   }
 };
 </script>
