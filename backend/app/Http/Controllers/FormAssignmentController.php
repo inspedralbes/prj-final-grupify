@@ -38,11 +38,67 @@ class FormAssignmentController extends Controller
      */
     public function getByTeacher($teacherId)
     {
-        $assignments = FormAssignment::where('teacher_id', $teacherId)
-            ->with(['form', 'course', 'division'])
-            ->get();
-
-        return response()->json($assignments);
+        try {
+            // Verificar si el profesor existe
+            $teacher = User::findOrFail($teacherId);
+            
+            // Obtener asignaciones
+            $assignments = FormAssignment::where('teacher_id', $teacherId)
+                ->get();
+                
+            // Cargar relaciones de manera segura
+            $result = [];
+            foreach ($assignments as $assignment) {
+                $item = [
+                    'id' => $assignment->id,
+                    'teacher_id' => $assignment->teacher_id,
+                    'form_id' => $assignment->form_id,
+                    'course_id' => $assignment->course_id,
+                    'division_id' => $assignment->division_id,
+                    'responses_count' => $assignment->responses_count,
+                    'created_at' => $assignment->created_at,
+                    'updated_at' => $assignment->updated_at,
+                ];
+                
+                // Cargar form si existe
+                $form = Form::find($assignment->form_id);
+                if ($form) {
+                    $item['form'] = [
+                        'id' => $form->id,
+                        'title' => $form->title,
+                        'description' => $form->description ?? '',
+                        'status' => $form->status ?? 'active'
+                    ];
+                }
+                
+                // Cargar course si existe
+                $course = Course::find($assignment->course_id);
+                if ($course) {
+                    $item['course'] = [
+                        'id' => $course->id,
+                        'name' => $course->name ?? 'Sin nombre'
+                    ];
+                }
+                
+                // Cargar division si existe
+                $division = Division::find($assignment->division_id);
+                if ($division) {
+                    $item['division'] = [
+                        'id' => $division->id,
+                        'name' => $division->name ?? 'Sin nombre'
+                    ];
+                }
+                
+                $result[] = $item;
+            }
+            
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al obtener asignaciones de formularios',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

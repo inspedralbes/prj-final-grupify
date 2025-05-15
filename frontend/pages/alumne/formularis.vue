@@ -49,7 +49,7 @@ const loadFormsByUserId = async userId => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          Authorization: `Bearer ${authStore.token}`,
           Accept: "application/json",
         },
       }
