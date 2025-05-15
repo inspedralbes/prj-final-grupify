@@ -8,18 +8,19 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h1 class="text-3xl font-bold">
-              Autoavaluació de Competències
+              Autoavaluación de Competencias
             </h1>
             <p class="mt-2 text-blue-100">
-              Seguiment gràfic de l'evolució de les competències dels estudiants
+              Seguimiento gráfico de la evolución de las competencias de los estudiantes
             </p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Contingut principal -->
+    <!-- Contenido principal -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
       <!-- Targetes informatives -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-[#00ADEC] flex items-start">
@@ -59,11 +60,15 @@
         </div>
       </div>
 
-      <!-- Secció de gràfic -->
+      <!-- Sección de gráfico -->
       <div class="grid grid-cols-1 gap-8">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
           <div class="p-1">
-            <GraficAutoavaluacio />
+            <GraficAutoavaluacio 
+              :search-query="searchQuery"
+              :selected-course="selectedCourse"
+              :selected-division="selectedDivision"
+            />
           </div>
         </div>
       </div>
@@ -149,15 +154,25 @@
 import { ref, onMounted } from 'vue';
 import DashboardNavTeacher from '@/components/Teacher/DashboardNavTeacher.vue';
 import GraficAutoavaluacio from '@/components/Teacher/GraficAutoavaluacio.vue';
+import { useAuthStore } from "@/stores/authStore";
 
-// Dades de l'usuari
-const userData = ref(null);
+// Store de autenticación
+const authStore = useAuthStore();
 
-// Carregar dades des de localStorage
+// Variables para el filtrado
+const searchQuery = ref('');
+const selectedCourse = ref('all');
+const selectedDivision = ref('all');
+
+// Función para limpiar los filtros
+const clearFilters = () => {
+  searchQuery.value = '';
+  selectedCourse.value = 'all';
+  selectedDivision.value = 'all';
+};
+
+// Inicializar datos al montar el componente
 onMounted(() => {
-  const storedUser = localStorage.getItem('user');
-  if (storedUser) {
-    userData.value = JSON.parse(storedUser);
-  }
+  console.log("Componente montado - filtros disponibles");
 });
 </script>
