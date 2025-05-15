@@ -39,7 +39,6 @@ class DatabaseSeeder extends Seeder
             GroupSubjectSeeder::class,
             GroupCourseSeeder::class,
             FormSeeder::class,   // Crear formularios primero
-            TutorFormSeeder::class, // Formularios específicos para tutores
             QuestionSeeder::class, // Crear preguntas después
             OptionSeeder::class,
             CourseUserSeeder::class,
