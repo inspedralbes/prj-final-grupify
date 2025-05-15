@@ -46,8 +46,7 @@ const dashboardState = reactive({
     studentRelations: 0,
     conflictCases: 0,
     interventions: 0
-  },
-  calendarActivities: []
+  }
 });
 
 // Funciones para cargar datos reales de CESC y Sociograma
@@ -233,7 +232,7 @@ const menuItems = [
 const fetchStudents = async () => {
   try {
     await studentsStore.fetchStudents();
-    dashboardState.totalStudents = studentsStore.students.length;
+    // No establecemos aquí la totalidad de estudiantes, lo haremos después de cargar las clases asignadas
   } catch (error) {
     console.error("Error al cargar estudiantes:", error);
     dashboardState.totalStudents = 0;
@@ -264,6 +263,9 @@ const fetchAssignedClasses = async () => {
       // Para cada clase asignada, obtenemos la lista de estudiantes
       const assignedClasses = [];
       
+      // Variable para contar el número total de estudiantes únicos
+      const allStudentIds = new Set();
+      
       for (const cd of authStore.user.course_divisions) {
         // Cargar estudiantes específicos para esta clase
         await studentsStore.fetchStudents(true, cd.course_id, cd.division_id);
@@ -272,6 +274,9 @@ const fetchAssignedClasses = async () => {
         const studentsInClass = studentsStore.students.filter(
           student => student.course_id === cd.course_id && student.division_id === cd.division_id
         );
+        
+        // Añadir IDs de estudiantes al conjunto de IDs únicos
+        studentsInClass.forEach(student => allStudentIds.add(student.id));
         
         // Determinar si es ESO o BACHILLERATO basado en el nombre del curso
         let tipoEnsenanza = '';
@@ -284,13 +289,9 @@ const fetchAssignedClasses = async () => {
         // Generar nombre de clase combinando curso y división
         const className = `${cd.course_name} ${cd.division_name}`;
         
-        // Obtener el próximo evento del calendario para esta clase
-        const nextEvent = await getNextEvent(cd.course_id, cd.division_id);
-        
         assignedClasses.push({
           name: className,
           students: studentsInClass.length,
-          nextClass: nextEvent?.date || 'No programado',
           courseId: cd.course_id,
           divisionId: cd.division_id,
           courseName: cd.course_name,
@@ -299,6 +300,9 @@ const fetchAssignedClasses = async () => {
           studentsList: studentsInClass // Lista completa de estudiantes
         });
       }
+      
+      // Actualizar el contador total de estudiantes con el número real de estudiantes únicos
+      dashboardState.totalStudents = allStudentIds.size;
       
       // Actualizar el estado con las clases asignadas
       dashboardState.currentClasses = assignedClasses;
@@ -312,10 +316,16 @@ const fetchAssignedClasses = async () => {
       const allCourses = coursesStore.courses;
       const allClasses = [];
       
+      // Variable para contar el número total de estudiantes únicos
+      const allStudentIds = new Set();
+      
       for (const course of allCourses) {
         const studentsInClass = studentsStore.students.filter(
           student => student.course_id === course.courseId && student.division_id === course.division.id
         );
+        
+        // Añadir IDs de estudiantes al conjunto de IDs únicos
+        studentsInClass.forEach(student => allStudentIds.add(student.id));
         
         // Determinar si es ESO o BACHILLERATO basado en el nombre del curso
         let tipoEnsenanza = '';
@@ -328,7 +338,6 @@ const fetchAssignedClasses = async () => {
         allClasses.push({
           name: `${course.courseName} ${course.division.name}`,
           students: studentsInClass.length,
-          nextClass: 'No programado',
           courseId: course.courseId,
           divisionId: course.division.id,
           courseName: course.courseName,
@@ -338,44 +347,17 @@ const fetchAssignedClasses = async () => {
         });
       }
       
+      // Actualizar el contador total de estudiantes con el número real de estudiantes únicos
+      dashboardState.totalStudents = allStudentIds.size;
+      
       // Si no hay clases asignadas específicamente, mostrar todas
       dashboardState.currentClasses = allClasses;
     }
   } catch (error) {
     console.error("Error al cargar clases asignadas:", error);
     dashboardState.currentClasses = [];
+    dashboardState.totalStudents = 0;
   }
-};
-
-// Función para obtener el próximo evento programado para una clase (simulado por ahora)
-const getNextEvent = async (courseId, divisionId) => {
-  try {
-    // En una implementación real, aquí se haría una llamada a la API para obtener eventos del calendario
-    // Por ahora retornamos un valor simulado
-    return {
-      date: getNextClassTime(),
-      title: 'Sesión programada'
-    };
-  } catch (error) {
-    console.error("Error al obtener próximo evento:", error);
-    return null;
-  }
-};
-
-// Función para generar un horario para la próxima clase (simulado)
-const getNextClassTime = () => {
-  const days = ['Dilluns', 'Dimarts', 'Dimecres', 'Dijous', 'Divendres'];
-  const hours = ['09:00', '10:15', '11:30', '12:45', '15:30', '16:45'];
-
-  // 25% de probabilidad de que la clase sea "Avui"
-  if (Math.random() < 0.25) {
-    return `Avui ${hours[Math.floor(Math.random() * hours.length)]}`;
-  }
-
-  const randomDay = days[Math.floor(Math.random() * days.length)];
-  const randomHour = hours[Math.floor(Math.random() * hours.length)];
-
-  return `${randomDay} ${randomHour}`;
 };
 
 // Cargar el usuario desde el localStorage cuando el componente se monta
@@ -392,18 +374,15 @@ onMounted(async () => {
     console.log("User data loaded:", userData.value);
     
     try {
-      // Primero cargar la información de los estudiantes
+      // Primero cargar la información general de los estudiantes
       await fetchStudents();
       
-      // Cargar las clases asignadas (esto cargará también los alumnos por clase)
+      // Cargar las clases asignadas (esto calculará el número real de alumnos únicos)
       await fetchAssignedClasses();
       
       // Cargar datos de CESC y Sociograma una vez que tenemos los datos de estudiantes
       await updateCescData();
       await updateSociogramData();
-      
-      // Cargar actividades del calendario
-      await fetchCalendarActivities();
       
       console.log("Datos del dashboard cargados correctamente");
     } catch (error) {
@@ -425,73 +404,6 @@ const navigateToClass = (classItem) => {
       class_name: classItem.name
     }
   });
-};
-
-// Función para cargar actividades del calendario
-const fetchCalendarActivities = async () => {
-  try {
-    // Intentar obtener actividades del calendario desde la API
-    const token = localStorage.getItem('token');
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    // Intentar cargar actividades reales del calendario - Ajusta la URL según tu API
-    const response = await fetch("http://localhost:8000/api/calendar-activities", { headers });
-    
-    if (response.ok) {
-      const data = await response.json();
-      // Actualizar con datos reales
-      dashboardState.calendarActivities = data;
-    } else {
-      // Si la API no existe o falla, generar algunas actividades basadas en las clases actuales
-      const activities = [];
-      
-      // Si hay clases asignadas, generar actividades basadas en ellas
-      if (dashboardState.currentClasses.length > 0) {
-        // Actividad de evaluación para la primera clase
-        const firstClass = dashboardState.currentClasses[0];
-        activities.push({
-          title: "Reunió d'avaluació",
-          group: firstClass.name,
-          date: "Demà, 10:00",
-          type: "calendar"
-        });
-      }
-      
-      // Si hay estudiantes, generar algunas tutorías individualizadas
-      if (studentsStore.students.length > 0) {
-        // Tomar un estudiante al azar para una tutoría
-        const randomStudent = studentsStore.students[Math.floor(Math.random() * studentsStore.students.length)];
-        const studentName = `${randomStudent.name} ${randomStudent.last_name || ''}`;
-        
-        activities.push({
-          title: "Tutoria individualitzada",
-          group: studentName,
-          date: "Divendres, 12:30",
-          type: "users"
-        });
-      }
-      
-      dashboardState.calendarActivities = activities;
-    }
-  } catch (error) {
-    console.error("Error al cargar actividades del calendario:", error);
-    // En caso de error, usar actividades predeterminadas
-    dashboardState.calendarActivities = [
-      {
-        title: "Reunió d'orientació",
-        group: "Equip docent",
-        date: "Demà, 11:00",
-        type: "calendar"
-      }
-    ];
-  }
 };
 
 // Computed para obtener las clases filtradas
@@ -635,18 +547,6 @@ const getCurrentDate = () => {
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 class="text-lg font-medium text-gray-900">Classes Assignades</h2>
               <div class="flex items-center">
-                <!-- Selector de tipo de enseñanza -->
-                <div class="mr-2">
-                  <select 
-                    v-model="dashboardState.tipoEnsenanzaFilter"
-                    class="text-sm border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20"
-                    @change="filterClasses"
-                  >
-                    <option value="TODOS">Tots</option>
-                    <option value="ESO">ESO</option>
-                    <option value="BACHILLERATO">Batxillerat</option>
-                  </select>
-                </div>
                 <NuxtLink to="/professor/llista-alumnes" class="text-sm text-primary hover:text-primary-dark">
                   Veure tots els alumnes
                 </NuxtLink>
@@ -661,7 +561,7 @@ const getCurrentDate = () => {
             <!-- Estado vacío -->
             <div v-else-if="filteredClasses.length === 0" class="py-10 text-center">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <h3 class="mt-2 text-sm font-medium text-gray-900">No s'han trobat classes</h3>
               <p class="mt-1 text-sm text-gray-500">
@@ -696,9 +596,8 @@ const getCurrentDate = () => {
                     </div>
                   </div>
                 </div>
-                <div class="flex items-center">
-                  <span class="text-sm text-gray-500">{{ classItem.nextClass }}</span>
-                  <svg class="h-5 w-5 text-gray-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div>
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -801,51 +700,6 @@ const getCurrentDate = () => {
                     <p class="text-xs text-gray-500">{{ item.description }}</p>
                   </div>
                 </NuxtLink>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Actividades del calendario -->
-          <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-medium text-gray-900">Activitats Properes</h2>
-            </div>
-            
-            <!-- Estado vacío -->
-            <div v-if="dashboardState.calendarActivities.length === 0" class="py-6 text-center">
-              <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">No hi ha activitats programades</h3>
-              <p class="mt-1 text-sm text-gray-500">No tens cap activitat propera programada.</p>
-            </div>
-            
-            <!-- Lista de actividades -->
-            <div v-else class="divide-y divide-gray-200">
-              <div
-                v-for="(activity, index) in dashboardState.calendarActivities"
-                :key="index"
-                class="px-6 py-4 flex items-center hover:bg-gray-50"
-              >
-                <div class="flex-shrink-0">
-                  <div class="h-9 w-9 rounded-full flex items-center justify-center" 
-                       :class="activity.type === 'calendar' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'">
-                    <svg v-if="activity.type === 'calendar'" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <svg v-else class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div class="ml-4">
-                  <p class="text-sm font-medium text-gray-900">{{ activity.title }}</p>
-                  <div class="flex items-center text-xs text-gray-500">
-                    <span>{{ activity.group }}</span>
-                    <span class="mx-1">•</span>
-                    <span>{{ activity.date }}</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
