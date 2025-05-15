@@ -890,14 +890,9 @@ const cancelEdit = () => {
           
           <!-- Botón temporal para depuración (puedes quitar esto después) -->
           <div class="mt-4 text-center">
-            <button 
-              @click="actualizarGrafico(datosGrafico)" 
-              class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded inline-flex items-center"
-            >
-              <span>Forzar actualización del gráfico</span>
-            </button>
+            
             <p class="text-xs text-gray-500 mt-1">
-              Estado del gráfico: {{ datosGrafico ? `Datos disponibles (${datosGrafico.length} competencias)` : 'Sin datos' }}
+              Estat del gràfic: {{ datosGrafico ? `Dades disponibles (${datosGrafico.length} competències)` : 'Sense dades' }}
             </p>
           </div>
         </div>
