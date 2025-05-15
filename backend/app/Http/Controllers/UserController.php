@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Division;
 use App\Models\Course;
 use App\Models\Subject;
+use App\Models\CourseDivisionUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -1067,6 +1068,104 @@ class UserController extends Controller
                     'division_name' => $courseDivision?->division?->division,
                 ]
             ]);
+        }
+    }
+    
+    /**
+     * Obtiene las asignaciones de un orientador específico
+     * 
+     * @param int $id ID del orientador
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getOrientadorAssignments($id)
+    {
+        try {
+            // Verificar que el usuario existe y es un orientador
+            $user = User::findOrFail($id);
+            
+            if ($user->role_id != 5) { // 5 es el ID del rol 'orientador'
+                return response()->json([
+                    'error' => true,
+                    'message' => 'El usuario no es un orientador',
+                    'assignments' => []
+                ], 400);
+            }
+            
+            // Primero intentar con course_division_users
+            $assignments = \App\Models\CourseDivisionUser::where('user_id', $id)
+                ->with(['course', 'division'])
+                ->get()
+                ->map(function ($cdu) {
+                    return [
+                        'course_id' => $cdu->course_id,
+                        'division_id' => $cdu->division_id,
+                        'course_name' => $cdu->course->name ?? 'Sin Curso',
+                        'division_name' => $cdu->division->division ?? 'Sin División',
+                    ];
+                });
+                
+            // Si no hay asignaciones, intentar con roles por nivel educativo
+            if ($assignments->isEmpty()) {
+                // Para ESO, buscar cursos que contienen 'ESO' y divisiones A-E
+                $esoAssignments = [];
+                $esoCoursesIds = Course::where('name', 'like', '%ESO%')->pluck('id')->toArray();
+                $esoDivisionsIds = Division::whereBetween('id', [3, 7])->pluck('id')->toArray();
+                
+                if (!empty($esoCoursesIds) && !empty($esoDivisionsIds)) {
+                    foreach ($esoCoursesIds as $courseId) {
+                        $course = Course::find($courseId);
+                        foreach ($esoDivisionsIds as $divisionId) {
+                            $division = Division::find($divisionId);
+                            $esoAssignments[] = [
+                                'course_id' => $courseId,
+                                'division_id' => $divisionId,
+                                'course_name' => $course ? $course->name : 'Sin Curso',
+                                'division_name' => $division ? $division->division : 'Sin División',
+                            ];
+                        }
+                    }
+                }
+                
+                // Para BATX, buscar cursos que contienen 'BATX' o 'BACHILLER' y divisiones 1 y 2
+                $batxAssignments = [];
+                $batxCoursesIds = Course::where('name', 'like', '%BATX%')
+                                        ->orWhere('name', 'like', '%BACHILLER%')
+                                        ->pluck('id')->toArray();
+                $batxDivisionsIds = Division::whereIn('id', [1, 2])->pluck('id')->toArray();
+                
+                if (!empty($batxCoursesIds) && !empty($batxDivisionsIds)) {
+                    foreach ($batxCoursesIds as $courseId) {
+                        $course = Course::find($courseId);
+                        foreach ($batxDivisionsIds as $divisionId) {
+                            $division = Division::find($divisionId);
+                            $batxAssignments[] = [
+                                'course_id' => $courseId,
+                                'division_id' => $divisionId,
+                                'course_name' => $course ? $course->name : 'Sin Curso',
+                                'division_name' => $division ? $division->division : 'Sin División',
+                            ];
+                        }
+                    }
+                }
+                
+                // Combinar las asignaciones de ESO y BATX
+                $assignments = collect(array_merge($esoAssignments, $batxAssignments));
+            }
+            
+            return response()->json([
+                'id' => $user->id,
+                'name' => $user->name,
+                'last_name' => $user->last_name,
+                'role_name' => 'orientador',
+                'assignments' => $assignments
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Error al obtener las asignaciones del orientador: ' . $e->getMessage(),
+                'assignments' => []
+            ], 500);
         }
     }
 }
