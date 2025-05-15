@@ -448,36 +448,60 @@
             const selectedRole = parseInt(role);
             let isValid = true;
             
-            // SOLUCIÓN CRÍTICA: Eliminar campos vacíos de course_division_pairs 
-            // para evitar el error de validación del servidor
-            const allCoursePairs = document.querySelectorAll('[name^="course_division_pairs"]');
-            allCoursePairs.forEach(select => {
-                // Si el campo está vacío, deshabilitarlo para que no se envíe
-                if (!select.value) {
-                    select.disabled = true;
+            // SOLUCIÓN MEJORADA: Manejar los pares curso-división para todos los roles
+            // Agrupar los pares curso-división
+            const pairs = {};
+            document.querySelectorAll('[name^="course_division_pairs"]').forEach(select => {
+                // Extraer el índice y tipo (course_id o division_id) del nombre del campo
+                const matches = select.name.match(/course_division_pairs\[(\d+)\]\[(\w+)\]/);
+                if (matches) {
+                    const [_, index, type] = matches;
+                    if (!pairs[index]) pairs[index] = {};
+                    pairs[index][type] = select;
+                }
+            });
+
+            // Verificar cada par y deshabilitar ambos si alguno está vacío
+            Object.values(pairs).forEach(pair => {
+                const courseSelect = pair.course_id;
+                const divisionSelect = pair.division_id;
+                
+                if (courseSelect && divisionSelect) {
+                    // Si alguno está vacío, deshabilitar ambos
+                    if (!courseSelect.value || !divisionSelect.value) {
+                        courseSelect.disabled = true;
+                        divisionSelect.disabled = true;
+                    }
                 }
             });
             
             if (selectedRole === 1) { // Professor
-                const courseSelect = document.querySelector('select[name="course_division_pairs[0][course_id]"]');
-                const divisionSelect = document.querySelector('select[name="course_division_pairs[0][division_id]"]');
+                // Verificar que haya al menos un par de curso-división válido
+                let hasValidPair = false;
+                const pairs = {};
                 
-                // Asegurarse de que ambos estén habilitados si tienen valor
-                if (courseSelect && divisionSelect) {
-                    if (courseSelect.value && divisionSelect.value) {
-                        courseSelect.disabled = false;
-                        divisionSelect.disabled = false;
-                    } else if (!courseSelect.value && !divisionSelect.value) {
-                        // Si ambos están vacíos, dejarlos deshabilitados
-                        courseSelect.disabled = true;
-                        divisionSelect.disabled = true;
-                    } else {
-                        // Si solo uno tiene valor, mostrar error
-                        showAlert('Cal seleccionar tant el curs com la divisió per al professor.');
-                        isValid = false;
-                        courseSelect.disabled = false;
-                        divisionSelect.disabled = false;
+                document.querySelectorAll('[name^="course_division_pairs"]').forEach(select => {
+                    if (select.disabled) return; // Ignorar campos deshabilitados
+                    
+                    const matches = select.name.match(/course_division_pairs\[(\d+)\]\[(\w+)\]/);
+                    if (matches) {
+                        const [_, index, type] = matches;
+                        if (!pairs[index]) pairs[index] = {};
+                        pairs[index][type] = select;
                     }
+                });
+                
+                // Verificar si hay al menos un par válido
+                Object.values(pairs).forEach(pair => {
+                    if (pair.course_id && pair.division_id && 
+                        pair.course_id.value && pair.division_id.value) {
+                        hasValidPair = true;
+                    }
+                });
+                
+                if (!hasValidPair) {
+                    showAlert('Cal seleccionar almenys un parell curs-divisió vàlid per al professor.');
+                    isValid = false;
                 }
             } else if (selectedRole === 2) { // Alumne
                 const courseSelect = document.getElementById('student_course_id');
@@ -501,26 +525,37 @@
                 const courseSelect = document.getElementById('tutor_course_id');
                 const divisionSelect = document.getElementById('tutor_division_id');
                 
+                // Para tutores, permitir usar tanto course_division_pairs como los campos específicos
+                
                 if (courseSelect && divisionSelect) {
-                    if (courseSelect.value && divisionSelect.value) {
-                        courseSelect.disabled = false;
-                        divisionSelect.disabled = false;
-                    } else if (!courseSelect.value && !divisionSelect.value) {
-                        courseSelect.disabled = true;
-                        divisionSelect.disabled = true;
-                    } else {
+                    if ((courseSelect.value && !divisionSelect.value) || (!courseSelect.value && divisionSelect.value)) {
+                        // Si solo uno tiene valor, mostrar error
                         showAlert('Cal seleccionar tant el curs com la divisió per al tutor.');
                         isValid = false;
-                        courseSelect.disabled = false;
-                        divisionSelect.disabled = false;
+                    } else if (!courseSelect.value && !divisionSelect.value) {
+                        // Si ambos están vacíos, deshabilitarlos para evitar validaciones
+                        courseSelect.disabled = true;
+                        divisionSelect.disabled = true;
                     }
                 }
             } else if (selectedRole === 5) { // Orientador
                 const nivelSelect = document.getElementById('nivel_educativo');
                 
-                if (nivelSelect) {
-                    if (!nivelSelect.value) {
-                        showAlert('Cal seleccionar un nivell educatiu per a l\'orientador.');
+                // Para orientadores, permitir usar tanto course_division_pairs como el nivel educativo
+                // Si se especifica nivel, es prioritario
+                if (nivelSelect && !nivelSelect.value) {
+                    // Verificar si hay al menos un par curso-división válido
+                    let hasValidPair = false;
+                    
+                    document.querySelectorAll('[name^="course_division_pairs"]').forEach(select => {
+                        if (!select.disabled && select.value) {
+                            hasValidPair = true;
+                        }
+                    });
+                    
+                    // Si no hay nivel educativo ni pares curso-división válidos, mostrar advertencia
+                    if (!hasValidPair) {
+                        showAlert('Cal seleccionar un nivell educatiu o assignar almenys un curs per a l\'orientador.');
                         isValid = false;
                     }
                 }
