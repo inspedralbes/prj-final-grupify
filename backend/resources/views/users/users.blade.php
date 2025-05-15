@@ -56,7 +56,20 @@
                 <!-- Filtros -->
                 <div class="col-md-6">
                     <form action="{{ route('users.index') }}" method="GET">
-                        <div class="d-flex flex-column flex-sm-row gap-2">
+                        <div class="d-flex flex-column gap-2">
+                            <!-- Búsqueda por texto -->
+                            <div class="flex-grow-1">
+                                <label for="search_filter" class="form-label d-block d-md-none mb-1">Cerca per nom o cognom:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="search_filter" name="search" class="form-control" 
+                                        placeholder="Cerca per nom o cognom" value="{{ request('search') }}">
+                                </div>
+                            </div>
+                            
+                            <!-- Filtro por rol -->
                             <div class="flex-grow-1">
                                 <label for="role_filter" class="form-label d-block d-md-none mb-1">Filtrar per rol:</label>
                                 <select id="role_filter" name="role_id" class="form-select">
@@ -68,11 +81,13 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="d-flex gap-2 mt-2 mt-sm-0">
+                            
+                            <!-- Botones de acción -->
+                            <div class="d-flex gap-2 mt-2">
                                 <button type="submit" class="btn btn-primary px-3 py-2">
                                     <i class="fas fa-filter me-2"></i>Aplicar
                                 </button>
-                                @if(request('role_id'))
+                                @if(request('role_id') || request('search'))
                                 <a href="{{ route('users.index') }}" class="btn btn-light border px-3 py-2">
                                     <i class="fas fa-times me-2"></i>Netejar
                                 </a>
@@ -143,7 +158,7 @@
                                 <div class="d-flex flex-column align-items-center py-4">
                                     <i class="fas fa-users text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
                                     <h5 class="fw-light text-muted">No s'han trobat usuaris</h5>
-                                    @if(request('role_id'))
+                                    @if(request('role_id') || request('search'))
                                     <a href="{{ route('users.index') }}" class="btn btn-sm btn-outline-primary mt-3">
                                         <i class="fas fa-filter me-1"></i> Eliminar filtres
                                     </a>
@@ -202,7 +217,7 @@
             <div class="card-body text-center py-5">
                 <i class="fas fa-users text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
                 <h5 class="fw-light text-muted">No s'han trobat usuaris</h5>
-                @if(request('role_id'))
+                @if(request('role_id') || request('search'))
                 <a href="{{ route('users.index') }}" class="btn btn-outline-primary mt-3">
                     <i class="fas fa-filter me-1"></i> Eliminar filtres
                 </a>

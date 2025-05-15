@@ -147,6 +147,15 @@ class UserController extends Controller
             $query->where('role_id', $request->role_id);
         }
 
+        // Aplicar filtro de búsqueda por texto si se proporciona
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('last_name', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
         // Obtener usuarios paginados
         $users = $query->paginate(20);
 
