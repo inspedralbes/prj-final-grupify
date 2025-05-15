@@ -207,9 +207,29 @@ class CourseController extends Controller
         return redirect()->route('courses.index')->with('success', 'Curs eliminat correctament');
     }
     //obtenir els cursos amb les divisions
-    public function getCoursesWithDivisions()
+    public function getCoursesWithDivisions(Request $request)
     {
-        $courses = Course::with('divisions')->get()->map(function ($course) {
+        // Obtener el ID del usuario de la solicitud o del usuario autenticado
+        $userId = $request->input('user_id', $request->user()->id ?? null);
+        
+        // Verificar si se proporcionó un ID de usuario
+        if (!$userId) {
+            return response()->json(['message' => 'Se requiere un ID de usuario'], 400);
+        }
+        
+        // Obtener los cursos asociados al usuario a través de la tabla course_division_user
+        $courses = Course::whereHas('divisions', function ($query) use ($userId) {
+            $query->whereHas('courseDivisionUser', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        })
+        ->with(['divisions' => function ($query) use ($userId) {
+            $query->whereHas('courseDivisionUser', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+        }])
+        ->get()
+        ->map(function ($course) {
             // Filtrar las divisiones de los cursos de ESO (1-4 ESO)
             if ($course->id >= 1 && $course->id <= 4) {
                 // Divisiones únicas para ESO (A, B, C, D, E)
@@ -220,7 +240,7 @@ class CourseController extends Controller
                 // Divisiones solo 1 y 2 para Bachillerato
                 $divisions = $course->divisions->whereIn('division', ['1', '2'])->unique('division');
             } else {
-                $divisions = [];
+                $divisions = $course->divisions->unique('division');
             }
 
             // Mapear los resultados para devolver solo los datos necesarios

@@ -28,6 +28,11 @@ class Division extends Model
             ->withPivot('course_id')
             ->withTimestamps();
     }
+    
+    public function courseDivisionUser()
+    {
+        return $this->hasMany(CourseDivisionUser::class, 'division_id');
+    }
     public function groups()
     {
         return $this->belongsToMany(Group::class);

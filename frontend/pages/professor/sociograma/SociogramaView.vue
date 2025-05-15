@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useCoursesStore } from '~/stores/coursesStore'; 
+import { useAuthStore } from '~/stores/authStore';
 import { useCourseSearch } from '~/composables/useCourseSearch';
 import CoursesFilters from '~/components/Teacher/SociogramaComponents/CoursesFilters.vue';
 import DashboardNavTeacher from '~/components/Teacher/DashboardNavTeacher.vue';
@@ -12,7 +13,9 @@ const coursesStore = useCoursesStore();
 
 onMounted(async () => {
   try {
-    await coursesStore.fetchCourses();
+    const authStore = useAuthStore();
+    const userId = authStore.user?.id;
+    await coursesStore.fetchCourses(false, userId);
   } catch (err) {
     error.value = 'Error al cargar los cursos';
   } finally {

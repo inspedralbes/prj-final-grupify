@@ -156,7 +156,9 @@ export function useChat() {
   // Cargar cursos
   onMounted(async () => {
     try {
-      await coursesStore.fetchCourses();
+      const authStore = useAuthStore();
+      const userId = authStore.user?.id;
+      await coursesStore.fetchCourses(false, userId);
       courses.value = coursesStore.courses;
       console.log("Courses loaded:", courses.value);
     } catch (error) {
