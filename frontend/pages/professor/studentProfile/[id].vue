@@ -120,22 +120,42 @@ async function obtenerDatosAlumno(studentId) {
   }
 }
 // Función para actualizar el gráfico
+// Variable para almacenar las respuestas para el gráfico
+const datosGrafico = ref(null);
+
 function actualizarGrafico(respuestas) {
   console.log("Actualizando gráfico con respuestas:", respuestas);
-
-  const svg = document.getElementById("radial-graph");
-  if (!svg) {
-    console.error("No se encontró el elemento SVG principal");
-    return;
-  }
-
-  const dataPointsElement = svg.querySelector("#data-points");
-  const areaDataElement = svg.querySelector("#area-data");
-
-  if (!dataPointsElement || !areaDataElement) {
-    console.error("No se encontraron los elementos necesarios del SVG");
-    return;
-  }
+  
+  // Almacenar los datos para usarlos cuando el SVG esté disponible
+  datosGrafico.value = respuestas;
+  
+  // Intentar actualizar el gráfico varias veces si es necesario
+  const intentarActualizar = (intentos = 0) => {
+    // Buscar el SVG en el DOM
+    const svg = document.getElementById("radial-graph");
+    if (!svg) {
+      console.error("No se encontró el elemento SVG principal (intento " + (intentos + 1) + ")");
+      if (intentos < 3) {
+        // Intentar nuevamente después de un pequeño retraso
+        setTimeout(() => intentarActualizar(intentos + 1), 100);
+      }
+      return;
+    }
+    
+    console.log("SVG encontrado, actualizando elementos...");
+    
+    const dataPointsElement = svg.querySelector("#data-points");
+    const areaDataElement = svg.querySelector("#area-data");
+    
+    if (!dataPointsElement || !areaDataElement) {
+      console.error("No se encontraron los elementos necesarios del SVG (intento " + (intentos + 1) + ")");
+      if (intentos < 3) {
+        setTimeout(() => intentarActualizar(intentos + 1), 100);
+      }
+      return;
+    }
+    
+    console.log("Elementos del SVG encontrados, dibujando gráfico...");
 
   dataPointsElement.innerHTML = "";
   let areaPath = "";
@@ -252,6 +272,12 @@ function actualizarGrafico(respuestas) {
     areaPath += " Z";
     areaDataElement.setAttribute("d", areaPath);
   }
+  
+    console.log("Gráfico actualizado correctamente");
+  };
+  
+  // Iniciar el proceso de actualización
+  intentarActualizar();
 }
 // Función para confirmar la baja
 const handleBaja = async () => {
@@ -337,36 +363,72 @@ const handleAlta = async () => {
   }
 };
 
+// Función para actualizar el gráfico cuando el formulario se hace visible
+const mostrarGrafico = () => {
+  isFormVisible.value = !isFormVisible.value;
+  
+  // Si el formulario está visible y tenemos datos, actualizamos el gráfico
+  if (isFormVisible.value && datosGrafico.value) {
+    // Esperamos a que el DOM se actualice antes de intentar manipular el SVG
+    nextTick(() => {
+      // Añadimos un pequeño retraso para asegurar que el SVG esté completamente renderizado
+      setTimeout(() => {
+        // Forzamos una actualización del gráfico
+        actualizarGrafico(datosGrafico.value);
+        console.log("Gráfico actualizado después de hacer visible");
+      }, 200);
+    });
+  }
+};
+
+// Función que se llama cuando el DOM del formulario se ha montado
+const onFormMounted = () => {
+  if (isFormVisible.value && datosGrafico.value) {
+    console.log("El formulario está montado y visible");
+    // Esperar un poco para asegurar que el DOM está completamente renderizado
+    setTimeout(() => {
+      actualizarGrafico(datosGrafico.value);
+    }, 50);
+  }
+};
+
 onMounted(async () => {
+  console.log("Componente principal montado");
   try {
+    // Cargar estudiantes si no están cargados
     if (!studentsStore.students.length) {
       await studentsStore.fetchStudents();
     }
+    
+    // Buscar el estudiante específico
     student.value = studentsStore.getStudentById(Number(studentId));
     if (!student.value) {
       error.value = "Estudiant no trobat";
     } else {
-      await fetchComments(studentId); // Fetch comments after student is loaded
-      await checkForm5Status(studentId); // Comprobar si ha respondido al formulario 5
+      // Cargar comentarios y verificar estado del formulario
+      await fetchComments(studentId);
+      await checkForm5Status(studentId);
 
-      // Obtener las respuestas del formulario 4
+      // Obtener las respuestas de las competencias
       const respuestas = await obtenerDatosAlumno(studentId);
       console.log("Respuestas recibidas en onMounted:", respuestas);
-
-      // No mostramos automáticamente el formulario al cargar
-      // Esperamos a que el usuario haga clic en el botón
-      await nextTick();
-      // Actualizar el gráfico con las respuestas
-      if (respuestas && respuestas.length > 0) {
-        actualizarGrafico(respuestas);
+      
+      if (!respuestas || respuestas.length === 0) {
+        console.warn("No se encontraron respuestas para actualizar el gráfico.");
       } else {
-        console.warn(
-          "No se encontraron respuestas para actualizar el gráfico."
-        );
+        // Guardar las respuestas para el gráfico
+        datosGrafico.value = respuestas;
+        console.log("Datos del gráfico guardados, esperando a que el usuario active el gráfico");
+        
+        // Si quisiéramos mostrar automáticamente el gráfico:
+        // isFormVisible.value = true;
+        // nextTick(() => {
+        //   onFormMounted();
+        // });
       }
     }
   } catch (err) {
-    console.error(err);
+    console.error("Error en onMounted:", err);
     error.value = "Error al cargar els estudiants";
   } finally {
     isLoading.value = false;
@@ -726,7 +788,7 @@ const cancelEdit = () => {
                 {{ isFormVisible ? '' : '' }}
               </span>
               <button
-                @click="isFormVisible = !isFormVisible"
+                @click="mostrarGrafico"
                 :class="{
                   'bg-[rgb(0,173,238)]': isFormVisible,
                   'bg-gray-200': !isFormVisible,
@@ -749,6 +811,9 @@ const cancelEdit = () => {
         <div
           class="bg-white rounded-xl shadow-sm p-6 mt-4"
           v-if="isFormVisible"
+          v-show="isFormVisible"
+          key="grafico-container"
+          @vue:mounted="onFormMounted"
         >
           <!-- Actualiza esta parte en tu template -->
           <svg
@@ -821,6 +886,14 @@ const cancelEdit = () => {
             <span v-else class="text-red-600 font-semibold"
               >No contestat ❌</span
             >
+          </div>
+          
+          <!-- Botón temporal para depuración (puedes quitar esto después) -->
+          <div class="mt-4 text-center">
+            
+            <p class="text-xs text-gray-500 mt-1">
+              Estat del gràfic: {{ datosGrafico ? `Dades disponibles (${datosGrafico.length} competències)` : 'Sense dades' }}
+            </p>
           </div>
         </div>
       </div>
