@@ -133,54 +133,13 @@ const updateSociogramData = async () => {
   try {
     console.log("[DASHBOARD ORIENTADOR] Iniciando updateSociogramData...");
     
-    // Obtener datos reales de Sociograma
-    const token = localStorage.getItem('token');
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
+    // Usar directamente datos simulados basados en el total de estudiantes
+    dashboardState.sociogramData = {
+      completed: Math.floor(dashboardState.totalStudents * 0.35),
+      total: dashboardState.totalStudents
     };
     
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    console.log("[DASHBOARD ORIENTADOR] Solicitando datos Sociograma a API:", "http://localhost:8000/api/sociogram-stats");
-    console.log("[DASHBOARD ORIENTADOR] Headers:", { 
-      tieneToken: !!token,
-      authHeader: token ? 'Bearer ' + token.substr(0, 10) + '...' : 'No hay token'
-    });
-    
-    // Intenta cargar datos de Sociograma reales - Ajusta la URL según la API
-    const response = await fetch("http://localhost:8000/api/sociogram-stats", { headers });
-    
-    console.log("[DASHBOARD ORIENTADOR] Respuesta API Sociograma:", {
-      status: response.status,
-      ok: response.ok,
-      statusText: response.statusText
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log("[DASHBOARD ORIENTADOR] Datos Sociograma recibidos:", data);
-      
-      // Actualizar con datos reales
-      dashboardState.sociogramData = {
-        completed: data.completed || 0,
-        total: data.total || dashboardState.totalStudents
-      };
-      
-      console.log("[DASHBOARD ORIENTADOR] Sociograma data actualizada con datos reales:", dashboardState.sociogramData);
-    } else {
-      console.log("[DASHBOARD ORIENTADOR] API Sociograma falló, usando datos simulados");
-      
-      // Fallback a datos estimados basados en el total de estudiantes
-      dashboardState.sociogramData = {
-        completed: Math.floor(dashboardState.totalStudents * 0.35),
-        total: dashboardState.totalStudents
-      };
-      
-      console.log("[DASHBOARD ORIENTADOR] Sociograma data simulada:", dashboardState.sociogramData);
-    }
+    console.log("[DASHBOARD ORIENTADOR] Sociograma data simulada:", dashboardState.sociogramData);
   } catch (error) {
     console.error("[DASHBOARD ORIENTADOR] Error al cargar datos de Sociograma:", error);
     
