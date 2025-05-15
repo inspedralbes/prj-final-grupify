@@ -13,7 +13,14 @@ class CheckRole
             return response()->json(['message' => 'No autenticado'], 401);
         }
 
-        $userRole = Auth::user()->role->name;
+        $user = Auth::user();
+        
+        // Verificar si el usuario tiene una relación de rol válida
+        if (!$user->role || !isset($user->role->name)) {
+            return response()->json(['message' => 'El usuario no tiene un rol asignado correctamente'], 403);
+        }
+        
+        $userRole = $user->role->name;
         
         // Si no se especifican roles, cualquier usuario autenticado puede acceder
         if (empty($roles)) {

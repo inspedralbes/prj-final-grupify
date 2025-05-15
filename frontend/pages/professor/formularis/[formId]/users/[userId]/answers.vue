@@ -204,12 +204,14 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "~/stores/authStore";
 import DashboardNavTeacher from "~/components/Teacher/DashboardNavTeacher.vue";
 
 const route = useRoute();
 const router = useRouter();
 const formId = route.params.formId;
 const userId = route.params.userId;
+const authStore = useAuthStore();
 
 // Definir competencias
 const competences = [
@@ -261,7 +263,7 @@ const fetchAnswers = async (formId, userId) => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          Authorization: `Bearer ${authStore.token}`,
         },
       }
     );
@@ -302,7 +304,7 @@ const fetchAnswersSociogram = async (formId, userId) => {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          Authorization: `Bearer ${authStore.token}`,
         },
       }
     );

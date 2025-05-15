@@ -115,7 +115,7 @@ Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm'])
 Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/forms/response-status', [AnswerController::class, 'getFormResponseStatus']);
 
 // RUTA PARA OBTENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
-Route::middleware(['auth:sanctum', 'role:tutor,orientador,admin'])->get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
+Route::middleware(['auth:sanctum'])->get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
 
 // RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
 Route::middleware(['auth:sanctum'])->get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
@@ -354,6 +354,7 @@ Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->group(function
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/form-user/update-status', [FormUserController::class, 'updateAnsweredStatus']);
     Route::post('/form-user/responses', [FormUserController::class, 'getFormResponses']);
+    Route::get('/form-user/{formId}/assigned-users', [FormUserController::class, 'getAssignedUsers']);
 });
 
 // Rutas de diagnóstico

@@ -112,4 +112,97 @@ class FormUserController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Obtiene los usuarios asignados a un formulario por un profesor, indicando si han respondido o no.
+     * Solo devuelve los usuarios de los cursos y divisiones asignados al profesor autenticado.
+     */
+    public function getAssignedUsers($formId)
+    {
+        try {
+            // Obtenemos el profesor autenticado
+            $teacher = auth()->user();
+            
+            if (!$teacher) {
+                return response()->json([
+                    'message' => 'Usuario no autenticado',
+                ], 401);
+            }
+            
+            // Verificamos si el profesor tiene asignaciones para este formulario
+            $teacherAssignments = \App\Models\FormAssignment::where('teacher_id', $teacher->id)
+                ->where('form_id', $formId)
+                ->get();
+                
+            if ($teacherAssignments->isEmpty()) {
+                return response()->json([
+                    'message' => 'Este formulario no está asignado a ninguno de tus cursos',
+                    'users' => [],
+                ], 403);
+            }
+            
+            // Obtenemos los cursos y divisiones asignados a este profesor para este formulario
+            $coursesDivisions = $teacherAssignments->map(function($assignment) {
+                return [
+                    'course_id' => $assignment->course_id,
+                    'division_id' => $assignment->division_id
+                ];
+            })->toArray();
+            
+            // Obtenemos los usuarios (alumnos) que pertenecen a esos cursos y divisiones
+            $formUsers = collect();
+            
+            foreach ($coursesDivisions as $cd) {
+                $users = FormUser::where('form_id', $formId)
+                    ->where('course_id', $cd['course_id'])
+                    ->where('division_id', $cd['division_id'])
+                    ->with(['user', 'course', 'division'])
+                    ->get();
+                    
+                $formUsers = $formUsers->merge($users);
+            }
+            
+            if ($formUsers->isEmpty()) {
+                return response()->json([
+                    'message' => 'No se han encontrado usuarios asignados a este formulario en tus cursos',
+                    'users' => [],
+                ]);
+            }
+            
+            // Mapear los resultados
+            $users = $formUsers->map(function($formUser) {
+                return [
+                    'id' => $formUser->user->id,
+                    'name' => $formUser->user->name,
+                    'last_name' => $formUser->user->surname ?? '',
+                    'email' => $formUser->user->email,
+                    'course' => $formUser->course->name ?? '',
+                    'division' => $formUser->division->name ?? '',
+                    'answered' => $formUser->answered == 1,
+                    'status' => $formUser->answered == 1 ? 'Contestado' : 'Pendiente',
+                ];
+            });
+            
+            // Estadísticas
+            $total = $users->count();
+            $answered = $users->where('answered', true)->count();
+            
+            return response()->json([
+                'users' => $users,
+                'stats' => [
+                    'total' => $total,
+                    'answered' => $answered,
+                    'pending' => $total - $answered,
+                    'percentage' => $total > 0 ? round(($answered / $total) * 100, 2) : 0,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al obtener los usuarios asignados al formulario: ' . $e->getMessage());
+            
+            return response()->json([
+                'message' => 'Error al obtener los usuarios asignados al formulario',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
