@@ -19,6 +19,77 @@
 
     
 
+    <!-- Filtro de estudiantes justo encima de la lista -->
+    <div class="bg-white rounded-lg p-4 mb-4 shadow-md">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">Filtrar Alumnes</h2>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Búsqueda por nombre -->
+        <div class="flex-1">
+          <label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-1">Nom de l'alumne</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              v-model="localSearchQuery"
+              id="searchQuery"
+              type="text"
+              placeholder="Cercar per nom o email..."
+              class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+        </div>
+        
+        <!-- Selección de curso -->
+        <div class="flex-1">
+          <label for="courseSelect" class="block text-sm font-medium text-gray-700 mb-1">Curs</label>
+          <select
+            v-model="localSelectedCourse"
+            id="courseSelect"
+            class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="all">Tots els cursos</option>
+            <option value="1 ESO">1º ESO</option>
+            <option value="2 ESO">2º ESO</option>
+            <option value="3 ESO">3º ESO</option>
+            <option value="4 ESO">4º ESO</option>
+            <option value="BATXILLERAT">BATXILLERAT</option>
+          </select>
+        </div>
+        
+        <!-- Selección de división -->
+        <div class="flex-1">
+          <label for="divisionSelect" class="block text-sm font-medium text-gray-700 mb-1">Divisió</label>
+          <select
+            v-model="localSelectedDivision"
+            id="divisionSelect"
+            class="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="all">Totes les divisions</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Botón para limpiar filtros -->
+      <div class="mt-4 flex justify-end">
+        <button
+          @click="clearLocalFilters"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Netejar filtres
+        </button>
+      </div>
+    </div>
+
     <!-- Llistat d'estudiants -->
     <div v-if="filteredStudents.length > 0" class="bg-white rounded-lg shadow overflow-hidden">
       <div class="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
@@ -287,17 +358,46 @@ import { GridComponent, TooltipComponent, LegendComponent, DataZoomComponent } f
 import { useStudentsStore } from "@/stores/studentsStore";
 import { useAuthStore } from "@/stores/authStore";
 
+// Props para recibir los filtros desde el componente padre
+const props = defineProps({
+  searchQuery: {
+    type: String,
+    default: ''
+  },
+  selectedCourse: {
+    type: String,
+    default: 'all'
+  },
+  selectedDivision: {
+    type: String,
+    default: 'all'
+  }
+});
+
 // Registrar componentes de ECharts
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent]);
 
 const studentsStore = useStudentsStore();
 const authStore = useAuthStore();
 
-// VARIABLES REACTIVES PER FILTRAR ELS ESTUDIANTS
-const searchQuery = ref('');
-const selectedCourse = ref(null);
-const selectedDivision = ref(null);
+// Variables locales para los filtros (se sincronizan con los props)
+const localSearchQuery = ref('');
+const localSelectedCourse = ref('all');
+const localSelectedDivision = ref('all');
 const students = computed(() => studentsStore.students || []);
+
+// Sincronizar las variables locales con los props
+watch(() => props.searchQuery, (newVal) => {
+  localSearchQuery.value = newVal;
+}, { immediate: true });
+
+watch(() => props.selectedCourse, (newVal) => {
+  localSelectedCourse.value = newVal;
+}, { immediate: true });
+
+watch(() => props.selectedDivision, (newVal) => {
+  localSelectedDivision.value = newVal;
+}, { immediate: true });
 
 // Estado
 const isLoading = ref(true);
@@ -358,19 +458,26 @@ const handleDivisionChange = () => {
 const filteredStudents = computed(() => {
   let result = [...students.value];
 
-  if (selectedCourse.value) {
-    result = result.filter(student => student.course_id === selectedCourse.value);
+  // Filtrar por curso si no es "all"
+  if (localSelectedCourse.value !== 'all') {
+    result = result.filter(student => 
+      student.course && student.course.toLowerCase() === localSelectedCourse.value.toLowerCase()
+    );
   }
 
-  if (selectedDivision.value) {
-    result = result.filter(student => student.division_id === selectedDivision.value);
+  // Filtrar por división si no es "all"
+  if (localSelectedDivision.value !== 'all') {
+    result = result.filter(student => 
+      student.division && student.division.toLowerCase() === localSelectedDivision.value.toLowerCase()
+    );
   }
 
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.toLowerCase().trim();
+  // Filtrar por términos de búsqueda
+  if (localSearchQuery.value && localSearchQuery.value.trim()) {
+    const query = localSearchQuery.value.toLowerCase().trim();
     result = result.filter(student =>
-      student.name.toLowerCase().includes(query) ||
-      student.email.toLowerCase().includes(query)
+      (student.name && student.name.toLowerCase().includes(query)) ||
+      (student.email && student.email.toLowerCase().includes(query))
     );
   }
 
@@ -698,9 +805,19 @@ const pagesToShow = computed(() => {
   }
 });
 
-// Resetear la página cuando cambien los filtros
-watch([searchQuery, selectedCourse, selectedDivision], () => {
+// Función para limpiar los filtros locales
+const clearLocalFilters = () => {
+  localSearchQuery.value = '';
+  localSelectedCourse.value = 'all';
+  localSelectedDivision.value = 'all';
   currentPage.value = 1;
+  selectedStudent.value = null;
+};
+
+// Resetear la página cuando cambien los filtros
+watch([localSearchQuery, localSelectedCourse, localSelectedDivision], () => {
+  currentPage.value = 1;
+  selectedStudent.value = null; // Reset selected student when filters change
 });
 
 // Cargar datos iniciales
@@ -724,8 +841,8 @@ onMounted(async () => {
     // Cargar las competencias desde el backend
     await fetchCompetencias();
     
-    // Cargar los cursos disponibles
-    await fetchCourses();
+    // No cargamos los cursos aquí ya que lo hacemos en el componente padre
+    // ya que las variables de curso y división vienen por props
     
     isLoading.value = false;
   } catch (err) {
@@ -735,35 +852,12 @@ onMounted(async () => {
   }
 });
 
-// Watch para actualizar divisiones cuando cambia el curso
-watch(selectedCourse, () => {
-  selectedDivision.value = null;
-  if (selectedCourse.value) {
-    fetchDivisions();
-  }
-});
+// Ya no necesitamos detectar si el usuario es orientador
+// ya que todos los roles pueden ver y usar el filtro
 
-// Variables para cursos y divisiones
-const courses = ref([]);
-const divisions = ref([]);
+// No necesitamos este watch ya que los valores vienen por props desde el componente padre
 
-// Funció per obtenir tots els cursos
-const fetchCourses = async () => {
-  try {
-    const response = await fetch("http://localhost:8000/api/courses", {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    });
-    if (!response.ok) throw new Error("Error al carregar els cursos");
-    const data = await response.json();
-    courses.value = data;
-  } catch (error) {
-    console.error("Error al carregar els cursos:", error);
-  }
-};
+// We no longer need this code as it's now in the parent component
 </script>
 
 <style scoped>
