@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\FormAssignedMail;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * @OA\Tag(
@@ -55,16 +56,54 @@ class FormController extends Controller
     }
     public function assignFormToCourseAndDivision(Request $request)
     {
-        // Validar los datos
-        $validated = $request->validate([
+        // Preparar reglas de validación
+        $rules = [
             'course_id' => 'required|exists:courses,id',
             'division_id' => 'required|exists:divisions,id',
             'form_id' => 'required|exists:forms,id',
-        ]);
+            'teacher_id' => 'nullable|exists:users,id',
+        ];
+        
+        // Validar los datos
+        $validated = $request->validate($rules);
+        
+        // Si no se proporciona teacher_id, usar el ID del usuario autenticado
+        if (!isset($validated['teacher_id']) || empty($validated['teacher_id'])) {
+            $validated['teacher_id'] = auth()->id();
+        }
 
         $courseId = $validated['course_id'];
         $divisionId = $validated['division_id'];
         $formId = $validated['form_id'];
+        $teacherId = $validated['teacher_id'];
+
+        // SOLUCIÓN TEMPORAL: Verificar si la tabla form_assignments existe antes de intentar usarla
+        try {
+            // Intenta crear la asignación (si la migración ya se ejecutó)
+            if (Schema::hasTable('form_assignments')) {
+                $formAssignment = \App\Models\FormAssignment::firstOrCreate(
+                    [
+                        'teacher_id' => $teacherId,
+                        'form_id' => $formId,
+                        'course_id' => $courseId,
+                        'division_id' => $divisionId,
+                    ],
+                    [
+                        'responses_count' => 0
+                    ]
+                );
+                
+                $assignmentId = $formAssignment->id;
+            } else {
+                // Si la tabla no existe, seguimos adelante sin crear la asignación
+                $assignmentId = null;
+                Log::warning('La tabla form_assignments no existe. Se necesita ejecutar la migración.');
+            }
+        } catch (\Exception $e) {
+            // Si hay cualquier error, registramos y continuamos
+            Log::error('Error al crear la asignación del formulario: ' . $e->getMessage());
+            $assignmentId = null;
+        }
 
         $users = User::whereHas('divisions', function ($query) use ($courseId, $divisionId) {
             $query->where('course_id', $courseId)
@@ -77,7 +116,6 @@ class FormController extends Controller
 
         $form = Form::find($formId);
     
-
         foreach ($users as $user) {
             if (!$user->forms()->where('form_id', $formId)->exists()) {
                 $user->forms()->attach($formId, [
@@ -90,7 +128,10 @@ class FormController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Formulario asignado y notificación enviada correctamente.'], 200);
+        return response()->json([
+            'message' => 'Formulario asignado y notificación enviada correctamente.',
+            'assignment_id' => $assignmentId ?? 0
+        ], 200);
     }
 
 
@@ -128,6 +169,12 @@ class FormController extends Controller
 
         // Extraer solo las preguntas con sus opciones
         $questions = $form->questions;
+
+        // Verificar y registrar si hay preguntas
+        \Illuminate\Support\Facades\Log::info('Preguntas recuperadas para formulario ID ' . $formId, [
+            'questions_count' => $questions->count(),
+            'questions' => $questions->toArray()
+        ]);
 
         // Devolver las preguntas y opciones
         return response()->json($questions, 200);

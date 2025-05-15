@@ -67,6 +67,16 @@ class User extends Authenticatable
             ->withPivot('answered', 'course_id', 'division_id')
             ->withTimestamps();
     }
+    
+    public function formUsers()
+    {
+        return $this->hasMany(FormUser::class);
+    }
+    
+    public function formAssignments()
+    {
+        return $this->hasMany(FormAssignment::class, 'teacher_id');
+    }
 
     public function teacherComments()
     {

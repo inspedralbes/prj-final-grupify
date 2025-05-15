@@ -24,6 +24,9 @@ use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\BitacoraNoteController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\CompetenceController;
+use App\Http\Controllers\FormAssignmentController;
+use App\Http\Controllers\FormUserController;
+use App\Http\Controllers\DiagnosticController;
 
 // Rutas para competencias
 Route::get('/competences', [CompetenceController::class, 'index']);
@@ -338,3 +341,24 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'role:tutor,orientador,admin'])->post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
 Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']); // Ruta pública para obtener resultados
 Route::get('/cesc/graficas-tags', [CescRelationshipController::class, 'getTagsGraphData']); // Ruta pública para obtener gráficas
+
+// Rutas para asignación de formularios
+Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->group(function () {
+    Route::post('/form-assignments', [FormAssignmentController::class, 'assign']);
+    Route::get('/form-assignments/teacher/{teacherId}', [FormAssignmentController::class, 'getByTeacher']);
+    Route::get('/form-assignments/{id}', [FormAssignmentController::class, 'getAssignmentDetails']);
+    Route::post('/form-assignments/{id}/update-count', [FormAssignmentController::class, 'updateResponsesCount']);
+});
+
+// Rutas para form_user
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/form-user/update-status', [FormUserController::class, 'updateAnsweredStatus']);
+    Route::post('/form-user/responses', [FormUserController::class, 'getFormResponses']);
+});
+
+// Rutas de diagnóstico
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/check-migration-status', [DiagnosticController::class, 'checkMigrationStatus']);
+    Route::get('/check-data-integrity', [DiagnosticController::class, 'checkDataIntegrity']);
+    Route::post('/fix-data-issues', [DiagnosticController::class, 'fixDataIssues']);
+});
