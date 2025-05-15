@@ -1,0 +1,12 @@
+{
+    "servers": {
+        "my-mcp-server-610260f5": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "@upstash/context7-mcp@latest",
+                "-y"
+            ]
+        }
+    }
+}

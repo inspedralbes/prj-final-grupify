@@ -140,6 +140,27 @@ services:
     networks:
       - app-network
 
+  chat:
+    build:
+      context: ./mcp-use-grupify
+      dockerfile: Dockerfile
+    container_name: grupify-chat
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./mcp-use-grupify:/app
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: gestioeduca
+      DB_USER: user
+      DB_PASSWORD: user
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
 volumes:
   mysql_data:
   redis_data:
