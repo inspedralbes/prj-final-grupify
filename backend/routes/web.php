@@ -14,6 +14,7 @@ use App\Http\Controllers\AnswerController;
 use App\Http\Controllers\AuthenticatedSessionController;
 use App\Http\Controllers\RegisteredUserController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\QuestionsController;
 
 use Illuminate\Auth\Events\Authenticated;
 
@@ -34,6 +35,11 @@ Route::post('/logout', function () {
 Route::get('/forms/{id}', [FormController::class, 'show'])->name('forms.show');
 
 Route::post('/users/{userId}/assign-course-division', [UserController::class, 'assignCourseAndDivision'])->name('users.assignCourseDivision');
+
+// Rutas específicas para las preguntas y respuestas del formulario (sin protección de autenticación)
+Route::get('/api/form-questions/{formId}', [QuestionsController::class, 'getFormQuestions']);
+Route::post('/api/submit-form-responses/{formId}', [App\Http\Controllers\SubmitResponsesController::class, 'submitResponses']);
+
 
 Route::resource('roles', RoleController::class);
 Route::resource('courses', CourseController::class);
