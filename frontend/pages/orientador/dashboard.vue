@@ -211,7 +211,7 @@ const menuItems = [
   {
     title: "Cesc",
     icon: "M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.25-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z",
-    route: "/professor/cesc/CescView",
+    route: "/orientador/cesc/CescView",
     description: "Avaluació de conductes d'assetjament"
   },
   {
@@ -223,7 +223,7 @@ const menuItems = [
   {
     title: "Notificacions",
     icon: "M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5",
-    route: "/professor/notificacions",
+    route: "/orientador/notificacions",
     description: "Gestiona les teves notificacions"
   },
 ];
