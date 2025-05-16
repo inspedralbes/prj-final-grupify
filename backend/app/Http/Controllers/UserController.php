@@ -139,9 +139,13 @@ class UserController extends Controller
     {
         // Obtener todos los roles para el selector
         $roles = \App\Models\Role::all();
+        
+        // Obtener cursos y divisiones para los filtros
+        $courses = \App\Models\Course::all();
+        $divisions = \App\Models\Division::all();
 
         // Iniciar query para usuarios
-        $query = User::with('role');
+        $query = User::with(['role', 'courseDivisionUsers.course', 'courseDivisionUsers.division']);
 
         // Aplicar filtro por rol si se proporciona
         if ($request->filled('role_id')) {
@@ -156,6 +160,22 @@ class UserController extends Controller
                   ->orWhere('last_name', 'LIKE', "%{$searchTerm}%");
             });
         }
+        
+        // Aplicar filtro por curso si se proporciona
+        if ($request->filled('course_id')) {
+            $courseId = $request->course_id;
+            $query->whereHas('courseDivisionUsers', function($q) use ($courseId) {
+                $q->where('course_id', $courseId);
+            });
+        }
+        
+        // Aplicar filtro por división si se proporciona
+        if ($request->filled('division_id')) {
+            $divisionId = $request->division_id;
+            $query->whereHas('courseDivisionUsers', function($q) use ($divisionId) {
+                $q->where('division_id', $divisionId);
+            });
+        }
 
         // Obtener usuarios paginados
         $users = $query->paginate(20);
@@ -166,7 +186,7 @@ class UserController extends Controller
         }
 
         // Si no es AJAX (es una solicitud tradicional), devolver una vista
-        return view('users.users', compact('users', 'roles'));
+        return view('users.users', compact('users', 'roles', 'courses', 'divisions'));
     }
 
 
