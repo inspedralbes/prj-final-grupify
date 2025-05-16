@@ -56,22 +56,22 @@
                 <!-- Filtros -->
                 <div class="col-md-6">
                     <form action="{{ route('users.index') }}" method="GET">
-                        <!-- Búsqueda por texto - Ocupa toda la anchura -->
-                        <div class="mb-3">
-                            <label for="search_filter" class="form-label d-block d-md-none mb-1">Cerca per nom o cognom:</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white">
-                                    <i class="fas fa-search text-muted"></i>
-                                </span>
-                                <input type="text" id="search_filter" name="search" class="form-control" 
-                                    placeholder="Cerca per nom o cognom" value="{{ request('search') }}">
-                            </div>
-                        </div>
-                        
-                        <!-- Contenedor de filtros en grid -->
+                        <!-- Todos los filtros en una sola línea -->
                         <div class="row g-2 mb-3">
+                            <!-- Búsqueda por texto -->
+                            <div class="col-md-3">
+                                <label for="search_filter" class="form-label small text-muted d-block mb-1">Cerca per nom:</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="search_filter" name="search" class="form-control" 
+                                        placeholder="Nom o cognom" value="{{ request('search') }}">
+                                </div>
+                            </div>
+                            
                             <!-- Filtro por rol -->
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="role_filter" class="form-label small text-muted d-block mb-1">Filtrar per rol:</label>
                                 <select id="role_filter" name="role_id" class="form-select form-select-sm">
                                     <option value="">Tots els rols</option>
@@ -84,7 +84,7 @@
                             </div>
                             
                             <!-- Filtro por curso -->
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="course_filter" class="form-label small text-muted d-block mb-1">Filtrar per curs:</label>
                                 <select id="course_filter" name="course_id" class="form-select form-select-sm">
                                     <option value="">Tots els cursos</option>
@@ -97,7 +97,7 @@
                             </div>
                             
                             <!-- Filtro por división -->
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="division_filter" class="form-label small text-muted d-block mb-1">Filtrar per divisió:</label>
                                 <select id="division_filter" name="division_id" class="form-select form-select-sm">
                                     <option value="">Totes les divisions</option>
@@ -111,12 +111,12 @@
                         </div>
                         
                         <!-- Botones de acción -->
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary px-3 py-2">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm px-3">
                                 <i class="fas fa-filter me-2"></i>Aplicar
                             </button>
                             @if(request('role_id') || request('search') || request('course_id') || request('division_id'))
-                            <a href="{{ route('users.index') }}" class="btn btn-light border px-3 py-2">
+                            <a href="{{ route('users.index') }}" class="btn btn-light border btn-sm px-3">
                                 <i class="fas fa-times me-2"></i>Netejar
                             </a>
                             @endif
