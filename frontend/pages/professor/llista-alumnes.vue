@@ -72,6 +72,8 @@ const selectCourseAndDivision = async (courseName, divisionName) => {
     // Si se encuentra la asignación, cargar los estudiantes de ese curso y división
     if (assignment) {
       await studentsStore.fetchStudents(true, assignment.course_id, assignment.division_id);
+    } else {
+      console.error("No se encontró la asignación para el curso y división seleccionados");
     }
     
     // Resetear a página 1 al cambiar de selección
@@ -357,7 +359,14 @@ onMounted(async () => {
           </div>
           
           <!-- Mostrem els estudiants paginats -->
-          <TeacherStudentList :students="paginatedStudents" class="divide-y divide-gray-200" />
+          <TeacherStudentList 
+            :students="paginatedStudents" 
+            class="divide-y divide-gray-200" 
+            v-if="paginatedStudents.length > 0" 
+          />
+          <div v-else class="p-6 text-center text-gray-500">
+            No s'han trobat estudiants en aquest curs i divisió.
+          </div>
 
           <!-- Controls de paginació -->
           <div class="flex items-center justify-between px-4 py-3 sm:px-6">
