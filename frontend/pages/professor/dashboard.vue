@@ -84,15 +84,7 @@ const allMenuItems = [
     route: "/professor/notificacions",
     requiredPermission: null,
     description: "Gestiona les teves notificacions"
-  },
-  {
-    title: "Estat Formularis",
-    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
-    route: "/professor/formularis/estat",
-    requiredPermission: null,
-    description: "Seguiment dels formularis completats"
-  },
-];
+  },];
 
 // Filtrar menú según permisos
 const menuItems = computed(() => {
@@ -607,9 +599,9 @@ const getCurrentDate = () => {
           <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 class="text-lg font-medium text-gray-900">Estat dels Formularis</h2>
-              <NuxtLink to="/professor/formularis/estat" class="text-sm text-primary hover:text-primary-dark">
-                Veure complet
-              </NuxtLink>
+              <span class="text-sm text-gray-400">
+                Resum
+              </span>
             </div>
             <div class="p-6 space-y-4">
               <div v-for="(form, name) in dashboardState.formCompletion" :key="name" class="space-y-2">
