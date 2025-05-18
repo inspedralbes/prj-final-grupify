@@ -46,8 +46,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import DashboardNavOrientador from '@/components/Orientador/DashboardNavOrientador.vue';
-import TagsGraphic from '@/components/Teacher/CescComponents/TagsGraphic.vue';
-import CescCategoryCards from '@/components/Teacher/CescComponents/CescCategoryCards.vue';
+import TagsGraphic from '@/components/Orientador/CescComponents/TagsGraphic.vue';
+import CescCategoryCards from '@/components/Orientador/CescComponents/CescCategoryCards.vue';
 
 const route = useRoute();
 // Datos del usuario
