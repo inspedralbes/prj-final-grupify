@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStudentSearch } from "@/composables/useStudentSearch";
 import { useStudentsStore } from "@/stores/studentsStore";
 import { useAuthStore } from "~/stores/authStore";
+import OrientadorDashboardNavOrientador from "~/components/Orientador/DashboardNavOrientador.vue";
+import OrientadorStudentList from "~/components/Orientador/OrientadorStudentList.vue";
 
 const router = useRouter();
 
@@ -277,7 +279,7 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <DashboardNavTeacher />
+    <OrientadorDashboardNavOrientador />
 
     <main class="container mx-auto px-4 py-6 sm:py-8">
       <!-- Títol i descripció del panell -->
@@ -488,4 +490,21 @@ onMounted(async () => {
 .border-primary-500 {
   border-color: #6366f1;
 }
+
+.bg-primary {
+  background-color: #4f46e5;
+}
+
+.bg-primary-dark {
+  background-color: #3730a3;
+}
+
+.bg-primary-500 {
+  background-color: #6366f1;
+}
+
+.bg-primary-600 {
+  background-color: #4f46e5;
+}
+
 </style>
