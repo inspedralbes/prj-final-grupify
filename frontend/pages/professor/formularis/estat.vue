@@ -109,9 +109,14 @@
                 </div>
               </td>
               <td class="py-2 px-4">
-                <NuxtLink :to="`/professor/formularis/respostat/${assignment.id}`" class="text-blue-600 hover:underline mr-3">
-                  Ver Respuestas
-                </NuxtLink>
+                <div class="flex space-x-3">
+                  <NuxtLink :to="`/professor/formularis/respostat/${assignment.id}`" class="text-blue-600 hover:underline">
+                    Ver Respuestas
+                  </NuxtLink>
+                  <button @click="toggleAssignmentStatus(assignment)" class="text-gray-400 hover:text-primary">
+                    <component :is="assignment.status ? EyeSlashIcon : EyeIcon" class="w-5 h-5" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -123,6 +128,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { EyeIcon, EyeSlashIcon } from "@heroicons/vue/24/outline";
 
 const assignments = ref([]);
 const forms = ref([]);
@@ -343,5 +349,37 @@ const calculateCompletionPercentage = (assignment) => {
   console.log(`Formulario ID: ${assignment.id}, Respuestas: ${assignment.responses_count}, Porcentaje: ${percentage}%`);
   
   return percentage;
+};
+
+// Función para alternar el estado del formulario entre activo/inactivo
+const toggleAssignmentStatus = async (assignment) => {
+  try {
+    const newStatus = !assignment.status; // Invertir el estado actual
+    
+    const response = await fetch(`/api/form-assignments/${assignment.id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Estado del formulario actualizado:', data);
+      
+      // Actualizar el estado en la lista local
+      assignment.status = newStatus;
+      
+      // Notificar al usuario
+      alert(newStatus ? 'Formulario activado' : 'Formulario desactivado');
+    } else {
+      console.error('Error al actualizar el estado del formulario');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
 };
 </script>

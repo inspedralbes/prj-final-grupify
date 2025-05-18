@@ -108,6 +108,9 @@ Route::post('/forms/{formId}/submit-responses', [AnswerController::class, 'submi
 // RUTA PARA ACTUALIZAR ESTADO DE FORMULARIO
 Route::patch('/forms/{formId}/status', [FormController::class, 'updateFormStatus']);
 
+// RUTA PARA ACTUALIZAR ESTADO DE ASIGNACIÓN DE FORMULARIO
+Route::patch('/forms/{formId}/assignment-status', [FormController::class, 'updateFormAssignmentStatus']);
+
 // RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO UN FORMULARIO
 Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm']);
 
@@ -343,11 +346,12 @@ Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResul
 Route::get('/cesc/graficas-tags', [CescRelationshipController::class, 'getTagsGraphData']); // Ruta pública para obtener gráficas
 
 // Rutas para asignación de formularios
-Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/form-assignments', [FormAssignmentController::class, 'assign']);
     Route::get('/form-assignments/teacher/{teacherId}', [FormAssignmentController::class, 'getByTeacher']);
     Route::get('/form-assignments/{id}', [FormAssignmentController::class, 'getAssignmentDetails']);
     Route::post('/form-assignments/{id}/update-count', [FormAssignmentController::class, 'updateResponsesCount']);
+    Route::patch('/form-assignments/{id}/status', [FormAssignmentController::class, 'updateStatus']);
 });
 
 // Rutas para form_user

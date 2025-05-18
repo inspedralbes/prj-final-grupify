@@ -23,7 +23,13 @@ class FormAssignmentController extends Controller
             'form_id' => 'required|exists:forms,id',
             'course_id' => 'required|exists:courses,id',
             'division_id' => 'required|exists:divisions,id',
+            'status' => 'boolean',
         ]);
+        
+        // Asegurar que status esté presente con valor predeterminado
+        if (!isset($validated['status'])) {
+            $validated['status'] = true; // Activo por defecto
+        }
 
         try {
             $assignment = FormAssignment::create($validated);
@@ -56,6 +62,7 @@ class FormAssignmentController extends Controller
                     'course_id' => $assignment->course_id,
                     'division_id' => $assignment->division_id,
                     'responses_count' => $assignment->responses_count,
+                    'status' => $assignment->status ?? true,
                     'created_at' => $assignment->created_at,
                     'updated_at' => $assignment->updated_at,
                 ];
@@ -179,5 +186,25 @@ class FormAssignmentController extends Controller
         $assignment->save();
         
         return response()->json(['message' => 'Contador actualizado', 'count' => $count]);
+    }
+    
+    /**
+     * Actualizar el estado de la asignación del formulario (activar/desactivar)
+     */
+    public function updateStatus(Request $request, $assignmentId)
+    {
+        $assignment = FormAssignment::findOrFail($assignmentId);
+        
+        $validated = $request->validate([
+            'status' => 'required|in:0,1',  // Aceptar solo 0 o 1 como valores
+        ]);
+        
+        $assignment->status = $validated['status'];
+        $assignment->save();
+        
+        return response()->json([
+            'message' => $validated['status'] == 1 ? 'Formulario activado' : 'Formulario desactivado',
+            'assignment' => $assignment
+        ]);
     }
 }

@@ -153,6 +153,34 @@ class FormController extends Controller
 
         return response()->json(['message' => 'Estado del formulario actualizado correctamente']);
     }
+    
+    public function updateFormAssignmentStatus(Request $request, $formId)
+    {
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'division_id' => 'required|exists:divisions,id',
+            'status' => 'required|in:0,1',  // Aceptar solo 0 o 1 como valores
+        ]);
+
+        // Buscar la asignación del formulario
+        $formAssignment = \App\Models\FormAssignment::where('form_id', $formId)
+            ->where('course_id', $validated['course_id'])
+            ->where('division_id', $validated['division_id'])
+            ->first();
+
+        if (!$formAssignment) {
+            return response()->json(['message' => 'Asignación de formulario no encontrada'], 404);
+        }
+
+        // Actualizar el estado de la asignación (como valor entero, no como booleano)
+        $formAssignment->status = $validated['status'];
+        $formAssignment->save();
+
+        return response()->json([
+            'message' => 'Estado de la asignación del formulario actualizado correctamente',
+            'form_assignment' => $formAssignment
+        ]);
+    }
 
 
 
@@ -186,7 +214,7 @@ class FormController extends Controller
         // Buscar al usuario junto con sus formularios y el campo 'answered' de la tabla pivot
         $user = User::with(['forms' => function ($query) {
             $query->where('status', 1) // Filtrar solo formularios activos
-                ->withPivot('answered'); // Incluir el campo 'answered' de la tabla pivot
+                ->withPivot('answered', 'course_id', 'division_id'); // Incluir campos de la tabla pivot
         }])->find($userId);
 
         // Verificar si el usuario existe
@@ -195,13 +223,29 @@ class FormController extends Controller
         }
 
         // Obtener los formularios del usuario con la columna 'answered' de la tabla pivot
-        $forms = $user->forms->map(function ($form) {
-            return [
-                'id' => $form->id,
-                'title' => $form->title,
-                'answered' => $form->pivot->answered, // Acceder al valor de 'answered' en la tabla pivot
-            ];
-        });
+        $forms = $user->forms->map(function ($form) use ($userId) {
+            $pivotData = $form->pivot;
+            
+            // Verificar si está activo en form_assignments
+            $isActive = \App\Models\FormAssignment::where('form_id', $form->id)
+                ->where('course_id', $pivotData->course_id)
+                ->where('division_id', $pivotData->division_id)
+                ->where('status', true)
+                ->exists();
+                
+            // Solo devolver si está activo en form_assignments
+            if ($isActive) {
+                return [
+                    'id' => $form->id,
+                    'title' => $form->title,
+                    'answered' => $pivotData->answered,
+                    'course_id' => $pivotData->course_id,
+                    'division_id' => $pivotData->division_id,
+                ];
+            }
+            
+            return null;
+        })->filter(); // Eliminar los nulos (formularios inactivos)
 
         // Devolver los formularios y su estado 'answered'
         return response()->json($forms);
