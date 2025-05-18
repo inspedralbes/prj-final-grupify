@@ -120,6 +120,37 @@ async function obtenerDatosAlumno(studentId) {
   }
 }
 // Función para actualizar el gráfico
+// Función para cargar un estudiante directamente por su ID
+const fetchStudentById = async (id) => {
+  try {
+    console.log("Obteniendo estudiante directamente por ID:", id);
+    const response = await fetch(`http://localhost:8000/api/users/${id}`);
+    
+    if (!response.ok) {
+      console.error(`Error al obtener estudiante: ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log("Datos del estudiante recibidos:", data);
+    
+    // Asegurarse de que el estudiante tiene todos los campos necesarios
+    return {
+      id: data.id,
+      name: data.name,
+      last_name: data.last_name,
+      email: data.email,
+      image: data.image,
+      course: data.course || "",
+      division: data.division || "",
+      status: data.status !== undefined ? data.status : 1
+    };
+  } catch (error) {
+    console.error("Error en fetchStudentById:", error);
+    return null;
+  }
+};
+
 // Variable para almacenar las respuestas para el gráfico
 const datosGrafico = ref(null);
 
@@ -371,12 +402,26 @@ const mostrarGrafico = () => {
   if (isFormVisible.value && datosGrafico.value) {
     // Esperamos a que el DOM se actualice antes de intentar manipular el SVG
     nextTick(() => {
-      // Añadimos un pequeño retraso para asegurar que el SVG esté completamente renderizado
-      setTimeout(() => {
-        // Forzamos una actualización del gráfico
-        actualizarGrafico(datosGrafico.value);
-        console.log("Gráfico actualizado después de hacer visible");
-      }, 200);
+      // Añadimos varios intentos con retrasos incrementales para asegurar que el SVG esté listo
+      const maxIntentos = 5;
+      const intentarActualizar = (intento = 1) => {
+        setTimeout(() => {
+          console.log(`Intento ${intento} de actualizar gráfico`);
+          actualizarGrafico(datosGrafico.value);
+          
+          // Verificar si el gráfico se dibujó correctamente
+          const svg = document.getElementById("radial-graph");
+          const dataPoints = svg?.querySelector("#data-points");
+          
+          // Si no hay puntos de datos y aún hay intentos, intentar de nuevo
+          if ((!dataPoints || dataPoints.children.length === 0) && intento < maxIntentos) {
+            console.log(`Reintentar actualización del gráfico (intento ${intento + 1})`);
+            intentarActualizar(intento + 1);
+          }
+        }, 200 * intento); // Retraso incremental: 200ms, 400ms, 600ms, 800ms, 1000ms
+      };
+      
+      intentarActualizar();
     });
   }
 };
@@ -385,50 +430,102 @@ const mostrarGrafico = () => {
 const onFormMounted = () => {
   if (isFormVisible.value && datosGrafico.value) {
     console.log("El formulario está montado y visible");
-    // Esperar un poco para asegurar que el DOM está completamente renderizado
-    setTimeout(() => {
-      actualizarGrafico(datosGrafico.value);
-    }, 50);
+    
+    // Implementar múltiples intentos para asegurar que el gráfico se renderice
+    const maxIntentos = 5;
+    
+    const intentarActualizar = (intento = 1) => {
+      setTimeout(() => {
+        console.log(`Intento ${intento} de actualizar gráfico desde onFormMounted`);
+        actualizarGrafico(datosGrafico.value);
+        
+        // Verificar si el gráfico se dibujó correctamente
+        const svg = document.getElementById("radial-graph");
+        const dataPoints = svg?.querySelector("#data-points");
+        
+        // Si no hay puntos de datos y aún hay intentos, intentar de nuevo
+        if ((!dataPoints || dataPoints.children.length === 0) && intento < maxIntentos) {
+          console.log(`Reintentar actualización del gráfico (intento ${intento + 1})`);
+          intentarActualizar(intento + 1);
+        }
+      }, 100 * intento); // Retraso incremental: 100ms, 200ms, 300ms, etc.
+    };
+    
+    intentarActualizar();
   }
 };
 
 onMounted(async () => {
   console.log("Componente principal montado");
   try {
-    // Cargar estudiantes si no están cargados
-    if (!studentsStore.students.length) {
-      await studentsStore.fetchStudents();
+    isLoading.value = true;
+    error.value = null;
+    
+    // Intento 1: Ver si el estudiante ya está en la tienda
+    if (studentsStore.students.length > 0) {
+      student.value = studentsStore.getStudentById(Number(studentId));
+      console.log("Búsqueda en tienda existente:", student.value ? "encontrado" : "no encontrado");
     }
     
-    // Buscar el estudiante específico
-    student.value = studentsStore.getStudentById(Number(studentId));
+    // Intento 2: Si no lo encontramos, intentar cargarlo de la tienda después de refrescar
     if (!student.value) {
-      error.value = "Estudiant no trobat";
-    } else {
-      // Cargar comentarios y verificar estado del formulario
-      await fetchComments(studentId);
-      await checkForm5Status(studentId);
-
-      // Obtener las respuestas de las competencias
+      console.log("Cargando estudiantes de la tienda...");
+      await studentsStore.fetchStudents(true);
+      student.value = studentsStore.getStudentById(Number(studentId));
+      console.log("Búsqueda después de refrescar tienda:", student.value ? "encontrado" : "no encontrado");
+    }
+    
+    // Intento 3: Como último recurso, obtener directamente del backend
+    if (!student.value) {
+      console.log("Obteniendo estudiante directamente de la API...");
+      student.value = await fetchStudentById(studentId);
+      
+      // Si se obtuvo correctamente, actualizar la tienda
+      if (student.value) {
+        console.log("Estudiante obtenido directamente, actualizando tienda");
+        studentsStore.updateStudent(student.value);
+      } else {
+        error.value = "Estudiant no trobat";
+        isLoading.value = false;
+        return;
+      }
+    }
+    
+    console.log("Estudiante cargado correctamente:", student.value);
+    
+    // Proceder con la carga de datos adicionales
+    await Promise.all([
+      fetchComments(studentId),
+      checkForm5Status(studentId)
+    ]).catch(err => {
+      console.error("Error al cargar comentarios o estado del formulario:", err);
+      // No detener el proceso por datos adicionales
+    });
+    
+    // Obtener las respuestas de las competencias
+    try {
       const respuestas = await obtenerDatosAlumno(studentId);
       console.log("Respuestas recibidas en onMounted:", respuestas);
       
-      if (!respuestas || respuestas.length === 0) {
-        console.warn("No se encontraron respuestas para actualizar el gráfico.");
-      } else {
+      if (respuestas && respuestas.length > 0) {
         // Guardar las respuestas para el gráfico
         datosGrafico.value = respuestas;
         console.log("Datos del gráfico guardados, esperando a que el usuario active el gráfico");
         
-        // Si quisiéramos mostrar automáticamente el gráfico:
+        // Opcional: mostrar automáticamente el gráfico
         // isFormVisible.value = true;
         // nextTick(() => {
-        //   onFormMounted();
+        //   setTimeout(() => actualizarGrafico(respuestas), 100);
         // });
+      } else {
+        console.warn("No se encontraron respuestas para actualizar el gráfico.");
       }
+    } catch (compErr) {
+      console.error("Error al obtener datos de competencias:", compErr);
+      // No detener el proceso por error en competencias
     }
   } catch (err) {
-    console.error("Error en onMounted:", err);
+    console.error("Error general en onMounted:", err);
     error.value = "Error al cargar els estudiants";
   } finally {
     isLoading.value = false;
