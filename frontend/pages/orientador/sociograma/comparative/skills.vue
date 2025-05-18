@@ -752,7 +752,7 @@ const coursesComparisonOptions = computed(() => {
 });
 
 const goBack = () => {
-  router.push("/professor/sociograma/comparative");
+  router.push("/orientador/sociograma/comparative");
 };
 
 // Calcular el porcentaje de votos recibidos
