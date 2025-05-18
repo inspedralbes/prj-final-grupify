@@ -132,6 +132,7 @@ class FormUserController extends Controller
             // Verificamos si el profesor tiene asignaciones para este formulario
             $teacherAssignments = \App\Models\FormAssignment::where('teacher_id', $teacher->id)
                 ->where('form_id', $formId)
+                ->where('status', true) // Solo asignaciones activas
                 ->get();
                 
             if ($teacherAssignments->isEmpty()) {

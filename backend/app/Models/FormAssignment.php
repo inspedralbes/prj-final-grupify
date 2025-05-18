@@ -17,6 +17,7 @@ class FormAssignment extends Model
         'course_id',
         'division_id',
         'responses_count',
+        'status',
     ];
 
     /**
