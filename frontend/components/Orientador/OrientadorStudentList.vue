@@ -57,7 +57,7 @@
             </td>
             <td class="py-3 px-4 text-right">
               <NuxtLink
-                :to="`/professor/studentProfile/${student.id}`"
+                :to="`/orientador/studentProfile/${student.id}`"
                 class="text-primary hover:text-primary-dark inline-flex items-center"
               >
                 <span class="mr-1">Veure</span>
