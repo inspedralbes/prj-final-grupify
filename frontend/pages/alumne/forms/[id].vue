@@ -58,18 +58,12 @@ async function fetchFormQuestions() {
   hasError.value = false;
   
   try {
-    // Intentamos ambas rutas para garantizar que funcionará
-    let apiUrl = `http://localhost:8000/api/form-questions/${formId}`;
-    let response = await fetch(apiUrl);
+    // Usar directamente la ruta que sabemos que funciona
+    const apiUrl = `http://localhost:8000/api/forms/${formId}/questions`;
+    const response = await fetch(apiUrl);
     
     if (!response.ok) {
-      console.log(`Falló la primera ruta, intentando con ruta alternativa...`);
-      apiUrl = `http://localhost:8000/api/forms/${formId}/questions`;
-      response = await fetch(apiUrl);
-      
-      if (!response.ok) {
-        throw new Error(`Error al cargar el formulario: ${response.status} ${response.statusText}`);
-      }
+      throw new Error(`Error al cargar el formulario: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
@@ -232,11 +226,8 @@ async function submitResponses() {
       // return;
     }
 
-    // Intentamos con dos rutas posibles
-    const submitUrls = [
-      `http://localhost:8000/api/submit-form-responses/${formId}`,
-      `http://localhost:8000/api/forms/${formId}/submit-responses`
-    ];
+    // Usar directamente la URL correcta
+    const submitUrl = `http://localhost:8000/api/forms/${formId}/submit-responses`;
     
     let submitted = false;
     let errorMsg = "";
@@ -251,12 +242,8 @@ async function submitResponses() {
     
     console.log("Datos a enviar:", JSON.stringify(postData, null, 2));
     
-    // Intentar con la primera URL, si falla intentar con la segunda
-    for (const url of submitUrls) {
-      if (submitted) break;
-      
-      try {
-        console.log(`Intentando enviar a: ${url}`);
+    try {
+      console.log(`Enviando a: ${submitUrl}`);
         
         const fetchOptions = {
           method: "POST",
@@ -267,8 +254,8 @@ async function submitResponses() {
           body: JSON.stringify(postData),
         };
 
-        const response = await fetch(url, fetchOptions);
-        console.log(`Respuesta de ${url}:`, response);
+        const response = await fetch(submitUrl, fetchOptions);
+        console.log(`Respuesta de ${submitUrl}:`, response);
         
         // Verificar si la respuesta está vacía
         const responseText = await response.text();
@@ -286,7 +273,7 @@ async function submitResponses() {
               console.error("No se pudo parsear la respuesta de error:", e);
             }
           }
-          continue; // Intentar con la siguiente URL
+          throw new Error(errorMsg);
         }
 
         // Procesamos la respuesta como JSON solo si tiene contenido válido
@@ -310,15 +297,9 @@ async function submitResponses() {
           navigateTo("/alumne/dashboard");
         }, 1500);
       } catch (error) {
-        console.error(`Error al enviar a ${url}:`, error);
-        errorMsg = error.message;
+        console.error(`Error al enviar a ${submitUrl}:`, error);
+        triggerToast(`Error: ${error.message}`, "error");
       }
-    }
-    
-    // Si ninguno de los dos intentos funcionó
-    if (!submitted) {
-      triggerToast(`Error: ${errorMsg}`, "error");
-    }
   } catch (error) {
     console.error("Error al enviar las respuestas:", error);
     triggerToast(`Error: ${error.message}`, "error");
