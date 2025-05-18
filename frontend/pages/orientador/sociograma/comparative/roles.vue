@@ -294,7 +294,6 @@ onMounted(async () => {
 const generateComparativeData = () => {
   // Si no hay cursos, no hacemos nada
   if (!allCourses.value || allCourses.value.length === 0) return;
-  console.log("Cursos carregats:", allCourses.value);
 
   const dataByCategory = {
     'Populars': [],

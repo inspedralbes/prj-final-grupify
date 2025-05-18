@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useCoursesStore } from "~/stores/coursesStore";
 import { useRelationshipsStore } from "~/stores/relationships"; 
 import { useStudentsStore } from "~/stores/studentsStore";
+import { useAuthStore } from "~/stores/authStore";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 import CourseFilter from "@/components/Teacher/SociogramaComponents/CourseFilterComponent.vue"; // Importar el nuevo componente
 import { use } from "echarts/core";
@@ -109,6 +110,7 @@ const router = useRouter();
 const coursesStore = useCoursesStore();
 const relationshipsStore = useRelationshipsStore();
 const studentsStore = useStudentsStore();
+const authStore = useAuthStore();
 
 const isLoading = ref(true);
 const error = ref(null);
@@ -131,10 +133,17 @@ const parseCourseAndDivision = (value) => {
 // Cargar datos iniciales
 onMounted(async () => {
   try {
-    await coursesStore.fetchCourses();
+    // Primero nos aseguramos de que tenemos la información del usuario
+    if (!authStore.user || !authStore.user.id) {
+      await authStore.checkAuth();
+    }
+    
+    // Cargamos los cursos (tanto para el usuario actual como todos los cursos)
+    await coursesStore.fetchCourses(true, authStore.user?.id); // Esto carga los cursos del usuario
     await studentsStore.fetchStudents();
     await relationshipsStore.fetchRelationships();
 
+    // Guardamos los cursos asignados al usuario
     allCourses.value = coursesStore.courses;
 
     if (allCourses.value.length > 0) {
@@ -145,7 +154,7 @@ onMounted(async () => {
       // Cargar los datos destacados
       loadHighlightedData();
 
-      // Generar datos para la comparativa entre cursos
+      // Generar datos para la comparativa entre cursos - aquí se filtrará para mostrar solo los cursos asignados
       await generateCoursesComparison();
     }
   } catch (err) {
@@ -155,6 +164,8 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+
 
 // Cargar datos destacados para el curso seleccionado
 const loadHighlightedData = () => {
@@ -171,10 +182,20 @@ const loadHighlightedData = () => {
   ).value; // Acceder al valor del computed
 };
 
-// Generar datos para la comparativa entre todos los cursos
+// Generar datos para la comparativa entre cursos filtrados
 const generateCoursesComparison = async () => {
-  // Usar el nuevo método para obtener la comparación entre cursos
-  coursesComparison.value = relationshipsStore.generateCoursesComparison(threshold.value);
+  // Obtener todos los datos de comparación
+  const allCoursesComparison = relationshipsStore.generateCoursesComparison(threshold.value);
+  
+  // Crear una lista de nombres de cursos asignados al usuario actual
+  const assignedCourseNames = allCourses.value.map(course => 
+    `${course.courseName} ${course.division.name}`
+  );
+  
+  // Filtrar para incluir solo los cursos asignados al usuario
+  coursesComparison.value = allCoursesComparison.filter(courseData => 
+    assignedCourseNames.includes(courseData.course)
+  );
 };
 
 // Funciones de actualización que serán llamadas desde el componente hijo
