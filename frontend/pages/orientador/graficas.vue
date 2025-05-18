@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <DashboardNavTeacher class="w-full" />
+    <DashboardNavOrientador class="w-full" />
 
     <!-- Contenido principal -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -45,7 +45,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import DashboardNavTeacher from '@/components/Teacher/DashboardNavTeacher.vue';
+import DashboardNavOrientador from '@/components/Orientador/DashboardNavOrientador.vue';
 import TagsGraphic from '@/components/Teacher/CescComponents/TagsGraphic.vue';
 import CescCategoryCards from '@/components/Teacher/CescComponents/CescCategoryCards.vue';
 

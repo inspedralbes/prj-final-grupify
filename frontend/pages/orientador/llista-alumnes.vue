@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router';
 import { useStudentSearch } from "@/composables/useStudentSearch";
 import { useStudentsStore } from "@/stores/studentsStore";
 import { useAuthStore } from "~/stores/authStore";
+import OrientadorDashboardNavOrientador from "~/components/Orientador/DashboardNavOrientador.vue";
+import OrientadorStudentList from "~/components/Orientador/OrientadorStudentList.vue";
 
 const router = useRouter();
 
@@ -277,7 +279,7 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <TeacherDashboardNavTeacher />
+    <OrientadorDashboardNavOrientador />
 
     <main class="container mx-auto px-4 py-6 sm:py-8">
       <!-- Títol i descripció del panell -->

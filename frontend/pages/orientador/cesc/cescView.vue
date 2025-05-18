@@ -4,7 +4,7 @@ import { useCoursesStore } from '~/stores/coursesStore';
 import { useAuthStore } from '~/stores/authStore';
 import { useCourseSearch } from '~/composables/useCourseSearch';
 import CoursesFilters from '~/components/Teacher/CescComponents/CoursesFilters.vue';
-import DashboardNavTeacher from '~/components/Teacher/DashboardNavTeacher.vue';
+import DashboardNavOrientador from '~/components/Orientador/DashboardNavOrientador.vue';
 import CoursesList from '~/components/Teacher/CescComponents/CoursesList.vue';
 
 const error = ref(null);
@@ -29,7 +29,7 @@ const { searchQuery, selectedCourse, selectedDivision, filteredCourses } = useCo
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <DashboardNavTeacher />
+    <DashboardNavOrientador />
     
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
       <!-- Header Section -->
