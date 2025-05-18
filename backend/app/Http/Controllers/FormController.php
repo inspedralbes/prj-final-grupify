@@ -108,7 +108,9 @@ class FormController extends Controller
         $users = User::whereHas('divisions', function ($query) use ($courseId, $divisionId) {
             $query->where('course_id', $courseId)
                 ->where('division_id', $divisionId);
-        })->get();
+        })
+        ->where('role_id', 2) // Usando el ID del rol 'alumne'
+        ->get();
 
         if ($users->isEmpty()) {
             return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);

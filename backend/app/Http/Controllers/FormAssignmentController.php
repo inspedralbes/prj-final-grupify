@@ -131,6 +131,7 @@ class FormAssignmentController extends Controller
         ->with(['formUsers' => function($query) use ($assignment) {
             $query->where('form_id', $assignment->form_id);
         }])
+        ->where('id', '!=', $assignment->teacher_id) // Excluir al profesor de la lista
         ->get();
 
         // Preparar datos de respuesta
