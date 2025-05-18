@@ -101,7 +101,7 @@ Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/assign-
 Route::get('/forms/user/{userId}', [FormController::class, 'getFormsByUserId']);
 
 // RUTA PARA OBTENER PREGUNTAS CON RESPUESTAS DE UN FORMULARIO
-Route::get('/forms/{formId}/questions-and-answers', [FormController::class, 'getQuestions']);
+Route::get('/forms/{formId}/questions-and-answers', [FormController::class, 'getQuestionsAndAnswers']);
 
 Route::post('/forms/{formId}/submit-responses', [AnswerController::class, 'submitResponses']);
 
@@ -229,7 +229,7 @@ Route::resource('forms', FormController::class);
 Route::post('forms-save', [FormController::class, 'storeFormWithQuestions']);
 
 // Ruta para obtener las preguntas y respuestas de un formulario
-Route::get('forms/{formId}/questions', [FormController::class, 'getQuestionsAndAnswers']);
+Route::get('forms/{formId}/questions', [FormController::class, 'getQuestions']);
 Route::post('forms/{formId}/submit-answers', [AnswerController::class, 'storeMultipleAnswers']);
 Route::get('forms/{id}', [FormController::class, 'show']);
 
