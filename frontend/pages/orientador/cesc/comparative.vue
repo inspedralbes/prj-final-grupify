@@ -74,7 +74,7 @@ const handleCategorySelected = (selectedCategory) => {
   categoria.value = selectedCategory;
   showGraph.value = true;
   // Actualizar URL sin recargar la página
-  window.history.pushState({}, '', `/orientador/graficas${selectedCategory !== 'all' ? `?categoria=${selectedCategory}` : ''}`);
+  window.history.pushState({}, '', `/orientador/cesc/comparative${selectedCategory !== 'all' ? `?categoria=${selectedCategory}` : ''}`);
 };
 
 // Cargar datos del usuario desde localStorage y determinar categoría desde URL

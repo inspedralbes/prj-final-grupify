@@ -41,7 +41,7 @@ const menuItemsConfig = [
     items: [
       {
         title: "CESC",
-        route: "/orientador/graficas",
+        route: "/orientador/cesc/comparative",
         icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75Z",
       },
       {
@@ -108,7 +108,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <nav class="bg-[#00ADEC] shadow-lg">
+  <nav class="bg-[#00ADEC] shadow-lg relative z-20"><!-- Aumentamos el z-index para estar por encima del título -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Botón de inicio -->
@@ -202,7 +202,7 @@ onUnmounted(() => {
               <!-- Menú desplegable mejorado -->
               <div
                 v-show="openDropdowns[item.id]"
-                class="absolute z-10 right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top transition-all duration-200"
+                class="absolute z-30 right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top transition-all duration-200"
               >
                 <div class="py-2 divide-y divide-gray-100">
                   <NuxtLink

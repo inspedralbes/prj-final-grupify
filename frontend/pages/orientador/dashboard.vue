@@ -630,7 +630,7 @@ const getCurrentDate = () => {
                     </div>
                   </div>
                   <div class="ml-auto">
-                    <NuxtLink to="/orientador/sociograma/SociogramaView" class="text-xs text-primary hover:underline">
+                    <NuxtLink to="/orientador/graficas" class="text-xs text-primary hover:underline">
                       Detalls
                     </NuxtLink>
                   </div>
