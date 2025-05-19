@@ -91,50 +91,33 @@ const handleRegenerateQuestion = async question => {
 };
 
 const handleSave = async () => {
-  const formData = {
-    title: props.title,
-    description: props.description,
-    questions: localQuestions.value,
-    teacher_id: props.teacher_id,
-    is_global: false,
-    date_limit: dateLimit.value,
-    time_limit: timeLimit.value,
-  };
-  console.log(formData);
-  // console.log(dateLimit.value);
-  // console.log('Datos que se enviarán:', JSON.stringify(formData, null, 2)); // Verifica la estructura del objeto
-
-  try {
-    const response = await fetch("http://localhost:8000/api/forms-save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      // console.error('Errors de validació:', errorData);
-      // showToastMessage('Errors en les dades enviades: ' + JSON.stringify(errorData.errors, null, 2), 'error-toast');
-      return;
-    }
-
-    const result = await response.json();
-    // console.log('Resposta del servidor:', result);
-    showToastMessage("Formulari desat amb èxit.");
-
-    // Espera 1 segundo antes de redirigir
-    setTimeout(() => {
-      navigateTo("/professor/formularis");
-    }, 1000); // Redirigir después de 1 segundo
-  } catch (error) {
-    // console.error('Error en desar el formulari:', error);
-    showToastMessage(
-      "Hi va haver un error en desar el formulari. Si us plau, torna-ho a intentar.",
-      "error-toast"
-    );
+  // Validar datos mínimos requeridos
+  if (!props.title || !props.title.trim()) {
+    showToastMessage("El formulari ha de tenir un títol", "error-toast");
+    return;
   }
+
+  if (!props.description || !props.description.trim()) {
+    showToastMessage("El formulari ha de tenir una descripció", "error-toast");
+    return;
+  }
+
+  if (!localQuestions.value || localQuestions.value.length === 0) {
+    showToastMessage("El formulari ha de tenir almenys una pregunta", "error-toast");
+    return;
+  }
+
+  if (!dateLimit.value) {
+    showToastMessage("Cal definir una data límit per al formulari", "error-toast");
+    return;
+  }
+
+  // En lugar de enviar directamente la solicitud al backend,
+  // solo emitimos el evento para que el componente padre lo maneje
+  emit("save", {
+    dateLimit: dateLimit.value,
+    timeLimit: timeLimit.value
+  });
 };
 
 const handleDownload = () => {
@@ -171,12 +154,6 @@ function showToastMessage(message, type = "success-toast") {
 
 <template>
   <div>
-    <label for="date"> Afegir data límit </label>
-    <input type="date" v-model="dateLimit" name="date">
-    <label for="time">Agefir temps limit</label>
-    <input type="time" v-model="timeLimit">
-  </div>
-  <div>
     <!-- Toast mensaje -->
     <div v-if="showToast" :class="toastType" class="toast">
       {{ toastMessage }}
@@ -186,25 +163,6 @@ function showToastMessage(message, type = "success-toast") {
       <div v-if="title" class="card animate-fade-in">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold mb-2">{{ titleContent }}</h2>
-          <button
-            class="text-gray-600 hover:text-primary transition duration-200"
-            @click="handleDownload"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-6"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-              />
-            </svg>
-          </button>
         </div>
         <p class="text-gray-600">{{ descriptionContent }}</p>
       </div>
@@ -257,13 +215,6 @@ function showToastMessage(message, type = "success-toast") {
             />
           </template>
         </div>
-      </div>
-
-      <div
-        v-if="localQuestions.length > 0"
-        class="flex justify-end space-x-4 pt-4"
-      >
-        <button class="btn btn-primary" @click="handleSave">Guardar</button>
       </div>
 
       <FormsBuilderQuestionEditorModal
