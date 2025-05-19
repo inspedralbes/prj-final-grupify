@@ -140,6 +140,29 @@ services:
     networks:
       - app-network
 
+  chat:
+    build:
+      context: ./mcp-use-grupify
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`chat.grupify.cat`)"
+      - "traefik.http.routers.chat.entrypoints=websecure"
+      - "traefik.http.routers.chat.tls.certresolver=myresolver"
+      - "traefik.http.services.chat.loadbalancer.server.port=8501"
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USER: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    networks:
+      - app-network
+
 volumes:
   db_data:
   redis_data:
