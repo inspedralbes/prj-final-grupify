@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('teacher_id')->nullable();
             $table->foreign('teacher_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('title')->unique();
-            $table->string('description')->nullable();
+            $table->text('description')->nullable();
             $table->integer('responses_count')->default(0);
             $table->integer('status')->default(1);
             $table->boolean('is_global')->default(false);
