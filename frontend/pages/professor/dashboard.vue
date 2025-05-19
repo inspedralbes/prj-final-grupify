@@ -17,7 +17,7 @@ const dashboardState = reactive({
   pendingForms: 3,
   completedForms: 15,
   activeGroups: 0,
-  totalStudents: 0,
+  totalStudents: 0,  // Inicializar a 0, se actualizará con los datos reales
   currentClasses: [],
   formCompletion: {
     'Avaluació Inicial': { completed: 78, total: 78, percentage: 100 },
@@ -84,15 +84,7 @@ const allMenuItems = [
     route: "/professor/notificacions",
     requiredPermission: null,
     description: "Gestiona les teves notificacions"
-  },
-  {
-    title: "Estat Formularis",
-    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
-    route: "/professor/formularis/estat",
-    requiredPermission: null,
-    description: "Seguiment dels formularis completats"
-  },
-];
+  },];
 
 // Filtrar menú según permisos
 const menuItems = computed(() => {
@@ -140,7 +132,8 @@ const loadClassesData = async () => {
     await fetchUserData();
 
     // Cargar cursos disponibles
-    await coursesStore.fetchCourses();
+    const userId = authStore.user?.id;
+    await coursesStore.fetchCourses(true, userId);
 
     // Si el profesor tiene course_divisions en su perfil, usamos esos datos
     if (authStore.user?.course_divisions && authStore.user.course_divisions.length > 0) {
@@ -177,6 +170,17 @@ const loadClassesData = async () => {
       // Esperar a que se carguen todos los datos de estudiantes
       await Promise.all(studentsPromises);
 
+      // Calcular el total de estudiantes sumando los conteos de cada mapa
+      let totalStudents = 0;
+      studentCountMap.forEach(count => {
+        totalStudents += count;
+      });
+      
+      // Actualizar el contador total de estudiantes
+      dashboardState.totalStudents = totalStudents;
+      
+      console.log("Total de estudiantes calculado:", totalStudents);
+
       // Transformar course_divisions en el formato requerido para currentClasses
       dashboardState.currentClasses = authStore.user.course_divisions.map(cd => {
         // Generar nombre de clase combinando curso y división
@@ -192,7 +196,8 @@ const loadClassesData = async () => {
           courseId: cd.course_id,
           divisionId: cd.division_id,
           courseName: cd.course_name,
-          divisionName: cd.division_name
+          divisionName: cd.division_name,
+          students: students
         });
 
         return {
@@ -227,7 +232,7 @@ const fetchTeacherGroups = async () => {
     dashboardState.activeGroups = groupStore.groups.length;
 
     // Calcular el número total de estudiantes en todos los grupos
-    let totalStudents = groupStore.groups.reduce(
+    let groupStudents = groupStore.groups.reduce(
       (total, group) => total + (group.number_of_students || 0),
       0
     );
@@ -235,9 +240,12 @@ const fetchTeacherGroups = async () => {
     // Si hay datos de estudiantes en authStore, usar esos datos
     if (authStore.user?.student_count) {
       dashboardState.totalStudents = authStore.user.student_count;
-    } else if (totalStudents > 0) {
-      dashboardState.totalStudents = totalStudents;
+    } else if (groupStudents > 0 && dashboardState.totalStudents === 0) {
+      // Solo actualizar si no tenemos datos de estudiantes aún
+      dashboardState.totalStudents = groupStudents;
     }
+    
+    console.log("Total de estudiantes después de fetchTeacherGroups:", dashboardState.totalStudents);
 
     // Si hay datos de formularios completados en authStore, usar esos datos
     if (authStore.user?.completed_forms_count) {
@@ -298,6 +306,16 @@ onMounted(async () => {
 
   // Cargar datos reales de clases
   await loadClassesData();
+  
+  console.log("Estado final del dashboard:", {
+    totalStudents: dashboardState.totalStudents,
+    activeGroups: dashboardState.activeGroups,
+    completedForms: dashboardState.completedForms,
+    currentClasses: dashboardState.currentClasses.map(c => ({
+      name: c.name,
+      students: c.students
+    }))
+  });
 });
 
 // Función de logout
@@ -436,15 +454,6 @@ const getCurrentDate = () => {
 
           <!-- Herramientas de usuario -->
           <div class="flex items-center space-x-4">
-            <!-- Notificaciones -->
-            <button class="p-1 rounded-full text-gray-500 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary relative">
-              <span class="sr-only">Ver notificacions</span>
-              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-            </button>
-
             <!-- Perfil de usuario -->
             <div class="flex items-center">
               <div v-if="userData" class="flex items-center">
@@ -590,9 +599,9 @@ const getCurrentDate = () => {
           <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 class="text-lg font-medium text-gray-900">Estat dels Formularis</h2>
-              <NuxtLink to="/professor/formularis/estat" class="text-sm text-primary hover:text-primary-dark">
-                Veure complet
-              </NuxtLink>
+              <span class="text-sm text-gray-400">
+                Resum
+              </span>
             </div>
             <div class="p-6 space-y-4">
               <div v-for="(form, name) in dashboardState.formCompletion" :key="name" class="space-y-2">

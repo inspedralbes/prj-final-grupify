@@ -23,6 +23,18 @@ use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\BitacoraNoteController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\CompetenceController;
+use App\Http\Controllers\FormAssignmentController;
+use App\Http\Controllers\FormUserController;
+use App\Http\Controllers\DiagnosticController;
+
+// Rutas para competencias
+Route::get('/competences', [CompetenceController::class, 'index']);
+Route::get('/competences/{id}', [CompetenceController::class, 'show']);
+
+// Ruta accesible sin autenticación para facilitar la depuración
+Route::get('/students/{id}/competences', [CompetenceController::class, 'getStudentCompetences']);
+Route::post('/competences/store-user-competence', [CompetenceController::class, 'storeUserCompetence']);
 
 Route::put('user/{id}/status', [UserController::class, 'updateStatus']);
 
@@ -89,12 +101,15 @@ Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/assign-
 Route::get('/forms/user/{userId}', [FormController::class, 'getFormsByUserId']);
 
 // RUTA PARA OBTENER PREGUNTAS CON RESPUESTAS DE UN FORMULARIO
-Route::get('/forms/{formId}/questions-and-answers', [FormController::class, 'getQuestions']);
+Route::get('/forms/{formId}/questions-and-answers', [FormController::class, 'getQuestionsAndAnswers']);
 
 Route::post('/forms/{formId}/submit-responses', [AnswerController::class, 'submitResponses']);
 
 // RUTA PARA ACTUALIZAR ESTADO DE FORMULARIO
 Route::patch('/forms/{formId}/status', [FormController::class, 'updateFormStatus']);
+
+// RUTA PARA ACTUALIZAR ESTADO DE ASIGNACIÓN DE FORMULARIO
+Route::patch('/forms/{formId}/assignment-status', [FormController::class, 'updateFormAssignmentStatus']);
 
 // RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO UN FORMULARIO
 Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm']);
@@ -103,7 +118,7 @@ Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm'])
 Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/forms/response-status', [AnswerController::class, 'getFormResponseStatus']);
 
 // RUTA PARA OBTENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
-Route::middleware(['auth:sanctum', 'role:tutor,orientador,admin'])->get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
+Route::middleware(['auth:sanctum'])->get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
 
 // RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
 Route::middleware(['auth:sanctum'])->get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
@@ -214,7 +229,7 @@ Route::resource('forms', FormController::class);
 Route::post('forms-save', [FormController::class, 'storeFormWithQuestions']);
 
 // Ruta para obtener las preguntas y respuestas de un formulario
-Route::get('forms/{formId}/questions', [FormController::class, 'getQuestionsAndAnswers']);
+Route::get('forms/{formId}/questions', [FormController::class, 'getQuestions']);
 Route::post('forms/{formId}/submit-answers', [AnswerController::class, 'storeMultipleAnswers']);
 Route::get('forms/{id}', [FormController::class, 'show']);
 
@@ -329,3 +344,29 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'role:tutor,orientador,admin'])->post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
 Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']); // Ruta pública para obtener resultados
 Route::get('/cesc/graficas-tags', [CescRelationshipController::class, 'getTagsGraphData']); // Ruta pública para obtener gráficas
+
+// Rutas para asignación de formularios
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/form-assignments', [FormAssignmentController::class, 'assign']);
+    Route::get('/form-assignments/teacher/{teacherId}', [FormAssignmentController::class, 'getByTeacher']);
+    Route::get('/form-assignments/{id}', [FormAssignmentController::class, 'getAssignmentDetails']);
+    Route::post('/form-assignments/{id}/update-count', [FormAssignmentController::class, 'updateResponsesCount']);
+    Route::patch('/form-assignments/{id}/status', [FormAssignmentController::class, 'updateStatus']);
+});
+
+// Rutas para form_user
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/form-user/update-status', [FormUserController::class, 'updateAnsweredStatus']);
+    Route::post('/form-user/responses', [FormUserController::class, 'getFormResponses']);
+    Route::get('/form-user/{formId}/assigned-users', [FormUserController::class, 'getAssignedUsers']);
+});
+
+// Rutas de diagnóstico
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/check-migration-status', [DiagnosticController::class, 'checkMigrationStatus']);
+    Route::get('/check-data-integrity', [DiagnosticController::class, 'checkDataIntegrity']);
+    Route::post('/fix-data-issues', [DiagnosticController::class, 'fixDataIssues']);
+});
+
+// Ruta para obtener las asignaciones de un orientador
+Route::middleware(['auth:sanctum'])->get('/orientador-assignments/{id}', [UserController::class, 'getOrientadorAssignments']);

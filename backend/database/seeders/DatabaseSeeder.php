@@ -24,11 +24,11 @@ class DatabaseSeeder extends Seeder
     public function run()
 
     {
-        // Llama a otros seeders si es necesario
+        // Asegurarse de que RoleSeeder se ejecute primero
         $this->call([
+            RoleSeeder::class,       // IMPORTANTE: Roles deben crearse primero
             CourseSeeder::class,
             SubjectSeeder::class,
-            RoleSeeder::class,
             UserSeeder::class,
             TutorSeeder::class,       // Seeder para tutores
             OrientadorSeeder::class,  // Seeder para orientadores
@@ -39,7 +39,6 @@ class DatabaseSeeder extends Seeder
             GroupSubjectSeeder::class,
             GroupCourseSeeder::class,
             FormSeeder::class,   // Crear formularios primero
-            TutorFormSeeder::class, // Formularios específicos para tutores
             QuestionSeeder::class, // Crear preguntas después
             OptionSeeder::class,
             CourseUserSeeder::class,
@@ -54,6 +53,7 @@ class DatabaseSeeder extends Seeder
             BitacoraSeeder::class,
             BitacoraNotesSeeder::class,
             CourseDivisionSeeder::class,
+            CompetenceAnswerSeeder::class, // Seeder para generar datos de autoavaluación de competencias
         ]);
     }
 }

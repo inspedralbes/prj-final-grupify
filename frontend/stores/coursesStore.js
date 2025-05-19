@@ -9,7 +9,7 @@ export const useCoursesStore = defineStore("courses", {
   }),
 
   actions: {
-    async fetchCourses(force = false) {
+    async fetchCourses(force = false, userId = null) {
       if (!force && this.courses.length > 0) {
         return;
       }
@@ -18,9 +18,13 @@ export const useCoursesStore = defineStore("courses", {
       this.error = null;
 
       try {
-        const response = await fetch(
-          "https://api.grupify.cat/api/courses-with-divisions"
-        );
+        // Construir la URL con el parámetro user_id si está disponible
+        let url = "http://localhost:8000/api/courses-with-divisions";
+        if (userId) {
+          url += `?user_id=${userId}`;
+        }
+
+        const response = await fetch(url);
 
         if (!response.ok) {
           throw new Error(`Error al obtener cursos: ${response.statusText}`);

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Division;
 use App\Models\Course;
 use App\Models\Subject;
+use App\Models\CourseDivisionUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -76,6 +77,24 @@ class UserController extends Controller
         // para evitar duplicados
         \App\Models\CourseDivisionUser::where('user_id', $userId)->delete();
 
+        // Verificar si ya existe esta combinación para evitar duplicados
+        $existeCombinacion = \App\Models\CourseDivisionUser::where([
+            'course_id' => $request->course_id,
+            'division_id' => $request->division_id,
+            'user_id' => $userId,
+        ])->exists();
+        
+        if ($existeCombinacion) {
+            return response()->json([
+                'message' => 'Esta combinación de curso y división ya está asignada a este usuario',
+                'data' => \App\Models\CourseDivisionUser::where([
+                    'course_id' => $request->course_id,
+                    'division_id' => $request->division_id,
+                    'user_id' => $userId,
+                ])->first()
+            ], 200);
+        }
+        
         // Crear una nueva asignación en la tabla course_division_user
         $courseDivisionUser = \App\Models\CourseDivisionUser::create([
             'user_id' => $userId,
@@ -120,13 +139,42 @@ class UserController extends Controller
     {
         // Obtener todos los roles para el selector
         $roles = \App\Models\Role::all();
+        
+        // Obtener cursos y divisiones para los filtros
+        $courses = \App\Models\Course::all();
+        $divisions = \App\Models\Division::all();
 
         // Iniciar query para usuarios
-        $query = User::with('role');
+        $query = User::with(['role', 'courseDivisionUsers.course', 'courseDivisionUsers.division']);
 
         // Aplicar filtro por rol si se proporciona
         if ($request->filled('role_id')) {
             $query->where('role_id', $request->role_id);
+        }
+
+        // Aplicar filtro de búsqueda por texto si se proporciona
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('last_name', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        // Aplicar filtro por curso si se proporciona
+        if ($request->filled('course_id')) {
+            $courseId = $request->course_id;
+            $query->whereHas('courseDivisionUsers', function($q) use ($courseId) {
+                $q->where('course_id', $courseId);
+            });
+        }
+        
+        // Aplicar filtro por división si se proporciona
+        if ($request->filled('division_id')) {
+            $divisionId = $request->division_id;
+            $query->whereHas('courseDivisionUsers', function($q) use ($divisionId) {
+                $q->where('division_id', $divisionId);
+            });
         }
 
         // Obtener usuarios paginados
@@ -138,7 +186,7 @@ class UserController extends Controller
         }
 
         // Si no es AJAX (es una solicitud tradicional), devolver una vista
-        return view('users.users', compact('users', 'roles'));
+        return view('users.users', compact('users', 'roles', 'courses', 'divisions'));
     }
 
 
@@ -191,8 +239,8 @@ class UserController extends Controller
         \Log::info('Datos recibidos en store de usuario:', $request->all());
         
         try {
-            // Validación base para todos los usuarios
-            $validator = Validator::make($request->all(), [
+            // Reglas de validación base para todos los usuarios
+            $rules = [
                 'name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
@@ -203,9 +251,23 @@ class UserController extends Controller
                 'divisions' => 'nullable|array',
                 'subjects' => 'nullable|array',
                 'course_division_pairs' => 'nullable|array',
-                'course_division_pairs.*.course_id' => 'required_with:course_division_pairs|exists:courses,id',
-                'course_division_pairs.*.division_id' => 'required_with:course_division_pairs|exists:divisions,id'
-            ]);
+                'course_division_pairs.*.course_id' => 'nullable|exists:courses,id',
+                'course_division_pairs.*.division_id' => 'nullable|exists:divisions,id',
+            ];
+            
+            // Agregar reglas específicas según el rol
+            if ($request->role_id == 1) { // Profesor
+                $rules['subjects'] = 'nullable|array';
+                $rules['subjects.*'] = 'exists:subjects,id';
+            } else if ($request->role_id == 4) { // Tutor
+                $rules['tutor_course_id'] = 'nullable|exists:courses,id';
+                $rules['tutor_division_id'] = 'nullable|exists:divisions,id';
+            } else if ($request->role_id == 5) { // Orientador
+                $rules['nivel_educativo'] = 'nullable|in:eso,bachillerato';
+            }
+            
+            // Validar con las reglas adecuadas
+            $validator = Validator::make($request->all(), $rules);
 
             // Si la validación falla, retorna errores
             if ($validator->fails()) {
@@ -236,9 +298,134 @@ class UserController extends Controller
                 $user->save();
             }
 
-            // Si el usuario es Profesor o Tutor u Orientador, manejar asignaciones
-            if (in_array($request->role_id, [1, 4, 5])) {
-                \Log::info('Procesando usuario de tipo Profesor/Tutor/Orientador (role_id: ' . $request->role_id . ')');
+            // Si el usuario es Orientador (rol 5)
+            if ($request->role_id == 5) {
+                \Log::info('Procesando usuario de tipo Orientador (role_id: 5)');
+                
+                // Primero comprobar si se especificó nivel educativo
+                $nivelEducativo = $request->input('nivel_educativo');
+                $coursesDivisionsProcesados = false;
+                
+                if ($nivelEducativo) {
+                    \Log::info("Procesando nivel educativo para orientador: {$nivelEducativo}");
+                    
+                    // Obtener cursos según el nivel seleccionado
+                    $cursos = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Obtenemos cursos de ESO por nombre
+                        $cursos = Course::whereIn('name', ['1 ESO', '2 ESO', '3 ESO', '4 ESO'])
+                                        ->orWhere('name', 'like', '%ESO%')
+                                        ->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Obtenemos cursos de Bachillerato por nombre
+                        $cursos = Course::whereIn('name', ['1 BATX', '2 BATX'])
+                                        ->orWhere('name', 'like', '%BATX%')
+                                        ->orWhere('name', 'like', '%BACHILLER%')
+                                        ->pluck('id')->toArray();
+                    }
+                    
+                    // Obtener las divisiones apropiadas según el nivel educativo
+                    $divisiones = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Para ESO, usar solo las divisiones con IDs 3 al 7 (A, B, C, D, E)
+                        $divisiones = Division::whereBetween('id', [3, 7])->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Para Bachillerato, usar solo las divisiones 1 y 2
+                        $divisiones = Division::whereIn('id', [1, 2])->pluck('id')->toArray();
+                    }
+                    
+                    \Log::info("Divisiones seleccionadas para {$nivelEducativo}: " . implode(', ', $divisiones));
+                    
+                    // Crear todas las combinaciones posibles de curso y división
+                    $combinacionesCreadas = 0;
+                    foreach ($cursos as $cursoId) {
+                        foreach ($divisiones as $divisionId) {
+                            // Verificar si ya existe esta combinación para evitar duplicados
+                            $existeCombinacion = \App\Models\CourseDivisionUser::where([
+                                'course_id' => $cursoId,
+                                'division_id' => $divisionId,
+                                'user_id' => $user->id,
+                            ])->exists();
+                            
+                            if (!$existeCombinacion) {
+                                // Verificar si ya existe esta combinación para evitar duplicados
+                                $existeCombinacion = \App\Models\CourseDivisionUser::where([
+                                    'course_id' => $cursoId,
+                                    'division_id' => $divisionId,
+                                    'user_id' => $user->id,
+                                ])->exists();
+                                
+                                if (!$existeCombinacion) {
+                                    \App\Models\CourseDivisionUser::create([
+                                        'user_id' => $user->id,
+                                        'course_id' => $cursoId,
+                                        'division_id' => $divisionId,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ]);
+                                    
+                                    \Log::info("Asignación creada para orientador: curso {$cursoId}, división {$divisionId}");
+                                } else {
+                                    \Log::info("Se omitió combinación duplicada para orientador: curso {$cursoId}, división {$divisionId}");
+                                }
+                                
+                                \Log::info('Asociado curso:' . $cursoId . ' y división:' . $divisionId . ' al orientador');
+                            } else {
+                                \Log::info('Se omitió combinación duplicada: curso:' . $cursoId . ' y división:' . $divisionId . ' para el orientador:' . $user->id);
+                            }
+                            
+                            // Actualizar la tabla course_user
+                            if (!empty($cursoId)) {
+                                $user->courses()->syncWithoutDetaching([$cursoId]);
+                                $combinacionesCreadas++;
+                            } else {
+                                \Log::warning('Se evitó sincronizar cursoId vacío para el orientador: ' . $user->id);
+                            }
+                        }
+                    }
+                    
+                    \Log::info("Asignadas {$combinacionesCreadas} combinaciones para el orientador");
+                    $coursesDivisionsProcesados = true;
+                }
+                
+                // Adicionalmente, procesar los pares curso-división si existen
+                if (!$coursesDivisionsProcesados && $request->has('course_division_pairs') && is_array($request->course_division_pairs)) {
+                    \Log::info('Procesando pares curso-división para orientador: ', $request->course_division_pairs);
+                    
+                    foreach ($request->course_division_pairs as $pair) {
+                        if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
+                            // Verificar si ya existe esta combinación para evitar duplicados
+                            $existeCombinacion = \App\Models\CourseDivisionUser::where([
+                                'course_id' => $pair['course_id'],
+                                'division_id' => $pair['division_id'],
+                                'user_id' => $user->id,
+                            ])->exists();
+                            
+                            if (!$existeCombinacion) {
+                                \App\Models\CourseDivisionUser::create([
+                                    'course_id' => $pair['course_id'],
+                                    'division_id' => $pair['division_id'],
+                                    'user_id' => $user->id,
+                                ]);
+                                
+                                \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al usuario');
+                            } else {
+                                \Log::info('Se omitió combinación duplicada: curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' para el usuario:' . $user->id);
+                            }
+
+                            // También agregar a la tabla course_user
+                            if (!empty($pair['course_id'])) {
+                                $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            }
+                            
+                            \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al orientador');
+                        }
+                    }
+                }
+            }
+            // Si el usuario es Profesor (rol 1) o Tutor (rol 4), manejar asignaciones
+            else if (in_array($request->role_id, [1, 4])) {
+                \Log::info('Procesando usuario de tipo Profesor/Tutor (role_id: ' . $request->role_id . ')');
                 
                 // Asociar materias si se han seleccionado (solo para profesores)
                 if ($request->role_id == 1 && $request->has('subjects') && count($request->subjects) > 0) {
@@ -253,14 +440,32 @@ class UserController extends Controller
                     foreach ($request->course_division_pairs as $pair) {
                         // Verificar que ambos valores existan
                         if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
-                            \App\Models\CourseDivisionUser::create([
+                            // Verificar si ya existe esta combinación para evitar duplicados
+                            $existeCombinacion = \App\Models\CourseDivisionUser::where([
                                 'course_id' => $pair['course_id'],
                                 'division_id' => $pair['division_id'],
                                 'user_id' => $user->id,
-                            ]);
+                            ])->exists();
+                            
+                            if (!$existeCombinacion) {
+                                \App\Models\CourseDivisionUser::create([
+                                    'course_id' => $pair['course_id'],
+                                    'division_id' => $pair['division_id'],
+                                    'user_id' => $user->id,
+                                ]);
+                                
+                                \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al orientador');
+                            } else {
+                                \Log::info('Se omitió combinación duplicada: curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' para el orientador:' . $user->id);
+                            }
 
                             // También agregar a la tabla course_user para mantener compatibilidad
-                            $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            // Solo sincronizar si course_id no está vacío
+                            if (!empty($pair['course_id'])) {
+                                $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            } else {
+                                \Log::warning('Se evitó sincronizar course_id vacío para el usuario: ' . $user->id);
+                            }
                             
                             \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al usuario');
                         } else {
@@ -280,34 +485,108 @@ class UserController extends Controller
                     
                     foreach ($request->courses as $courseId) {
                         foreach ($request->divisions as $divisionId) {
-                            \App\Models\CourseDivisionUser::create([
+                            // Verificar si ya existe esta combinación para evitar duplicados
+                            $existeCombinacion = \App\Models\CourseDivisionUser::where([
                                 'course_id' => $courseId,
                                 'division_id' => $divisionId,
                                 'user_id' => $user->id,
-                            ]);
+                            ])->exists();
+                            
+                            if (!$existeCombinacion) {
+                                \App\Models\CourseDivisionUser::create([
+                                    'course_id' => $courseId,
+                                    'division_id' => $divisionId,
+                                    'user_id' => $user->id,
+                                ]);
+                                
+                                \Log::info('Asociado curso:' . $courseId . ' y división:' . $divisionId . ' al usuario');
+                            } else {
+                                \Log::info('Se omitió combinación duplicada: curso:' . $courseId . ' y división:' . $divisionId . ' para el usuario:' . $user->id);
+                            }
 
                             // También agregar a la tabla course_user para mantener compatibilidad
-                            $user->courses()->syncWithoutDetaching([$courseId]);
+                            if (!empty($courseId)) {
+                                $user->courses()->syncWithoutDetaching([$courseId]);
+                            } else {
+                                \Log::warning('Se evitó sincronizar course_id vacío para el usuario: ' . $user->id);
+                            }
                             
                             \Log::info('Asociado curso:' . $courseId . ' y división:' . $divisionId . ' al usuario');
                         }
                     }
                 }
                 
+                // Variable para rastrear si ya se procesaron pares
+                $pairsProcessed = false;
+                
                 // Si hay específicamente tutor_course_id y tutor_division_id
-                if ($request->has('tutor_course_id') && $request->has('tutor_division_id')) {
+                if ($request->has('tutor_course_id') && $request->has('tutor_division_id') && 
+                    !empty($request->tutor_course_id) && !empty($request->tutor_division_id)) {
                     \Log::info('Usando tutor_course_id y tutor_division_id');
                     
-                    \App\Models\CourseDivisionUser::create([
+                    // Verificar si ya existe esta combinación para evitar duplicados
+                    $existeCombinacion = \App\Models\CourseDivisionUser::where([
                         'course_id' => $request->tutor_course_id,
                         'division_id' => $request->tutor_division_id,
                         'user_id' => $user->id,
-                    ]);
+                    ])->exists();
+                    
+                    if (!$existeCombinacion) {
+                        \App\Models\CourseDivisionUser::create([
+                            'course_id' => $request->tutor_course_id,
+                            'division_id' => $request->tutor_division_id,
+                            'user_id' => $user->id,
+                        ]);
+                        
+                        \Log::info('Asociado curso:' . $request->tutor_course_id . ' y división:' . $request->tutor_division_id . ' al tutor');
+                    } else {
+                        \Log::info('Se omitió combinación duplicada: curso:' . $request->tutor_course_id . ' y división:' . $request->tutor_division_id . ' para el tutor:' . $user->id);
+                    }
 
                     // También agregar a la tabla course_user para mantener compatibilidad
-                    $user->courses()->syncWithoutDetaching([$request->tutor_course_id]);
+                    if (!empty($request->tutor_course_id)) {
+                        $user->courses()->syncWithoutDetaching([$request->tutor_course_id]);
+                    } else {
+                        \Log::warning('Se evitó sincronizar tutor_course_id vacío para el usuario: ' . $user->id);
+                    }
                     
                     \Log::info('Asociado curso:' . $request->tutor_course_id . ' y división:' . $request->tutor_division_id . ' al usuario');
+                    $pairsProcessed = true;
+                }
+                
+                // También procesar los pares curso-división, si no se han procesado ya
+                if (!$pairsProcessed && $request->has('course_division_pairs') && is_array($request->course_division_pairs)) {
+                    \Log::info('Procesando pares curso-división para tutor: ', $request->course_division_pairs);
+                    
+                    foreach ($request->course_division_pairs as $pair) {
+                        if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
+                            // Verificar si ya existe esta combinación para evitar duplicados
+                            $existeCombinacion = \App\Models\CourseDivisionUser::where([
+                                'course_id' => $pair['course_id'],
+                                'division_id' => $pair['division_id'],
+                                'user_id' => $user->id,
+                            ])->exists();
+                            
+                            if (!$existeCombinacion) {
+                                \App\Models\CourseDivisionUser::create([
+                                    'course_id' => $pair['course_id'],
+                                    'division_id' => $pair['division_id'],
+                                    'user_id' => $user->id,
+                                ]);
+                                
+                                \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al tutor');
+                            } else {
+                                \Log::info('Se omitió combinación duplicada: curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' para el tutor:' . $user->id);
+                            }
+
+                            // También agregar a la tabla course_user
+                            if (!empty($pair['course_id'])) {
+                                $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            }
+                            
+                            \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al tutor');
+                        }
+                    }
                 }
             }
 
@@ -321,14 +600,31 @@ class UserController extends Controller
                     
                     foreach ($request->course_division_pairs as $pair) {
                         if (!empty($pair['course_id']) && !empty($pair['division_id'])) {
-                            \App\Models\CourseDivisionUser::create([
+                            // Verificar si ya existe esta combinación para evitar duplicados
+                            $existeCombinacion = \App\Models\CourseDivisionUser::where([
                                 'course_id' => $pair['course_id'],
                                 'division_id' => $pair['division_id'],
                                 'user_id' => $user->id,
-                            ]);
+                            ])->exists();
+                            
+                            if (!$existeCombinacion) {
+                                \App\Models\CourseDivisionUser::create([
+                                    'course_id' => $pair['course_id'],
+                                    'division_id' => $pair['division_id'],
+                                    'user_id' => $user->id,
+                                ]);
+                                
+                                \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al alumno');
+                            } else {
+                                \Log::info('Se omitió combinación duplicada: curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' para el alumno:' . $user->id);
+                            }
 
                             // También agregar a la tabla course_user para mantener compatibilidad
-                            $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            if (!empty($pair['course_id'])) {
+                                $user->courses()->syncWithoutDetaching([$pair['course_id']]);
+                            } else {
+                                \Log::warning('Se evitó sincronizar course_id vacío para el alumno: ' . $user->id);
+                            }
                             
                             \Log::info('Asociado curso:' . $pair['course_id'] . ' y división:' . $pair['division_id'] . ' al alumno');
                         } else {
@@ -343,14 +639,31 @@ class UserController extends Controller
                 if ($request->has('course_id') && $request->has('division_id')) {
                     \Log::info('Usando course_id y division_id individuales para alumno');
                     
-                    \App\Models\CourseDivisionUser::create([
+                    // Verificar si ya existe esta combinación para evitar duplicados
+                    $existeCombinacion = \App\Models\CourseDivisionUser::where([
                         'course_id' => $request->course_id,
                         'division_id' => $request->division_id,
                         'user_id' => $user->id,
-                    ]);
+                    ])->exists();
+                    
+                    if (!$existeCombinacion) {
+                        \App\Models\CourseDivisionUser::create([
+                            'course_id' => $request->course_id,
+                            'division_id' => $request->division_id,
+                            'user_id' => $user->id,
+                        ]);
+                        
+                        \Log::info('Asociado curso:' . $request->course_id . ' y división:' . $request->division_id . ' al alumno');
+                    } else {
+                        \Log::info('Se omitió combinación duplicada: curso:' . $request->course_id . ' y división:' . $request->division_id . ' para el alumno:' . $user->id);
+                    }
 
                     // También agregar a la tabla course_user para mantener compatibilidad
-                    $user->courses()->syncWithoutDetaching([$request->course_id]);
+                    if (!empty($request->course_id)) {
+                        $user->courses()->syncWithoutDetaching([$request->course_id]);
+                    } else {
+                        \Log::warning('Se evitó sincronizar course_id vacío para el alumno: ' . $user->id);
+                    }
                     
                     \Log::info('Asociado curso:' . $request->course_id . ' y división:' . $request->division_id . ' al alumno');
                 }
@@ -371,7 +684,11 @@ class UserController extends Controller
                             ]);
 
                             // También agregar a la tabla course_user para mantener compatibilidad
-                            $user->courses()->syncWithoutDetaching([$courseId]);
+                            if (!empty($courseId)) {
+                                $user->courses()->syncWithoutDetaching([$courseId]);
+                            } else {
+                                \Log::warning('Se evitó sincronizar course_id vacío para el alumno: ' . $user->id);
+                            }
                             
                             \Log::info('Asociado curso:' . $courseId . ' y división:' . $divisionId . ' al alumno');
                         }
@@ -585,65 +902,259 @@ class UserController extends Controller
                 \Log::info('Materias del profesor actualizadas');
             }
 
-            // Eliminar asignaciones previas de curso/división
+            // Gestión completa de las relaciones curso-división y course_user
+            // 1. Eliminar todas las asignaciones antiguas
+            \Log::info('Eliminando asignaciones previas para el usuario ID: ' . $user->id);
             \App\Models\CourseDivisionUser::where('user_id', $user->id)->delete();
-            \Log::info('Eliminadas asignaciones previas de curso/división');
-
-            // Para procesar los pares curso-división
-            if ($request->has('course_division_pairs')) {
-                $hasValidPairs = false;
+            
+            // 2. Eliminar también las relaciones en course_user para mantener consistencia
+            $user->courses()->detach();
+            \Log::info('Eliminadas asignaciones previas de curso/división y course_user');
+            
+            // Procesar las asignaciones de curso/división
+            $courseDivisionCreated = false;
+            
+            // Procesar los campos según el rol del usuario
+            if ($user->role_id == 5) { // Orientador
+                $nivelEducativo = $request->input('nivel_educativo');
                 
-                foreach ($request->course_division_pairs as $index => $pair) {
-                    // Verificar que ambos valores existan y no sean vacíos
-                    if (isset($pair['course_id']) && isset($pair['division_id']) && 
-                        !empty($pair['course_id']) && !empty($pair['division_id'])) {
-                        
+                if ($nivelEducativo) {
+                    \Log::info("Procesando nivel educativo para orientador: {$nivelEducativo}");
+                    
+                    // Obtener cursos según el nivel seleccionado
+                    $cursos = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Obtenemos cursos de ESO por nombre
+                        $cursos = Course::whereIn('name', ['1 ESO', '2 ESO', '3 ESO', '4 ESO'])
+                                        ->orWhere('name', 'like', '%ESO%')
+                                        ->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Obtenemos cursos de Bachillerato por nombre
+                        $cursos = Course::whereIn('name', ['1 BATX', '2 BATX'])
+                                        ->orWhere('name', 'like', '%BATX%')
+                                        ->orWhere('name', 'like', '%BACHILLER%')
+                                        ->pluck('id')->toArray();
+                    }
+                    
+                    // Obtener las divisiones apropiadas según el nivel educativo
+                    $divisiones = [];
+                    if ($nivelEducativo == 'eso') {
+                        // Para ESO, usar solo las divisiones con IDs 3 al 7 (A, B, C, D, E)
+                        $divisiones = Division::whereBetween('id', [3, 7])->pluck('id')->toArray();
+                    } elseif ($nivelEducativo == 'bachillerato') {
+                        // Para Bachillerato, usar solo las divisiones 1 y 2
+                        $divisiones = Division::whereIn('id', [1, 2])->pluck('id')->toArray();
+                    }
+                    
+                    \Log::info("Divisiones seleccionadas para {$nivelEducativo}: " . implode(', ', $divisiones));
+                    
+                    // Crear todas las combinaciones posibles de curso y división
+                    $combinacionesCreadas = 0;
+                    foreach ($cursos as $cursoId) {
+                        foreach ($divisiones as $divisionId) {
+                            \App\Models\CourseDivisionUser::create([
+                                'user_id' => $user->id,
+                                'course_id' => $cursoId,
+                                'division_id' => $divisionId,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                            
+                            // Actualizar la tabla course_user
+                            $user->courses()->syncWithoutDetaching([$cursoId]);
+                            $combinacionesCreadas++;
+                        }
+                    }
+                    
+                    \Log::info("Asignadas {$combinacionesCreadas} combinaciones para el orientador");
+                    $courseDivisionCreated = true;
+                }
+            }
+            else if ($user->role_id == 4) { // Tutor
+                $tutorCourseId = $request->input('tutor_course_id');
+                $tutorDivisionId = $request->input('tutor_division_id');
+                
+                if ($tutorCourseId && $tutorDivisionId) {
+                    \Log::info("Usando campos específicos de tutor (rol {$user->role_id}): course_id={$tutorCourseId}, division_id={$tutorDivisionId}");
+                    
+                    // Verificar si ya existe esta combinación para evitar duplicados
+                    $existeCombinacion = \App\Models\CourseDivisionUser::where([
+                        'course_id' => $tutorCourseId,
+                        'division_id' => $tutorDivisionId,
+                        'user_id' => $user->id,
+                    ])->exists();
+                    
+                    if (!$existeCombinacion) {
+                        // Crear la asignación en course_division_user
                         \App\Models\CourseDivisionUser::create([
                             'user_id' => $user->id,
-                            'course_id' => $pair['course_id'],
-                            'division_id' => $pair['division_id'],
+                            'course_id' => $tutorCourseId,
+                            'division_id' => $tutorDivisionId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
                         ]);
-
-                        // También mantener la compatibilidad con course_user
-                        if (!$user->courses()->where('courses.id', $pair['course_id'])->exists()) {
-                            $user->courses()->attach($pair['course_id']);
-                        }
                         
-                        $hasValidPairs = true;
-                        \Log::info("Asignación creada: Curso {$pair['course_id']}, División {$pair['division_id']}");
+                        \Log::info("Asignación creada para tutor: curso {$tutorCourseId}, división {$tutorDivisionId}");
+                    } else {
+                        \Log::info("Se omitió combinación duplicada para tutor: curso {$tutorCourseId}, división {$tutorDivisionId}");
+                    }
+                    
+                    // Actualizar la tabla course_user
+                    if (!empty($tutorCourseId)) {
+                        $user->courses()->syncWithoutDetaching([$tutorCourseId]);
+                        $courseDivisionCreated = true;
+                    } else {
+                        \Log::warning('Se evitó sincronizar tutorCourseId vacío para el usuario: ' . $user->id);
                     }
                 }
+            } 
+            else if ($user->role_id == 2) { // Estudiante
+                $studentCourseId = $request->input('student_course_id');
+                $studentDivisionId = $request->input('student_division_id');
                 
-                if (!$hasValidPairs) {
-                    \Log::warning("No se encontraron pares curso-división válidos");
+                if ($studentCourseId && $studentDivisionId) {
+                    \Log::info("Usando campos específicos de estudiante (rol {$user->role_id}): course_id={$studentCourseId}, division_id={$studentDivisionId}");
+                    
+                    // Verificar si ya existe esta combinación para evitar duplicados
+                    $existeCombinacion = \App\Models\CourseDivisionUser::where([
+                        'course_id' => $studentCourseId,
+                        'division_id' => $studentDivisionId,
+                        'user_id' => $user->id,
+                    ])->exists();
+                    
+                    if (!$existeCombinacion) {
+                        // Crear la asignación en course_division_user
+                        \App\Models\CourseDivisionUser::create([
+                            'user_id' => $user->id,
+                            'course_id' => $studentCourseId,
+                            'division_id' => $studentDivisionId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        
+                        \Log::info("Asignación creada para estudiante: curso {$studentCourseId}, división {$studentDivisionId}");
+                    } else {
+                        \Log::info("Se omitió combinación duplicada para estudiante: curso {$studentCourseId}, división {$studentDivisionId}");
+                    }
+                    
+                    // Actualizar la tabla course_user
+                    if (!empty($studentCourseId)) {
+                        $user->courses()->syncWithoutDetaching([$studentCourseId]);
+                        $courseDivisionCreated = true;
+                    } else {
+                        \Log::warning('Se evitó sincronizar studentCourseId vacío para el usuario: ' . $user->id);
+                    }
                 }
             }
-            // Si no hay pares pero hay course_id y division_id individuales (formato antiguo)
-            elseif ($request->has('course_id') && $request->has('division_id')) {
-                \App\Models\CourseDivisionUser::create([
-                    'user_id' => $user->id,
-                    'course_id' => $request->course_id,
-                    'division_id' => $request->division_id,
-                ]);
-
-                // También mantener la compatibilidad con course_user
-                if (!$user->courses()->where('courses.id', $request->course_id)->exists()) {
-                    $user->courses()->attach($request->course_id);
-                }
+            else if ($user->role_id == 1) // Profesor
+            
+            // Procesar los pares curso-división (siempre preferir esta estructura)
+            if ($request->has('course_division_pairs')) {
+                \Log::info("Estructura de course_division_pairs:", ['datos' => $request->course_division_pairs]);
                 
-                \Log::info("Usando campos individuales: Curso {$request->course_id}, División {$request->division_id}");
+                // Asegurarnos de que es un array
+                if (is_array($request->course_division_pairs) || is_object($request->course_division_pairs)) {
+                    $processedPairs = []; // Para evitar duplicados
+                    
+                    foreach ($request->course_division_pairs as $index => $pair) {
+                        // Obtener valores curso/división
+                        $course_id = null;
+                        $division_id = null;
+                        
+                        if (is_array($pair)) {
+                            $course_id = isset($pair['course_id']) ? intval($pair['course_id']) : null;
+                            $division_id = isset($pair['division_id']) ? intval($pair['division_id']) : null;
+                        } elseif (is_object($pair)) {
+                            $course_id = isset($pair->course_id) ? intval($pair->course_id) : null;
+                            $division_id = isset($pair->division_id) ? intval($pair->division_id) : null;
+                        }
+                        
+                        // Verificación estricta y evitar duplicados
+                        if ($course_id > 0 && $division_id > 0) {
+                            $pairKey = "{$course_id}-{$division_id}";
+                            
+                            if (!in_array($pairKey, $processedPairs)) {
+                                \Log::info("Creando asignación de profesor: course_id={$course_id}, division_id={$division_id}");
+                                
+                                // Verificar si ya existe esta combinación para evitar duplicados
+                                $existeCombinacion = \App\Models\CourseDivisionUser::where([
+                                    'course_id' => $course_id,
+                                    'division_id' => $division_id,
+                                    'user_id' => $user->id,
+                                ])->exists();
+                                
+                                if (!$existeCombinacion) {
+                                    // Crear la asignación en course_division_user
+                                    \App\Models\CourseDivisionUser::create([
+                                        'user_id' => $user->id,
+                                        'course_id' => $course_id,
+                                        'division_id' => $division_id,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ]);
+                                    
+                                    \Log::info("Asignación creada para profesor: curso {$course_id}, división {$division_id}");
+                                } else {
+                                    \Log::info("Se omitió combinación duplicada para profesor: curso {$course_id}, división {$division_id}");
+                                }
+                                
+                                // Actualizar la tabla course_user
+                                if (!empty($course_id)) {
+                                    $user->courses()->syncWithoutDetaching([$course_id]);
+                                } else {
+                                    \Log::warning('Se evitó sincronizar course_id vacío para el profesor: ' . $user->id);
+                                }
+                                
+                                $processedPairs[] = $pairKey;
+                                \Log::info("Asignación creada con éxito");
+                                $courseDivisionCreated = true;
+                            } else {
+                                \Log::info("Par duplicado ignorado: {$pairKey}");
+                            }
+                        } else {
+                            \Log::warning("Par inválido en índice {$index}: course_id={$course_id}, division_id={$division_id}");
+                        }
+                    }
+                } else {
+                    \Log::warning("course_division_pairs no es un array ni un objeto");
+                }
             }
+            
+            // Verificar que se hayan creado asignaciones
+            $newAssignments = \App\Models\CourseDivisionUser::where('user_id', $user->id)->get();
+            \Log::info("Asignaciones creadas: " . $newAssignments->count(), [
+                'asignaciones' => $newAssignments->toArray()
+            ]);
+            
+            // Refrescar el usuario para asegurarnos de tener los datos más recientes
+            $user->refresh();
+            
+            // Ya no es necesario este bloque, ya que tratamos los campos course_id/division_id al inicio
 
             \Log::info('Usuario actualizado correctamente');
+            
+            // Asegurarnos de que el usuario tiene la relación cargada correctamente
+            $user = User::with(['courses', 'subjects', 'courseDivisionUsers.course', 'courseDivisionUsers.division'])->find($user->id);
+            
+            // Verificar explícitamente que hay asignaciones
+            $assignments = $user->courseDivisionUsers;
+            if ($assignments->isEmpty()) {
+                \Log::warning("ADVERTENCIA: El usuario {$user->id} no tiene asignaciones después de guardar");
+            } else {
+                \Log::info("Asignaciones confirmadas para usuario {$user->id}: " . $assignments->count());
+                foreach ($assignments as $idx => $assignment) {
+                    \Log::info("Asignación #{$idx}: Curso {$assignment->course_id}, División {$assignment->division_id}");
+                }
+            }
             
             if ($request->wantsJson()) {
                 return response()->json([
                     'message' => 'Usuari actualitzat correctament',
-                    'user' => $user->load(['courses', 'subjects', 'courseDivisionUsers.course', 'courseDivisionUsers.division'])
+                    'user' => $user
                 ], 200);
             }
 
-            return redirect()->route('users.index')->with('success', 'Usuari actualitzat correctament');
+            return redirect()->route('users.show', $user->id)->with('success', 'Usuari actualitzat correctament');
             
         } catch (\Exception $e) {
             \Log::error('Error al actualizar usuario: ' . $e->getMessage());
@@ -866,6 +1377,104 @@ class UserController extends Controller
                     'division_name' => $courseDivision?->division?->division,
                 ]
             ]);
+        }
+    }
+    
+    /**
+     * Obtiene las asignaciones de un orientador específico
+     * 
+     * @param int $id ID del orientador
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getOrientadorAssignments($id)
+    {
+        try {
+            // Verificar que el usuario existe y es un orientador
+            $user = User::findOrFail($id);
+            
+            if ($user->role_id != 5) { // 5 es el ID del rol 'orientador'
+                return response()->json([
+                    'error' => true,
+                    'message' => 'El usuario no es un orientador',
+                    'assignments' => []
+                ], 400);
+            }
+            
+            // Primero intentar con course_division_users
+            $assignments = \App\Models\CourseDivisionUser::where('user_id', $id)
+                ->with(['course', 'division'])
+                ->get()
+                ->map(function ($cdu) {
+                    return [
+                        'course_id' => $cdu->course_id,
+                        'division_id' => $cdu->division_id,
+                        'course_name' => $cdu->course->name ?? 'Sin Curso',
+                        'division_name' => $cdu->division->division ?? 'Sin División',
+                    ];
+                });
+                
+            // Si no hay asignaciones, intentar con roles por nivel educativo
+            if ($assignments->isEmpty()) {
+                // Para ESO, buscar cursos que contienen 'ESO' y divisiones A-E
+                $esoAssignments = [];
+                $esoCoursesIds = Course::where('name', 'like', '%ESO%')->pluck('id')->toArray();
+                $esoDivisionsIds = Division::whereBetween('id', [3, 7])->pluck('id')->toArray();
+                
+                if (!empty($esoCoursesIds) && !empty($esoDivisionsIds)) {
+                    foreach ($esoCoursesIds as $courseId) {
+                        $course = Course::find($courseId);
+                        foreach ($esoDivisionsIds as $divisionId) {
+                            $division = Division::find($divisionId);
+                            $esoAssignments[] = [
+                                'course_id' => $courseId,
+                                'division_id' => $divisionId,
+                                'course_name' => $course ? $course->name : 'Sin Curso',
+                                'division_name' => $division ? $division->division : 'Sin División',
+                            ];
+                        }
+                    }
+                }
+                
+                // Para BATX, buscar cursos que contienen 'BATX' o 'BACHILLER' y divisiones 1 y 2
+                $batxAssignments = [];
+                $batxCoursesIds = Course::where('name', 'like', '%BATX%')
+                                        ->orWhere('name', 'like', '%BACHILLER%')
+                                        ->pluck('id')->toArray();
+                $batxDivisionsIds = Division::whereIn('id', [1, 2])->pluck('id')->toArray();
+                
+                if (!empty($batxCoursesIds) && !empty($batxDivisionsIds)) {
+                    foreach ($batxCoursesIds as $courseId) {
+                        $course = Course::find($courseId);
+                        foreach ($batxDivisionsIds as $divisionId) {
+                            $division = Division::find($divisionId);
+                            $batxAssignments[] = [
+                                'course_id' => $courseId,
+                                'division_id' => $divisionId,
+                                'course_name' => $course ? $course->name : 'Sin Curso',
+                                'division_name' => $division ? $division->division : 'Sin División',
+                            ];
+                        }
+                    }
+                }
+                
+                // Combinar las asignaciones de ESO y BATX
+                $assignments = collect(array_merge($esoAssignments, $batxAssignments));
+            }
+            
+            return response()->json([
+                'id' => $user->id,
+                'name' => $user->name,
+                'last_name' => $user->last_name,
+                'role_name' => 'orientador',
+                'assignments' => $assignments
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Error al obtener las asignaciones del orientador: ' . $e->getMessage(),
+                'assignments' => []
+            ], 500);
         }
     }
 }

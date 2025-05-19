@@ -30,26 +30,26 @@ const menuItemsConfig = [
         title: "General",
         route: "/professor/formularis",
         icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-        showFor: ['profesor', 'tutor', 'orientador', 'admin'],
+        showFor: ['profesor', 'tutor', 'admin'],
       },
-      {
-        title: "Estat Formularis",
-        route: "/professor/formularis/estat",
-        icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
-        showFor: ['profesor', 'tutor', 'orientador', 'admin'],
-      },
-      // {
-      //   title: "Sociograma",
-      //   route: "/professor/sociograma/SociogramaView",
-      //   icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
-      //   showFor: ['orientador', 'admin'],
-      // },
       // {
       //   title: "Cesc",
       //   route: "/professor/cesc/CescView",
       //   icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
       //   showFor: ['orientador', 'admin'],
       // }
+      {
+        title: "Cesc",
+        route: "/professor/cesc/CescView",
+        icon: "M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.25-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z",
+        showFor: ['orientador', 'admin'],
+      },
+      {
+        title: "Sociograma",
+        route: "/professor/sociograma/SociogramaView",
+        icon: "M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z",
+        showFor: ['orientador', 'admin'],
+      }
     ]
   },
   {
@@ -63,14 +63,21 @@ const menuItemsConfig = [
       //   route: "/professor/graficas",
       //   icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
       // },
-      // {
-      //   title: "Sociograma",
-      //   route:"/professor/sociograma/comparative",
-      //   icon: "M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z",
-      // },
+      {
+        title: "CESC",
+        route: "/orientador/cesc/comparative",
+        icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75Z",
+        showFor: ['orientador', 'admin'],
+      },
+      {
+        title: "Sociograma",
+        route:"/professor/sociograma/comparative",
+        icon: "M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z",
+        showFor: ['orientador', 'admin'],
+      },
       {
         title: "Autoavaluació",
-        route: "/professor/graficFormAutoavaluacio",
+        route: "/professor/autoavaluacio",
         icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
       }
     ]

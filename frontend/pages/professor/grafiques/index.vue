@@ -126,7 +126,7 @@
             </div>
           </div>
           <div class="px-6 pb-6">
-            <nuxt-link to="/orientador/graficas?categoria=social" class="block w-full py-3 px-4 text-center bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+            <nuxt-link to="/orientador/cesc/comparative?categoria=social" class="block w-full py-3 px-4 text-center bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
               Visualitzar comparativa
             </nuxt-link>
           </div>
@@ -156,7 +156,7 @@
             </div>
           </div>
           <div class="px-6 pb-6">
-            <nuxt-link to="/orientador/graficas?categoria=violento" class="block w-full py-3 px-4 text-center bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
+            <nuxt-link to="/orientador/cesc/comparative?categoria=violento" class="block w-full py-3 px-4 text-center bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
               Visualitzar comparativa
             </nuxt-link>
           </div>
@@ -190,7 +190,7 @@
             </div>
           </div>
           <div class="px-6 pb-6">
-            <nuxt-link to="/orientador/graficas?categoria=afectado" class="block w-full py-3 px-4 text-center bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors">
+            <nuxt-link to="/orientador/cesc/comparative?categoria=afectado" class="block w-full py-3 px-4 text-center bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors">
               Visualitzar comparativa
             </nuxt-link>
           </div>

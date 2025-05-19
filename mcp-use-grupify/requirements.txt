@@ -1,0 +1,9 @@
+langchain
+langchain-openai
+python-dotenv
+openai>=1.0.0
+fastembed
+mysql-connector-python
+streamlit
+google-generativeai
+langchain-google-genai

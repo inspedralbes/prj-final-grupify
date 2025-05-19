@@ -16,6 +16,7 @@ export const useStudentsStore = defineStore("students", {
 
       this.loading = true;
       this.error = null;
+      this.students = []; // Limpiar estudiantes anteriores
 
       // Construir la URL con parámetros de filtro
       let url = "https://api.grupify.cat/api/get-students";

@@ -7,6 +7,7 @@ use App\Models\Form;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SociogramRelationshipController extends Controller
 {
@@ -298,37 +299,110 @@ class SociogramRelationshipController extends Controller
     {
         $data = $request->validate([
             'user_id' => 'required|exists:users,id',
+            'form_id' => 'required|exists:forms,id', // Añadido: recibir el ID del formulario desde la solicitud
             'relationships' => 'required|array',
             'relationships.*.peer_id' => 'required|exists:users,id',
             'relationships.*.question_id' => 'required|exists:questions,id',
             'relationships.*.relationship_type' => 'required|in:positive,negative',
         ]);
 
-        foreach ($data['relationships'] as $relationship) {
-            SociogramRelationship::create([
+        // Iniciar una transacción para garantizar consistencia
+        DB::beginTransaction();
+        
+        try {
+            // Guardar cada relación individual
+            foreach ($data['relationships'] as $relationship) {
+                SociogramRelationship::create([
+                    'user_id' => $data['user_id'],
+                    'peer_id' => $relationship['peer_id'],
+                    'question_id' => $relationship['question_id'],
+                    'relationship_type' => $relationship['relationship_type'],
+                ]);
+            }
+            
+            // Obtener el formulario usando el ID proporcionado
+            $form = Form::find($data['form_id']);
+            if (!$form) {
+                throw new \Exception("Formulario no encontrado con ID: " . $data['form_id']);
+            }
+
+            // Obtener el usuario
+            $user = User::find($data['user_id']);
+            if (!$user) {
+                throw new \Exception("Usuario no encontrado.");
+            }
+            
+            // Obtener el curso y división del usuario
+            $courseDivision = DB::table('course_division_user')
+                ->where('user_id', $data['user_id'])
+                ->orderBy('id', 'desc')
+                ->first();
+                
+            if (!$courseDivision) {
+                throw new \Exception("Usuario sin curso/división asignados.");
+            }
+            
+            // Actualizar o crear el registro en form_user con answered = 1
+            DB::table('form_user')->updateOrInsert(
+                [
+                    'user_id' => $data['user_id'],
+                    'form_id' => $form->id,
+                    'course_id' => $courseDivision->course_id,
+                    'division_id' => $courseDivision->division_id,
+                ],
+                [
+                    'answered' => 1, // Marca como respondido (1 en lugar de true para asegurar compatibilidad)
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+            
+            // Actualizar el contador de respuestas en el formulario si es necesario
+            if (Schema::hasTable('form_assignments')) {
+                $formAssignment = \App\Models\FormAssignment::where('form_id', $form->id)
+                    ->where('course_id', $courseDivision->course_id)
+                    ->where('division_id', $courseDivision->division_id)
+                    ->first();
+                    
+                if ($formAssignment) {
+                    // Contar el número de usuarios que han respondido el formulario 
+                    $answeredCount = DB::table('form_user')
+                        ->where('form_id', $form->id)
+                        ->where('course_id', $courseDivision->course_id)
+                        ->where('division_id', $courseDivision->division_id)
+                        ->where('answered', 1)
+                        ->count();
+                    
+                    // Actualizar el contador de respuestas
+                    $formAssignment->responses_count = $answeredCount;
+                    $formAssignment->save();
+                }
+            }
+            
+            // Confirmar la transacción
+            DB::commit();
+            
+            // Registrar la acción completada
+            \Illuminate\Support\Facades\Log::info('Sociograma completado', [
                 'user_id' => $data['user_id'],
-                'peer_id' => $relationship['peer_id'],
-                'question_id' => $relationship['question_id'],
-                'relationship_type' => $relationship['relationship_type'],
+                'form_id' => $form->id,
+                'course_id' => $courseDivision->course_id,
+                'division_id' => $courseDivision->division_id
             ]);
+            
+            // Devolver una respuesta exitosa
+            return response()->json(['message' => 'Relaciones guardadas correctamente y formulario marcado como respondido.'], 201);
+            
+        } catch (\Exception $e) {
+            // Si hay algún error, revertir la transacción
+            DB::rollback();
+            
+            // Registrar el error
+            \Illuminate\Support\Facades\Log::error('Error al guardar sociograma: ' . $e->getMessage());
+            
+            // Devolver respuesta de error
+            return response()->json(['error' => 'Error al guardar las relaciones: ' . $e->getMessage()], 500);
         }
-
-        $form = Form::find(3);
-        if ($form) {
-            $form->increment('responses_count');
-        } else {
-            return response()->json(['error' => 'Formulario sociograma no encontrado.'], 404);
-        }
-
-        $user = User::find($data['user_id']);
-        if ($user) {
-            $user->forms()->updateExistingPivot($form->id, ['answered' => true]);
-        } else {
-            return response()->json(['error' => 'Usuario no encontrado.'], 404);
-        }
-
-        // Devolver una respuesta exitosa
-        return response()->json(['message' => 'Relaciones guardadas, contador de respuestas actualizado y formulario marcado como respondido.'], 201);
     }
 
 

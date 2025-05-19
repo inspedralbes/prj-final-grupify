@@ -49,7 +49,12 @@ async function fetchQuestions() {
 // Función para cargar usuarios
 async function fetchUsers() {
   try {
-    const response = await fetch("https://api.grupify.cat/api/get-students", {
+    // Obtener el curso y división del usuario actual
+    const courseId = authStore.user.course_id;
+    const divisionId = authStore.user.division_id;
+    
+    // Filtrar para obtener solo estudiantes del mismo curso y división
+    const response = await fetch(`http://localhost:8000/api/get-students?course_id=${courseId}&division_id=${divisionId}`, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -57,7 +62,10 @@ async function fetchUsers() {
     });
 
     if (!response.ok) throw new Error("Error al cargar los usuarios");
-    userNames.value = await response.json();
+    const allStudents = await response.json();
+    
+    // Excluir al usuario actual de la lista
+    userNames.value = allStudents.filter(student => student.id !== userId);
   } catch (error) {
     console.error("Error al cargar los usuarios:", error);
     triggerToast("Error al cargar los usuarios.", "error");
@@ -93,18 +101,56 @@ function goToNextQuestion() {
 // Función para enviar respuestas
 async function submitResponses() {
   try {
-    // Formatear las respuestas, añadiendo un tipo de respuesta
-    const formattedResponses = Object.keys(responses.value).map(questionId => {
-      const answer = responses.value[questionId];
-      return {
-        question_id: parseInt(questionId),
-        answer,
-        answer_type: determineAnswerType(answer), // Llamamos a una función para determinar el tipo de respuesta
-      };
-    });
+    // Formatear las respuestas para el controlador CescRelationship
+    // Crear un array de relaciones en el formato que espera el controlador
+    const relationships = [];
+    
+    // Para cada pregunta respondida
+    for (const questionId in responses.value) {
+      // Obtener los IDs de los peers seleccionados
+      const selectedPeerIds = responses.value[questionId];
+      
+      // Para cada peer seleccionado, crear una relación
+      for (const peerId of selectedPeerIds) {
+        // Determinar el tag_id basado en la pregunta
+        // Asumimos que cada pregunta del CESC corresponde a un tag específico
+        // Pregunta 1: Popular (tag_id: 1)
+        // Pregunta 2: Rebutjat (tag_id: 2)
+        // Pregunta 3: Agressiu (tag_id: 3)
+        // Pregunta 4: Prosocial (tag_id: 4)
+        // Pregunta 5: Víctima (tag_id: 5)
+        
+        // Buscar la pregunta actual en el array de preguntas
+        const currentQuestion = questions.value.find(q => q.id == questionId);
+        let tagId = 1; // Valor predeterminado (Popular)
+        
+        // Determinar el tag_id basado en el título o contenido de la pregunta
+        if (currentQuestion) {
+          const questionTitle = currentQuestion.title.toLowerCase();
+          
+          if (questionTitle.includes('rechazados') || questionTitle.includes('rebutjats')) {
+            tagId = 2; // Rebutjat
+          } else if (questionTitle.includes('agresivos') || questionTitle.includes('agressius')) {
+            tagId = 3; // Agressiu
+          } else if (questionTitle.includes('prosociales') || questionTitle.includes('prosocials')) {
+            tagId = 4; // Prosocial
+          } else if (questionTitle.includes('víctimas') || questionTitle.includes('víctima')) {
+            tagId = 5; // Víctima
+          }
+        }
+        
+        // Añadir la relación al array
+        relationships.push({
+          peer_id: peerId,
+          question_id: parseInt(questionId),
+          tag_id: tagId
+        });
+      }
+    }
 
+    // Enviar los datos al endpoint correcto utilizando el formato adecuado
     const response = await fetch(
-      `https://api.grupify.cat/api/forms/${formId}/submit-responses`,
+      `http://localhost:8000/api/cesc-relationships`,
       {
         method: "POST",
         headers: {
@@ -112,18 +158,22 @@ async function submitResponses() {
         },
         body: JSON.stringify({
           user_id: userId,
-          responses: formattedResponses,
+          form_id: formId, // Enviar el ID del formulario que se está contestando
+          relationships: relationships
         }),
       }
     );
 
-    if (!response.ok) throw new Error("Error al enviar respuestas");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Error al enviar respuestas del CESC");
+    }
 
-    triggerToast("Respuestas enviadas correctamente.", "success");
+    triggerToast("Respuestas del CESC enviadas correctamente.", "success");
     setTimeout(() => (window.location.href = "/alumne/dashboard"), 1000);
   } catch (error) {
-    console.error("Error al enviar las respuestas:", error);
-    triggerToast("Error al enviar las respuestas.", "error");
+    console.error("Error al enviar las respuestas del CESC:", error);
+    triggerToast("Error al enviar las respuestas: " + error.message, "error");
   }
 }
 

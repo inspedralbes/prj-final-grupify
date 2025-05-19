@@ -60,6 +60,7 @@ const assignFormToCourseAndDivision = async () => {
         course_id: selectedCourseId,
         division_id: selectedDivisionId,
         form_id: formId,
+        teacher_id: authStore.user?.id // Añadimos explícitamente el ID del profesor autenticado
       }),
     });
 

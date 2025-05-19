@@ -8,34 +8,32 @@ export function useStudentSearch(initialStudents = []) {
   const authStore = useAuthStore();
   const students = ref(initialStudents);
   const searchQuery = ref("");
-  const selectedCourse = ref("all");
-  const selectedDivision = ref("all");
+  const selectedCourse = ref("");
+  const selectedDivision = ref("");
 
   // Filtro de estudiantes con lógica mejorada
   const filteredStudents = computed(() => {
-    if (!students.value) return [];
+    if (!students.value || students.value.length === 0) return [];
 
-    return students.value.filter(student => {
+    // Aplicar filtros con validación más estricta
+    const filtered = students.value.filter(student => {
       // Filtro por texto de búsqueda (nombre, apellido, email)
       const matchesSearch =
         searchQuery.value === "" || 
-        student.name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        student.last_name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        student.email?.toLowerCase().includes(searchQuery.value.toLowerCase());
+        (student.name && student.name.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+        (student.last_name && student.last_name.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+        (student.email && student.email.toLowerCase().includes(searchQuery.value.toLowerCase()));
 
-      // Filtro por curso
-      const matchesCourse =
-        selectedCourse.value === "all" ||
-        (student.course && student.course === selectedCourse.value);
-
-      // Filtro por división
-      const matchesDivision =
-        selectedDivision.value === "all" ||
-        (student.division && student.division === selectedDivision.value);
+      // Filtro por curso y división - en este punto no necesitamos filtrar más por curso/división
+      // ya que los estudiantes ya vienen filtrados desde la llamada a la API
+      // Simplemente asegurarnos de que tengan los campos esperados
+      const hasCourseAndDivision = student.course && student.division;
 
       // Aplicar todos los filtros
-      return matchesSearch && matchesCourse && matchesDivision;
+      return matchesSearch && hasCourseAndDivision;
     });
+
+    return filtered;
   });
 
   // Función para verificar si un estudiante pertenece a alguno de los cursos del profesor

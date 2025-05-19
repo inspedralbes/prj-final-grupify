@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   UserGroupIcon,
   UserIcon,
@@ -12,6 +12,7 @@ import {
 import { useStudentsStore } from "@/stores/studentsStore";
 
 const router = useRouter();
+const route = useRoute();
 const studentsStore = useStudentsStore();
 const errorMessage = ref(""); // Estado para el mensaje de error
 const successMessage = ref(""); // Estado para el mensaje de éxito
@@ -195,6 +196,9 @@ const handleFinish = async () => {
       throw new Error("Estudiante no identificado.");
     }
 
+    // Obtener el ID del formulario de la URL
+    const formId = route.params.id;
+
     const relationshipTypes = {
       preferredWorkPartners: "positive",
       avoidWorkPartners: "negative",
@@ -230,13 +234,15 @@ const handleFinish = async () => {
         },
         body: JSON.stringify({
           user_id: studentId, // ID del usuario logueado
+          form_id: formId,    // ID del formulario que se está contestando
           relationships: answers, // Relaciones enviadas
         }),
       }
     );
 
     if (!response.ok) {
-      throw new Error("Error al enviar las respuestas.");
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Error al enviar las respuestas.");
     }
 
     // Mostrar mensaje de éxito y redirigir

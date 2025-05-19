@@ -22,7 +22,7 @@
         <i class="fas fa-exclamation-triangle me-2"></i> Hi ha hagut errors en el formulari:
         <ul class="mt-2 mb-0">
             @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
+            <li>{{ $error }}</li>
             @endforeach
         </ul>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -176,6 +176,7 @@
             <div class="card-body">
                 <p class="text-muted mb-3">Selecciona els cursos i divisions als quals aquest professor tindrà accés:</p>
 
+
                 <!-- Contenedor para las combinaciones de curso-división -->
                 <div id="course-division-container">
                     @php
@@ -197,7 +198,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Curs:</label>
-                                <select name="course_division_pairs[{{ $pairCount }}][course_id]" class="form-select course-select">
+                                <select name="course_division_pairs[{{ $pairCount }}][course_id]" class="form-select course-select direct-update" id="course_select_{{ $pairCount }}" data-pair-index="{{ $pairCount }}">
                                     <option value="">Selecciona un curs</option>
                                     @foreach ($courses as $course)
                                     <option value="{{ $course->id }}" {{ $pair->course_id == $course->id ? 'selected' : '' }}>
@@ -205,10 +206,11 @@
                                     </option>
                                     @endforeach
                                 </select>
+                                <!-- Campo eliminado para evitar conflictos -->
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Divisió:</label>
-                                <select name="course_division_pairs[{{ $pairCount }}][division_id]" class="form-select">
+                                <select name="course_division_pairs[{{ $pairCount }}][division_id]" class="form-select direct-update" id="division_select_{{ $pairCount }}" data-pair-index="{{ $pairCount }}">
                                     <option value="">Selecciona una divisió</option>
                                     @foreach($divisions as $division)
                                     <option value="{{ $division->id }}" {{ $pair->division_id == $division->id ? 'selected' : '' }}>
@@ -216,6 +218,7 @@
                                     </option>
                                     @endforeach
                                 </select>
+                                <!-- Campo eliminado para evitar conflictos -->
                             </div>
                         </div>
                     </div>
@@ -226,7 +229,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Curs:</label>
-                                <select name="course_division_pairs[0][course_id]" class="form-select course-select">
+                                <select name="course_division_pairs[0][course_id]" class="form-select course-select direct-update">
                                     <option value="">Selecciona un curs</option>
                                     @foreach ($courses as $course)
                                     <option value="{{ $course->id }}">{{ $course->name }}</option>
@@ -235,7 +238,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Divisió:</label>
-                                <select name="course_division_pairs[0][division_id]" class="form-select">
+                                <select name="course_division_pairs[0][division_id]" class="form-select direct-update">
                                     <option value="">Selecciona una divisió</option>
                                     @foreach($divisions as $division)
                                     <option value="{{ $division->id }}">{{ $division->division }}</option>
@@ -248,12 +251,45 @@
                     @endforelse
                 </div>
 
+                <!-- Se eliminó el botón de depuración -->
+
                 <!-- Botón para agregar más combinaciones -->
                 <button type="button" id="add-course-division" class="btn btn-primary">
                     <i class="fas fa-plus-circle me-2"></i> Afegir un altre curs i divisió
                 </button>
 
                 <input type="hidden" id="pair-count" value="{{ $pairCount }}">
+            </div>
+        </div>
+
+        <!-- Si el usuario es un orientador, mostrar selección de nivel educativo -->
+        <div id="orientador-options" class="card border-0 shadow-sm mb-4 {{ $user->role_id == 5 ? '' : 'd-none' }}">
+            <div class="card-header bg-white py-3 border-0">
+                <div class="d-flex align-items-center">
+                    <span class="flex-shrink-0 rounded-circle bg-info-subtle p-2 me-2">
+                        <i class="fas fa-graduation-cap text-info"></i>
+                    </span>
+                    <h5 class="mb-0 fw-bold">Assignació de Nivell Educatiu (Orientador)</h5>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Un orientador pot ser assignat a un nivell educatiu complet:</p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="nivel_educativo" class="form-label fw-medium">Nivell Educatiu:</label>
+                        <select name="nivel_educativo" id="nivel_educativo" class="form-select">
+                            <option value="">Selecciona un nivell</option>
+                            <option value="eso">ESO</option>
+                            <option value="bachillerato">Batxillerat</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="alert alert-info d-flex align-items-center mt-3">
+                    <i class="fas fa-info-circle fs-5 me-3"></i>
+                    <span>L'orientador tindrà accés a tots els cursos i divisions del nivell educatiu seleccionat.</span>
+                </div>
             </div>
         </div>
 
@@ -278,7 +314,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="tutor_course_id" class="form-label fw-medium">Curs:</label>
-                        <select name="course_division_pairs[0][course_id]" id="tutor_course_id" class="form-select">
+                        <select name="tutor_course_id" id="tutor_course_id" class="form-select direct-update">
                             <option value="">Selecciona un curs</option>
                             @foreach($courses as $course)
                             <option value="{{ $course->id }}" {{ $tutorAssignment && $tutorAssignment->course_id == $course->id ? 'selected' : '' }}>
@@ -290,7 +326,7 @@
 
                     <div class="col-md-6">
                         <label for="tutor_division_id" class="form-label fw-medium">Divisió:</label>
-                        <select name="course_division_pairs[0][division_id]" id="tutor_division_id" class="form-select">
+                        <select name="tutor_division_id" id="tutor_division_id" class="form-select direct-update">
                             <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
                             <option value="{{ $division->id }}" {{ $tutorAssignment && $tutorAssignment->division_id == $division->id ? 'selected' : '' }}>
@@ -323,11 +359,11 @@
                 // Obtener la asignación actual para estudiantes
                 $studentAssignment = $user->courseDivisionUsers->first();
                 @endphp
-                
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="student_course_id" class="form-label fw-medium">Curs:</label>
-                        <select name="course_division_pairs[0][course_id]" id="student_course_id" class="form-select">
+                        <select name="student_course_id" id="student_course_id" class="form-select direct-update">
                             <option value="">Selecciona un curs</option>
                             @foreach($courses as $course)
                             <option value="{{ $course->id }}" {{ $studentAssignment && $studentAssignment->course_id == $course->id ? 'selected' : '' }}>
@@ -339,7 +375,7 @@
 
                     <div class="col-md-6">
                         <label for="student_division_id" class="form-label fw-medium">Divisió:</label>
-                        <select name="course_division_pairs[0][division_id]" id="student_division_id" class="form-select">
+                        <select name="student_division_id" id="student_division_id" class="form-select direct-update">
                             <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
                             <option value="{{ $division->id }}" {{ $studentAssignment && $studentAssignment->division_id == $division->id ? 'selected' : '' }}>
@@ -349,7 +385,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="alert alert-info d-flex align-items-center mt-3">
                     <i class="fas fa-info-circle fs-5 me-3"></i>
                     <span>L'alumne només serà assignat al curs i divisió seleccionats.</span>
@@ -560,7 +596,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label fw-medium">Curs:</label>
-                        <select name="course_division_pairs[${pairCount}][course_id]" class="form-select course-select">
+                        <select name="course_division_pairs[${pairCount}][course_id]" class="form-select course-select direct-update">
                             <option value="">Selecciona un curs</option>
                             @foreach ($courses as $course)
                                 <option value="{{ $course->id }}">{{ $course->name }}</option>
@@ -569,7 +605,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-medium">Divisió:</label>
-                        <select name="course_division_pairs[${pairCount}][division_id]" class="form-select">
+                        <select name="course_division_pairs[${pairCount}][division_id]" class="form-select direct-update">
                             <option value="">Selecciona una divisió</option>
                             @foreach($divisions as $division)
                                 <option value="{{ $division->id }}">{{ $division->division }}</option>
@@ -601,6 +637,7 @@
         const professorOptions = document.getElementById('professor-options');
         const professorOptionsCourses = document.getElementById('professor-options-courses');
         const tutorOptions = document.getElementById('tutor-options');
+        const orientadorOptions = document.getElementById('orientador-options');
         const studentOptions = document.getElementById('student-options');
 
         roleSelect.addEventListener('change', function() {
@@ -610,14 +647,17 @@
             professorOptions.classList.add('d-none');
             professorOptionsCourses.classList.add('d-none');
             tutorOptions.classList.add('d-none');
+            orientadorOptions.classList.add('d-none');
             studentOptions.classList.add('d-none');
 
             // Mostrar las opciones según el rol seleccionado
             if (selectedRole == 1) { // Profesor
                 professorOptions.classList.remove('d-none');
                 professorOptionsCourses.classList.remove('d-none');
-            } else if (selectedRole == 4 || selectedRole == 5) { // Tutor u Orientador
+            } else if (selectedRole == 4) { // Tutor
                 tutorOptions.classList.remove('d-none');
+            } else if (selectedRole == 5) { // Orientador
+                orientadorOptions.classList.remove('d-none');
             } else if (selectedRole == 2) { // Estudiante
                 studentOptions.classList.remove('d-none');
             }
@@ -628,26 +668,17 @@
         form.addEventListener('submit', function(event) {
             // Prevenir el envío por defecto para validación
             event.preventDefault();
-            
+
             // Verificar que hay al menos un curso y división según el rol
             const selectedRole = parseInt(roleSelect.value);
             let isValid = true;
-            
-            // Eliminar selectores de cursos y divisiones vacíos para evitar errores de validación
-            const allSelectsCD = document.querySelectorAll('select[name^="course_division_pairs"]');
-            allSelectsCD.forEach(select => {
-                // Si el campo está vacío, deshabilitarlo para que no se envíe
-                if (!select.value) {
-                    select.disabled = true;
-                }
-            });
-            
+
             // Crear alerta
             function showAlert(message) {
                 // Eliminar alertas previas
                 const existingAlerts = document.querySelectorAll('.alert-danger:not(.d-none)');
                 existingAlerts.forEach(el => el.remove());
-                
+
                 // Crear nueva alerta
                 const alertDiv = document.createElement('div');
                 alertDiv.className = 'alert alert-danger alert-dismissible fade show mb-4';
@@ -658,7 +689,7 @@
                 form.prepend(alertDiv);
                 window.scrollTo(0, 0);
             }
-            
+
             if (selectedRole === 1) { // Profesor
                 // Verificar si hay al menos un par curso-división válido
                 const courseDivPairs = [...document.querySelectorAll('#professor-options-courses .course-division-pair')];
@@ -667,7 +698,7 @@
                     const divisionSelect = pair.querySelector('select[name$="[division_id]"]');
                     return courseSelect && divisionSelect && courseSelect.value && divisionSelect.value;
                 });
-                
+
                 if (!validPair) {
                     showAlert('Cal seleccionar almenys un curs i divisió per al professor.');
                     isValid = false;
@@ -675,38 +706,37 @@
             } else if (selectedRole === 2) { // Alumno
                 const studentCourseSelect = document.getElementById('student_course_id');
                 const studentDivisionSelect = document.getElementById('student_division_id');
-                
+
                 if (!studentCourseSelect.value || !studentDivisionSelect.value) {
                     showAlert('Cal seleccionar un curs i divisió per a l\'alumne.');
                     isValid = false;
-                } else {
-                    // Habilitar para asegurar que se envíen
-                    studentCourseSelect.disabled = false;
-                    studentDivisionSelect.disabled = false;
                 }
-            } else if (selectedRole === 4 || selectedRole === 5) { // Tutor u Orientador
+            } else if (selectedRole === 5) { // Orientador
+                const nivelEducativoSelect = document.getElementById('nivel_educativo');
+
+                if (!nivelEducativoSelect.value) {
+                    showAlert('Cal seleccionar un nivell educatiu per a l\'orientador.');
+                    isValid = false;
+                }
+            } else if (selectedRole === 4) { // Tutor u Orientador
                 const tutorCourseSelect = document.getElementById('tutor_course_id');
                 const tutorDivisionSelect = document.getElementById('tutor_division_id');
-                
+
                 if (!tutorCourseSelect.value || !tutorDivisionSelect.value) {
                     showAlert('Cal seleccionar un curs i divisió per al tutor/orientador.');
                     isValid = false;
-                } else {
-                    // Habilitar para asegurar que se envíen
-                    tutorCourseSelect.disabled = false;
-                    tutorDivisionSelect.disabled = false;
                 }
             }
-            
+
             if (!isValid) {
                 return;
             }
-            
+
             // Si pasa todas las validaciones, mostrar indicador de carga y enviar
             const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processant...';
-            
+
             form.submit();
         });
     });

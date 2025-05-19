@@ -170,6 +170,98 @@
                     @endif
                 </div>
             </div>
+            @elseif($user->role_id == 4) <!-- Si es tutor -->
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-user-tie me-2 text-primary"></i>
+                        Informació del Tutor
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="row g-4 text-center">
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-4 bg-light">
+                                <div class="display-6 mb-3 text-warning">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <h6 class="mb-2 text-muted">Curs Assignat</h6>
+                                <div class="fs-5 fw-medium">
+                                    {{ $user->courseDivisionUsers->first()?->course->name ?? 'Sense curs assignat' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-4 rounded-4 bg-light">
+                                <div class="display-6 mb-3 text-warning">
+                                    <i class="fas fa-sitemap"></i>
+                                </div>
+                                <h6 class="mb-2 text-muted">Divisió Assignada</h6>
+                                <div class="fs-5 fw-medium">
+                                    {{ $user->courseDivisionUsers->first()?->division->division ?? 'Sense divisió assignada' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @elseif($user->role_id == 5) <!-- Si es orientador -->
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-graduation-cap me-2 text-primary"></i>
+                        Informació de l'Orientador
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="text-center">
+                        <div class="p-4 rounded-4 bg-light">
+                            <div class="display-6 mb-3 text-info">
+                                <i class="fas fa-school"></i>
+                            </div>
+                            <h6 class="mb-2 text-muted">Nivell Educatiu Assignat</h6>
+                            <div class="fs-4 fw-medium">
+                                @php
+                                    // Verificar las asignaciones del orientador
+                                    $nivellAssignat = '';
+                                    $cursos = $user->courseDivisionUsers->pluck('course_id')->unique()->toArray();
+                                    
+                                    // Buscar cursos de ESO (IDs de cursos típicos de ESO)
+                                    $cursosESO = \App\Models\Course::whereIn('name', ['1 ESO', '2 ESO', '3 ESO', '4 ESO'])
+                                                ->orWhere('name', 'like', '%ESO%')
+                                                ->pluck('id')
+                                                ->toArray();
+                                                
+                                    // Buscar cursos de Bachillerato (IDs de cursos típicos de Bachillerato)
+                                    $cursosBatx = \App\Models\Course::whereIn('name', ['1 BATX', '2 BATX'])
+                                                ->orWhere('name', 'like', '%BATX%')
+                                                ->orWhere('name', 'like', '%BACHILLER%')
+                                                ->pluck('id')
+                                                ->toArray();
+                                    
+                                    // Determinar el nivel educativo asignado
+                                    $esESO = count(array_intersect($cursos, $cursosESO)) > 0;
+                                    $esBatx = count(array_intersect($cursos, $cursosBatx)) > 0;
+                                    
+                                    if ($esESO && $esBatx) {
+                                        $nivellAssignat = 'ESO i Batxillerat';
+                                    } elseif ($esESO) {
+                                        $nivellAssignat = 'ESO';
+                                    } elseif ($esBatx) {
+                                        $nivellAssignat = 'Batxillerat';
+                                    } else {
+                                        $nivellAssignat = 'Sense nivell assignat';
+                                    }
+                                @endphp
+                                <span class="badge bg-info text-white px-4 py-3 rounded-pill fs-6">
+                                    <i class="fas fa-school me-2"></i>
+                                    {{ $nivellAssignat }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             @elseif($user->role_id == 2) <!-- Si es estudiante -->
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 border-0">

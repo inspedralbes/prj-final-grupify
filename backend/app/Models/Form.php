@@ -15,6 +15,7 @@ class Form extends Model
         'is_global',
         'date_limit',
         'time_limit',
+        'responses_count',
     ];
 
     public function teacher()

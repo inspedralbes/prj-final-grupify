@@ -23,18 +23,73 @@ const showToast = ref(false);
 
 onMounted(async () => {
   try {
-    const response = await fetch(`https://api.grupify.cat/api/forms?teacher_id=${teacherId.value}`, {
-      method: "GET",
-      headers: { Accept: "application/json" }
-    });
-    if (!response.ok) throw new Error("Error obteniendo los datos.");
-    forms.value = await response.json();
-
-    filterForms(forms.value);
+    // Obtener el token del authStore
+    const token = authStore.token;
     
-    console.log(forms.value)
+    if (!token) {
+      throw new Error("No se encontró token de autenticación. Por favor, inicie sesión de nuevo.");
+    }
+    
+    // Mantener la forma original de obtener los formularios desde la tabla forms
+    const response = await fetch(`http://localhost:8000/api/forms?teacher_id=${teacherId.value}`, {
+      method: "GET",
+      headers: { 
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) throw new Error("Error obteniendo los datos.");
+    
+    // Obtener los formularios
+    forms.value = await response.json();
+    
+    // Adicionalmente, obtenemos las asignaciones para tener los datos de course_id y division_id
+    const assignmentsResponse = await fetch(`http://localhost:8000/api/form-assignments/teacher/${teacherId.value}`, {
+      method: "GET",
+      headers: { 
+        Accept: "application/json",
+        Authorization: `Bearer ${token}` 
+      }
+    });
+    
+    if (assignmentsResponse.ok) {
+      const formAssignments = await assignmentsResponse.json();
+      
+      // Enriquecer los formularios con la información de asignaciones
+      forms.value = forms.value.map(form => {
+        // Buscar la asignación correspondiente a este formulario
+        const assignment = formAssignments.find(a => a.form_id === form.id);
+        
+        if (assignment) {
+          // Si encontramos la asignación, añadimos course_id y division_id al formulario
+          // Y obtenemos el estado desde assignments si está disponible
+          return {
+            ...form,
+            course_id: assignment.course_id,
+            division_id: assignment.division_id,
+            // Usar el status de la asignación si está disponible (asegurando que sea 0 o 1)
+            status: assignment.status !== undefined ? 
+                   (typeof assignment.status === 'boolean' ? 
+                     (assignment.status ? 1 : 0) : 
+                     parseInt(assignment.status)) : 
+                   form.status
+          };
+        }
+        
+        return form;
+      });
+    }
+    
+    filterForms(forms.value);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error al cargar los formularios:", error.message);
+    toastMessage.value = "Error al cargar los formularios: " + error.message;
+    toastType.value = "error";
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
   }
 });
 
@@ -49,27 +104,72 @@ const filterForms = (forms) => {
   }
 };
 
-const updateFormStatus = async (formId, newStatus) => {
+const updateFormStatus = async (formId, newStatus, courseId, divisionId) => {
   try {
-    const response = await fetch(
-      `https://api.grupify.cat/api/forms/${formId}/status`,
-      {
-        method: "PATCH",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-        body: JSON.stringify({ status: newStatus }),
+    // Verificar si tenemos course_id y division_id
+    if (!courseId || !divisionId) {
+      throw new Error("No se encontró información de curso y división para este formulario.");
+    }
+    
+    // Obtener el token del authStore
+    const token = authStore.token;
+    
+    if (!token) {
+      throw new Error("No se encontró token de autenticación. Por favor, inicie sesión de nuevo.");
+    }
+    
+    const url = `http://localhost:8000/api/forms/${formId}/assignment-status`;
+    const body = { 
+      status: newStatus,
+      course_id: courseId,
+      division_id: divisionId
+    };
+    
+    // Actualizar la tabla form_assignments con valor 0 o 1
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        throw new Error(`Error al actualizar el estado: ${errorData.message || response.statusText}`);
+      } catch (e) {
+        throw new Error(`Error al actualizar el estado: ${response.statusText}`);
       }
-    );
-    if (!response.ok)
-      throw new Error("Error al actualizar el estado del formulario.");
+    }
+    
+    const responseData = await response.json();
+      
+    // Actualizar la interfaz de usuario para reflejar el cambio
     forms.value = forms.value.map(form =>
       form.id === formId ? { ...form, status: newStatus } : form
     );
+    
+    // Mostrar mensaje de éxito
+    toastMessage.value = "Estado de la asignación actualizado correctamente";
+    toastType.value = "success";
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error al actualizar el estado:", error.message);
+    // Mostrar mensaje de error
+    toastMessage.value = "Error al actualizar el estado: " + error.message;
+    toastType.value = "error";
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
   }
 };
 
@@ -162,9 +262,6 @@ const handleFormAssigned = assignments => {
                   Estat
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Respostes
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Data
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -194,9 +291,6 @@ const handleFormAssigned = assignments => {
                   </span>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500">
-                  {{ form.responses_count }}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">
                   {{ form.date_limit }}
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500">
@@ -210,11 +304,15 @@ const handleFormAssigned = assignments => {
                       <UserGroupIcon class="w-4 h-4" />
                       <span>Assignar</span>
                     </button>
-                    <button class="text-gray-400 hover:text-primary" @click="
-                      updateFormStatus(form.id, form.status === 1 ? 0 : 1)
-                      ">
+                    <button 
+                      class="text-gray-400 hover:text-primary" 
+                      @click="updateFormStatus(form.id, form.status === 1 ? 0 : 1, form.course_id, form.division_id)"
+                      :disabled="!form.course_id || !form.division_id"
+                      :title="!form.course_id || !form.division_id ? 'Este formulario no tiene asignación' : `Cambiar estado (${form.status === 1 ? 'desactivar' : 'activar'})`"
+                    >
                       <!-- Cambiar el ícono dependiendo del estado del formulario -->
                       <component :is="form.status === 0 ? EyeIcon : EyeSlashIcon" class="w-5 h-5" />
+                      <span class="sr-only">{{ form.status === 1 ? 'Desactivar' : 'Activar' }} formulario</span>
                     </button>
                     <button @click="viewUsersAnswered(form.id)">
                       Veure respostes

@@ -56,10 +56,24 @@
                 <!-- Filtros -->
                 <div class="col-md-6">
                     <form action="{{ route('users.index') }}" method="GET">
-                        <div class="d-flex flex-column flex-sm-row gap-2">
-                            <div class="flex-grow-1">
-                                <label for="role_filter" class="form-label d-block d-md-none mb-1">Filtrar per rol:</label>
-                                <select id="role_filter" name="role_id" class="form-select">
+                        <!-- Todos los filtros en una sola línea -->
+                        <div class="row g-2 mb-3">
+                            <!-- Búsqueda por texto -->
+                            <div class="col-md-3">
+                                <label for="search_filter" class="form-label small text-muted d-block mb-1">Cerca per nom:</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="search_filter" name="search" class="form-control" 
+                                        placeholder="Nom o cognom" value="{{ request('search') }}">
+                                </div>
+                            </div>
+                            
+                            <!-- Filtro por rol -->
+                            <div class="col-md-3">
+                                <label for="role_filter" class="form-label small text-muted d-block mb-1">Filtrar per rol:</label>
+                                <select id="role_filter" name="role_id" class="form-select form-select-sm">
                                     <option value="">Tots els rols</option>
                                     @foreach($roles as $role)
                                     <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
@@ -68,16 +82,44 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="d-flex gap-2 mt-2 mt-sm-0">
-                                <button type="submit" class="btn btn-primary px-3 py-2">
-                                    <i class="fas fa-filter me-2"></i>Aplicar
-                                </button>
-                                @if(request('role_id'))
-                                <a href="{{ route('users.index') }}" class="btn btn-light border px-3 py-2">
-                                    <i class="fas fa-times me-2"></i>Netejar
-                                </a>
-                                @endif
+                            
+                            <!-- Filtro por curso -->
+                            <div class="col-md-3">
+                                <label for="course_filter" class="form-label small text-muted d-block mb-1">Filtrar per curs:</label>
+                                <select id="course_filter" name="course_id" class="form-select form-select-sm">
+                                    <option value="">Tots els cursos</option>
+                                    @foreach($courses as $course)
+                                    <option value="{{ $course->id }}" {{ request('course_id') == $course->id ? 'selected' : '' }}>
+                                        {{ $course->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
                             </div>
+                            
+                            <!-- Filtro por división -->
+                            <div class="col-md-3">
+                                <label for="division_filter" class="form-label small text-muted d-block mb-1">Filtrar per divisió:</label>
+                                <select id="division_filter" name="division_id" class="form-select form-select-sm">
+                                    <option value="">Totes les divisions</option>
+                                    @foreach($divisions as $division)
+                                    <option value="{{ $division->id }}" {{ request('division_id') == $division->id ? 'selected' : '' }}>
+                                        {{ $division->division }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de acción -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm px-3">
+                                <i class="fas fa-filter me-2"></i>Aplicar
+                            </button>
+                            @if(request('role_id') || request('search') || request('course_id') || request('division_id'))
+                            <a href="{{ route('users.index') }}" class="btn btn-light border btn-sm px-3">
+                                <i class="fas fa-times me-2"></i>Netejar
+                            </a>
+                            @endif
                         </div>
                     </form>
                 </div>
@@ -143,7 +185,7 @@
                                 <div class="d-flex flex-column align-items-center py-4">
                                     <i class="fas fa-users text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
                                     <h5 class="fw-light text-muted">No s'han trobat usuaris</h5>
-                                    @if(request('role_id'))
+                                    @if(request('role_id') || request('search') || request('course_id') || request('division_id'))
                                     <a href="{{ route('users.index') }}" class="btn btn-sm btn-outline-primary mt-3">
                                         <i class="fas fa-filter me-1"></i> Eliminar filtres
                                     </a>
@@ -202,7 +244,7 @@
             <div class="card-body text-center py-5">
                 <i class="fas fa-users text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
                 <h5 class="fw-light text-muted">No s'han trobat usuaris</h5>
-                @if(request('role_id'))
+                @if(request('role_id') || request('search') || request('course_id') || request('division_id'))
                 <a href="{{ route('users.index') }}" class="btn btn-outline-primary mt-3">
                     <i class="fas fa-filter me-1"></i> Eliminar filtres
                 </a>

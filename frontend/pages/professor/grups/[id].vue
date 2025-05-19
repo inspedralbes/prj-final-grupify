@@ -4,6 +4,7 @@ import { useStudentsStore } from "@/stores/studentsStore";
 import { useGroupStore } from "@/stores/groupStore";
 import { useCommentStore } from '@/stores/commentStore';
 import { useBitacoraStore } from "@/stores/bitacoraStore";
+import { useAuthStore } from "@/stores/authStore";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
 const route = useRoute();
@@ -13,6 +14,7 @@ const groupStore = useGroupStore();
 const commentsStore = useCommentStore();
 //Bitacora y BitacoraNotas
 const bitacoraStore = useBitacoraStore();
+const authStore = useAuthStore();
 const bitacoraEntries = ref([]);
 
 const selectedStudent = ref("");
@@ -115,21 +117,23 @@ const availableStudents = computed(() => {
 
 const handleAddComment = async () => {
   if (!newComment.value.trim()) {
-    errorMessage.value = "El comentario no puede estar vacío.";
+    errorMessage.value = "El comentari no pot estar buit.";
     return;
   }
 
   try {
+    // Usar el ID del usuario autenticado, que debería ser un profesor, tutor u orientador
     const commentData = {
-      teacher_id: 1, // Aquí debería ir el ID del profesor autenticado
+      teacher_id: authStore.user?.id, // Usar el ID del usuario autenticado
       content: newComment.value,
     };
 
     await commentsStore.addCommentToGroup(group.value.id, commentData);
-    successMessage.value = "Comentario añadido con éxito";
+    successMessage.value = "Comentari afegit amb éxit";
     newComment.value = ""; // Limpia el campo después de añadir
   } catch (error) {
-    errorMessage.value = "Hubo un error al añadir el comentario";
+    console.error("Error adding comment:", error);
+    errorMessage.value = "Error al afegir el comentari";
   } finally {
     setTimeout(() => {
       successMessage.value = "";
@@ -141,9 +145,9 @@ const handleAddComment = async () => {
 const handleDeleteComment = async (commentId) => {
   try {
     await commentsStore.deleteCommentFromGroup(group.value.id, commentId);
-    successMessage.value = "Comentario eliminado con éxito";
+    successMessage.value = "Comentari eliminat correctament";
   } catch (error) {
-    errorMessage.value = "Hubo un error al eliminar el comentario";
+    errorMessage.value = "Error al eliminar el comentari";
   }
 };
 
@@ -399,7 +403,7 @@ const saveGroup = () => {
                 Comentaris
               </h3>
               <div v-if="isLoadingComments" class="py-8 text-center text-gray-500">
-                <p>Cargando comentarios...</p>
+                <p>Cargando comentaris...</p>
               </div>
               <div v-else>
                 <ul>

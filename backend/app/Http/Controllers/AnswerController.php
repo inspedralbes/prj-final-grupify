@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Form;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @OA\Tag(
@@ -304,6 +306,8 @@ public function getAverageRating($questionId)
 
         // Obtener el ID del usuario del cuerpo de la solicitud
         $userId = $request->input('user_id');
+        $courseId = $request->input('course_id');
+        $divisionId = $request->input('division_id');
 
         // Validar las respuestas (asegurándonos de que son válidas)
         $validator = Validator::make($request->all(), [
@@ -311,6 +315,8 @@ public function getAverageRating($questionId)
             'responses.*.question_id' => 'required|integer|exists:questions,id',
             'responses.*.answer' => 'required',
             'responses.*.answer_type' => 'required|in:string,number,boolean,array,object,multiple,checkbox,rating',
+            'course_id' => 'required|exists:courses,id',
+            'division_id' => 'required|exists:divisions,id',
         ]);
 
         if ($validator->fails()) {
@@ -332,29 +338,84 @@ public function getAverageRating($questionId)
                 'rating' => $response['answer_type'] === 'rating' ? (int) $response['answer'] : null,  // Guardar el valor de rating si es una respuesta 'rating'
                 'answer_type' => $response['answer_type'],  // Guardamos el tipo de respuesta
             ]);
-            
-            
         }
 
-        // Incrementar el contador de respuestas en el formulario
+        // Obtenemos el formulario pero ya no incrementamos el contador de responses_count
         $form = Form::find($formId);
-        if ($form) {
-            // Incrementar el contador de respuestas del formulario
-            $form->increment('responses_count'); // Esto incrementa el campo `responses_count`
-        } else {
-            Log::error('Formulari no trobat', ['form_id' => $formId]);
+        if (!$form) {
+            Log::error('Formulario no encontrado', ['form_id' => $formId]);
         }
 
         // Marcar como respondido en la tabla intermedia "form_user"
         $user = User::find($userId);
         if ($user && $form) {
             // Actualizar la tabla pivot "form_user", seteando el campo "answered" a true
-            $user->forms()->updateExistingPivot($formId, ['answered' => true]);
+            $formUser = DB::table('form_user')
+                ->where('user_id', $userId)
+                ->where('form_id', $formId)
+                ->where('course_id', $courseId)
+                ->where('division_id', $divisionId)
+                ->first();
+                
+            if ($formUser) {
+                // Si existe el registro, actualizarlo
+                DB::table('form_user')
+                    ->where('user_id', $userId)
+                    ->where('form_id', $formId)
+                    ->where('course_id', $courseId)
+                    ->where('division_id', $divisionId)
+                    ->update(['answered' => true]);
+            } else {
+                // Si no existe, crear un nuevo registro
+                DB::table('form_user')->insert([
+                    'user_id' => $userId,
+                    'form_id' => $formId,
+                    'course_id' => $courseId,
+                    'division_id' => $divisionId,
+                    'answered' => true,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
         }
 
-        Log::info('Form ID rebut:', ['form_id' => $formId]);
+        // Actualizar el contador en la tabla form_assignments basado en los registros en form_user con answered=1
+        try {
+            if (Schema::hasTable('form_assignments')) {
+                $formAssignment = \App\Models\FormAssignment::where('form_id', $formId)
+                    ->where('course_id', $courseId)
+                    ->where('division_id', $divisionId)
+                    ->first();
+                    
+                if ($formAssignment) {
+                    // Contar el número de usuarios que han respondido el formulario (tienen answered=1)
+                    $answeredCount = DB::table('form_user')
+                        ->where('form_id', $formId)
+                        ->where('course_id', $courseId)
+                        ->where('division_id', $divisionId)
+                        ->where('answered', 1)
+                        ->count();
+                    
+                    // Actualizar el contador de respuestas
+                    $formAssignment->responses_count = $answeredCount;
+                    $formAssignment->save();
+                    
+                    Log::info('Contador de respuestas actualizado en form_assignments', [
+                        'form_id' => $formId,
+                        'course_id' => $courseId,
+                        'division_id' => $divisionId,
+                        'responses_count' => $answeredCount
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar el contador de respuestas: ' . $e->getMessage());
+            // Continuamos con la ejecución aunque falle esta parte
+        }
 
-        return response()->json(['message' => 'Respostes desades correctament'], 200);
+        Log::info('Form ID recibido:', ['form_id' => $formId]);
+
+        return response()->json(['message' => 'Respuestas guardadas correctamente'], 200);
     }
 
 
