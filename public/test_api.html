@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de API de Autoavaluación</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #3498db;
+            margin-top: 30px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        input[type="number"] {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100px;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            overflow: auto;
+            max-height: 500px;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de API de Autoavaluación</h1>
+    <p>Esta página permite probar las diferentes rutas de la API para obtener datos de autoavaluación.</p>
+
+    <div>
+        <label for="studentId">ID del Estudiante:</label>
+        <input type="number" id="studentId" value="272" />
+    </div>
+
+    <h2>Endpoints disponibles</h2>
+    
+    <div>
+        <button onclick="testEndpoint('autoavaluacion')">Ruta Autoavaluación</button>
+        <button onclick="testEndpoint('debug')">Ruta Debug</button>
+        <button onclick="testEndpoint('public')">Ruta Pública</button>
+        <button onclick="testEndpoint('forms4')">Ruta Forms/4</button>
+    </div>
+
+    <div id="result" class="result">
+        <p>Los resultados aparecerán aquí...</p>
+    </div>
+
+    <script>
+        // Función para probar un endpoint
+        async function testEndpoint(type) {
+            const resultElement = document.getElementById('result');
+            const studentId = document.getElementById('studentId').value;
+            
+            if (!studentId) {
+                resultElement.innerHTML = '<p class="error">Por favor, introduce un ID de estudiante</p>';
+                return;
+            }
+            
+            resultElement.innerHTML = '<p class="loading">Cargando...</p>';
+            
+            let url = '';
+            switch (type) {
+                case 'autoavaluacion':
+                    url = `http://localhost:8000/api/autoavaluacion/estudiante/${studentId}`;
+                    break;
+                case 'debug':
+                    url = `http://localhost:8000/api/debug/autoavaluacion/${studentId}`;
+                    break;
+                case 'public':
+                    url = `http://localhost:8000/api/public/forms/autoavaluacion/${studentId}`;
+                    break;
+                case 'forms4':
+                    url = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
+                    break;
+                default:
+                    url = `http://localhost:8000/api/autoavaluacion/estudiante/${studentId}`;
+            }
+            
+            try {
+                console.log(`Consultando: ${url}`);
+                const response = await fetch(url);
+                
+                let resultHTML = `<h3>Ruta probada: ${url}</h3>`;
+                resultHTML += `<p>Código de estado: <strong>${response.status}</strong></p>`;
+                
+                if (!response.ok) {
+                    resultHTML += `<p class="error">Error: ${response.statusText}</p>`;
+                } else {
+                    const data = await response.json();
+                    resultHTML += `<p class="success">✅ Respuesta exitosa</p>`;
+                    
+                    // Info básica del usuario y formulario
+                    if (data.user_name || data.user) {
+                        resultHTML += `<h4>Información del estudiante</h4>`;
+                        if (data.user) {
+                            resultHTML += `<p>Nombre: ${data.user.name} ${data.user.last_name}</p>`;
+                        } else {
+                            resultHTML += `<p>Nombre: ${data.user_name} ${data.user_lastname || ''}</p>`;
+                        }
+                    }
+                    
+                    // Estado de answered
+                    if (data.has_answered !== undefined) {
+                        resultHTML += `<h4>Estado de respuesta</h4>`;
+                        resultHTML += `<p>¿Ha respondido?: <strong>${data.has_answered ? 'Sí' : 'No'}</strong></p>`;
+                    }
+                    
+                    // Respuestas/competencias
+                    if (data.answers || data.competences) {
+                        resultHTML += `<h4>Respuestas/Competencias</h4>`;
+                        const items = data.answers || data.competences || [];
+                        
+                        if (items.length > 0) {
+                            resultHTML += `<table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%">`;
+                            resultHTML += `<tr><th>ID</th><th>Competencia</th><th>Valor/Rating</th></tr>`;
+                            
+                            items.forEach(item => {
+                                const id = item.id || item.question_id;
+                                const name = item.name || item.competence_name || 'Competencia';
+                                const value = item.rating || item.rating_value || 0;
+                                
+                                resultHTML += `<tr>
+                                    <td>${id}</td>
+                                    <td>${name}</td>
+                                    <td style="text-align: center">${value}</td>
+                                </tr>`;
+                            });
+                            
+                            resultHTML += `</table>`;
+                        } else {
+                            resultHTML += `<p>No hay respuestas/competencias</p>`;
+                        }
+                    }
+                    
+                    // Datos completos
+                    resultHTML += `<h4>Datos completos (JSON)</h4>`;
+                    resultHTML += `<pre style="background: #f5f5f5; padding: 10px; overflow: auto">${JSON.stringify(data, null, 2)}</pre>`;
+                }
+                
+                resultElement.innerHTML = resultHTML;
+            } catch (error) {
+                resultElement.innerHTML = `<p class="error">Error al realizar la petición: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
