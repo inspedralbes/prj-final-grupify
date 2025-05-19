@@ -1,9 +1,10 @@
 import { Configuration, OpenAIApi } from "openai";
+import { useRuntimeConfig } from '#app';
 
 // Configure OpenAI
-// Nota: Esta API Key debería estar en variables de entorno en producción
-// Obtén tu API key en https://platform.openai.com/api-keys
-const OPENAI_API_KEY = "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"; // ¡IMPORTANTE! Reemplaza esto con tu API Key de OpenAI
+// Obtiene la API Key desde las variables de entorno del runtime config
+const config = useRuntimeConfig();
+const OPENAI_API_KEY = config.public.openaiApiKey || ''; // Obtén tu API key en https://platform.openai.com/api-keys
 const configuration = new Configuration({
   apiKey: OPENAI_API_KEY,
 });
