@@ -4,7 +4,7 @@ import { useRuntimeConfig } from '#app';
 // Configure OpenAI
 // Obtiene la API Key desde las variables de entorno del runtime config
 const config = useRuntimeConfig();
-const OPENAI_API_KEY = config.public.openaiApiKey || ''; // Obtén tu API key en https://platform.openai.com/api-keys
+const OPENAI_API_KEY = config.public.openaiApiKey || '';
 const configuration = new Configuration({
   apiKey: OPENAI_API_KEY,
 });
