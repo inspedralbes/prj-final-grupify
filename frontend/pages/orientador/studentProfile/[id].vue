@@ -395,16 +395,33 @@ const onFormMounted = () => {
 onMounted(async () => {
   console.log("Componente principal montado");
   try {
-    // Cargar estudiantes si no están cargados
-    if (!studentsStore.students.length) {
-      await studentsStore.fetchStudents();
+    // Buscar el estudiante específico en el store - debería estar ahí si venimos 
+    // de la lista de estudiantes después de nuestros cambios
+    student.value = studentsStore.getStudentById(Number(studentId));
+    
+    // Si no se encuentra en el store, intentar cargarlo específicamente por ID
+    if (!student.value) {
+      console.log("Estudiante no encontrado en la store, intentando cargarlo vía API:", studentId);
+      
+      try {
+        // Usar el endpoint getStudents pero con parámetros para filtrar por ID
+        await studentsStore.fetchStudents(true);
+        
+        // Intentar nuevamente después de cargar todos los estudiantes
+        student.value = studentsStore.getStudentById(Number(studentId));
+        
+        if (!student.value) {
+          console.error("No se pudo encontrar el estudiante después de recargar");
+          error.value = "Estudiant no trobat";
+        }
+      } catch (fetchError) {
+        console.error("Error al cargar los estudiantes:", fetchError);
+        error.value = "Error al cargar les dades del estudiant";
+      }
     }
     
-    // Buscar el estudiante específico
-    student.value = studentsStore.getStudentById(Number(studentId));
-    if (!student.value) {
-      error.value = "Estudiant no trobat";
-    } else {
+    // Si tenemos el estudiante, ya sea del store o de la carga
+    if (student.value) {
       // Cargar comentarios y verificar estado del formulario
       await fetchComments(studentId);
       await checkForm5Status(studentId);
@@ -419,12 +436,6 @@ onMounted(async () => {
         // Guardar las respuestas para el gráfico
         datosGrafico.value = respuestas;
         console.log("Datos del gráfico guardados, esperando a que el usuario active el gráfico");
-        
-        // Si quisiéramos mostrar automáticamente el gráfico:
-        // isFormVisible.value = true;
-        // nextTick(() => {
-        //   onFormMounted();
-        // });
       }
     }
   } catch (err) {

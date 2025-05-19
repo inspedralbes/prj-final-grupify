@@ -224,6 +224,10 @@ const filterStudentsByClass = async (cls) => {
       // Recargar todos los estudiantes asignados
       await fetchAllAssignedStudents();
       
+      // Asegurarse de que los datos estén también en el store para acceso por ID
+      // Esto es crucial - guardar TODOS los estudiantes asignados también en el store
+      studentsStore.setAllStudents(allAssignedStudents.value);
+      
       // Resetear filtros para mostrar todo
       selectedCourse.value = '';
       selectedDivision.value = '';
@@ -264,6 +268,9 @@ onMounted(async () => {
   
   // Cargar todos los estudiantes primero
   await fetchAllAssignedStudents();
+  
+  // Importante: guardar todos los estudiantes en el store para permitir navegación por ID
+  studentsStore.setAllStudents(allAssignedStudents.value);
   
   // Resetear filtros y asegurarse que se ve "Tots els alumnes"
   selectedCourse.value = '';

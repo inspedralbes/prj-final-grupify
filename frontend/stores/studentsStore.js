@@ -84,6 +84,24 @@ export const useStudentsStore = defineStore("students", {
         this.loading = false;
       }
     },
+    
+    // Nuevo método para establecer estudiantes directamente
+    setAllStudents(students) {
+      if (!Array.isArray(students)) {
+        console.error("setAllStudents: Se esperaba un array de estudiantes");
+        return;
+      }
+      
+      // Combinar los estudiantes existentes con los nuevos, evitando duplicados por ID
+      const currentIds = this.students.map(s => s.id);
+      const newStudents = students.filter(s => !currentIds.includes(s.id));
+      
+      if (newStudents.length > 0) {
+        console.log(`Añadiendo ${newStudents.length} estudiantes nuevos al store`);
+        this.students = [...this.students, ...newStudents];
+      }
+    },
+    
     updateStudent(updatedStudent) {
       const studentIndex = this.students.findIndex(
         student => student.id === updatedStudent.id
