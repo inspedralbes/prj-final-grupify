@@ -134,7 +134,7 @@ const handleSubmit = async () => {
       scheduled_at: scheduledAt
     }
 
-    await $fetch('http://localhost:8000/api/notifications', {
+    await $fetch('https://api.grupify.cat/api/notifications', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${authStore.token}`,

@@ -33,7 +33,7 @@ const analyzeWithAI = async (course) => {
     isLoading.value = true;
 
     // Realizar la solicitud a la API
-    const response = await fetch("http://localhost:8000/api/sociogram/responses", {
+    const response = await fetch("https://api.grupify.cat/api/sociogram/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

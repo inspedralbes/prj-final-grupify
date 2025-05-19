@@ -59,7 +59,7 @@ async function fetchFormQuestions() {
   
   try {
     // Usar directamente la ruta que sabemos que funciona
-    const apiUrl = `http://localhost:8000/api/forms/${formId}/questions`;
+    const apiUrl = `https://api.grupify.cat/api/forms/${formId}/questions`;
     const response = await fetch(apiUrl);
     
     if (!response.ok) {
@@ -178,7 +178,7 @@ async function submitResponses() {
     if (!courseId || !divisionId) {
       console.log("Intentando obtener información del usuario desde la API");
       try {
-        const userInfoResponse = await fetch(`http://localhost:8000/api/users/${userId}`);
+        const userInfoResponse = await fetch(`https://api.grupify.cat/api/users/${userId}`);
         if (userInfoResponse.ok) {
           const userDataText = await userInfoResponse.text();
           console.log("Respuesta de API de usuario:", userDataText);
@@ -227,7 +227,7 @@ async function submitResponses() {
     }
 
     // Usar directamente la URL correcta
-    const submitUrl = `http://localhost:8000/api/forms/${formId}/submit-responses`;
+    const submitUrl = `https://api.grupify.cat/api/forms/${formId}/submit-responses`;
     
     let submitted = false;
     let errorMsg = "";

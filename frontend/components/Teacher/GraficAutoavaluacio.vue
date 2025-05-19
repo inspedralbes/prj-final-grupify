@@ -415,7 +415,7 @@ const competenciasList = ref([]);
 // Función para cargar competencias desde el backend
 const fetchCompetencias = async () => {
   try {
-    const response = await fetch(`http://localhost:8000/api/competences`, {
+    const response = await fetch(`https://api.grupify.cat/api/competences`, {
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -492,7 +492,7 @@ const fetchDivisions = async () => {
 
   try {
     const response = await fetch(
-      `http://localhost:8000/api/course-divisions?course_id=${selectedCourse.value}`,
+      `https://api.grupify.cat/api/course-divisions?course_id=${selectedCourse.value}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -541,10 +541,10 @@ const selectStudent = async (student) => {
 // Fetch datos de competencias del estudiante
 const fetchStudentCompetenciasData = async (studentId) => {
   try {
-    console.log(`Realizando petición a: http://localhost:8000/api/students/${studentId}/competences`);
+    console.log(`Realizando petición a: https://api.grupify.cat/api/students/${studentId}/competences`);
     
     // Intentar primero sin autenticación para depuración
-    const response = await fetch(`http://localhost:8000/api/students/${studentId}/competences`);
+    const response = await fetch(`https://api.grupify.cat/api/students/${studentId}/competences`);
     
     if (!response.ok) {
       console.error(`Error HTTP: ${response.status} ${response.statusText}`);

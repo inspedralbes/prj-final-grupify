@@ -31,7 +31,7 @@ const getUsersByForm = async (formId) => {
   try {
     // Special case for sociogram form (form ID 3)
     if (formId === "3") {
-      const apiUrl = `http://localhost:8000/api/forms/${formId}/responded-users`;
+      const apiUrl = `https://api.grupify.cat/api/forms/${formId}/responded-users`;
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -49,7 +49,7 @@ const getUsersByForm = async (formId) => {
       students.value = data;
     } else {
       // Obtenemos los alumnos de los cursos asignados al profesor actual
-      const apiUrl = `http://localhost:8000/api/form-user/${formId}/assigned-users`;
+      const apiUrl = `https://api.grupify.cat/api/form-user/${formId}/assigned-users`;
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {

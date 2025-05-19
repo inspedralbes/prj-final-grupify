@@ -31,7 +31,7 @@ onMounted(async () => {
     }
     
     // Mantener la forma original de obtener los formularios desde la tabla forms
-    const response = await fetch(`http://localhost:8000/api/forms?teacher_id=${teacherId.value}`, {
+    const response = await fetch(`https://api.grupify.cat/api/forms?teacher_id=${teacherId.value}`, {
       method: "GET",
       headers: { 
         Accept: "application/json",
@@ -45,7 +45,7 @@ onMounted(async () => {
     forms.value = await response.json();
     
     // Adicionalmente, obtenemos las asignaciones para tener los datos de course_id y division_id
-    const assignmentsResponse = await fetch(`http://localhost:8000/api/form-assignments/teacher/${teacherId.value}`, {
+    const assignmentsResponse = await fetch(`https://api.grupify.cat/api/form-assignments/teacher/${teacherId.value}`, {
       method: "GET",
       headers: { 
         Accept: "application/json",
@@ -118,7 +118,7 @@ const updateFormStatus = async (formId, newStatus, courseId, divisionId) => {
       throw new Error("No se encontró token de autenticación. Por favor, inicie sesión de nuevo.");
     }
     
-    const url = `http://localhost:8000/api/forms/${formId}/assignment-status`;
+    const url = `https://api.grupify.cat/api/forms/${formId}/assignment-status`;
     const body = { 
       status: newStatus,
       course_id: courseId,

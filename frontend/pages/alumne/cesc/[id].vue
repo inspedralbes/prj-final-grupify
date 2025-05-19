@@ -54,7 +54,7 @@ async function fetchUsers() {
     const divisionId = authStore.user.division_id;
     
     // Filtrar para obtener solo estudiantes del mismo curso y división
-    const response = await fetch(`http://localhost:8000/api/get-students?course_id=${courseId}&division_id=${divisionId}`, {
+    const response = await fetch(`https://api.grupify.cat/api/get-students?course_id=${courseId}&division_id=${divisionId}`, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -150,7 +150,7 @@ async function submitResponses() {
 
     // Enviar los datos al endpoint correcto utilizando el formato adecuado
     const response = await fetch(
-      `http://localhost:8000/api/cesc-relationships`,
+      `https://api.grupify.cat/api/cesc-relationships`,
       {
         method: "POST",
         headers: {

@@ -54,7 +54,7 @@ async function obtenerDatosAlumno(studentId) {
     
     // Obtener preguntas y respuestas del formulario 5 (contiene las competencias 34 y 35)
     try {
-      const form5Response = await fetch(`http://localhost:8000/api/forms/5/questions`);
+      const form5Response = await fetch(`https://api.grupify.cat/api/forms/5/questions`);
       
       if (form5Response.ok) {
         const form5Data = await form5Response.json();
@@ -67,7 +67,7 @@ async function obtenerDatosAlumno(studentId) {
     
     // Obtener preguntas y respuestas del formulario 4 (contiene las competencias 36-41)
     try {
-      const form4Response = await fetch(`http://localhost:8000/api/forms/4/questions`);
+      const form4Response = await fetch(`https://api.grupify.cat/api/forms/4/questions`);
       
       if (form4Response.ok) {
         const form4Data = await form4Response.json();
@@ -442,7 +442,7 @@ const checkForm5Status = async studentId => {
     );
 
     // Llamada a la ruta correcta para obtener los usuarios que han respondido el formulario 5
-    const response = await fetch(`http://localhost:8000/api/forms/5/users`, {
+    const response = await fetch(`https://api.grupify.cat/api/forms/5/users`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

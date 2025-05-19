@@ -108,7 +108,7 @@ const fetchAllAssignedStudents = async () => {
       
       try {
         // Obtener asignaciones desde el backend para este orientador específico
-        const response = await fetch(`http://localhost:8000/api/orientador-assignments/${authStore.user.id}`, {
+        const response = await fetch(`https://api.grupify.cat/api/orientador-assignments/${authStore.user.id}`, {
           headers: {
             Authorization: `Bearer ${authStore.token}`,
             Accept: 'application/json',

@@ -19,7 +19,7 @@ export const useCoursesStore = defineStore("courses", {
 
       try {
         // Construir la URL con el parámetro user_id si está disponible
-        let url = "http://localhost:8000/api/courses-with-divisions";
+        let url = "https://api.grupify.cat/api/courses-with-divisions";
         if (userId) {
           url += `?user_id=${userId}`;
         }
