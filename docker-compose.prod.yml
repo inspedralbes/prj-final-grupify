@@ -124,7 +124,17 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USERNAME}", "--password=${DB_PASSWORD}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "${DB_USERNAME}",
+          "--password=${DB_PASSWORD}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -154,6 +164,7 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USER: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      ROUTER_API_KEY: ${ROUTER_API_KEY}
     depends_on:
       db:
         condition: service_healthy
