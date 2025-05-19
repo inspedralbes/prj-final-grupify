@@ -117,8 +117,20 @@ Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm'])
 // RUTA PARA PROFESORES: Ver estado de respuestas sin ver el contenido
 Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/forms/response-status', [AnswerController::class, 'getFormResponseStatus']);
 
-// RUTA PARA OBTENER RESPUESTAS DE UN USUARIO A UN FORMULARIO
+// RUTA PARA OBTENER RESPUESTAS DE UN USUARIO A UN FORMULARIO (Con autenticación para la mayoría de formularios)
 Route::middleware(['auth:sanctum'])->get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
+
+// RUTAS COMPLETAMENTE PÚBLICAS PARA FORMULARIO DE AUTOAVALUACIÓN (ID 4)
+// Estas rutas permiten a cualquiera ver las respuestas sin autenticación
+Route::get('/forms/4/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
+Route::get('/autoavaluacion/estudiante/{userId}', [AnswerController::class, 'getAutoavaluacionResponses']);
+
+// RUTA DE DEPURACIÓN - Muestra todos los datos para diagnóstico
+Route::get('/debug/autoavaluacion/{userId}', [AnswerController::class, 'debugStudentAnswers']);
+
+// RUTAS PÚBLICAS EXPLÍCITAS SIN MIDDLEWARE PARA PRUEBAS DIRECTAS EN NAVEGADOR
+Route::get('/public/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getPublicAnswersByUser']);
+Route::get('/public/forms/autoavaluacion/{userId}', [AnswerController::class, 'getPublicAutoavaluacionAnswers']);
 
 // RUTA PARA OBTENER USUARIOS QUE HAN RESPONDIDO SOCIOGRAMA
 Route::middleware(['auth:sanctum'])->get('/forms/{formId}/responded-users', [SociogramRelationshipController::class, 'getRespondedUsers']);
