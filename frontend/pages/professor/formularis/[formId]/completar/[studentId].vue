@@ -483,16 +483,16 @@ function getRatingLabel(n) {
                 :class="{ 'opacity-70 cursor-wait': isSubmitting }"
               >
                 <span v-if="isSubmitting">
-                  <span class="inline-block animate-spin mr-2">⟳</span> Enviando...
+                  <span class="inline-block animate-spin mr-2">⟳</span> Enviant...
                 </span>
-                <span v-else>Enviar respuestas</span>
+                <span v-else>Enviar respostes</span>
               </button>
               <button
                 v-else
                 @click="nextQuestion"
                 class="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
               >
-                Siguiente →
+                Següent →
               </button>
             </div>
           </div>
