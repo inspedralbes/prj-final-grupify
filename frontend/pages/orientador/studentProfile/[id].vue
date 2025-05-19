@@ -19,7 +19,6 @@ const comments = ref([]);
 const newComment = ref(""); // Ensure newComment is defined
 const editingComment = ref(null); // Ensure editingComment is defined
 const isFormVisible = ref(false); // Inicialmente cerrado
-const hasAnsweredForm5 = ref(false); // Estado para saber si ha respondido el formulario 5
 
 // Definir todas las competencias, incluso las que están en el formulario equivocado
 const competences = [
@@ -494,13 +493,12 @@ onMounted(async () => {
     console.log("Estudiante cargado correctamente:", student.value);
     
     // Proceder con la carga de datos adicionales
-    await Promise.all([
-      fetchComments(studentId),
-      checkForm5Status(studentId)
-    ]).catch(err => {
-      console.error("Error al cargar comentarios o estado del formulario:", err);
+    try {
+      await fetchComments(studentId);
+    } catch (err) {
+      console.error("Error al cargar comentarios:", err);
       // No detener el proceso por datos adicionales
-    });
+    }
     
     // Obtener las respuestas de las competencias
     try {
@@ -511,12 +509,6 @@ onMounted(async () => {
         // Guardar las respuestas para el gráfico
         datosGrafico.value = respuestas;
         console.log("Datos del gráfico guardados, esperando a que el usuario active el gráfico");
-        
-        // Opcional: mostrar automáticamente el gráfico
-        // isFormVisible.value = true;
-        // nextTick(() => {
-        //   setTimeout(() => actualizarGrafico(respuestas), 100);
-        // });
       } else {
         console.warn("No se encontraron respuestas para actualizar el gráfico.");
       }
@@ -531,44 +523,6 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
-const checkForm5Status = async studentId => {
-  try {
-    console.log(
-      "Verificando respuesta del formulario 5 para el estudiante:",
-      studentId
-    );
-
-    // Llamada a la ruta correcta para obtener los usuarios que han respondido el formulario 5
-    const response = await fetch(`http://localhost:8000/api/forms/5/users`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Error al comprobar la respuesta del formulario (Código ${response.status})`
-      );
-    }
-
-    const data = await response.json();
-    console.log("Respuesta del servidor para el formulario 5:", data); // Imprime la respuesta
-
-    // Asegúrate de que estamos comparando los IDs correctamente (convirtiéndolos a números si es necesario)
-    const hasAnswered = data.some(
-      user => Number(user.id) === Number(studentId)
-    ); // Aseguramos que ambas sean del mismo tipo
-
-    console.log("¿El estudiante ha respondido?", hasAnswered); // Depuración adicional
-
-    // Verifica si el estudiante ha respondido y actualiza el estado
-    hasAnsweredForm5.value = hasAnswered;
-  } catch (error) {
-    console.error("Error en checkForm5Status:", error);
-    hasAnsweredForm5.value = false; // En caso de error, asumimos que no ha respondido
-  }
-};
 
 // Funciones para comentarios
 const fetchComments = async studentId => {
@@ -804,13 +758,10 @@ const cancelEdit = () => {
 
                 <button
                   v-if="student.status"
-                  @click="showBajaModal = true"
-                  class="group relative px-5 py-2 bg-red-500 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 hover:bg-red-600 hover:shadow-lg"
+                  disabled
+                  class="group relative px-5 py-2 bg-gray-400 text-white text-sm font-semibold rounded-full overflow-hidden cursor-not-allowed opacity-70"
                 >
                   <span class="relative z-10">Donar de Baixa</span>
-                  <span
-                    class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                  ></span>
                 </button>
 
                 <button
@@ -873,210 +824,8 @@ const cancelEdit = () => {
           </div>
         </div>
       </div>
-      <!-- Gràfic d'autoavaluació -->
-      <div class="mb-8">
-        <div class="bg-white rounded-xl shadow-sm p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-gray-800">
-              Gràfic d'autoavaluació
-            </h3>
-            <div class="flex items-center">
-              <span class="text-sm text-gray-500 mr-2">
-                {{ isFormVisible ? '' : '' }}
-              </span>
-              <button
-                @click="mostrarGrafico"
-                :class="{
-                  'bg-[rgb(0,173,238)]': isFormVisible,
-                  'bg-gray-200': !isFormVisible,
-                }"
-                class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none"
-              >
-                <span
-                  :class="{
-                    'translate-x-6': isFormVisible,
-                    'translate-x-1': !isFormVisible,
-                  }"
-                  class="inline-block w-4 h-4 transform bg-white rounded-full transition-transform"
-                ></span>
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Contenido desplegable para resultados de autoevaluación -->
-        <div
-          class="bg-white rounded-xl shadow-sm p-6 mt-4"
-          v-if="isFormVisible"
-          v-show="isFormVisible"
-          key="grafico-container"
-          @vue:mounted="onFormMounted"
-        >
-          <!-- Actualiza esta parte en tu template -->
-          <svg
-            id="radial-graph"
-            viewBox="-10 -10 231 231"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <!-- Cuadrícula de fondo -->
-            <g stroke="#e5e7eb" fill="none">
-              <circle r="16" cx="100" cy="100" />
-              <!-- 1 -->
-              <circle r="32" cx="100" cy="100" />
-              <!-- 2 -->
-              <circle r="48" cx="100" cy="100" />
-              <!-- 3 -->
-              <circle r="64" cx="100" cy="100" />
-              <!-- 4 -->
-              <circle r="80" cx="100" cy="100" />
-              <!-- 5 -->
-            </g>
 
-            <!-- Líneas radiales -->
-            <g stroke="#e5e7eb" stroke-width="0.5">
-              <line x1="100" y1="100" x2="100" y2="20" />
-              <line x1="100" y1="100" x2="156.6" y2="43.4" />
-              <line x1="100" y1="100" x2="180" y2="100" />
-              <line x1="100" y1="100" x2="156.6" y2="156.6" />
-              <line x1="100" y1="100" x2="100" y2="180" />
-              <line x1="100" y1="100" x2="43.4" y2="156.6" />
-              <line x1="100" y1="100" x2="20" y2="100" />
-              <line x1="100" y1="100" x2="43.4" y2="43.4" />
-            </g>
-
-            <!-- Etiquetas de valores -->
-            <g fill="#6b7280" font-size="6">
-              <text x="105" y="37">4</text>
-              <text x="105" y="53">3</text>
-              <text x="105" y="69">2</text>
-              <text x="105" y="85">1</text>
-              <text x="105" y="21">5</text>
-            </g>
-
-            <!-- Etiquetas de competencias -->
-            <g font-size="6" fill="#374151">
-              <text x="100" y="15" text-anchor="middle">Responsabilitat</text>
-              <text x="165" y="43.4" text-anchor="start">Treball equip</text>
-              <text x="185" y="104" text-anchor="start">Gestió temps</text>
-              <text x="165" y="165" text-anchor="middle">Comunicació</text>
-              <text x="100" y="190" text-anchor="middle">Adaptabilitat</text>
-              <text x="35" y="165" text-anchor="end">Lideratge</text>
-              <text x="15" y="104" text-anchor="end">Creativitat</text>
-              <text x="35" y="43.4" text-anchor="end">Proactivitat</text>
-            </g>
-
-            <path
-              id="area-data"
-              fill="#00ADEE"
-              fill-opacity="0.2"
-              stroke="#00ADEE"
-              stroke-width="1"
-            />
-            <g id="data-points"></g>
-          </svg>
-
-          <!-- Mostrar si el formulario ha sido contestado o no -->
-          <div class="mt-4 text-center text-gray-700">
-            <span v-if="hasAnsweredForm5" class="text-green-600 font-semibold"
-              >Contestat ✅</span
-            >
-            <span v-else class="text-red-600 font-semibold"
-              >No contestat ❌</span
-            >
-          </div>
-          
-          <!-- Botón temporal para depuración (puedes quitar esto después) -->
-          <div class="mt-4 text-center">
-            
-            <p class="text-xs text-gray-500 mt-1">
-              Estat del gràfic: {{ datosGrafico ? `Dades disponibles (${datosGrafico.length} competències)` : 'Sense dades' }}
-            </p>
-          </div>
-        </div>
-      </div>
-      <!-- Comentarios -->
-      <div class="bg-white rounded-2xl shadow-lg p-8 mt-6">
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">
-          Historial de Comentaris
-        </h2>
-
-        <div class="mb-4">
-          <textarea
-            v-model="newComment"
-            placeholder="Escriu un nou comentari"
-            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 transition"
-            rows="4"
-          ></textarea>
-          <button
-            @click="addComment"
-            class="group relative mt-3 w-full px-6 py-3 bg-primary text-white text-sm font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:bg-primary-dark hover:shadow-lg"
-          >
-            <span class="relative z-10">Desar comentari</span>
-            <span
-              class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-            ></span>
-          </button>
-        </div>
-
-        <ul class="space-y-4">
-          <li
-            v-for="comment in comments"
-            :key="comment.id"
-            class="bg-gray-100 p-4 rounded-lg shadow-sm hover:bg-gray-200 transition"
-          >
-            <div class="flex justify-between items-start">
-              <p v-if="editingComment !== comment.id">{{ comment.content }}</p>
-              <textarea
-                v-else
-                v-model="comment.content"
-                rows="3"
-                class="w-full p-2 border border-gray-300 rounded-lg"
-              ></textarea>
-              <div class="ml-4 flex space-x-2">
-                <button
-                  v-if="editingComment === comment.id"
-                  @click="updateComment(comment.id)"
-                  class="group relative px-4 py-2 bg-green-600 text-white text-xs font-medium rounded-lg overflow-hidden transition-all duration-300 hover:bg-green-700 hover:shadow-lg"
-                >
-                  <span class="relative z-10">Desar</span>
-                  <span
-                    class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                  ></span>
-                </button>
-                <button
-                  v-if="editingComment === comment.id"
-                  @click="cancelEdit"
-                  class="group relative px-4 py-2 bg-gray-300 text-gray-700 text-xs font-medium rounded-lg overflow-hidden transition-all duration-300 hover:bg-gray-400 hover:shadow-lg"
-                >
-                  <span class="relative z-10">Cancel·lar</span>
-                  <span
-                    class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                  ></span>
-                </button>
-                <button
-                  v-else
-                  @click="() => (editingComment = comment.id)"
-                  class="group relative px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg overflow-hidden transition-all duration-300 hover:bg-blue-700 hover:shadow-lg"
-                >
-                  <span class="relative z-10">Editar</span>
-                  <span
-                    class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                  ></span>
-                </button>
-                <button
-                  @click="deleteComment(comment.id)"
-                  class="group relative px-4 py-2 bg-red-600 text-white text-xs font-medium rounded-lg overflow-hidden transition-all duration-300 hover:bg-red-700 hover:shadow-lg"
-                >
-                  <span class="relative z-10">Eliminar</span>
-                  <span
-                    class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"
-                  ></span>
-                </button>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </div>
     </main>
   </div>
 </template>
