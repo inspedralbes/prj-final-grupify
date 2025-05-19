@@ -14,6 +14,11 @@ env:
   GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
   SERVER_USER: ${{ secrets.SERVER_USER }}
   SERVER_IP: ${{ secrets.SERVER_IP }}
+  DB_HOST: ${{ secrets.DB_HOST }}
+  DB_PORT: ${{ secrets.DB_PORT }}
+  DB_DATABASE: ${{ secrets.DB_DATABASE }}
+  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   TAG: v2.5
 
 jobs:
@@ -31,13 +36,28 @@ jobs:
         run: |
           echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> $GITHUB_ENV
           echo "API_BASE_URL=${API_BASE_URL}" >> $GITHUB_ENV
+          echo "DB_HOST=${DB_HOST}" >> $GITHUB_ENV
+          echo "DB_PORT=${DB_PORT}" >> $GITHUB_ENV
+          echo "DB_DATABASE=${DB_DATABASE}" >> $GITHUB_ENV
+          echo "DB_USERNAME=${DB_USERNAME}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${DB_PASSWORD}" >> $GITHUB_ENV
 
       - name: Build and push Docker images
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
+          # Build and push other images
           make allprod
+          
+          # Build and push chat service
+          docker build -t ghcr.io/${{ secrets.GHCR_USERNAME }}/grupify-chat:${{ env.TAG }} -f mcp-use-grupify/Dockerfile ./mcp-use-grupify
+          docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/grupify-chat:${{ env.TAG }}
 
       - name: Set up SSH
         run: |
@@ -58,5 +78,10 @@ jobs:
             git pull && \
             export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' && \
             export API_BASE_URL='${{ secrets.API_BASE_URL }}' && \
+            export DB_HOST='${{ secrets.DB_HOST }}' && \
+            export DB_PORT='${{ secrets.DB_PORT }}' && \
+            export DB_DATABASE='${{ secrets.DB_DATABASE }}' && \
+            export DB_USERNAME='${{ secrets.DB_USERNAME }}' && \
+            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}' && \
             docker compose -f docker-compose.prod.yml pull && \
             docker compose -f docker-compose.prod.yml up -d"

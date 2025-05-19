@@ -141,9 +141,7 @@ services:
       - app-network
 
   chat:
-    build:
-      context: ./mcp-use-grupify
-      dockerfile: Dockerfile
+    image: ghcr.io/${GHCR_USERNAME}/grupify-chat:${TAG}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`chat.grupify.cat`)"

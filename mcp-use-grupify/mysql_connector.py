@@ -4,12 +4,16 @@ from dotenv import load_dotenv
 
 class MySQLConnector:
     def __init__(self):
-        load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
-        self.host = os.getenv("DB_HOST")
-        self.port = os.getenv("DB_PORT")
-        self.user = os.getenv("DB_USER")
-        self.password = os.getenv("DB_PASSWORD")
-        self.database = os.getenv("DB_DATABASE")
+        # Try to load from .env file if it exists, but don't fail if it doesn't
+        env_path = os.path.join(os.path.dirname(__file__), '.env')
+        if os.path.exists(env_path):
+            load_dotenv(dotenv_path=env_path)
+            
+        self.host = os.environ.get("DB_HOST")
+        self.port = os.environ.get("DB_PORT", "3306")  # Default MySQL port
+        self.user = os.environ.get("DB_USER")
+        self.password = os.environ.get("DB_PASSWORD")
+        self.database = os.environ.get("DB_DATABASE")
         self.connection = None
         self.cursor = None
         self._connect()
