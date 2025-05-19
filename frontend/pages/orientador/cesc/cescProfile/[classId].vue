@@ -404,7 +404,7 @@ import { useCoursesStore } from "~/stores/coursesStore";
 import { useResultatCescStore } from "~/stores/resultatsCescStore";
 import { useStudentsStore } from "~/stores/studentsStore";
 import { useRoute } from "vue-router";
-import OrientadorDashboardNavOrientador from "~/components/Orientador/DashboardNavOrientador.vue";
+import DashboardNavOrientador from "~/components/Orientador/DashboardNavOrientador.vue";
 import VChart from 'vue-echarts';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';

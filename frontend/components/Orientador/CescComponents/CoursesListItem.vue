@@ -21,7 +21,7 @@ defineProps({
 const viewProfile = (course) => {
   if (!course) return;
   router.push({
-    path: `/professor/cesc/cescProfile/${course.classId}`,
+    path: `/orientador/cesc/cescProfile/${course.classId}`,
   });
 };
 
@@ -74,7 +74,7 @@ const analyzeWithAI = async (course) => {
 
 
     router.push({
-      path: "/professor/assistent",
+      path: "/orientador/assistent",
     });
   } catch (error) {
     console.error("Error durante el análisis con IA:", error);

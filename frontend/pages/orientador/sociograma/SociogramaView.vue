@@ -3,8 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useCoursesStore } from '~/stores/coursesStore'; 
 import { useAuthStore } from '~/stores/authStore';
 import { useCourseSearch } from '~/composables/useCourseSearch';
-import CoursesFilters from '~/components/Teacher/SociogramaComponents/CoursesFilters.vue';
-// Cambiamos el componente de navegación para usar el del orientador
+import CoursesFilters from '~/components/Orientador/SociogramaComponents/CoursesFilters.vue';
 import DashboardNavOrientador from '~/components/Orientador/DashboardNavOrientador.vue';
 import CoursesListOrientador from '~/components/Orientador/SociogramaComponents/CoursesListOrientador.vue';
 

@@ -11,7 +11,7 @@ defineProps({
 });
 
 const viewAnswers = (studentId, formId) => {
-  navigateTo(`/professor/formularis/${formId}/users/${studentId}/answers`);
+  navigateTo(`/orientador/formularis/${formId}/users/${studentId}/answers`);
 };
 </script>
 
