@@ -141,7 +141,7 @@ services:
       - app-network
 
   chat:
-    image: ghcr.io/${GHCR_USERNAME}/grupify-chat:${TAG}
+    image: ghcr.io/adriapedralbes/grupify-chat:v2.5
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`chat.grupify.cat`)"
