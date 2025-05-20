@@ -55,7 +55,7 @@ async function fetchUsers() {
     // Obtener el curso y división del usuario actual
     const courseId = authStore.user.course_id;
     const divisionId = authStore.user.division_id;
-    
+
     // Filtrar para obtener solo estudiantes del mismo curso y división
     const response = await fetch(`http://localhost:8000/api/get-students?course_id=${courseId}&division_id=${divisionId}`, {
       method: "GET",
@@ -66,7 +66,7 @@ async function fetchUsers() {
 
     if (!response.ok) throw new Error("Error al cargar los usuarios");
     const allStudents = await response.json();
-    
+
     // Excluir al usuario actual de la lista
     userNames.value = allStudents.filter(student => student.id !== userId);
   } catch (error) {
@@ -107,41 +107,40 @@ async function submitResponses() {
     // Formatear las respuestas para el controlador CescRelationship
     // Crear un array de relaciones en el formato que espera el controlador
     const relationships = [];
-    
+
     // Para cada pregunta respondida
     for (const questionId in responses.value) {
       // Obtener los IDs de los peers seleccionados
       const selectedPeerIds = responses.value[questionId];
-      
+
       // Para cada peer seleccionado, crear una relación
       for (const peerId of selectedPeerIds) {
-        // Determinar el tag_id basado en la pregunta
-        // Asumimos que cada pregunta del CESC corresponde a un tag específico
-        // Pregunta 1: Popular (tag_id: 1)
-        // Pregunta 2: Rebutjat (tag_id: 2)
-        // Pregunta 3: Agressiu (tag_id: 3)
-        // Pregunta 4: Prosocial (tag_id: 4)
-        // Pregunta 5: Víctima (tag_id: 5)
-        
-        // Buscar la pregunta actual en el array de preguntas
-        const currentQuestion = questions.value.find(q => q.id == questionId);
-        let tagId = 1; // Valor predeterminado (Popular)
-        
-        // Determinar el tag_id basado en el título o contenido de la pregunta
-        if (currentQuestion) {
-          const questionTitle = currentQuestion.title.toLowerCase();
-          
-          if (questionTitle.includes('rechazados') || questionTitle.includes('rebutjats')) {
-            tagId = 2; // Rebutjat
-          } else if (questionTitle.includes('agresivos') || questionTitle.includes('agressius')) {
-            tagId = 3; // Agressiu
-          } else if (questionTitle.includes('prosociales') || questionTitle.includes('prosocials')) {
-            tagId = 4; // Prosocial
-          } else if (questionTitle.includes('víctimas') || questionTitle.includes('víctima')) {
-            tagId = 5; // Víctima
-          }
-        }
-        
+        // Determinar el tag_id basado en el ID de la pregunta
+        // Mapeamos los IDs de las preguntas a los IDs de los tags según el seeder
+        // POPULAR (tag_id: 1): Preguntas 3, 14
+        // REBUTJAT (tag_id: 2): Pregunta 4
+        // AGRESSIU (tag_id: 3): Preguntas 5, 7, 8, 10
+        // PROSOCIAL (tag_id: 4): Preguntas 6, 9
+        // VÍCTIMA (tag_id: 5): Preguntas 11, 12, 13
+
+        // Convertir questionId a número para comparaciones
+        const qId = parseInt(questionId);
+
+        // Mapeo directo de question_id a tag_id
+        const questionTagMap = {
+          3: 1, 14: 1,  // POPULAR
+          4: 2,         // REBUTJAT
+          5: 3, 7: 3, 8: 3, 10: 3,  // AGRESSIU
+          6: 4, 9: 4,   // PROSOCIAL
+          11: 5, 12: 5, 13: 5  // VÍCTIMA
+        };
+
+        // Asignar tag_id según el mapeo, o usar 1 (Popular) como valor predeterminado
+        let tagId = questionTagMap[qId] || 1;
+
+        // Añadir logs para depuración
+        console.log(`Pregunta ID: ${qId}, Tag ID asignado: ${tagId}`);
+
         // Añadir la relación al array
         relationships.push({
           peer_id: peerId,
@@ -150,6 +149,9 @@ async function submitResponses() {
         });
       }
     }
+
+    // Mostrar las relaciones que se van a enviar para depuración
+    console.log("Relaciones a enviar:", JSON.stringify(relationships, null, 2));
 
     // Enviar los datos al endpoint correcto utilizando el formato adecuado
     const response = await fetch(
