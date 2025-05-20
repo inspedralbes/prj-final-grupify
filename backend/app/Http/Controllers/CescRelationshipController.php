@@ -564,6 +564,65 @@ public function getTagsGraphData()
     }
 }
 
+/**
+ * Obtener los 5 mejores estudiantes con más puntos para un tag específico en un curso/división
+ */
+public function getTopStudentsByTag($courseId, $divisionId, $tagId)
+{
+    try {
+        // Validar que el curso, división y tag existan
+        $courseExists = DB::table('courses')->where('id', $courseId)->exists();
+        $divisionExists = DB::table('divisions')->where('id', $divisionId)->exists();
+        $tagExists = DB::table('tags_cesc')->where('id', $tagId)->exists();
+
+        if (!$courseExists || !$divisionExists || !$tagExists) {
+            return response()->json([
+                'message' => 'Curso, división o tag no encontrado',
+                'errors' => [
+                    'course' => !$courseExists ? 'Curso no encontrado' : null,
+                    'division' => !$divisionExists ? 'División no encontrada' : null,
+                    'tag' => !$tagExists ? 'Tag no encontrado' : null,
+                ]
+            ], 404);
+        }
+
+        // Obtener los estudiantes del curso/división
+        $studentIds = DB::table('course_division_user')
+            ->where('course_id', $courseId)
+            ->where('division_id', $divisionId)
+            ->pluck('user_id');
+
+        // Obtener los resultados CESC para estos estudiantes y el tag específico
+        $topStudents = CescResult::whereIn('peer_id', $studentIds)
+            ->where('tag_id', $tagId)
+            ->with(['peer'])
+            ->orderBy('vote_count', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($result) {
+                return [
+                    'id' => $result->peer_id,
+                    'name' => $result->peer ? $result->peer->name . ' ' . $result->peer->last_name : 'Estudiante desconocido',
+                    'points' => $result->vote_count
+                ];
+            });
+
+        // Obtener el nombre del tag
+        $tagName = TagCesc::find($tagId)->name ?? 'Desconocido';
+
+        return response()->json([
+            'course_id' => $courseId,
+            'division_id' => $divisionId,
+            'tag_id' => $tagId,
+            'tag_name' => $tagName,
+            'students' => $topStudents
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error al obtener los datos de los estudiantes',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 
-
+}

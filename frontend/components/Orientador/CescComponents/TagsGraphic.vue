@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-8 mt-8">
+  <div class="space-y-6 mt-2">
     <!-- Pantalla de carga -->
     <div v-if="isLoading" class="flex flex-col justify-center items-center h-64 bg-white rounded-xl shadow-md p-8">
       <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#00ADEC] mb-4"></div>
@@ -18,9 +18,19 @@
     <!-- Contenido principal cuando hay datos -->
     <div v-else-if="graphData.length > 0" class="bg-white rounded-2xl shadow-xl overflow-hidden">
       <!-- Cabecera con información -->
-      <div class="bg-gradient-to-r from-[#00ADEC] to-[#0080C0] text-white p-6">
-        <h2 class="text-2xl font-bold mb-2">Comparativa de Puntos por Tags CESC por Clase</h2>
-        <p class="opacity-90">Análisis de la distribución de puntuaciones según las categorías CESC: Popular (A), Rebutjat (C), Agressiu (B), Prosocial (A) y Víctima (C)</p>
+      <div class="p-4">
+        <div class="flex items-start justify-between mb-3">
+          <button @click="handleReturn" class="flex items-center py-1 px-4 bg-[#0072AF] hover:bg-[#005d8f] text-white rounded-md transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Tornar
+          </button>
+        </div>
+      
+          <h1 class="text-2xl md:text-3xl font-semibold text-[#0080C0] text-center mb-4 sm:mb-0">ANÀLISI DE TAGS CESC</h1>
+          <p class="text-gray-600 text-center mb-4">Anàlisi de la distribució de puntuacions segons les categories CESC: Popular (A), Rebutjat (C), Agressiu (B), Prosocial (A) i Víctima (C)</p>
+
       </div>
 
       <!-- Tarjetas de resumen de los TAGS CESC -->
@@ -105,23 +115,24 @@
               <p class="text-sm text-gray-500">Total de estudiantes</p>
               <p class="text-xl font-bold text-gray-800">{{ totalStudents }}</p>
             </div>
-            <div class="bg-white p-3 rounded-lg shadow-sm">
+            <!-- Solo mostramos la estadística de la categoría seleccionada -->
+            <div v-if="categoria === 'all' || categoria === 'social'" class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-green-500">Total Popular (A)</p>
               <p class="text-xl font-bold text-green-600">{{ totalPopular }} puntos</p>
             </div>
-            <div class="bg-white p-3 rounded-lg shadow-sm">
+            <div v-if="categoria === 'all' || categoria === 'afectado'" class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-blue-500">Total Rebutjat (C)</p>
               <p class="text-xl font-bold text-blue-600">{{ totalRebutjat }} puntos</p>
             </div>
-            <div class="bg-white p-3 rounded-lg shadow-sm">
+            <div v-if="categoria === 'all' || categoria === 'violento'" class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-red-500">Total Agressiu (B)</p>
               <p class="text-xl font-bold text-red-600">{{ totalAgressiu }} puntos</p>
             </div>
-            <div class="bg-white p-3 rounded-lg shadow-sm">
+            <div v-if="categoria === 'all' || categoria === 'social'" class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-purple-500">Total Prosocial (A)</p>
               <p class="text-xl font-bold text-purple-600">{{ totalProsocial }} puntos</p>
             </div>
-            <div class="bg-white p-3 rounded-lg shadow-sm">
+            <div v-if="categoria === 'all' || categoria === 'afectado'" class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-amber-500">Total Víctima (C)</p>
               <p class="text-xl font-bold text-amber-600">{{ totalVictima }} puntos</p>
             </div>
@@ -145,13 +156,6 @@
             :class="chartType === 'grouped' ? 'bg-[#00ADEC] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
           >
             Gráfico agrupado
-          </button>
-          <button
-            @click="chartType = 'percentage'"
-            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            :class="chartType === 'percentage' ? 'bg-[#00ADEC] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-          >
-            Porcentajes
           </button>
         </div>
       </div>
@@ -180,85 +184,48 @@
             </button>
           </div>
           <div class="p-6">
-            <div class="grid grid-cols-2 gap-4 mb-6">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <p class="text-sm text-gray-500">Total estudiantes</p>
-                <p class="text-2xl font-bold text-gray-800">{{ selectedClass.total_students }}</p>
+            <!-- Lista de los 5 primeros alumnos con más puntos del tag seleccionado -->
+            <div v-if="topStudents.length > 0">
+              <h4 class="font-semibold text-gray-800 text-lg mb-4">
+                Top 5 Alumnos - {{ getTagNameByIndex(selectedTagIndex) }}
+              </h4>
+              
+              <div class="space-y-3">
+                <div v-for="(student, index) in topStudents" :key="index" 
+                  class="bg-white border rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow flex justify-between items-center">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 flex items-center justify-center rounded-full mr-3"
+                      :class="getTagColorClass(selectedTagIndex)">
+                      <span class="text-white font-bold">{{ index + 1 }}</span>
+                    </div>
+                    <div>
+                      <p class="font-medium">{{ student.name }}</p>
+                      <p class="text-sm text-gray-500">Participación: {{ student.percentage }}%</p>
+                    </div>
+                  </div>
+                  <span class="font-bold" :class="getTagTextColorClass(selectedTagIndex)">
+                    {{ student.points }} puntos
+                  </span>
+                </div>
               </div>
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <p class="text-sm text-gray-500">Total tags asignados</p>
-                <p class="text-2xl font-bold text-gray-800">{{ selectedClass.tag_1_count + selectedClass.tag_2_count + selectedClass.tag_3_count + selectedClass.tag_4_count + selectedClass.tag_5_count }} puntos</p>
+
+              <div class="mt-4 text-center">
+                <p class="text-sm text-gray-600">Estos alumnos representan el {{ studentsCoverage }}% del total de puntos de {{ getTagNameByIndex(selectedTagIndex) }} en la clase.</p>
               </div>
             </div>
-
-            <div class="space-y-4">
-              <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                <div class="flex justify-between items-center mb-2">
-                  <h4 class="font-medium text-green-800">Popular (A)</h4>
-                  <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_1_count }} puntos</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-green-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_1_count / selectedClass.total_students) * 100, 100)}%` }"></div>
-                </div>
-                <p class="text-green-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_1_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
-              </div>
-
-              <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <div class="flex justify-between items-center mb-2">
-                  <h4 class="font-medium text-blue-800">Rebutjat (C)</h4>
-                  <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_2_count }} puntos</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-blue-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_2_count / selectedClass.total_students) * 100, 100)}%` }"></div>
-                </div>
-                <p class="text-blue-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_2_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
-              </div>
-
-              <div class="bg-red-50 p-4 rounded-lg border border-red-100">
-                <div class="flex justify-between items-center mb-2">
-                  <h4 class="font-medium text-red-800">Agressiu (B)</h4>
-                  <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_3_count }} puntos</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-red-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_3_count / selectedClass.total_students) * 100, 100)}%` }"></div>
-                </div>
-                <p class="text-red-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_3_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
-              </div>
-
-              <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                <div class="flex justify-between items-center mb-2">
-                  <h4 class="font-medium text-purple-800">Prosocial (A)</h4>
-                  <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_4_count }} puntos</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-purple-600 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_4_count / selectedClass.total_students) * 100, 100)}%` }"></div>
-                </div>
-                <p class="text-purple-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_4_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
-              </div>
-
-              <div class="bg-amber-50 p-4 rounded-lg border border-amber-100">
-                <div class="flex justify-between items-center mb-2">
-                  <h4 class="font-medium text-amber-800">Víctima (C)</h4>
-                  <span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-sm font-medium">{{ selectedClass.tag_5_count }} puntos</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div class="bg-amber-500 h-2.5 rounded-full" :style="{ width: `${Math.min((selectedClass.tag_5_count / selectedClass.total_students) * 100, 100)}%` }"></div>
-                </div>
-                <p class="text-amber-600 text-sm mt-2">{{ Math.min(((selectedClass.tag_5_count / selectedClass.total_students) * 100), 100).toFixed(1) }}% de la clase</p>
-              </div>
+            
+            <!-- Mensaje de carga mientras se obtienen los datos -->
+            <div v-else-if="loadingStudents" class="flex flex-col items-center justify-center py-8">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00ADEC] mb-4"></div>
+              <p class="text-gray-600">Cargando datos de alumnos...</p>
             </div>
-
-            <div class="mt-6 pt-4 border-t border-gray-200">
-              <h4 class="font-medium text-gray-700 mb-2">Recomendaciones</h4>
-              <ul class="list-disc pl-5 text-gray-600 space-y-1">
-                <li v-if="selectedClass.tag_1_count > 3">Esta clase tiene un número significativo de estudiantes populares, lo que puede favorecer un buen clima de aula.</li>
-                <li v-if="selectedClass.tag_2_count > 3">Hay varios estudiantes identificados como rechazados. Considere implementar actividades de integración.</li>
-                <li v-if="selectedClass.tag_3_count > 2">Preste atención al número de estudiantes con conductas agresivas. Se recomienda implementar programas de gestión emocional.</li>
-                <li v-if="selectedClass.tag_4_count > 3">El número de estudiantes prosociales es alto, lo que puede ser un recurso valioso para mejorar el clima del aula.</li>
-                <li v-if="selectedClass.tag_5_count > 2">Hay varios estudiantes identificados como víctimas. Se recomienda una intervención para prevenir situaciones de acoso.</li>
-                <li v-if="(selectedClass.tag_2_count + selectedClass.tag_3_count + selectedClass.tag_5_count) / selectedClass.total_students > 0.3">El porcentaje de estudiantes con tags negativos es alto. Considere una evaluación más detallada del clima escolar.</li>
-                <li v-if="selectedClass.tag_2_count <= 2 && selectedClass.tag_3_count <= 2 && selectedClass.tag_5_count <= 2">Los niveles de rechazo, agresividad y victimización son bajos. Continúe con las estrategias actuales.</li>
-              </ul>
+            
+            <!-- Mensaje si no hay datos disponibles -->
+            <div v-else class="text-center py-8">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p class="text-gray-600">No se encontraron datos de alumnos para esta categoría.</p>
             </div>
           </div>
           <div class="bg-gray-50 p-4 rounded-b-xl border-t border-gray-200 flex justify-end">
@@ -300,12 +267,24 @@ const props = defineProps({
   }
 });
 
+// Emit para el botón de volver
+const emit = defineEmits(['return-to-categories']);
+
+// Función para manejar el clic en el botón de volver
+const handleReturn = () => {
+  emit('return-to-categories');
+};
+
 // Estado
 const graphData = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
 const chartType = ref('stacked'); // 'stacked', 'grouped', 'percentage'
 const selectedClass = ref(null); // Para el modal de detalles
+const selectedTagIndex = ref(0); // Índice del tag seleccionado en el gráfico
+const topStudents = ref([]); // Lista de los 5 mejores estudiantes para el tag seleccionado
+const loadingStudents = ref(false); // Estado de carga para los estudiantes
+const studentsCoverage = ref(0); // Porcentaje de cobertura de los 5 estudiantes sobre el total de puntos
 
 // Calcular estadísticas totales
 const totalStudents = computed(() => {
@@ -611,10 +590,120 @@ const filteredLegend = computed(() => {
 });
 
 // Manejar clic en el gráfico para mostrar detalles
-const handleChartClick = (params) => {
+const handleChartClick = async (params) => {
   if (params.componentType === 'series' && params.seriesType === 'bar') {
     const dataIndex = params.dataIndex;
     selectedClass.value = graphData.value[dataIndex];
+    
+    // Obtener el índice del tag según la serie seleccionada
+    const seriesName = params.seriesName;
+    selectedTagIndex.value = getTagIndexByName(seriesName);
+    
+    // Cargar los datos de los 5 mejores estudiantes para este tag
+    await fetchTopStudentsByTag(
+      selectedClass.value.course_id, 
+      selectedClass.value.division_id, 
+      selectedTagIndex.value + 1
+    );
+  }
+};
+
+// Obtener el índice del tag según su nombre
+const getTagIndexByName = (tagName) => {
+  switch (tagName) {
+    case 'Popular (A)': return 0;
+    case 'Rebutjat (C)': return 1;
+    case 'Agressiu (B)': return 2;
+    case 'Prosocial (A)': return 3;
+    case 'Víctima (C)': return 4;
+    default: return 0;
+  }
+};
+
+// Obtener el nombre del tag según su índice
+const getTagNameByIndex = (index) => {
+  switch (index) {
+    case 0: return 'Popular (A)';
+    case 1: return 'Rebutjat (C)';
+    case 2: return 'Agressiu (B)';
+    case 3: return 'Prosocial (A)';
+    case 4: return 'Víctima (C)';
+    default: return 'Desconocido';
+  }
+};
+
+// Obtener la clase de color de fondo para el tag según su índice
+const getTagColorClass = (index) => {
+  switch (index) {
+    case 0: return 'bg-green-500';
+    case 1: return 'bg-blue-500';
+    case 2: return 'bg-red-500';
+    case 3: return 'bg-purple-500';
+    case 4: return 'bg-amber-500';
+    default: return 'bg-gray-500';
+  }
+};
+
+// Obtener la clase de color de texto para el tag según su índice
+const getTagTextColorClass = (index) => {
+  switch (index) {
+    case 0: return 'text-green-600';
+    case 1: return 'text-blue-600';
+    case 2: return 'text-red-600';
+    case 3: return 'text-purple-600';
+    case 4: return 'text-amber-600';
+    default: return 'text-gray-600';
+  }
+};
+
+// Obtener los 5 mejores estudiantes para un tag específico
+const fetchTopStudentsByTag = async (courseId, divisionId, tagId) => {
+  loadingStudents.value = true;
+  topStudents.value = [];
+  
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/cesc/top-students/${courseId}/${divisionId}/${tagId}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Error al cargar los estudiantes: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Top estudiantes recibidos:', data);
+    
+    if (data && data.students) {
+      // Tomar los 5 primeros estudiantes
+      topStudents.value = data.students.slice(0, 5).map(student => ({
+        name: student.name,
+        points: student.points,
+        percentage: ((student.points / getTotalPointsForTag(selectedTagIndex.value)) * 100).toFixed(1)
+      }));
+      
+      // Calcular el porcentaje de cobertura de estos 5 estudiantes
+      const totalPoints = getTotalPointsForTag(selectedTagIndex.value);
+      const topStudentsPoints = topStudents.value.reduce((sum, student) => sum + student.points, 0);
+      studentsCoverage.value = ((topStudentsPoints / totalPoints) * 100).toFixed(1);
+    }
+  } catch (err) {
+    console.error('Error al cargar los datos de estudiantes:', err);
+  } finally {
+    loadingStudents.value = false;
+  }
+};
+
+// Obtener el total de puntos para un tag específico
+const getTotalPointsForTag = (tagIndex) => {
+  if (!selectedClass.value) return 0;
+  
+  switch (tagIndex) {
+    case 0: return selectedClass.value.tag_1_count;
+    case 1: return selectedClass.value.tag_2_count;
+    case 2: return selectedClass.value.tag_3_count;
+    case 3: return selectedClass.value.tag_4_count;
+    case 4: return selectedClass.value.tag_5_count;
+    default: return 0;
   }
 };
 

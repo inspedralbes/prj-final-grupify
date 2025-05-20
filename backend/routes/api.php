@@ -356,6 +356,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum', 'role:tutor,orientador,admin'])->post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
 Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']); // Ruta pública para obtener resultados
 Route::get('/cesc/graficas-tags', [CescRelationshipController::class, 'getTagsGraphData']); // Ruta pública para obtener gráficas
+Route::get('/cesc/top-students/{courseId}/{divisionId}/{tagId}', [CescRelationshipController::class, 'getTopStudentsByTag']); // Ruta para obtener los 5 mejores estudiantes por tag
 
 // Rutas para asignación de formularios
 Route::middleware(['auth:sanctum'])->group(function () {
