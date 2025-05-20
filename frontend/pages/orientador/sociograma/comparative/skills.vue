@@ -183,18 +183,11 @@ const loadHighlightedData = () => {
 
 // Generar datos para la comparativa entre cursos filtrados
 const generateCoursesComparison = async () => {
-  // Obtener todos los datos de comparación
-  const allCoursesComparison = relationshipsStore.generateCoursesComparison(threshold.value);
+  // Obtener todos los datos de comparación sin filtrar por usuario
+  coursesComparison.value = relationshipsStore.generateCoursesComparison(threshold.value);
   
-  // Crear una lista de nombres de cursos asignados al usuario actual
-  const assignedCourseNames = allCourses.value.map(course => 
-    `${course.courseName} ${course.division.name}`
-  );
-  
-  // Filtrar para incluir solo los cursos asignados al usuario
-  coursesComparison.value = allCoursesComparison.filter(courseData => 
-    assignedCourseNames.includes(courseData.course)
-  );
+  // Almacenar en localStorage que el orientador quiere ver todos los datos
+  localStorage.setItem('orientadorViewAllData', 'true');
 };
 
 // Funciones de actualización que serán llamadas desde el componente hijo

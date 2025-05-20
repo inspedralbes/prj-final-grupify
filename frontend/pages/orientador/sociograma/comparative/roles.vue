@@ -351,6 +351,9 @@ const generateComparativeData = () => {
   });
  
   comparativeData.value = chartData;
+  
+  // Almacenar en localStorage que el orientador quiere ver todos los datos
+  localStorage.setItem('orientadorViewAllData', 'true');
 };
 
 
