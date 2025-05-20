@@ -1,4 +1,4 @@
-import { generateFormQuestions } from "@/services/openai";
+import { generateFormQuestions } from "@/services/gemini";
 
 /**
  * Regenerates a question based on the original question and context
