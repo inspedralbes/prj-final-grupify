@@ -438,22 +438,7 @@ const getCurrentDate = () => {
             </div>
           </div>
 
-          <!-- Búsqueda -->
-          <div class="hidden sm:flex flex-1 max-w-xl px-4">
-            <div class="w-full">
-              <label for="search" class="sr-only">Cercar</label>
-              <div class="relative">
-                <input id="search" type="text" placeholder="Cercar alumnes, grups o formularis..."
-                  class="block w-full bg-gray-100 border border-transparent rounded-md py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <!-- Herramientas de usuario -->
           <div class="flex items-center space-x-4">

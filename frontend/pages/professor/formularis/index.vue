@@ -2,8 +2,6 @@
 import {
   PlusIcon,
   UserGroupIcon,
-  EyeIcon,
-  EyeSlashIcon,
 } from "@heroicons/vue/24/outline";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
@@ -20,6 +18,7 @@ const forms = ref([]);
 const toastMessage = ref("");
 const toastType = ref("success");
 const showToast = ref(false);
+const searchTimeout = ref(null);
 
 onMounted(async () => {
   try {
@@ -182,6 +181,27 @@ const openAssignModal = form => {
   showAssignModal.value = true;
 };
 
+// Función para aplicar los filtros cuando cambian los selectores
+const applyFilters = () => {
+  // No es necesario hacer nada explícito aquí ya que nuestra propiedad computada 
+  // filteredForms ya se actualiza automáticamente cuando cambian sus dependencias
+  console.log("Aplicando filtros - Estado:", selectedDivision.value, "Fecha:", selectedDate.value);
+};
+
+// Función para manejar el input de búsqueda con debounce
+const onSearchInput = (event) => {
+  // Cancelar el timeout anterior si existe
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
+  
+  // Establecer un nuevo timeout para aplicar la búsqueda después de 300ms
+  searchTimeout.value = setTimeout(() => {
+    searchQuery.value = event.target.value;
+    console.log("Búsqueda aplicada:", searchQuery.value);
+  }, 300);
+};
+
 const handleFormAssigned = assignments => {
   toastMessage.value =
     "Formulario asignado correctamente a los estudiantes seleccionados";
@@ -193,6 +213,55 @@ const handleFormAssigned = assignments => {
     toastType.value = "";
   }, 3000);
 };
+
+// Propiedad computada para filtrar los formularios según los criterios seleccionados
+const filteredForms = computed(() => {
+  return forms.value.filter(form => {
+    // Filtrar por búsqueda (título o descripción)
+    const searchMatch = searchQuery.value === "" || 
+      (form.title && form.title.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+      (form.description && form.description.toLowerCase().includes(searchQuery.value.toLowerCase()));
+    
+    // Filtrar por estado
+    let stateMatch = true;
+    if (selectedDivision.value !== "all") {
+      if (selectedDivision.value === "active") {
+        stateMatch = form.status === 1;
+      } else if (selectedDivision.value === "draft" || selectedDivision.value === "closed") {
+        stateMatch = form.status === 0;
+      }
+    }
+    
+    // Filtrar por fecha
+    let dateMatch = true;
+    if (selectedDate.value !== "all" && form.date_limit) {
+      const formDate = new Date(form.date_limit);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDate.value === "today") {
+        // Filtrar solo los de hoy
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dateMatch = formDate >= today && formDate < tomorrow;
+      } else if (selectedDate.value === "week") {
+        // Filtrar los de esta semana
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay()); // Domingo como inicio de semana
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 7);
+        dateMatch = formDate >= weekStart && formDate < weekEnd;
+      } else if (selectedDate.value === "month") {
+        // Filtrar los de este mes
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        dateMatch = formDate >= monthStart && formDate <= monthEnd;
+      }
+    }
+    
+    return searchMatch && stateMatch && dateMatch;
+  });
+});
 </script>
 
 <template>
@@ -223,7 +292,8 @@ const handleFormAssigned = assignments => {
           <div class="flex-1">
             <div class="relative">
               <input v-model="searchQuery" type="text" placeholder="Buscar formularis..."
-                class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                @input="onSearchInput" />
               <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -232,14 +302,14 @@ const handleFormAssigned = assignments => {
             </div>
           </div>
           <div class="flex flex-col md:flex-row gap-4">
-            <select v-model="selectedDivision"
+            <select v-model="selectedDivision" @change="applyFilters"
               class="px-4 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="all">Tots los estats</option>
               <option value="active">Actius</option>
               <option value="draft">Borradors</option>
               <option value="closed">Tancats</option>
             </select>
-            <select v-model="selectedDate"
+            <select v-model="selectedDate" @change="applyFilters"
               class="px-4 py-2 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="all">Totes les dates</option>
               <option value="today">Avui</option>
@@ -273,7 +343,7 @@ const handleFormAssigned = assignments => {
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="form in forms" :key="form.id" class="hover:bg-gray-50">
+              <tr v-for="form in filteredForms" :key="form.id" class="hover:bg-gray-50">
                 <td class="px-6 py-4">
                   <div class="text-sm font-medium text-gray-900">
                     {{ form.title }}
