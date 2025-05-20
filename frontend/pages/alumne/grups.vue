@@ -39,7 +39,15 @@
           class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
 
           <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-medium text-primary">
+            <div v-if="member.image" class="w-8 h-8 rounded-full overflow-hidden">
+              <img 
+                :src="getProfileImageUrl(member.image)" 
+                :alt="`${member.name}'s profile`" 
+                class="w-full h-full object-cover"
+                @error="handleImageError($event, member)" 
+              />
+            </div>
+            <div v-else class="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-sm font-medium text-primary">
               {{ getInitials(member) }}
             </div>
             <span class="text-sm md:text-base">{{ member.name }} {{ member.last_name }}</span>
@@ -85,6 +93,22 @@ const getInitials = (member) => {
   return initials || "?";
 };
 
+const getProfileImageUrl = (imagePath) => {
+  // If image path starts with http, it's already a full URL
+  if (imagePath && (imagePath.startsWith('http://') || imagePath.startsWith('https://'))) {
+    return imagePath;
+  }
+  
+  // Otherwise, construct the URL to the backend storage
+  return `http://localhost:8000/storage/${imagePath}`;
+};
+
+const handleImageError = (event, member) => {
+  console.error(`Failed to load image for ${member.name}:`, member.image);
+  // Set the source to null to trigger fallback to initials
+  member.image = null;
+};
+
 const navigateToBitacora = (groupId) => {
   router.push(`/alumne/bitacora/${groupId}`);
 };
@@ -98,6 +122,11 @@ onMounted(async () => {
     // Verificar si algún grupo está vacío
     groupStore.groups.forEach((group, index) => {
       console.log(`Grupo ${index + 1}: ID=${group.id}, Nombre=${group.name}, Miembros=${(group.users || []).length}`);
+      
+      // Log users with images
+      (group.users || []).forEach(user => {
+        console.log(`  - Usuario: ${user.name} ${user.last_name}, Image: ${user.image || 'No image'}`);
+      });
     });
   } catch (error) {
     console.error("Error loading groups:", error);
