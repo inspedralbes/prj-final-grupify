@@ -135,48 +135,72 @@ const setupSocketListeners = () => {
   });
 };
 
-// Funció per obtenir tots els cursos
+// Funció per obtenir només els cursos assignats al professor
 const fetchCourses = async () => {
   try {
-    const response = await fetch("http://localhost:8000/api/courses", {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    });
-    if (!response.ok) throw new Error("Error al carregar els cursos");
-    const data = await response.json();
-    courses.value = data;
+    // Usamos directamente las asignaciones del profesor en lugar de obtener todos los cursos
+    if (authStore.user?.course_divisions?.length > 0) {
+      // Crear un mapa para evitar duplicados de cursos
+      const courseMap = new Map();
+      
+      // Extraer los cursos de las asignaciones del profesor
+      authStore.user.course_divisions.forEach(cd => {
+        courseMap.set(cd.course_id, {
+          id: cd.course_id,
+          name: cd.course_name
+        });
+      });
+      
+      // Convertir el mapa a un array
+      courses.value = Array.from(courseMap.values());
+    }
+    // Plan B: Usar el curso asignado al profesor (método antiguo)
+    else if (authStore.user?.course_id && authStore.user?.course_name) {
+      courses.value = [{
+        id: authStore.user.course_id,
+        name: authStore.user.course_name
+      }];
+    }
+    // Si no hay cursos asignados
+    else {
+      courses.value = [];
+    }
   } catch (error) {
     console.error("Error al carregar els cursos:", error);
   }
 };
 
-// Funció per obtenir les divisions segons el curs seleccionat
+// Funció per obtenir només les divisions del curs assignat al professor
 const fetchInvitationDivisions = async () => {
   if (!selectedInvitationCourse.value) {
     divisions.value = [];
     return;
   }
+  
   try {
-    const response = await fetch(
-      `http://localhost:8000/api/course-divisions?course_id=${selectedInvitationCourse.value}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      }
-    );
-    if (!response.ok) throw new Error("Error al carregar les divisions");
-    const data = await response.json();
-    if (data.divisions) {
-      divisions.value = data.divisions;
-    } else {
+    // Filtrar las divisiones de las asignaciones del profesor
+    if (authStore.user?.course_divisions?.length > 0) {
+      // Seleccionar sólo las divisiones del curso seleccionado y que están asignadas al profesor
+      const filteredDivisions = authStore.user.course_divisions
+        .filter(cd => cd.course_id === parseInt(selectedInvitationCourse.value))
+        .map(cd => ({
+          id: cd.division_id,
+          division: cd.division_name
+        }));
+      
+      divisions.value = filteredDivisions;
+    }
+    // Plan B: Usar la división asignada al profesor (método antiguo)
+    else if (authStore.user?.division_id && authStore.user?.division_name && 
+             authStore.user?.course_id === parseInt(selectedInvitationCourse.value)) {
+      divisions.value = [{
+        id: authStore.user.division_id,
+        division: authStore.user.division_name
+      }];
+    }
+    // Si no hay divisiones asignadas
+    else {
       divisions.value = [];
-      console.error(data.message || "No s'han trobat divisions");
     }
   } catch (error) {
     console.error("Error al carregar les divisions:", error);
@@ -399,7 +423,7 @@ onMounted(async () => {
       <!-- Contingut del modal -->
       <div class="bg-white rounded-lg p-4 sm:p-6 relative z-10 w-full max-w-md mx-4">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg sm:text-xl font-bold">Generar enllaç d'invitació</h2>
+          <h2 class="text-lg sm:text-xl font-bold">Generar enllaç d'invitació per als teus cursos</h2>
           <button @click="closeInvitationModal" class="text-gray-500 hover:text-gray-700" title="Tanca">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
               stroke="currentColor" stroke-width="2">
@@ -410,7 +434,7 @@ onMounted(async () => {
 
         <!-- Formulari per generar la invitació -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona un curs</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona un dels teus cursos assignats</label>
           <select v-model="selectedInvitationCourse" @change="fetchInvitationDivisions"
             class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
             <option disabled value="">Selecciona un curs</option>
@@ -418,9 +442,12 @@ onMounted(async () => {
               {{ course.name }}
             </option>
           </select>
+          <p v-if="courses.length === 0" class="mt-2 text-sm text-red-600">
+            No tens cursos assignats. Si necessites accés, contacta amb l'administrador.
+          </p>
         </div>
 
-        <!-- Selector de divisió -->
+          <!-- Selector de divisió -->
         <div class="mb-4" v-if="divisions.length > 0">
           <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona una divisió</label>
           <select v-model="selectedInvitationDivision"
@@ -430,6 +457,11 @@ onMounted(async () => {
               {{ division.division }}
             </option>
           </select>
+        </div>
+        
+        <!-- Mensaje informativo cuando no hay divisiones disponibles -->
+        <div v-else-if="selectedInvitationCourse" class="mb-4 p-2 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm">
+          <p>No tens cap divisió assignada per a aquest curs. Si necessites accés, contacta amb l'administrador.</p>
         </div>
 
         <button @click="generateInvitation"
