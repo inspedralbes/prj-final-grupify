@@ -134,11 +134,6 @@ const gestioSubmit = async (e) => {
           <LoginTextInput v-model="email" placeholder="Email" :has-msg-error="msgError && !email" />
           <LoginPasswordInput v-model="password" :has-msg-error="msgError && !password" />
 
-          <!-- Enlace para recuperar contraseña -->
-          <div class="forgot-password">
-            <a href="#">Heu oblidat la contrasenya?</a>
-          </div>
-
           <!-- Botón de envío -->
           <button type="submit" class="sign-in-button" :disabled="isLoading">
             {{ isLoading ? "Iniciant sessió..." : "Iniciar sessió" }}
