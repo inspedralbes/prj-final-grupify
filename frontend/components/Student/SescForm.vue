@@ -201,7 +201,7 @@ onMounted(async () => {
         class="mt-6 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
         @click="goToNextQuestion"
       >
-        Siguiente pregunta
+        Següent pregunta
       </button>
 
       <button

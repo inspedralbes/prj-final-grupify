@@ -79,7 +79,7 @@ const sendToBackend = async (userData) => {
     const dashboardRoutes = {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
-      alumno: "/alumne/dashboard",
+      alumne: "/alumne/dashboard",
       tutor: "/professor/dashboard", // Los tutores usan el mismo dashboard que los profesores
       orientador: "/orientador/dashboard"
     };

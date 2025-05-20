@@ -1,37 +1,39 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Configuration, OpenAIApi } from "openai";
+import { useRuntimeConfig } from '#app';
 
-// Initialize the Generative AI client with API key
-// Note: Ideally, this should be in an environment variable
-const API_KEY = "AIzaSyCeLUwISVfHOQbA7HeN_coGBnMZHvHNgic";
-const genAI = new GoogleGenerativeAI(API_KEY);
+// Configure OpenAI
+// Obtiene la API Key desde las variables de entorno del runtime config
+const config = useRuntimeConfig();
+const OPENAI_API_KEY = config.public.openaiApiKey || '';
+const configuration = new Configuration({
+  apiKey: OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
-// Modelo actualizado - usar gemini-1.5-pro en lugar de gemini-pro
-const MODEL_NAME = "gemini-1.5-pro"; 
-
-// Constants for retry mechanism
-const MAX_RETRIES = 5;
-const RETRY_DELAY = 2000; // 2 seconds between retries
-const REQUEST_TIMEOUT = 60000; // 60 seconds timeout
+// Constantes para el mecanismo de reintentos
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 segundos entre reintentos
+const REQUEST_TIMEOUT = 40000; // 40 segundos de timeout
 
 /**
- * Helper function to delay execution
- * @param {number} ms - Milliseconds to delay
- * @returns {Promise} - Resolves after the specified delay
+ * Función auxiliar para pausar la ejecución
+ * @param {number} ms - Milisegundos de retraso
+ * @returns {Promise} - Se resuelve después del retraso especificado
  */
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
- * Safely parses JSON from text response, handling various formats
- * @param {string} text - Text containing JSON
- * @returns {Object} - Parsed JSON object
+ * Analiza JSON de forma segura desde la respuesta de texto, manejando varios formatos
+ * @param {string} text - Texto que contiene JSON
+ * @returns {Object} - Objeto JSON analizado
  */
 const parseJSONSafely = text => {
   try {
-    // First try direct parsing in case the response is already clean JSON
+    // Primero intenta analizar directamente en caso de que la respuesta ya sea JSON limpio
     try {
       return JSON.parse(text);
     } catch (e) {
-      // If direct parsing fails, try to extract JSON object from the text
+      // Si el análisis directo falla, intenta extraer un objeto JSON del texto
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error("No s'ha trobat cap objecte JSON en la resposta");
@@ -39,19 +41,19 @@ const parseJSONSafely = text => {
       return JSON.parse(jsonMatch[0]);
     }
   } catch (error) {
-    console.error("Error parsing JSON:", error, "Text:", text);
+    console.error("Error al analizar JSON:", error, "Texto:", text);
     throw new Error(`Error al analitzar la resposta JSON: ${error.message}`);
   }
 };
 
 /**
- * Validate a single question format
- * @param {Object} question - Question object to validate
- * @param {number} index - Index of the question for error reporting
- * @returns {Object} - Validated and cleaned question object
+ * Valida el formato de una pregunta
+ * @param {Object} question - Objeto de pregunta a validar
+ * @param {number} index - Índice de la pregunta para informes de error
+ * @returns {Object} - Objeto de pregunta validado y limpiado
  */
 const validateQuestion = (question, index) => {
-  // Check question type
+  // Verificar tipo de pregunta
   if (
     !question.type ||
     !["text", "multiple", "checkbox", "number"].includes(question.type)
@@ -59,12 +61,12 @@ const validateQuestion = (question, index) => {
     throw new Error(`Tipus de pregunta invàlid en la pregunta ${index + 1}`);
   }
 
-  // Check question title
+  // Verificar título de la pregunta
   if (!question.title?.trim()) {
     throw new Error(`Títul invàlid en la pregunta ${index + 1}`);
   }
 
-  // For multiple choice questions, validate options
+  // Para preguntas de opción múltiple, validar opciones
   if (["multiple", "checkbox"].includes(question.type)) {
     if (!Array.isArray(question.options) || question.options.length < 2) {
       throw new Error(
@@ -72,7 +74,7 @@ const validateQuestion = (question, index) => {
       );
     }
 
-    // Normalize options format
+    // Normalizar formato de opciones
     question.options = question.options.map((option, optionIndex) => ({
       text: option.text || `Opción ${optionIndex + 1}`,
       value: typeof option.value === "number" ? option.value : optionIndex,
@@ -83,47 +85,47 @@ const validateQuestion = (question, index) => {
 };
 
 /**
- * Validate the complete form response
- * @param {Object} response - Form response to validate
- * @returns {Object} - Validated form response
+ * Valida la respuesta del formulario completo
+ * @param {Object} response - Respuesta del formulario para validar
+ * @returns {Object} - Respuesta del formulario validada
  */
 const validateResponse = response => {
-  // Check form title
+  // Verificar título del formulario
   if (!response?.title?.trim()) {
     throw new Error("El títul del formulari és obligatori");
   }
 
-  // Check form description
+  // Verificar descripción del formulario
   if (!response?.description?.trim()) {
     throw new Error("La descripció del formulari és obligatòria");
   }
 
-  // Check questions array
+  // Verificar array de preguntas
   if (!Array.isArray(response.questions) || response.questions.length === 0) {
     throw new Error("El formulari ha de tenir almenys una pregunta");
   }
 
-  // Validate each question
+  // Validar cada pregunta
   response.questions = response.questions.map((q, i) => validateQuestion(q, i));
   
   return response;
 };
 
 /**
- * Generate form questions using Google's Gemini AI
- * @param {string} prompt - User prompt describing the form
- * @param {number} retryCount - Current retry count (used internally)
- * @returns {Promise<Object>} - Generated form with questions
+ * Genera preguntas de formulario usando OpenAI
+ * @param {string} prompt - Descripción del formulario deseado
+ * @param {number} retryCount - Contador de reintentos (uso interno)
+ * @returns {Promise<Object>} - Formulario generado con preguntas
  */
 export async function generateFormQuestions(prompt, retryCount = 0) {
-  // Validate input
+  // Validar entrada
   if (!prompt?.trim()) {
     throw new Error(
       "Si us plau, proporciona una descripció del formulari que necessites."
     );
   }
 
-  // Attempt to import the fallback templates first in case the API fails
+  // Intentar importar plantillas de respaldo primero en caso de que la API falle
   let fallbackTemplates;
   try {
     const { selectFallbackTemplate } = await import("@/components/utils/formFallbacks");
@@ -133,18 +135,8 @@ export async function generateFormQuestions(prompt, retryCount = 0) {
     console.log("No se pudieron cargar las plantillas de respaldo:", fallbackError);
   }
 
-  // Create a promise that rejects after timeout
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(new Error("La sol·licitud ha excedit el temps d'espera"));
-    }, REQUEST_TIMEOUT);
-  });
-
   try {
-    // Get the Gemini model
-    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-
-    // System prompt with detailed instructions
+    // Instrucciones del sistema detalladas
     const systemPrompt = `Actúa como un experto en diseño de formularios educativos para profesores. Genera un formulario completo basado en la descripción proporcionada.
 
 IMPORTANTE: Debes responder ÚNICAMENTE con un objeto JSON válido que siga esta estructura exacta:
@@ -187,7 +179,7 @@ Utiliza solo la estructura JSON que te he proporcionado, sin añadir campos adic
 El JSON debe ser válido y estar correctamente formateado.
 Genera un total de 4 a 8 preguntas, dependiendo de la complejidad del formulario requerido.`;
 
-    // Create user message with the prompt
+    // Mensaje del usuario con el prompt
     const userMessage = `Necesito un formulario sobre: ${prompt}
 - Prioriza preguntas relevantes para profesores
 - Adapta el nivel educativo según el contexto
@@ -195,22 +187,31 @@ Genera un total de 4 a 8 preguntas, dependiendo de la complejidad del formulario
 - Si se trata de un test de comprensión lectora, incluye un breve texto y preguntas sobre ese texto
 - Genera formularios más sencillos con instrucciones claras`;
 
-    // Race between AI request and timeout
-    const result = await Promise.race([
-      model.generateContent([
-        { text: systemPrompt },
-        { text: userMessage }
-      ]),
-      timeoutPromise
-    ]);
+    // Crear un controlador de tiempo límite
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT);
 
-    // Check if response is valid
-    if (!result?.response?.text()) {
+    // Llamada a la API de OpenAI
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage }
+      ],
+      temperature: 0.7,
+      max_tokens: 2048,
+    }, { signal: timeoutController.signal });
+
+    // Limpiar el timeout
+    clearTimeout(timeoutId);
+
+    // Verificar si la respuesta es válida
+    if (!response?.data?.choices?.[0]?.message?.content) {
       throw new Error("No s'ha rebut resposta del model d'IA");
     }
 
-    // Parse and validate response
-    const responseText = result.response.text();
+    // Analizar y validar respuesta
+    const responseText = response.data.choices[0].message.content;
     const parsedResponse = parseJSONSafely(responseText);
     return validateResponse(parsedResponse);
   } catch (error) {
@@ -219,8 +220,9 @@ Genera un total de 4 a 8 preguntas, dependiendo de la complejidad del formulario
     console.log("Intento número:", retryCount + 1);
 
     // Si hay un error de red o API, proporciona un mensaje específico
-    if (error.message.includes("network") || error.message.includes("API") || error.message.includes("404")) {
-      console.error("Problema de conexión con la API de Gemini:", error.message);
+    if (error.message.includes("network") || error.message.includes("API") || 
+        error.message.includes("timeout") || error.name === "AbortError") {
+      console.error("Problema de conexión con la API de OpenAI:", error.message);
       
       // Si tenemos un template de respaldo disponible, lo devolvemos en lugar de fallar
       if (fallbackTemplates) {
@@ -257,13 +259,13 @@ Genera un total de 4 a 8 preguntas, dependiendo de la complejidad del formulario
 }
 
 /**
- * Generate a single form question
- * @param {string} prompt - Description of the question to generate
- * @param {string} type - Question type (text, multiple, checkbox, number)
- * @returns {Promise<Object>} - Generated question object
+ * Genera una sola pregunta de formulario
+ * @param {string} prompt - Descripción de la pregunta a generar
+ * @param {string} type - Tipo de pregunta (text, multiple, checkbox, number)
+ * @returns {Promise<Object>} - Objeto de pregunta generada
  */
 export async function generateSingleQuestion(prompt, type = "text") {
-  // Validate question type
+  // Validar tipo de pregunta
   if (!["text", "multiple", "checkbox", "number"].includes(type)) {
     throw new Error("Tipus de pregunta invàlid");
   }
@@ -273,7 +275,7 @@ export async function generateSingleQuestion(prompt, type = "text") {
     
     const response = await generateFormQuestions(questionPrompt);
     
-    // Return the first question from the response
+    // Devolver la primera pregunta de la respuesta
     if (response.questions && response.questions.length > 0) {
       return response.questions[0];
     } else {

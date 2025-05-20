@@ -91,50 +91,33 @@ const handleRegenerateQuestion = async question => {
 };
 
 const handleSave = async () => {
-  const formData = {
-    title: props.title,
-    description: props.description,
-    questions: localQuestions.value,
-    teacher_id: props.teacher_id,
-    is_global: false,
-    date_limit: dateLimit.value,
-    time_limit: timeLimit.value,
-  };
-  console.log(formData);
-  // console.log(dateLimit.value);
-  // console.log('Datos que se enviarán:', JSON.stringify(formData, null, 2)); // Verifica la estructura del objeto
-
-  try {
-    const response = await fetch("https://api.grupify.cat/api/forms-save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      // console.error('Errors de validació:', errorData);
-      // showToastMessage('Errors en les dades enviades: ' + JSON.stringify(errorData.errors, null, 2), 'error-toast');
-      return;
-    }
-
-    const result = await response.json();
-    // console.log('Resposta del servidor:', result);
-    showToastMessage("Formulari desat amb èxit.");
-
-    // Espera 1 segundo antes de redirigir
-    setTimeout(() => {
-      navigateTo("/professor/formularis");
-    }, 1000); // Redirigir después de 1 segundo
-  } catch (error) {
-    // console.error('Error en desar el formulari:', error);
-    showToastMessage(
-      "Hi va haver un error en desar el formulari. Si us plau, torna-ho a intentar.",
-      "error-toast"
-    );
+  // Validar datos mínimos requeridos
+  if (!props.title || !props.title.trim()) {
+    showToastMessage("El formulari ha de tenir un títol", "error-toast");
+    return;
   }
+
+  if (!props.description || !props.description.trim()) {
+    showToastMessage("El formulari ha de tenir una descripció", "error-toast");
+    return;
+  }
+
+  if (!localQuestions.value || localQuestions.value.length === 0) {
+    showToastMessage("El formulari ha de tenir almenys una pregunta", "error-toast");
+    return;
+  }
+
+  if (!dateLimit.value) {
+    showToastMessage("Cal definir una data límit per al formulari", "error-toast");
+    return;
+  }
+
+  // En lugar de enviar directamente la solicitud al backend,
+  // solo emitimos el evento para que el componente padre lo maneje
+  emit("save", {
+    dateLimit: dateLimit.value,
+    timeLimit: timeLimit.value
+  });
 };
 
 const handleDownload = () => {
@@ -171,12 +154,6 @@ function showToastMessage(message, type = "success-toast") {
 
 <template>
   <div>
-    <label for="date"> Afegir data límit </label>
-    <input type="date" v-model="dateLimit" name="date">
-    <label for="time">Agefir temps limit</label>
-    <input type="time" v-model="timeLimit">
-  </div>
-  <div>
     <!-- Toast mensaje -->
     <div v-if="showToast" :class="toastType" class="toast">
       {{ toastMessage }}
@@ -186,91 +163,43 @@ function showToastMessage(message, type = "success-toast") {
       <div v-if="title" class="card animate-fade-in">
         <div class="flex justify-between items-center">
           <h2 class="text-2xl font-bold mb-2">{{ titleContent }}</h2>
-          <button
-            class="text-gray-600 hover:text-primary transition duration-200"
-            @click="handleDownload"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-6"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
-              />
-            </svg>
-          </button>
         </div>
         <p class="text-gray-600">{{ descriptionContent }}</p>
       </div>
 
-      <div
-        v-for="(question, index) in visibleQuestions"
-        :key="index"
-        class="border rounded-lg p-6 bg-white animate-slide-up"
-      >
+      <div v-for="(question, index) in visibleQuestions" :key="index"
+        class="border rounded-lg p-6 bg-white animate-slide-up">
         <div class="flex justify-between items-start mb-4">
           <h3 class="text-lg font-medium">{{ question.title }}</h3>
-          <FormsBuilderQuestionActions
-            :question="question"
-            :is-loading="loadingQuestionId === question.id"
-            @edit="handleEditQuestion"
-            @regenerate="handleRegenerateQuestion"
-          />
+          <FormsBuilderQuestionActions :question="question" :is-loading="loadingQuestionId === question.id"
+            @edit="handleEditQuestion" @regenerate="handleRegenerateQuestion" />
         </div>
 
         <div class="space-y-4">
           <template v-if="['multiple', 'checkbox'].includes(question.type)">
-            <div
-              v-for="option in question.options"
-              :key="option.value"
-              class="flex items-center space-x-2"
-            >
-              <input
-                :type="question.type === 'multiple' ? 'radio' : 'checkbox'"
-                :name="`question-${index}`"
-                :value="option.value"
-                class="w-4 h-4 text-primary focus:ring-primary"
-              />
+            <div v-for="option in question.options" :key="option.value" class="flex items-center space-x-2">
+              <input :type="question.type === 'multiple' ? 'radio' : 'checkbox'" :name="`question-${index}`"
+                :value="option.value" class="w-4 h-4 text-primary focus:ring-primary" />
               <label class="text-gray-700">{{ option.text }}</label>
             </div>
           </template>
 
           <template v-else-if="question.type === 'text'">
-            <textarea
-              rows="3"
+            <textarea rows="3"
               class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Tu respuesta..."
-            ></textarea>
+              placeholder="Tu respuesta..."></textarea>
           </template>
 
           <template v-else-if="question.type === 'number'">
-            <input
-              type="number"
+            <input type="number"
               class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="0"
-            />
+              placeholder="0" />
           </template>
         </div>
       </div>
 
-      <div
-        v-if="localQuestions.length > 0"
-        class="flex justify-end space-x-4 pt-4"
-      >
-        <button class="btn btn-primary" @click="handleSave">Guardar</button>
-      </div>
-
-      <FormsBuilderQuestionEditorModal
-        v-model="showEditorModal"
-        :question="selectedQuestion"
-        @save="handleSaveQuestion"
-      />
+      <FormsBuilderQuestionEditorModal v-model="showEditorModal" :question="selectedQuestion"
+        @save="handleSaveQuestion" />
     </div>
   </div>
 </template>
@@ -279,10 +208,12 @@ function showToastMessage(message, type = "success-toast") {
 /* Estilos para el Toast */
 .toast {
   position: fixed;
-  top: 20px; /* Coloca el toast en la parte superior */
+  top: 20px;
+  /* Coloca el toast en la parte superior */
   left: 50%;
   transform: translateX(-50%);
-  background-color: #28a745; /* Verde para éxito */
+  background-color: #28a745;
+  /* Verde para éxito */
   color: white;
   padding: 15px;
   border-radius: 8px;
@@ -290,7 +221,8 @@ function showToastMessage(message, type = "success-toast") {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   opacity: 0;
   animation: toast-animation 0.5s forwards;
-  z-index: 9999; /* Asegura que se muestre encima de todo */
+  z-index: 9999;
+  /* Asegura que se muestre encima de todo */
 }
 
 @keyframes toast-animation {
@@ -298,6 +230,7 @@ function showToastMessage(message, type = "success-toast") {
     opacity: 0;
     transform: translateX(-50%) translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -306,11 +239,13 @@ function showToastMessage(message, type = "success-toast") {
 
 /* Toast para errores */
 .error-toast {
-  background-color: #dc3545; /* Rojo para error */
+  background-color: #dc3545;
+  /* Rojo para error */
 }
 
 /* Toast para mensajes generales */
 .success-toast {
-  background-color: #28a745; /* Verde para éxito */
+  background-color: #28a745;
+  /* Verde para éxito */
 }
 </style>

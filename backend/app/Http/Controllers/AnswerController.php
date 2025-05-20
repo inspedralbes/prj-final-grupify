@@ -109,8 +109,11 @@ class AnswerController extends Controller
             return response()->json(['message' => 'Usuario no encontrado'], 404);
         }
         
-        // Verificar el rol del usuario que está accediendo a las respuestas
-        if (auth()->check()) {
+        // Para el formulario de autoavaluación (ID 4), siempre permitir acceso
+        $isAutoavaluacionForm = (int)$formId === 4;
+        
+        // Comprobar autorización solo si NO es el formulario de autoavaluación
+        if (!$isAutoavaluacionForm && auth()->check()) {
             $currentUserRole = auth()->user()->role->name;
             
             // Los tutores no pueden ver las respuestas de los formularios
@@ -125,26 +128,41 @@ class AnswerController extends Controller
             ->with('question') // Cargar la relación con la pregunta
             ->get();
 
-        // Verificar si el usuario tiene respuestas para el formulario
+        // Si no hay respuestas pero es el formulario de autoavaluación, devolver un array vacío 
+        // en lugar de un error, para que el frontend pueda manejarlo adecuadamente
         if ($answers->isEmpty()) {
-            return response()->json(['message' => 'El usuario no ha respondido este formulario'], 404);
+            if ($isAutoavaluacionForm) {
+                return response()->json([
+                    'form_title' => $form->title ?? 'Formulario de Autoavaluación',
+                    'user_name' => $user->name,
+                    'user_lastname' => $user->last_name,
+                    'answers' => [],
+                    'message' => 'El estudiante aún no ha respondido el formulario de autoavaluación'
+                ], 200);
+            } else {
+                return response()->json(['message' => 'El usuario no ha respondido este formulario'], 404);
+            }
         }
 
         // Formatear las respuestas
-        $answers->each(function ($answer) {
+        $formattedAnswers = $answers->map(function ($answer) {
+            $formattedAnswer = $answer->toArray();
+            
             if (in_array($answer->answer_type, ['multiple', 'checkbox'])) {
-                $answer->answer = json_decode($answer->answer, true);
+                $formattedAnswer['answer'] = json_decode($answer->answer, true);
             } elseif ($answer->answer_type === 'rating') {
-                $answer->answer = $answer->rating; // Mostrar el valor de rating en lugar de `answer`
+                $formattedAnswer['answer'] = $answer->rating;
             }
+            
+            return $formattedAnswer;
         });
 
         // Devolver las respuestas con el título del formulario
         return response()->json([
-            'form_title' => $form->title, // Suponiendo que el modelo Form tiene un campo 'title'
+            'form_title' => $form->title ?? 'Formulario de Autoavaluación',
             'user_name' => $user->name,
             'user_lastname' => $user->last_name,
-            'answers' => $answers,
+            'answers' => $formattedAnswers,
         ], 200);
     }
 
@@ -296,6 +314,269 @@ public function getAverageRating($questionId)
         'question_id' => $questionId,
         'average_rating' => round($averageRating, 2), // Redondeamos a 2 decimales
     ], 200);
+}
+
+/**
+ * Método público específico para obtener respuestas de autoavaluación
+ * Esta función NO requiere autenticación y está optimizada para el frontend
+ */
+public function getAutoavaluacionResponses($userId)
+{ 
+    $formId = 4; 
+    
+    // Verificar si el usuario existe
+    $user = User::find($userId);
+    if (!$user) {
+        return response()->json(['message' => 'Estudiante no encontrado'], 404);
+    }
+    
+    // Buscar el formulario
+    $form = Form::find($formId);
+    $formTitle = $form ? $form->title : 'Formulario de Autoavaluación';
+    
+    // CONSULTA 1: Verificar form_user para ver si el usuario está registrado como respondido
+    $formUser = DB::table('form_user')
+        ->where('user_id', $userId)
+        ->where('form_id', $formId)
+        ->first();
+    
+    // Estado oficial según la tabla form_user
+    $officialAnsweredStatus = $formUser ? (bool)$formUser->answered : false;
+    
+    // CONSULTA 2: Obtener respuestas directamente de la tabla answers
+    $answers = Answer::where('form_id', $formId)
+        ->where('user_id', $userId)
+        ->with('question') // Cargar la relación con la pregunta
+        ->get();
+    
+    // Estado basado en si hay respuestas
+    $hasAnswersStatus = !$answers->isEmpty();
+    
+    // Log para depuración
+    \Log::info("Autoavaluacion check for student $userId:", [
+        'form_user_exists' => (bool)$formUser,
+        'form_user_answered' => $officialAnsweredStatus,
+        'has_answers' => $hasAnswersStatus,
+        'answers_count' => $answers->count(),
+        'answers_ids' => $answers->pluck('id')->toArray()
+    ]);
+    
+    // Si no hay respuestas pero hay un registro form_user con answered=true, verificar directamente en la tabla
+    if (!$hasAnswersStatus && $officialAnsweredStatus) {
+        \Log::warning("Inconsistencia: El estudiante $userId tiene answered=true pero no tiene respuestas");
+    }
+    
+    // Crear respuestas para las competencias
+    // Las IDs de las preguntas corresponden a las competencias (22-29)
+    $defaultCompetences = [
+        ['id' => 22, 'name' => 'Responsabilitat', 'question_id' => 22, 'rating' => 0],
+        ['id' => 23, 'name' => 'Treball en equip', 'question_id' => 23, 'rating' => 0],
+        ['id' => 24, 'name' => 'Gestió del temps', 'question_id' => 24, 'rating' => 0],
+        ['id' => 25, 'name' => 'Comunicació', 'question_id' => 25, 'rating' => 0],
+        ['id' => 26, 'name' => 'Adaptabilitat', 'question_id' => 26, 'rating' => 0],
+        ['id' => 27, 'name' => 'Lideratge', 'question_id' => 27, 'rating' => 0],
+        ['id' => 28, 'name' => 'Creativitat', 'question_id' => 28, 'rating' => 0],
+        ['id' => 29, 'name' => 'Proactivitat', 'question_id' => 29, 'rating' => 0],
+    ];
+    
+    if ($hasAnswersStatus) {
+        foreach ($answers as $answer) {
+            $questionId = $answer->question_id;
+            $rating = 0;
+            
+            if ($answer->answer_type === 'rating' && $answer->rating !== null) {
+                $rating = (int)$answer->rating;
+            } else if ($answer->answer !== null && is_numeric($answer->answer)) {
+                $rating = (int)$answer->answer;
+            }
+            
+            // Buscar la competencia correspondiente y actualizar su valor
+            foreach ($defaultCompetences as &$competence) {
+                if ($competence['question_id'] === $questionId) {
+                    $competence['rating'] = $rating;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Devolver respuesta JSON con toda la información
+    return response()->json([
+        'form_title' => $formTitle,
+        'user_name' => $user->name,
+        'user_lastname' => $user->last_name,
+        'user_id' => $userId,
+        'form_id' => $formId,
+        'answers' => $defaultCompetences,
+        'has_answered' => $officialAnsweredStatus || $hasAnswersStatus,
+        'form_user_status' => $officialAnsweredStatus,
+        'has_answers_in_db' => $hasAnswersStatus,
+        'raw_answers' => $answers,
+        'form_user_record' => $formUser,
+        'debug_info' => [
+            'timestamp' => now()->format('Y-m-d H:i:s'),
+            'server' => $_SERVER['SERVER_NAME'] ?? 'unknown'
+        ]
+    ], 200);
+}
+
+/**
+ * Método simple de depuración 
+ * SOLO PARA DEPURACIÓN - Muestra todos los datos de respuestas para un estudiante
+ */
+public function debugStudentAnswers($userId)
+{
+    // ID fijo del formulario de autoavaluación
+    $formId = 4;
+    
+    // Obtener usuario
+    $user = User::find($userId);
+    if (!$user) {
+        return response()->json(['error' => 'Usuario no encontrado'], 404);
+    }
+    
+    // Obtener todos los datos relevantes
+    $userData = [
+        'user_id' => $userId,
+        'name' => $user->name,
+        'last_name' => $user->last_name,
+        'email' => $user->email
+    ];
+    
+    // 1. Estado en form_user
+    $formUser = DB::table('form_user')
+        ->where('user_id', $userId)
+        ->where('form_id', $formId)
+        ->first();
+    
+    // 2. Respuestas en answers
+    $answers = DB::table('answers')
+        ->where('user_id', $userId)
+        ->where('form_id', $formId)
+        ->get();
+    
+    // 3. Todos los datos de las competencias (22-29)
+    $competencesData = [];
+    for ($id = 22; $id <= 29; $id++) {
+        // Buscar si hay una respuesta para esta pregunta/competencia
+        $answer = $answers->firstWhere('question_id', $id);
+        
+        $competencesData[] = [
+            'question_id' => $id,
+            'competence_name' => $this->getCompetenceName($id),
+            'has_answer' => !is_null($answer),
+            'answer_data' => $answer,
+            'rating_value' => $answer ? ($answer->rating ?? $answer->answer ?? 0) : 0
+        ];
+    }
+    
+    // Devolver toda la información para depuración
+    return response()->json([
+        'user' => $userData,
+        'form_user_status' => $formUser,
+        'answers_count' => count($answers),
+        'answers' => $answers,
+        'competences' => $competencesData,
+        'debug_timestamp' => now()->format('Y-m-d H:i:s')
+    ]);
+}
+
+/**
+ * Obtener respuestas de un usuario 
+ * Útil para pruebas directas desde el navegador
+ */
+public function getPublicAnswersByUser($formId, $userId)
+{
+    // Verificación mínima
+    if (!$formId || !$userId) {
+        return response()->json(['error' => 'Faltan parámetros requeridos'], 400);
+    }
+    
+    // Obtener datos básicos
+    $user = User::find($userId);
+    $form = Form::find($formId);
+    
+    if (!$user || !$form) {
+        return response()->json(['error' => 'Usuario o formulario no encontrados'], 404);
+    }
+    
+    // Para todas las competencias, obtener sus respuestas específicas
+    $allCompetences = [
+        ['id' => 22, 'name' => 'Responsabilitat', 'question_id' => 22],
+        ['id' => 23, 'name' => 'Treball en equip', 'question_id' => 23],
+        ['id' => 24, 'name' => 'Gestió del temps', 'question_id' => 24],
+        ['id' => 25, 'name' => 'Comunicació', 'question_id' => 25],
+        ['id' => 26, 'name' => 'Adaptabilitat', 'question_id' => 26],
+        ['id' => 27, 'name' => 'Lideratge', 'question_id' => 27],
+        ['id' => 28, 'name' => 'Creativitat', 'question_id' => 28],
+        ['id' => 29, 'name' => 'Proactivitat', 'question_id' => 29],
+    ];
+    
+    // Obtener las respuestas para estas competencias/preguntas
+    $answers = [];
+    foreach ($allCompetences as $competence) {
+        $answer = Answer::where('form_id', $formId)
+            ->where('user_id', $userId)
+            ->where('question_id', $competence['question_id'])
+            ->first();
+        
+        // Si existe una respuesta, obtener su valor
+        $rating = 0;
+        if ($answer) {
+            if ($answer->rating !== null) {
+                $rating = (int)$answer->rating;
+            } else if ($answer->answer !== null && is_numeric($answer->answer)) {
+                $rating = (int)$answer->answer;
+            }
+        }
+        
+        $answers[] = [
+            'id' => $competence['id'],
+            'name' => $competence['name'],
+            'question_id' => $competence['question_id'],
+            'rating' => $rating,
+            'has_value' => $answer ? true : false
+        ];
+    }
+    
+    return response()->json([
+        'user_id' => $userId,
+        'user_name' => $user->name,
+        'user_lastname' => $user->last_name,
+        'form_id' => $formId,
+        'form_title' => $form->title ?? 'Formulario',
+        'answers' => $answers,
+        'has_answered' => count(array_filter($answers, function($a) { return $a['has_value']; })) > 0
+    ]);
+}
+
+/**
+ * Método público específicamente para autoavaluaciones (Formulario ID 4)
+ * Sin autenticación para pruebas directas en el navegador
+ */
+public function getPublicAutoavaluacionAnswers($userId)
+{
+    return $this->getPublicAnswersByUser(4, $userId);
+}
+
+/**
+ * Método auxiliar para obtener el nombre de la competencia según el ID de la pregunta
+ */
+private function getCompetenceName($questionId)
+{
+    // Mapeo de preguntas a competencias para el formulario de autoavaluación (ID 4)
+    $competenceMapping = [
+        22 => 'Responsabilitat',
+        23 => 'Treball en equip',
+        24 => 'Gestió del temps',
+        25 => 'Comunicació',
+        26 => 'Adaptabilitat',
+        27 => 'Lideratge',
+        28 => 'Creativitat',
+        29 => 'Proactivitat'
+    ];
+    
+    return $competenceMapping[$questionId] ?? 'Competencia desconocida';
 }
 
 
