@@ -85,7 +85,7 @@ const menuItemsConfig = [
 
   {
     title: "Chat IA",
-    route: "/professor/assistent",
+    route: "http://localhost:8501",
     icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
   },
   {
@@ -274,9 +274,13 @@ onUnmounted(() => {
         <div class="hidden md:flex space-x-1">
           <template v-for="item in menuItems" :key="item.title">
             <!-- Menú normal -->
-            <NuxtLink
+            <component
               v-if="!item.type"
-              :to="item.route"
+              :is="item.route.startsWith('http') ? 'a' : 'NuxtLink'"
+              :to="!item.route.startsWith('http') ? item.route : undefined"
+              :href="item.route.startsWith('http') ? item.route : undefined"
+              target="_blank"
+              rel="noopener noreferrer"
               class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
               :class="[
                 isActiveRoute(item.route)
@@ -298,7 +302,7 @@ onUnmounted(() => {
                 />
               </svg>
               <span>{{ item.title }}</span>
-            </NuxtLink>
+            </component>
 
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative dropdown-container">
@@ -400,14 +404,18 @@ onUnmounted(() => {
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <template v-for="item in menuItems" :key="item.title">
             <!-- Menú normal -->
-            <NuxtLink
+            <component
               v-if="!item.type"
-              :to="item.route"
+              :is="item.route.startsWith('http') ? 'a' : 'NuxtLink'"
+              :to="!item.route.startsWith('http') ? item.route : undefined"
+              :href="item.route.startsWith('http') ? item.route : undefined"
+              target="_blank"
+              rel="noopener noreferrer"
               class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
               :class="{ 'bg-blue-700': isActiveRoute(item.route) }"
             >
               {{ item.title }}
-            </NuxtLink>
+            </component>
 
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative">
