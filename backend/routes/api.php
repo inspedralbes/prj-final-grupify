@@ -45,9 +45,9 @@ Route::get('/check-form-completion-public/{course_id}/{division_id}/{form_id}',
 
 // RURTAS SIN USOO
 
-// Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin-dashboard', [DashboardController::class, 'adminDashboard']);
-// Route::middleware(['auth:sanctum', 'role:teacher'])->get('/teacher-dashboard', [DashboardController::class, 'teacherDashboard']);
-// Route::middleware(['auth:sanctum', 'role:student'])->get('/student-dashboard', [DashboardController::class, 'studentDashboard']);
+// Route::middleware(['auth:sanctum'])->get('/admin-dashboard', [DashboardController::class, 'adminDashboard']);
+// Route::middleware(['auth:sanctum'])->get('/teacher-dashboard', [DashboardController::class, 'teacherDashboard']);
+// Route::middleware(['auth:sanctum'])->get('/student-dashboard', [DashboardController::class, 'studentDashboard']);
 
 // Asegurará que la solicitud sea procesada como una solicitud de la API
 Route::middleware('api')->resource('courses', CourseController::class);
@@ -56,7 +56,7 @@ Route::middleware('api')->resource('courses', CourseController::class);
 Route::get('roles', [RoleController::class, 'index']); // Todos pueden ver los roles
 Route::get('roles/{id}', [RoleController::class, 'show']); // Todos pueden ver los detalles de un rol
 // Solo los administradores pueden crear, editar y eliminar roles
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('roles', [RoleController::class, 'store']);
     Route::put('roles/{id}', [RoleController::class, 'update']);
     Route::delete('roles/{id}', [RoleController::class, 'destroy']);
@@ -83,7 +83,7 @@ Route::resource('users', UserController::class)->names([
 ]);
 
 // Ruta para asignar un rol a un usuario (solo admin puede hacerlo)
-Route::middleware(['auth:sanctum', 'role:admin'])->put('/users/{id}/role', [UserController::class, 'assignRole']);
+Route::middleware(['auth:sanctum'])->put('/users/{id}/role', [UserController::class, 'assignRole']);
 
 // Ruta para asignar curso y división a un usuario
 Route::post('/users/{userId}/assign-course-division', [UserController::class, 'assignCourseAndDivision'])->name('api.users.assignCourseDivision');
@@ -95,7 +95,7 @@ Route::get('/users/{id}/courses', [UserController::class, 'getUserCourses']);
 Route::post('forms-save', [FormController::class, 'storeFormWithQuestions']);
 
 // RUTA PARA ASIGNAR FORMULARIO A USUARIO
-Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/assign-form-to-user', [FormController::class, 'assignFormToUser']);
+Route::middleware(['auth:sanctum'])->post('/assign-form-to-user', [FormController::class, 'assignFormToUser']);
 
 // RUTA PARA OBTENER FORMULARIOS DE USUARIO
 Route::get('/forms/user/{userId}', [FormController::class, 'getFormsByUserId']);
@@ -115,7 +115,7 @@ Route::patch('/forms/{formId}/assignment-status', [FormController::class, 'updat
 Route::get('/forms/{formId}/users', [AnswerController::class, 'getUsersByForm']);
 
 // RUTA PARA PROFESORES: Ver estado de respuestas sin ver el contenido
-Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->post('/forms/response-status', [AnswerController::class, 'getFormResponseStatus']);
+Route::middleware(['auth:sanctum'])->post('/forms/response-status', [AnswerController::class, 'getFormResponseStatus']);
 
 // RUTA PARA OBTENER RESPUESTAS DE UN USUARIO A UN FORMULARIO (Con autenticación para la mayoría de formularios)
 Route::middleware(['auth:sanctum'])->get('/forms/{formId}/users/{userId}/answers', [AnswerController::class, 'getAnswersByUser']);
@@ -139,10 +139,10 @@ Route::middleware(['auth:sanctum'])->get('/forms/{formId}/responded-users', [Soc
 Route::middleware(['auth:sanctum'])->get('/forms/{formId}/responded-users-cesc', [CescRelationshipController::class, 'getRespondedUsers']);
 
 // RUTA PARA OBTENER RESPUESTA DE UN USUARIO DEL SOCIOGRAMA
-Route::middleware(['auth:sanctum', 'role:tutor,admin'])->get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
+Route::middleware(['auth:sanctum'])->get('/forms/{formId}/users/{userId}/relationships', [SociogramRelationshipController::class, 'getAnswersByUser']);
 
 // RUTA PARA OBTENER RESPUESTA DE UN USUARIO DEL CESC
-Route::middleware(['auth:sanctum', 'role:tutor,admin'])->get('/forms/{formId}/users/{userId}/relationships-cesc', [CescRelationshipController::class, 'getAnswersByUser']);
+Route::middleware(['auth:sanctum'])->get('/forms/{formId}/users/{userId}/relationships-cesc', [CescRelationshipController::class, 'getAnswersByUser']);
 
 // RUTA PARA OBTENER DIVISIONES SEGUN COURSE
 Route::get('/course-divisions', [CourseController::class, 'getDivisionsByCourse']);
@@ -166,10 +166,10 @@ Route::get('/all-responses', [AnswerController::class, 'getAllResponses']);
 Route::get('/forms/active', [FormController::class, 'getActiveForms']);
 
 //RUTA PARA OBTENER TODAS LAS RESPUESTA AL SOCIOGRAMA DE UN CURSO Y DIVISION ESPECIFICA
-Route::middleware(['auth:sanctum', 'role:tutor,admin'])->post('/sociogram/responses', [SociogramRelationshipController::class, 'getResponsesByCourseAndDivision']);
+Route::middleware(['auth:sanctum'])->post('/sociogram/responses', [SociogramRelationshipController::class, 'getResponsesByCourseAndDivision']);
 
 //RUTA PARA OBTENER TODAS LAS RESPUESTA DEL CESC DE UN CURSO Y DIVISION ESPECIFICA
-Route::middleware(['auth:sanctum', 'role:tutor,admin'])->post('/cesc/responses', [CescRelationshipController::class, 'getResponsesByCourseAndDivision']);
+Route::middleware(['auth:sanctum'])->post('/cesc/responses', [CescRelationshipController::class, 'getResponsesByCourseAndDivision']);
 
 Route::get('/roles', [RoleController::class, 'index']);
 
@@ -182,7 +182,7 @@ Route::group(['prefix' => 'forms'], function () {
     Route::get('/{form}', [FormController::class, 'show']);
 
     // Rutas que pueden acceder profesores, tutores y admin (no orientadores)
-    Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/', [FormController::class, 'store']);
         Route::put('/{form}', [FormController::class, 'update']);
         Route::patch('/{form}', [FormController::class, 'update']);
@@ -190,7 +190,7 @@ Route::group(['prefix' => 'forms'], function () {
     });
 
     // Rutas que pueden acceder profesores, tutores y admin (no orientadores)
-    Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/forms-save', [FormController::class, 'storeFormWithQuestions']);
     });
 });
@@ -200,7 +200,7 @@ Route::resource('questions', QuestionController::class);
 // Modificar la ruta del recurso answers para aplicar diferentes middlewares por método
 Route::group(['prefix' => 'answers'], function () {
     // Rutas que pueden acceder profesores, tutores, orientadores y admin
-    Route::middleware(['auth:sanctum', 'role:profesor,tutor,orientador,admin'])->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [AnswerController::class, 'index']);
         Route::get('/{answer}', [AnswerController::class, 'show']);
     });
@@ -211,7 +211,7 @@ Route::group(['prefix' => 'answers'], function () {
     });
 
     // Rutas que pueden acceder profesores, tutores y admin
-    Route::middleware(['auth:sanctum', 'role:profesor,tutor,admin'])->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/{answer}', [AnswerController::class, 'update']);
         Route::patch('/{answer}', [AnswerController::class, 'update']);
         Route::delete('/{answer}', [AnswerController::class, 'destroy']);
@@ -353,7 +353,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // RUTAS PARA OBTENER RESULTADOS DEL CESC
-Route::middleware(['auth:sanctum', 'role:tutor,orientador,admin'])->post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
+Route::middleware(['auth:sanctum'])->post('/cesc/calcular-resultados', [CescRelationshipController::class, 'calcularResultados']);
 Route::get('/cesc/ver-resultados', [CescRelationshipController::class, 'verResultados']); // Ruta pública para obtener resultados
 Route::get('/cesc/graficas-tags', [CescRelationshipController::class, 'getTagsGraphData']); // Ruta pública para obtener gráficas
 Route::get('/cesc/top-students/{courseId}/{divisionId}/{tagId}', [CescRelationshipController::class, 'getTopStudentsByTag']); // Ruta para obtener los 5 mejores estudiantes por tag

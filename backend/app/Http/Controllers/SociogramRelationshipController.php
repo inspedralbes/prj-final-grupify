@@ -188,15 +188,26 @@ class SociogramRelationshipController extends Controller
                 return response()->json(['message' => 'Formulario no encontrado'], 404);
             }
 
-            // Obtener los IDs únicos de los usuarios que han respondido el formulario
-            $userIds = SociogramRelationship::whereHas('question', function ($query) use ($formId) {
-                $query->where('form_id', $formId); // Relación con preguntas dentro del formulario
+            // Obtener los usuarios que han respondido basado en la tabla form_user
+            $respondedUserIds = \App\Models\FormUser::where('form_id', $formId)
+                ->where('answered', true)
+                ->pluck('user_id')
+                ->unique()
+                ->toArray();
+                
+            // También obtener los IDs de usuarios con relaciones sociométricas (como respaldo)
+            $relationshipUserIds = SociogramRelationship::whereHas('question', function ($query) use ($formId) {
+                $query->where('form_id', $formId);
             })
                 ->pluck('user_id')
-                ->unique();
+                ->unique()
+                ->toArray();
+                
+            // Combinar ambos conjuntos de IDs para mayor certeza
+            $userIds = array_unique(array_merge($respondedUserIds, $relationshipUserIds));
 
             // Verificar si existen usuarios
-            if ($userIds->isEmpty()) {
+            if (empty($userIds)) {
                 return response()->json(['message' => 'No hay usuarios que hayan respondido este formulario'], 404);
             }
 
@@ -214,6 +225,19 @@ class SociogramRelationshipController extends Controller
 
     public function getAnswersByUser($formId, $userId)
     {
+        // Verificar si el usuario autenticado tiene permisos para ver estas respuestas
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 401);
+        }
+        
+        // Verificamos manualmente si el usuario es profesor, tutor o admin
+        if ($user->role && in_array($user->role->name, ['profesor', 'tutor', 'admin', 'orientador'])) {
+            // Ok, proceder con la lógica
+        } else {
+            return response()->json(['message' => 'No tienes permisos para ver estas respuestas'], 403);
+        }
+        
         // Verificar si el formulario existe
         $form = Form::find($formId);
         if (!$form) {

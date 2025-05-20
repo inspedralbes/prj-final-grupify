@@ -29,64 +29,45 @@ const checkIfMobile = () => {
 
 const getUsersByForm = async (formId) => {
   try {
-    // Special case for sociogram form (form ID 3)
-    if (formId === "3") {
-      const apiUrl = `http://localhost:8000/api/forms/${formId}/responded-users`;
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      });
+    // Para todos los formularios, incluido el sociograma (ID 3), usamos la misma API
+    // que nos devolverá solo estudiantes de cursos asignados al profesor
+    const apiUrl = `http://localhost:8000/api/form-user/${formId}/assigned-users`;
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authStore.token}`,
+      },
+    });
 
-      if (!response.ok) {
-        throw new Error(`Error al obtener usuarios: ${response.status}`);
-      }
+    // Si no está autorizado o no se encontró el recurso, marcamos como no asignado
+    if (response.status === 401 || response.status === 403) {
+      console.log("Formulario no asignado a ninguno de tus cursos");
+      formNotAssigned.value = true;
+      students.value = [];
+      return;
+    }
 
-      const data = await response.json();
-      students.value = data;
+    if (response.status === 404) {
+      console.log("Recurso no encontrado");
+      formNotAssigned.value = true;
+      students.value = [];
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener usuarios asignados: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Datos recibidos:", data);
+    
+    if (data.users && data.users.length > 0) {
+      students.value = data.users;
     } else {
-      // Obtenemos los alumnos de los cursos asignados al profesor actual
-      const apiUrl = `http://localhost:8000/api/form-user/${formId}/assigned-users`;
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      });
-
-      // Si no está autorizado o no se encontró el recurso, marcamos como no asignado
-      if (response.status === 401 || response.status === 403) {
-        console.log("Formulario no asignado a ninguno de tus cursos");
-        formNotAssigned.value = true;
-        students.value = [];
-        return;
-      }
-
-      if (response.status === 404) {
-        console.log("Recurso no encontrado");
-        formNotAssigned.value = true;
-        students.value = [];
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`Error al obtener usuarios asignados: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Datos recibidos:", data);
-      
-      if (data.users && data.users.length > 0) {
-        students.value = data.users;
-      } else {
-        // Si no hay usuarios pero el formulario está asignado, mostramos una lista vacía
-        students.value = [];
-      }
+      // Si no hay usuarios pero el formulario está asignado, mostramos una lista vacía
+      students.value = [];
     }
   } catch (error) {
     console.error("Error:", error);
