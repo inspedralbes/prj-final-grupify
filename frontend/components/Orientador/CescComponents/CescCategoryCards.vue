@@ -80,7 +80,7 @@
           
           <div class="mt-8 text-center">
             <button 
-              @click.stop="selectCategory('violento')" 
+              @click.stop="selectCategory('violent')" 
               class="px-6 py-3 bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded-lg transition-colors duration-200 w-full"
             >
               Veure gràfic
@@ -122,7 +122,7 @@
           
           <div class="mt-8 text-center">
             <button 
-              @click.stop="selectCategory('afectado')" 
+              @click.stop="selectCategory('afectat')" 
               class="px-6 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 font-medium rounded-lg transition-colors duration-200 w-full"
             >
               Veure gràfic
