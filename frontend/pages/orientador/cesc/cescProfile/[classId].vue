@@ -206,10 +206,11 @@
                 <tr v-for="student in sortedAndFilteredStudents" 
                     :key="student.fullName"
                     :class="{
-                      'bg-white hover:bg-gray-50 transition-colors': !isHighlightedStudent(student),
-                      'bg-red-50 hover:bg-red-100 transition-colors': isHighlightedForAlert(student, 'Agressiu'),
-                      'bg-yellow-50 hover:bg-yellow-100 transition-colors': isHighlightedForAlert(student, 'Víctima'),
-                      'bg-blue-50 hover:bg-blue-100 transition-colors': highlightedStudent === student.fullName
+                      'bg-white hover:bg-gray-50 transition-colors': !isHighlightedRowByRank(student),
+                      'bg-red-50 hover:bg-red-100 transition-colors': isHighlightedRowByRank(student, 'Agressiu'),
+                      'bg-yellow-50 hover:bg-yellow-100 transition-colors': isHighlightedRowByRank(student, 'Víctima'),
+                      'bg-blue-50 hover:bg-blue-100 transition-colors': isHighlightedRowByRank(student, 'Rebutjat'),
+                      'bg-purple-50 hover:bg-purple-100 transition-colors': highlightedStudent === student.fullName && !isHighlightedRowByRank(student)
                     }">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
@@ -218,24 +219,25 @@
                       </div>
                       <div class="ml-3">
                         <div :class="{
-                          'font-medium text-gray-900': !isHighlightedForAlert(student),
-                          'font-semibold text-red-800': isHighlightedForAlert(student, 'Agressiu'),
-                          'font-semibold text-yellow-800': isHighlightedForAlert(student, 'Víctima')
+                          'font-medium text-gray-900': !isHighlightedRowByRank(student),
+                          'font-semibold text-red-800': isHighlightedRowByRank(student, 'Agressiu'),
+                          'font-semibold text-yellow-800': isHighlightedRowByRank(student, 'Víctima'),
+                          'font-semibold text-blue-800': isHighlightedRowByRank(student, 'Rebutjat')
                         }">
                           {{ student.fullName }}
                         </div>
                         <div class="flex space-x-1 mt-1">
-                          <span v-if="isHighlightedForAlert(student, 'Agressiu')" 
+                          <span v-if="isHighlightedRowByRank(student, 'Agressiu')" 
                                 class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Agressiu
+                            Agressiu (Top 2)
                           </span>
-                          <span v-if="isHighlightedForAlert(student, 'Víctima')" 
+                          <span v-if="isHighlightedRowByRank(student, 'Víctima')" 
                                 class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Víctima
+                            Víctima (Top 2)
                           </span>
-                          <span v-if="isHighlightedForAlert(student, 'Popular')" 
-                                class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Popular
+                          <span v-if="isHighlightedRowByRank(student, 'Rebutjat')" 
+                                class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            Rebutjat (Top 2)
                           </span>
                         </div>
                       </div>
@@ -247,10 +249,10 @@
                           class="px-3 py-1 rounded-full"
                           :class="[
                             getTagBadgeClasses(index),
-                            { 'font-bold': isHighlightedForAlert(student) && (
-                              (tag === 'Agressiu' && student.tags[tag] >= alertThreshold) || 
-                              (tag === 'Víctima' && student.tags[tag] >= alertThreshold) ||
-                              (tag === 'Popular' && student.tags[tag] >= alertThreshold)
+                            { 'font-bold': isHighlightedRowByRank(student) && (
+                              (tag === 'Agressiu' && isHighlightedRowByRank(student, 'Agressiu')) || 
+                              (tag === 'Víctima' && isHighlightedRowByRank(student, 'Víctima')) ||
+                              (tag === 'Rebutjat' && isHighlightedRowByRank(student, 'Rebutjat'))
                             ) }
                           ]">
                       {{ student.tags[tag] }}
@@ -266,6 +268,93 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerta de estudiantes que necesitan ayuda -->
+    <div v-if="showAlertModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-auto">
+        <div class="bg-gradient-to-r from-red-600 to-yellow-600 text-white p-4 rounded-t-xl flex justify-between items-center">
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h3 class="text-xl font-bold">Alumnes que necessiten atenció</h3>
+          </div>
+          <button @click="showAlertModal = false" class="text-white hover:text-gray-200 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-6">
+          <p class="text-gray-600 mb-4">S'han identificat els següents alumnes que podrien necessitar atenció especial:</p>
+          
+          <!-- Alumnos agresivos -->
+          <div v-if="topAggressiveStudents.length > 0" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <h4 class="text-red-800 font-semibold flex items-center mb-2">
+              <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+              Alumnes amb comportament agressiu (Top 2)
+            </h4>
+            <ul class="list-disc pl-5 text-red-700">
+              <li v-for="student in topAggressiveStudents" :key="student.fullName" class="mb-1">
+                <span class="font-medium">{{ student.fullName }}</span> - 
+                <span class="font-bold">{{ student.tags['Agressiu'] }} punts</span>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Alumnos víctimas -->
+          <div v-if="topVictimStudents.length > 0" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h4 class="text-yellow-800 font-semibold flex items-center mb-2">
+              <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+              Alumnes identificats com a víctimes (Top 2)
+            </h4>
+            <ul class="list-disc pl-5 text-yellow-700">
+              <li v-for="student in topVictimStudents" :key="student.fullName" class="mb-1">
+                <span class="font-medium">{{ student.fullName }}</span> - 
+                <span class="font-bold">{{ student.tags['Víctima'] }} punts</span>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Alumnos rechazados -->
+          <div v-if="topRejectedStudents.length > 0" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 class="text-blue-800 font-semibold flex items-center mb-2">
+              <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+              Alumnes amb rebuig social (Top 2)
+            </h4>
+            <ul class="list-disc pl-5 text-blue-700">
+              <li v-for="student in topRejectedStudents" :key="student.fullName" class="mb-1">
+                <span class="font-medium">{{ student.fullName }}</span> - 
+                <span class="font-bold">{{ student.tags['Rebutjat'] }} punts</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div class="mt-6 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <h4 class="text-indigo-800 font-semibold mb-2">Recomanacions generals:</h4>
+            <ul class="list-disc pl-5 text-indigo-700 space-y-1">
+              <li>Programar sessions individuals amb aquests alumnes.</li>
+              <li>Considerar la implementació d'activitats d'integració i cohesió grupal.</li>
+              <li>Fer un seguiment més detallat del seu comportament i evolució.</li>
+              <li>Consultar amb l'equip d'orientació per obtenir més recursos.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-b-xl border-t border-gray-200 flex justify-between">
+          <button @click="createPdfReport" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Descarregar Informe
+          </button>
+          <button @click="showAlertModal = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+            Entès
+          </button>
         </div>
       </div>
     </div>
@@ -492,6 +581,7 @@ const alertThreshold = ref(3); // Umbral inicial más bajo para mostrar más ale
 const selectedProfile = ref('Agressiu');
 const sortColumn = ref('fullName');
 const sortDirection = ref('asc');
+const showAlertModal = ref(false); // Control del modal de alerta
 
 // Color combinations for tags
 const tagColors = [
@@ -577,6 +667,15 @@ const studentTotal = (student) => {
   return Object.values(student.tags).reduce((sum, val) => sum + val, 0);
 };
 
+// Function to check if a student should be highlighted
+const isHighlightedStudent = (student, type = null) => {
+  if (highlightedStudent.value) {
+    return student.fullName === highlightedStudent.value;
+  }
+  
+  return isHighlightedRowByRank(student, type);
+};
+
 // Función para obtener el tag más alto de un estudiante
 const highestTag = (student) => {
   let maxTag = '';
@@ -635,43 +734,49 @@ const topStudentsByTag = (tag, limit = 3) => {
     .slice(0, limit);
 };
 
-// Verificar si un estudiante debe ser destacado
-const isHighlightedForAlert = (student, type = null) => {
-  if (!student.tags) return false;
-  
-  const aggressiveScore = student.tags['Agressiu'] || 0;
-  const victimScore = student.tags['Víctima'] || 0;
-  const popularScore = student.tags['Popular'] || 0;
-  
-  if (type === 'Agressiu') {
-    return aggressiveScore >= alertThreshold.value;
-  } else if (type === 'Víctima') {
-    return victimScore >= alertThreshold.value;
-  } else if (type === 'Popular') {
-    return popularScore >= alertThreshold.value;
-  }
-  
-  return aggressiveScore >= alertThreshold.value || 
-         victimScore >= alertThreshold.value || 
-         popularScore >= alertThreshold.value;
+// Obtener los 2 estudiantes con mayor puntuación en cada categoría
+const topAggressiveStudents = computed(() => {
+  return [...groupedResults.value]
+    .filter(s => s.tags['Agressiu'] && s.tags['Agressiu'] > 0)
+    .sort((a, b) => (b.tags['Agressiu'] || 0) - (a.tags['Agressiu'] || 0))
+    .slice(0, 2);
+});
+
+const topVictimStudents = computed(() => {
+  return [...groupedResults.value]
+    .filter(s => s.tags['Víctima'] && s.tags['Víctima'] > 0)
+    .sort((a, b) => (b.tags['Víctima'] || 0) - (a.tags['Víctima'] || 0))
+    .slice(0, 2);
+});
+
+const topRejectedStudents = computed(() => {
+  return [...groupedResults.value]
+    .filter(s => s.tags['Rebutjat'] && s.tags['Rebutjat'] > 0)
+    .sort((a, b) => (b.tags['Rebutjat'] || 0) - (a.tags['Rebutjat'] || 0))
+    .slice(0, 2);
+});
+
+// Función para crear un reporte PDF (placeholder - se puede implementar completamente después)
+const createPdfReport = () => {
+  alert('Funcionalidad de descarga de informe en desarrollo');
 };
 
-// Function to check if a student should be highlighted
-const isHighlightedStudent = (student, type = null) => {
-  if (highlightedStudent.value) {
-    return student.fullName === highlightedStudent.value;
-  }
-  
-  const aggressiveScore = student.tags['Agressiu'] || 0;
-  const victimScore = student.tags['Víctima'] || 0;
+// Función para identificar los 2 estudiantes con mayor puntuación en cada categoría
+const isHighlightedRowByRank = (student, type = null) => {
+  if (!student.tags) return false;
   
   if (type === 'Agressiu') {
-    return aggressiveScore >= alertThreshold.value;
+    return topAggressiveStudents.value.some(s => s.fullName === student.fullName);
   } else if (type === 'Víctima') {
-    return victimScore >= alertThreshold.value;
+    return topVictimStudents.value.some(s => s.fullName === student.fullName);
+  } else if (type === 'Rebutjat') {
+    return topRejectedStudents.value.some(s => s.fullName === student.fullName);
   }
   
-  return aggressiveScore >= alertThreshold.value || victimScore >= alertThreshold.value;
+  // Si no se especifica tipo, verificar si está en alguna de las listas
+  return topAggressiveStudents.value.some(s => s.fullName === student.fullName) || 
+         topVictimStudents.value.some(s => s.fullName === student.fullName) || 
+         topRejectedStudents.value.some(s => s.fullName === student.fullName);
 };
 
 // Manejar clic en el gráfico
