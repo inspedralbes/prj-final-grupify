@@ -4,61 +4,11 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
-
-env:
-  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-  API_BASE_URL: ${{ secrets.API_BASE_URL }}
-  GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-  GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-  SERVER_USER: ${{ secrets.SERVER_USER }}
-  SERVER_IP: ${{ secrets.SERVER_IP }}
-  DB_HOST: ${{ secrets.DB_HOST }}
-  DB_PORT: ${{ secrets.DB_PORT }}
-  DB_DATABASE: ${{ secrets.DB_DATABASE }}
-  DB_USERNAME: ${{ secrets.DB_USERNAME }}
-  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-  TAG: v2.5
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Log in to GitHub Container Registry (GHCR)
-        run: |
-          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
-
-      - name: Set up environment variables
-        run: |
-          echo "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" >> $GITHUB_ENV
-          echo "API_BASE_URL=${API_BASE_URL}" >> $GITHUB_ENV
-          echo "DB_HOST=${DB_HOST}" >> $GITHUB_ENV
-          echo "DB_PORT=${DB_PORT}" >> $GITHUB_ENV
-          echo "DB_DATABASE=${DB_DATABASE}" >> $GITHUB_ENV
-          echo "DB_USERNAME=${DB_USERNAME}" >> $GITHUB_ENV
-          echo "DB_PASSWORD=${DB_PASSWORD}" >> $GITHUB_ENV
-
-      - name: Build and push Docker images
-        env:
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: |
-          # Build and push other images
-          make allprod
-          
-          # Build and push chat service
-          docker build -t ghcr.io/${{ secrets.GHCR_USERNAME }}/grupify-chat:${{ env.TAG }} -f mcp-use-grupify/Dockerfile ./mcp-use-grupify
-          docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/grupify-chat:${{ env.TAG }}
-
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
@@ -66,22 +16,10 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Test SSH connection
-        run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo 'SSH connection successful'"
-
       - name: Deploy on Server
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=60 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "\
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "\
             cd /${{ secrets.SERVER_USER }}/prj-final-grupify && \
-            git reset --hard HEAD && \
+            docker compose -f docker-compose.prod.yml down && \
             git pull && \
-            export GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' && \
-            export API_BASE_URL='${{ secrets.API_BASE_URL }}' && \
-            export DB_HOST='${{ secrets.DB_HOST }}' && \
-            export DB_PORT='${{ secrets.DB_PORT }}' && \
-            export DB_DATABASE='${{ secrets.DB_DATABASE }}' && \
-            export DB_USERNAME='${{ secrets.DB_USERNAME }}' && \
-            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}' && \
-            docker compose -f docker-compose.prod.yml pull && \
-            docker compose -f docker-compose.prod.yml up -d"
+            docker compose -f docker-compose.prod.yml up --build -d"
