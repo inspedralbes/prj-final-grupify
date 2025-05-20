@@ -14,6 +14,10 @@ const props = defineProps({
   initialThreshold: {
     type: Number,
     default: 1.5
+  },
+  showAllData: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -23,6 +27,7 @@ const emit = defineEmits(['update:courseAndDivision', 'update:threshold', 'loadD
 // Estado interno del componente
 const selectedCourseAndDivision = ref(props.initialCourseAndDivision);
 const threshold = ref(props.initialThreshold);
+const viewAllData = ref(props.showAllData || localStorage.getItem('orientadorViewAllData') === 'true');
 
 // Computed property para obtener las opciones del selector combinado
 const courseOptions = computed(() => {
@@ -60,6 +65,13 @@ watch(threshold, (newValue) => {
 const loadData = () => {
   emit('loadData');
 };
+
+// Método para alternar entre ver todos los datos o filtrados
+const toggleViewAllData = () => {
+  viewAllData.value = !viewAllData.value;
+  localStorage.setItem('orientadorViewAllData', viewAllData.value ? 'true' : 'false');
+  emit('loadData');
+};
 </script>
 
 <template>
@@ -67,12 +79,25 @@ const loadData = () => {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Selector de curso combinado -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">
-          Seleccionar curs i grup
-        </label>
+        <div class="flex items-center justify-between">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Seleccionar curs i grup
+          </label>
+          <div class="flex items-center">
+            <input 
+              type="checkbox" 
+              id="viewAllData" 
+              v-model="viewAllData"
+              @change="toggleViewAllData"
+              class="h-4 w-4 rounded border-gray-300 text-[#0080C0] focus:ring-[#0080C0]"
+            />
+            <label for="viewAllData" class="ml-2 block text-sm text-gray-700">Mostrar tots els cursos</label>
+          </div>
+        </div>
         <select
           v-model="selectedCourseAndDivision"
           class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#0080C0] focus:border-[#0080C0] sm:text-sm rounded-md"
+          :disabled="viewAllData"
         >
           <option
             v-for="option in courseOptions"

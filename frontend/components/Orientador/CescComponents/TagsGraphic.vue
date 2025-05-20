@@ -834,6 +834,7 @@ const fetchData = async () => {
   error.value = null;
 
   try {
+    // La URL ahora se mantiene genérica sin filtrar por curso
     const response = await fetch('http://localhost:8000/api/cesc/graficas-tags', {
       method: 'GET',
       headers: {

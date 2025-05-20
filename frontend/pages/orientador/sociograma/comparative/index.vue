@@ -28,6 +28,10 @@ const comparativeOptions = [
 
 
 const navigateTo = (route) => {
+  // Establecer la preferencia de ver todos los datos
+  localStorage.setItem('orientadorViewAllData', 'true');
+  localStorage.setItem('orientadorViewAllStudents', 'true');
+  
   router.push(route);
 };
 </script>

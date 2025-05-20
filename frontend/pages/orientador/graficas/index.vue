@@ -141,10 +141,18 @@ const hoveredCard = ref(null);
 const userData = ref(null);
 
 const navigateToCesc = () => {
+  // Establecer la preferencia de ver todos los datos
+  localStorage.setItem('orientadorViewAllData', 'true');
+  localStorage.setItem('orientadorViewAllStudents', 'true');
+  
   router.push('/orientador/cesc/comparative');
 };
 
 const navigateToSociogram = () => {
+  // Establecer la preferencia de ver todos los datos
+  localStorage.setItem('orientadorViewAllData', 'true');
+  localStorage.setItem('orientadorViewAllStudents', 'true');
+  
   router.push('/orientador/sociograma/comparative');
 };
 

@@ -65,6 +65,9 @@ onMounted(() => {
     userData.value = JSON.parse(storedUser);
   }
   
+  // Establecer la preferencia de mostrar todos los datos cuando se navega directamente a esta página
+  localStorage.setItem('orientadorViewAllData', 'true');
+  
   // Obtener categoría de la URL si existe
   if (route.query.categoria) {
     categoria.value = route.query.categoria;

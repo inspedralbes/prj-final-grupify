@@ -475,4 +475,179 @@ class CescRelationshipController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Obtener datos para los gráficos de tags CESC agrupados por cursos.
+     * Esta función permite a los orientadores ver datos de todos los cursos sin filtrar.
+     */
+    public function getTagsGraphData() 
+    {
+        try {
+            // Obtener todas las relaciones CESC con sus respectivos tags
+            $relationships = CescRelationship::with(['peer', 'tag', 'question'])
+                ->whereHas('peer')
+                ->whereHas('tag')
+                ->get();
+                
+            if ($relationships->isEmpty()) {
+                return response()->json([], 200);
+            }
+            
+            // Obtener información de los cursos y divisiones de cada estudiante
+            $peerCourseInfo = [];
+            
+            foreach ($relationships as $rel) {
+                $peerId = $rel->peer_id;
+                
+                // Si ya hemos obtenido la información del curso para este peer, saltamos
+                if (isset($peerCourseInfo[$peerId])) {
+                    continue;
+                }
+                
+                // Obtener información del curso y división del peer
+                $courseInfo = DB::table('course_division_user as cdu')
+                    ->join('courses as c', 'cdu.course_id', '=', 'c.id')
+                    ->join('divisions as d', 'cdu.division_id', '=', 'd.id')
+                    ->where('cdu.user_id', $peerId)
+                    ->select('cdu.course_id', 'c.name as course_name', 'cdu.division_id', 'd.name as division_name')
+                    ->orderBy('cdu.id', 'desc')
+                    ->first();
+                    
+                if ($courseInfo) {
+                    $peerCourseInfo[$peerId] = [
+                        'course_id' => $courseInfo->course_id,
+                        'course_name' => $courseInfo->course_name,
+                        'division_id' => $courseInfo->division_id,
+                        'division_name' => $courseInfo->division_name
+                    ];
+                }
+            }
+            
+            // Agrupar los conteos de tags por curso y división
+            $tagCountsByCourse = [];
+            
+            foreach ($relationships as $rel) {
+                $peerId = $rel->peer_id;
+                $tagId = $rel->tag_id;
+                
+                // Si no tenemos información del curso para este peer, continuamos
+                if (!isset($peerCourseInfo[$peerId])) {
+                    continue;
+                }
+                
+                $courseId = $peerCourseInfo[$peerId]['course_id'];
+                $courseName = $peerCourseInfo[$peerId]['course_name'];
+                $divisionId = $peerCourseInfo[$peerId]['division_id'];
+                $divisionName = $peerCourseInfo[$peerId]['division_name'];
+                
+                // Crear clave única para este curso y división
+                $key = "{$courseId}-{$divisionId}";
+                
+                // Inicializar el registro para este curso/división si no existe
+                if (!isset($tagCountsByCourse[$key])) {
+                    $tagCountsByCourse[$key] = [
+                        'course_id' => $courseId,
+                        'course_name' => $courseName,
+                        'division_id' => $divisionId,
+                        'division_name' => $divisionName,
+                        'tag_1_count' => 0, // Popular
+                        'tag_2_count' => 0, // Rechazado
+                        'tag_3_count' => 0, // Agresivo
+                        'tag_4_count' => 0, // Prosocial
+                        'tag_5_count' => 0, // Víctima
+                        'total_students' => 0,
+                        'total_tags' => 0
+                    ];
+                }
+                
+                // Incrementar el contador para el tag correspondiente
+                $tagField = "tag_{$tagId}_count";
+                $tagCountsByCourse[$key][$tagField]++;
+                $tagCountsByCourse[$key]['total_tags']++;
+            }
+            
+            // Obtener el número total de estudiantes por curso/división
+            foreach ($tagCountsByCourse as $key => &$courseData) {
+                $studentCount = DB::table('course_division_user')
+                    ->where('course_id', $courseData['course_id'])
+                    ->where('division_id', $courseData['division_id'])
+                    ->whereIn('role_id', [3, 4]) // IDs de roles de estudiantes
+                    ->distinct('user_id')
+                    ->count('user_id');
+                    
+                $courseData['total_students'] = $studentCount;
+            }
+            
+            // Convertir a array para la respuesta JSON
+            $result = array_values($tagCountsByCourse);
+            
+            return response()->json($result, 200);
+            
+        } catch (\Exception $e) {
+            // Log del error
+            \Log::error('Error al obtener datos para gráficos CESC: ' . $e->getMessage());
+            
+            // Retornar error
+            return response()->json([
+                'message' => 'Error al obtener datos para gráficos CESC',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Obtener los 5 mejores estudiantes para un tag específico en un curso/división
+     */
+    public function getTopStudentsByTag($courseId, $divisionId, $tagId)
+    {
+        try {
+            // Validar que el tag existe
+            $tagExists = TagCesc::where('id', $tagId)->exists();
+            if (!$tagExists) {
+                return response()->json([
+                    'message' => 'Tag no encontrado'
+                ], 404);
+            }
+            
+            // Obtener los IDs de los estudiantes en este curso/división
+            $studentIds = DB::table('course_division_user')
+                ->where('course_id', $courseId)
+                ->where('division_id', $divisionId)
+                ->whereIn('role_id', [3, 4]) // Roles de estudiante
+                ->pluck('user_id')
+                ->toArray();
+                
+            if (empty($studentIds)) {
+                return response()->json([
+                    'message' => 'No hay estudiantes en este curso y división',
+                    'students' => []
+                ], 200);
+            }
+            
+            // Obtener conteo de menciones por estudiante para este tag
+            $studentCounts = DB::table('cesc_relationships as cr')
+                ->join('users as u', 'cr.peer_id', '=', 'u.id')
+                ->where('cr.tag_id', $tagId)
+                ->whereIn('cr.peer_id', $studentIds)
+                ->select('cr.peer_id', 'u.name', 'u.last_name', DB::raw('COUNT(*) as points'))
+                ->groupBy('cr.peer_id', 'u.name', 'u.last_name')
+                ->orderBy('points', 'desc')
+                ->get();
+                
+            // Devolver los resultados
+            return response()->json([
+                'students' => $studentCounts
+            ], 200);
+            
+        } catch (\Exception $e) {
+            // Log del error
+            \Log::error('Error al obtener top estudiantes por tag: ' . $e->getMessage());
+            
+            // Retornar error
+            return response()->json([
+                'message' => 'Error al obtener estudiantes por tag',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
