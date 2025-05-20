@@ -1,5 +1,5 @@
 <script setup>
-import { generateFormQuestions } from "@/services/openai";
+import { generateFormQuestions } from "@/services/gemini";
 import { useScrollToBottom } from "@/components/utils/chat";
 import { useFormSuggestions } from "@/components/utils/formSuggestions";
 import { selectFallbackTemplate } from "@/components/utils/formFallbacks";
@@ -38,6 +38,30 @@ const generateAIResponse = async (message) => {
       try {
         return await generateFormQuestions(message);
       } catch (error) {
+        // Si es un error de cuota, mostrar un mensaje específico
+        if (error.message.includes("quota") || 
+            error.message.includes("429") || 
+            error.message.includes("excedi")) {
+          
+          // Eliminar mensaje de pensamiento
+          chatHistory.value = chatHistory.value.filter(msg => !msg.isThinking);
+          
+          // Añadir mensaje específico de cuota
+          chatHistory.value.push({
+            role: "assistant",
+            content: "S'ha excedit la quota d'API de Gemini. Estem utilitzant una plantilla alternativa mentre resolem aquest problema.",
+            error: true,
+          });
+          
+          // Intentar usar plantilla de respaldo
+          try {
+            const fallbackTemplate = selectFallbackTemplate(message);
+            return fallbackTemplate;
+          } catch (fallbackError) {
+            throw new Error("Error de quota d'API i no s'ha pogut utilitzar una plantilla alternativa.");
+          }
+        }
+        
         if (retryCount.value < MAX_RETRIES) {
           retryCount.value++;
           

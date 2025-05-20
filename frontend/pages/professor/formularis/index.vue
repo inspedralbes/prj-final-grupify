@@ -2,6 +2,8 @@
 import {
   PlusIcon,
   UserGroupIcon,
+  EyeIcon,
+  EyeSlashIcon
 } from "@heroicons/vue/24/outline";
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 
@@ -24,42 +26,42 @@ onMounted(async () => {
   try {
     // Obtener el token del authStore
     const token = authStore.token;
-    
+
     if (!token) {
       throw new Error("No se encontró token de autenticación. Por favor, inicie sesión de nuevo.");
     }
-    
+
     // Mantener la forma original de obtener los formularios desde la tabla forms
     const response = await fetch(`http://localhost:8000/api/forms?teacher_id=${teacherId.value}`, {
       method: "GET",
-      headers: { 
+      headers: {
         Accept: "application/json",
         Authorization: `Bearer ${token}`
       }
     });
-    
+
     if (!response.ok) throw new Error("Error obteniendo los datos.");
-    
+
     // Obtener los formularios
     forms.value = await response.json();
-    
+
     // Adicionalmente, obtenemos las asignaciones para tener los datos de course_id y division_id
     const assignmentsResponse = await fetch(`http://localhost:8000/api/form-assignments/teacher/${teacherId.value}`, {
       method: "GET",
-      headers: { 
+      headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${token}` 
+        Authorization: `Bearer ${token}`
       }
     });
-    
+
     if (assignmentsResponse.ok) {
       const formAssignments = await assignmentsResponse.json();
-      
+
       // Enriquecer los formularios con la información de asignaciones
       forms.value = forms.value.map(form => {
         // Buscar la asignación correspondiente a este formulario
         const assignment = formAssignments.find(a => a.form_id === form.id);
-        
+
         if (assignment) {
           // Si encontramos la asignación, añadimos course_id y division_id al formulario
           // Y obtenemos el estado desde assignments si está disponible
@@ -68,18 +70,18 @@ onMounted(async () => {
             course_id: assignment.course_id,
             division_id: assignment.division_id,
             // Usar el status de la asignación si está disponible (asegurando que sea 0 o 1)
-            status: assignment.status !== undefined ? 
-                   (typeof assignment.status === 'boolean' ? 
-                     (assignment.status ? 1 : 0) : 
-                     parseInt(assignment.status)) : 
-                   form.status
+            status: assignment.status !== undefined ?
+              (typeof assignment.status === 'boolean' ?
+                (assignment.status ? 1 : 0) :
+                parseInt(assignment.status)) :
+              form.status
           };
         }
-        
+
         return form;
       });
     }
-    
+
     filterForms(forms.value);
   } catch (error) {
     console.error("Error al cargar los formularios:", error.message);
@@ -109,21 +111,21 @@ const updateFormStatus = async (formId, newStatus, courseId, divisionId) => {
     if (!courseId || !divisionId) {
       throw new Error("No se encontró información de curso y división para este formulario.");
     }
-    
+
     // Obtener el token del authStore
     const token = authStore.token;
-    
+
     if (!token) {
       throw new Error("No se encontró token de autenticación. Por favor, inicie sesión de nuevo.");
     }
-    
+
     const url = `http://localhost:8000/api/forms/${formId}/assignment-status`;
-    const body = { 
+    const body = {
       status: newStatus,
       course_id: courseId,
       division_id: divisionId
     };
-    
+
     // Actualizar la tabla form_assignments con valor 0 o 1
     const response = await fetch(url, {
       method: "PATCH",
@@ -134,10 +136,10 @@ const updateFormStatus = async (formId, newStatus, courseId, divisionId) => {
       },
       body: JSON.stringify(body),
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
-      
+
       try {
         const errorData = JSON.parse(errorText);
         throw new Error(`Error al actualizar el estado: ${errorData.message || response.statusText}`);
@@ -145,14 +147,14 @@ const updateFormStatus = async (formId, newStatus, courseId, divisionId) => {
         throw new Error(`Error al actualizar el estado: ${response.statusText}`);
       }
     }
-    
+
     const responseData = await response.json();
-      
+
     // Actualizar la interfaz de usuario para reflejar el cambio
     forms.value = forms.value.map(form =>
       form.id === formId ? { ...form, status: newStatus } : form
     );
-    
+
     // Mostrar mensaje de éxito
     toastMessage.value = "Estado de la asignación actualizado correctamente";
     toastType.value = "success";
@@ -194,7 +196,7 @@ const onSearchInput = (event) => {
   if (searchTimeout.value) {
     clearTimeout(searchTimeout.value);
   }
-  
+
   // Establecer un nuevo timeout para aplicar la búsqueda después de 300ms
   searchTimeout.value = setTimeout(() => {
     searchQuery.value = event.target.value;
@@ -218,10 +220,10 @@ const handleFormAssigned = assignments => {
 const filteredForms = computed(() => {
   return forms.value.filter(form => {
     // Filtrar por búsqueda (título o descripción)
-    const searchMatch = searchQuery.value === "" || 
+    const searchMatch = searchQuery.value === "" ||
       (form.title && form.title.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
       (form.description && form.description.toLowerCase().includes(searchQuery.value.toLowerCase()));
-    
+
     // Filtrar por estado
     let stateMatch = true;
     if (selectedDivision.value !== "all") {
@@ -231,14 +233,14 @@ const filteredForms = computed(() => {
         stateMatch = form.status === 0;
       }
     }
-    
+
     // Filtrar por fecha
     let dateMatch = true;
     if (selectedDate.value !== "all" && form.date_limit) {
       const formDate = new Date(form.date_limit);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (selectedDate.value === "today") {
         // Filtrar solo los de hoy
         const tomorrow = new Date(today);
@@ -258,7 +260,7 @@ const filteredForms = computed(() => {
         dateMatch = formDate >= monthStart && formDate <= monthEnd;
       }
     }
-    
+
     return searchMatch && stateMatch && dateMatch;
   });
 });
@@ -292,7 +294,7 @@ const filteredForms = computed(() => {
           <div class="flex-1">
             <div class="relative">
               <input v-model="searchQuery" type="text" placeholder="Buscar formularis..."
-                class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 @input="onSearchInput" />
               <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -374,12 +376,10 @@ const filteredForms = computed(() => {
                       <UserGroupIcon class="w-4 h-4" />
                       <span>Assignar</span>
                     </button>
-                    <button 
-                      class="text-gray-400 hover:text-primary" 
+                    <button class="text-gray-400 hover:text-primary"
                       @click="updateFormStatus(form.id, form.status === 1 ? 0 : 1, form.course_id, form.division_id)"
                       :disabled="!form.course_id || !form.division_id"
-                      :title="!form.course_id || !form.division_id ? 'Este formulario no tiene asignación' : `Cambiar estado (${form.status === 1 ? 'desactivar' : 'activar'})`"
-                    >
+                      :title="!form.course_id || !form.division_id ? 'Este formulario no tiene asignación' : `Cambiar estado (${form.status === 1 ? 'desactivar' : 'activar'})`">
                       <!-- Cambiar el ícono dependiendo del estado del formulario -->
                       <component :is="form.status === 0 ? EyeIcon : EyeSlashIcon" class="w-5 h-5" />
                       <span class="sr-only">{{ form.status === 1 ? 'Desactivar' : 'Activar' }} formulario</span>

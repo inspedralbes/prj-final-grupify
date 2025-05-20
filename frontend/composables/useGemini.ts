@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ref } from 'vue';
+import { useRuntimeConfig } from '#app';
 
-const genAI = new GoogleGenerativeAI('AIzaSyC0NI-xnqWHJy-0XoJl7cVo63MYpqC1r9E');
+const config = useRuntimeConfig();
+const genAI = new GoogleGenerativeAI(config.public.geminiApiKey);
 
 export const useGemini = () => {
   const generating = ref(false);
@@ -11,6 +13,11 @@ export const useGemini = () => {
     try {
       generating.value = true;
       error.value = null;
+      
+      // Verificar que tenemos una API key
+      if (!config.public.geminiApiKey) {
+        throw new Error("Error de configuració: No s'ha trobat la clau d'API de Gemini");
+      }
       
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       
@@ -45,7 +52,22 @@ export const useGemini = () => {
       
       return text;
     } catch (e) {
-      error.value = e instanceof Error ? e.message : 'An error occurred';
+      console.error("Error al generar notes:", e);
+      
+      // Proporcionar mensajes de error específicos para errores comunes
+      if (e instanceof Error) {
+        const errorMsg = e.message;
+        if (errorMsg.includes("quota") || errorMsg.includes("429") || errorMsg.includes("exceeded")) {
+          error.value = "S'ha excedit la quota d'API de Gemini. Si us plau, intenta-ho més tard.";
+        } else if (errorMsg.includes("network") || errorMsg.includes("connection")) {
+          error.value = "Error de connexió amb l'API de Gemini. Comprova la teva connexió a Internet.";
+        } else {
+          error.value = errorMsg;
+        }
+      } else {
+        error.value = "S'ha produït un error inesperat en generar les notes.";
+      }
+      
       return null;
     } finally {
       generating.value = false;
