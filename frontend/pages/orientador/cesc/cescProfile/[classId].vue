@@ -1,6 +1,14 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
     <DashboardNavOrientador class="w-full sticky top-0 z-10" />
+    <RiskAlertPopup
+      v-model="showRiskAlert"
+      :aggressive-students="topAggressiveStudents"
+      :victim-students="topVictimStudents"
+      :rejected-students="topRejectedStudents"
+      @create-report="createPdfReport"
+      @view-student="viewStudent"
+    />
     <div class="cesc-results-container py-8 flex-1">
       <!-- Cabecera mejorada y centrada -->
       <div class="cesc-header">
@@ -484,6 +492,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Botón flotante para reabrir el popup de alerta -->
+    <button 
+      v-if="!showRiskAlert && (topAggressiveStudents.length > 0 || topVictimStudents.length > 0 || topRejectedStudents.length > 0)"
+      @click="showRiskAlert = true" 
+      class="fixed bottom-6 right-6 bg-gradient-to-r from-red-600 to-yellow-500 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all hover:scale-105 z-40 flex items-center"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <span class="font-medium">Alumnes en Risc</span>
+    </button>
   </div>
 </template>
 
@@ -494,6 +514,7 @@ import { useResultatCescStore } from "~/stores/resultatsCescStore";
 import { useStudentsStore } from "~/stores/studentsStore";
 import { useRoute } from "vue-router";
 import DashboardNavOrientador from "~/components/Orientador/DashboardNavOrientador.vue";
+import RiskAlertPopup from "~/components/CESC/RiskAlertPopup.vue";
 import VChart from 'vue-echarts';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
@@ -582,6 +603,7 @@ const selectedProfile = ref('Agressiu');
 const sortColumn = ref('fullName');
 const sortDirection = ref('asc');
 const showAlertModal = ref(false); // Control del modal de alerta
+const showRiskAlert = ref(false); // Control para el nuevo popup dinámico
 
 // Color combinations for tags
 const tagColors = [
@@ -755,6 +777,12 @@ const topRejectedStudents = computed(() => {
     .sort((a, b) => (b.tags['Rebutjat'] || 0) - (a.tags['Rebutjat'] || 0))
     .slice(0, 2);
 });
+
+// Función para ver los detalles de un estudiante
+const viewStudent = (student) => {
+  selectedStudent.value = student;
+  showRiskAlert.value = false; // Cerrar el popup de riesgo al abrir el modal de estudiante
+};
 
 // Función para crear un reporte PDF (placeholder - se puede implementar completamente después)
 const createPdfReport = () => {
@@ -1287,6 +1315,16 @@ onMounted(async () => {
         student.division === course.value.division.name
     );
     await resultatsCescStore.fetchResults();
+    
+    // Mostrar el popup de riesgo automáticamente después de un breve retraso
+    setTimeout(() => {
+      // Solo mostrar si hay algún estudiante en riesgo
+      if (topAggressiveStudents.value.length > 0 || 
+          topVictimStudents.value.length > 0 || 
+          topRejectedStudents.value.length > 0) {
+        showRiskAlert.value = true;
+      }
+    }, 1000); // Retraso de 1 segundo para permitir que la página se cargue primero
   } catch (err) {
     console.error("Error en carregar les dades:", err);
     error.value = "Error en carregar les dades";
@@ -1295,3 +1333,40 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style>
+/* Estilos para la página CESC Profile */
+.cesc-results-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.cesc-header, .cesc-visualization, .cesc-table-container, .cesc-results-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+/* Nuevas animaciones para el componente */
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes pulseScale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.flash-animation {
+  animation: flash 2s infinite;
+}
+
+.pulse-scale {
+  animation: pulseScale 2s infinite;
+}
+</style>
