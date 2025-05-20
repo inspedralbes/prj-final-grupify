@@ -260,6 +260,66 @@ export const useRelationshipsStore = defineStore("relationships", () => {
         total: totalStudents > 1 ? Math.sqrt(sumSquaredDiff.total / totalStudents) : 0
       };
 
+      // Verificar si hay al menos un voto para calcular las distribuciones
+      const hasAnyVotes = totals.total > 0;
+      
+      // Calcular distribuciones solo si hay votos, de lo contrario simular datos para no mostrar 0.00
+      const distributions = {
+        liderazgo: hasAnyVotes ? 
+          Object.values(skillsMap)
+            .map(s => ({ id: s.id, name: s.name, last_name: s.last_name, votes: s.liderazgo, 
+                       percentage: totals.liderazgo > 0 ? (s.liderazgo / totals.liderazgo) * 100 : 0 }))
+            .sort((a, b) => b.votes - a.votes)
+            .slice(0, 5) :
+          // Datos simulados para cuando no hay votos
+          studentIds.slice(0, 5).map(id => {
+            const student = studentsStore.students.find(s => s.id === id);
+            return { 
+              id: student?.id || 0, 
+              name: student?.name || 'Estudiante', 
+              last_name: student?.last_name || '', 
+              votes: 0, 
+              percentage: 0 
+            };
+          }),
+          
+        creatividad: hasAnyVotes ? 
+          Object.values(skillsMap)
+            .map(s => ({ id: s.id, name: s.name, last_name: s.last_name, votes: s.creatividad, 
+                       percentage: totals.creatividad > 0 ? (s.creatividad / totals.creatividad) * 100 : 0 }))
+            .sort((a, b) => b.votes - a.votes)
+            .slice(0, 5) :
+          // Datos simulados para cuando no hay votos
+          studentIds.slice(0, 5).map(id => {
+            const student = studentsStore.students.find(s => s.id === id);
+            return { 
+              id: student?.id || 0, 
+              name: student?.name || 'Estudiante', 
+              last_name: student?.last_name || '', 
+              votes: 0, 
+              percentage: 0 
+            };
+          }),
+            
+        organizacion: hasAnyVotes ? 
+          Object.values(skillsMap)
+            .map(s => ({ id: s.id, name: s.name, last_name: s.last_name, votes: s.organizacion, 
+                       percentage: totals.organizacion > 0 ? (s.organizacion / totals.organizacion) * 100 : 0 }))
+            .sort((a, b) => b.votes - a.votes)
+            .slice(0, 5) :
+          // Datos simulados para cuando no hay votos
+          studentIds.slice(0, 5).map(id => {
+            const student = studentsStore.students.find(s => s.id === id);
+            return { 
+              id: student?.id || 0, 
+              name: student?.name || 'Estudiante', 
+              last_name: student?.last_name || '', 
+              votes: 0, 
+              percentage: 0 
+            };
+          })
+      };
+
       // Identificar estudiantes destacados (por encima del umbral * desviación estándar)
       const highlightedStudents = Object.values(skillsMap)
         .map(student => {
@@ -285,6 +345,42 @@ export const useRelationshipsStore = defineStore("relationships", () => {
           };
         })
         .filter(student => student.isHighlighted);
+        
+      // Calcular índices de variación y concentración
+      let coeficienteVariacion = {
+        liderazgo: mediasReales.liderazgo > 0 ? stdDevs.liderazgo / mediasReales.liderazgo : 0,
+        creatividad: mediasReales.creatividad > 0 ? stdDevs.creatividad / mediasReales.creatividad : 0,
+        organizacion: mediasReales.organizacion > 0 ? stdDevs.organizacion / mediasReales.organizacion : 0
+      };
+      
+      // Calcular índices de concentración (Herfindahl-Hirschman)
+      let indiceConcentracion = {
+        liderazgo: 0,
+        creatividad: 0,
+        organizacion: 0
+      };
+      
+      // Solo calcular si hay votos
+      if (totals.liderazgo > 0) {
+        indiceConcentracion.liderazgo = Object.values(skillsMap).reduce((sum, student) => {
+          const percentage = student.liderazgo / totals.liderazgo;
+          return sum + (percentage * percentage);
+        }, 0);
+      }
+      
+      if (totals.creatividad > 0) {
+        indiceConcentracion.creatividad = Object.values(skillsMap).reduce((sum, student) => {
+          const percentage = student.creatividad / totals.creatividad;
+          return sum + (percentage * percentage);
+        }, 0);
+      }
+      
+      if (totals.organizacion > 0) {
+        indiceConcentracion.organizacion = Object.values(skillsMap).reduce((sum, student) => {
+          const percentage = student.organizacion / totals.organizacion;
+          return sum + (percentage * percentage);
+        }, 0);
+      }
 
       // Información sobre las medias y destacados
       return {
@@ -296,7 +392,10 @@ export const useRelationshipsStore = defineStore("relationships", () => {
         hasHighlighted: highlightedStudents.length > 0,
         students: highlightedStudents,
         allStudents: Object.values(skillsMap), // Todos los estudiantes con sus puntuaciones
-        studentsWithVotes   // Nueva tabla con los votos de cada alumno
+        studentsWithVotes,   // Tabla con los votos de cada alumno
+        distributions,      // Distribución de votos para los 5 mejores estudiantes
+        coeficienteVariacion, // Coeficiente de variación
+        indiceConcentracion  // Índice de concentración (HHI)
       };
     });
   };
@@ -435,8 +534,52 @@ export const useRelationshipsStore = defineStore("relationships", () => {
       return [];
     }
 
-    // Obtener cursos y divisiones únicos
-    const uniqueCourses = [...new Set(studentsStore.students.map(s => s.course))];
+    // Determinar el nivel educativo del orientador (ESO o Bachillerato)
+    // Obtener el usuario actual del localStorage
+    let nivelEducativo = 'eso'; // Por defecto, asumimos ESO
+    
+    try {
+      const userString = localStorage.getItem('user');
+      if (userString) {
+        const user = JSON.parse(userString);
+        
+        // Verificar si hay cursos asignados al orientador
+        if (user && user.course_divisions && user.course_divisions.length > 0) {
+          // Buscar si hay algún curso de bachillerato
+          const hasBachillerato = user.course_divisions.some(cd => {
+            const courseName = cd.course_name.toLowerCase();
+            return courseName.includes('batx') || courseName.includes('bachiller');
+          });
+          
+          if (hasBachillerato) {
+            nivelEducativo = 'bachillerato';
+          }
+        }
+        
+        console.log('Nivel educativo del orientador:', nivelEducativo);
+      }
+    } catch (error) {
+      console.error('Error al determinar nivel educativo:', error);
+    }
+
+    // Obtener cursos y divisiones únicos filtrados por nivel educativo
+    let uniqueCourses = [...new Set(studentsStore.students.map(s => s.course))];
+    
+    // Filtrar los cursos según el nivel educativo del orientador
+    uniqueCourses = uniqueCourses.filter(courseName => {
+      if (!courseName) return false;
+      
+      const courseNameLower = courseName.toLowerCase();
+      if (nivelEducativo === 'eso') {
+        return courseNameLower.includes('eso');
+      } else if (nivelEducativo === 'bachillerato') {
+        return courseNameLower.includes('batx') || courseNameLower.includes('bachiller');
+      }
+      
+      return true; // Si no hay filtro, mostrar todos
+    });
+    
+    console.log('Cursos filtrados por nivel educativo:', uniqueCourses);
 
     // Para cada curso y división, obtener los datos destacados
     uniqueCourses.forEach(courseName => {

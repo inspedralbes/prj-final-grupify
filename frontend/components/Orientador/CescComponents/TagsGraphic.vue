@@ -109,7 +109,7 @@
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-gray-500">Total de classes</p>
-              <p class="text-xl font-bold text-gray-800">{{ graphData.length }}</p>
+              <p class="text-xl font-bold text-gray-800">{{ graphData.filter(item => !item.is_metadata).length }}</p>
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm">
               <p class="text-sm text-gray-500">Total d'estudiants</p>
@@ -288,7 +288,16 @@ const studentsCoverage = ref(0); // Porcentaje de cobertura de los 5 estudiantes
 
 // Calcular estadísticas totales
 const totalStudents = computed(() => {
-  return graphData.value.reduce((sum, item) => sum + item.total_students, 0);
+  // Primero buscamos si hay un registro de metadatos
+  const metadataItem = graphData.value.find(item => item.is_metadata === true);
+  
+  if (metadataItem) {
+    // Si hay metadatos, usamos el total_students de ese registro
+    return metadataItem.total_students;
+  } else {
+    // Si no hay metadatos, sumamos los total_students de todos los registros
+    return graphData.value.reduce((sum, item) => sum + item.total_students, 0);
+  }
 });
 
 const totalPopular = computed(() => {
@@ -854,9 +863,12 @@ const fetchData = async () => {
 
     const data = await response.json();
     console.log('Datos recibidos:', data);
-    graphData.value = data;
+    
+    // Filtrar los metadatos antes de asignarlos a graphData
+    const filteredData = data.filter(item => !item.is_metadata);
+    graphData.value = filteredData;
 
-    if (data.length === 0) {
+    if (filteredData.length === 0) {
       error.value = "No hay datos disponibles para mostrar";
     }
   } catch (err) {
