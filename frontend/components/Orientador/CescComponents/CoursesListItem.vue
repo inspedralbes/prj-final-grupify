@@ -93,8 +93,5 @@ const analyzeWithAI = async (course) => {
         <EyeIcon class="w-5 h-5" />
       </button>
     </td>
-    <td>
-      <button @click="analyzeWithAI(course)">Analitzar IA</button>
-    </td>
   </tr>
 </template>

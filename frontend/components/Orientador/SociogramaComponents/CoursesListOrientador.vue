@@ -21,7 +21,6 @@ const props = defineProps({
             <th class="text-left py-3">Curs</th>
             <th class="text-left py-3">Divisió</th>
             <th class="text-left py-3">Resultats</th>
-            <th class="text-left py-3">Accions</th>
           </tr>
         </thead>
         <tbody>

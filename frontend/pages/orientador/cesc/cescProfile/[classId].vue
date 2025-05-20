@@ -1296,6 +1296,7 @@ const groupedResults = computed(() => {
     groupedByStudent[fullName].tags[item.tag_name] = item.vote_count;
   });
   
+  console.log("Resultados agrupados:", Object.values(groupedByStudent));
   return Object.values(groupedByStudent);
 });
 

@@ -291,4 +291,185 @@ class CescRelationshipController extends Controller
             return response()->json(['message' => 'Error al guardar las relaciones: ' . $e->getMessage()], 500);
         }
     }
+    
+    /**
+     * Obtener los resultados de CESC para todos los estudiantes.
+     * 
+     * Este método retorna los resultados agrupados por estudiante y etiqueta.
+     */
+    public function verResultados()
+    {
+        try {
+            // Obtener todas las relaciones CESC con sus respectivas etiquetas
+            $relationships = CescRelationship::with(['peer', 'tag'])
+                ->whereHas('peer') // Asegurarse de que el peer exista
+                ->whereHas('tag')  // Asegurarse de que la etiqueta exista
+                ->get();
+            
+            if ($relationships->isEmpty()) {
+                return response()->json([
+                    'message' => 'No hay resultados CESC disponibles',
+                    'data' => []
+                ], 200);
+            }
+            
+            // Agrupar resultados por peer_id y tag_id para contar menciones
+            $results = [];
+            foreach ($relationships as $rel) {
+                $peerId = $rel->peer_id;
+                $tagId = $rel->tag_id;
+                
+                // Inicializar si no existe
+                if (!isset($results[$peerId])) {
+                    $results[$peerId] = [
+                        'peer_id' => $peerId,
+                        'peer_name' => $rel->peer ? $rel->peer->name : 'Desconocido',
+                        'peer_last_name' => $rel->peer ? $rel->peer->last_name : '',
+                        'tags' => []
+                    ];
+                }
+                
+                // Incrementar contador para este tag
+                if (!isset($results[$peerId]['tags'][$tagId])) {
+                    $results[$peerId]['tags'][$tagId] = [
+                        'tag_id' => $tagId,
+                        'tag_name' => $rel->tag ? $rel->tag->name : 'Desconocido',
+                        'count' => 1
+                    ];
+                } else {
+                    $results[$peerId]['tags'][$tagId]['count']++;
+                }
+            }
+            
+            // Formatear resultados para la respuesta final
+            $formattedResults = [];
+            foreach ($results as $result) {
+                foreach ($result['tags'] as $tag) {
+                    $formattedResults[] = [
+                        'peer_id' => $result['peer_id'],
+                        'peer_name' => $result['peer_name'],
+                        'peer_last_name' => $result['peer_last_name'],
+                        'tag_id' => $tag['tag_id'],
+                        'tag_name' => $tag['tag_name'],
+                        'vote_count' => $tag['count'] // Renombrar 'count' a 'vote_count' para compatibilidad
+                    ];
+                }
+            }
+            
+            return response()->json($formattedResults, 200);
+            
+        } catch (\Exception $e) {
+            // Log del error
+            \Log::error('Error al obtener resultados CESC: ' . $e->getMessage());
+            
+            // Retornar error
+            return response()->json([
+                'message' => 'Error al obtener resultados CESC',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Obtener los resultados de CESC para un curso y división específicos.
+     */
+    public function verResultadosPorGrupo($id)
+    {
+        try {
+            // Extraer course_id y division_id de la string $id (formato esperado: "course_id-division_id")
+            $parts = explode('-', $id);
+            if (count($parts) != 2) {
+                return response()->json([
+                    'message' => 'Formato de ID inválido. Use "course_id-division_id"'
+                ], 400);
+            }
+            
+            $courseId = $parts[0];
+            $divisionId = $parts[1];
+            
+            // Obtener los students_ids en este curso y división
+            $studentIds = DB::table('course_division_user')
+                ->where('course_id', $courseId)
+                ->where('division_id', $divisionId)
+                ->whereIn('role_id', [3, 4]) // Roles de estudiante (ajustar según la estructura)
+                ->pluck('user_id')
+                ->toArray();
+            
+            if (empty($studentIds)) {
+                return response()->json([
+                    'message' => 'No hay estudiantes en este curso y división',
+                    'data' => []
+                ], 200);
+            }
+            
+            // Obtener relaciones CESC donde los peers estén en la lista de students_ids
+            $relationships = CescRelationship::with(['peer', 'tag'])
+                ->whereIn('peer_id', $studentIds)
+                ->whereHas('peer')
+                ->whereHas('tag')
+                ->get();
+            
+            if ($relationships->isEmpty()) {
+                return response()->json([
+                    'message' => 'No hay resultados CESC disponibles para este grupo',
+                    'data' => []
+                ], 200);
+            }
+            
+            // Agrupar resultados por peer_id y tag_id para contar menciones
+            $results = [];
+            foreach ($relationships as $rel) {
+                $peerId = $rel->peer_id;
+                $tagId = $rel->tag_id;
+                
+                // Inicializar si no existe
+                if (!isset($results[$peerId])) {
+                    $results[$peerId] = [
+                        'peer_id' => $peerId,
+                        'peer_name' => $rel->peer ? $rel->peer->name : 'Desconocido',
+                        'peer_last_name' => $rel->peer ? $rel->peer->last_name : '',
+                        'tags' => []
+                    ];
+                }
+                
+                // Incrementar contador para este tag
+                if (!isset($results[$peerId]['tags'][$tagId])) {
+                    $results[$peerId]['tags'][$tagId] = [
+                        'tag_id' => $tagId,
+                        'tag_name' => $rel->tag ? $rel->tag->name : 'Desconocido',
+                        'count' => 1
+                    ];
+                } else {
+                    $results[$peerId]['tags'][$tagId]['count']++;
+                }
+            }
+            
+            // Formatear resultados para la respuesta final
+            $formattedResults = [];
+            foreach ($results as $result) {
+                foreach ($result['tags'] as $tag) {
+                    $formattedResults[] = [
+                        'peer_id' => $result['peer_id'],
+                        'peer_name' => $result['peer_name'],
+                        'peer_last_name' => $result['peer_last_name'],
+                        'tag_id' => $tag['tag_id'],
+                        'tag_name' => $tag['tag_name'],
+                        'vote_count' => $tag['count'] // Renombrar 'count' a 'vote_count' para compatibilidad
+                    ];
+                }
+            }
+            
+            return response()->json($formattedResults, 200);
+            
+        } catch (\Exception $e) {
+            // Log del error
+            \Log::error('Error al obtener resultados CESC por grupo: ' . $e->getMessage());
+            
+            // Retornar error
+            return response()->json([
+                'message' => 'Error al obtener resultados CESC por grupo',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
