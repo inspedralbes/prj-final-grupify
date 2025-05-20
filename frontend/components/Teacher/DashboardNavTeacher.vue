@@ -22,7 +22,7 @@ const menuItemsConfig = [
   },
   {
     type: "dropdown",
-    id: "formularis", // Añadimos un ID único para cada desplegable
+    id: "formularis",
     title: "Formularis",
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     items: [
@@ -32,12 +32,6 @@ const menuItemsConfig = [
         icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
         showFor: ['profesor', 'tutor', 'admin'],
       },
-      // {
-      //   title: "Cesc",
-      //   route: "/professor/cesc/CescView",
-      //   icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
-      //   showFor: ['orientador', 'admin'],
-      // }
       {
         title: "Cesc",
         route: "/professor/cesc/CescView",
@@ -58,11 +52,6 @@ const menuItemsConfig = [
     title: "Gràfiques",
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     items: [
-      // {
-      //   title: "Cesc",
-      //   route: "/professor/graficas",
-      //   icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-      // },
       {
         title: "CESC",
         route: "/orientador/cesc/comparative",
@@ -82,7 +71,6 @@ const menuItemsConfig = [
       }
     ]
   },
-
   {
     title: "Xat IA",
     route: "http://localhost:8501",
@@ -95,45 +83,19 @@ const menuItemsConfig = [
   },
 ];
 
-// Filtrar los elementos del menú según el rol del usuario
+// El resto del código del componente se mantiene igual hasta el template
+
 const menuItems = computed(() => {
-  // Asegurarnos de inicializar el authStore antes de acceder a los datos
   if (authStore.token && (!authStore.user || !authStore.user.role)) {
-    console.log("NavTeacher: authStore not initialized, initializing...");
     authStore.initialize();
   }
 
-  const userRole = authStore.userRole;
-  console.log("NavTeacher: User role for menu filtering:", userRole);
-
-  // Si no hay rol, intentar cargar desde localStorage
-  if (!userRole && authStore.token) {
-    console.log("NavTeacher: No role detected, trying localStorage...");
-    try {
-      const userString = localStorage.getItem("user");
-      if (userString) {
-        const user = JSON.parse(userString);
-        console.log("NavTeacher: User from localStorage:", user?.role?.name);
-        if (user && user.role && user.role.name) {
-          // Forzar la actualización del authStore
-          authStore.user = user;
-        }
-      }
-    } catch (e) {
-      console.error("NavTeacher: Error loading user from localStorage:", e);
-    }
-  }
-
-  // Obtener el rol, potencialmente actualizado
   const effectiveRole = authStore.userRole ||
     (authStore.user?.role?.name) ||
     JSON.parse(localStorage.getItem("user") || "{}")?.role?.name ||
-    'profesor'; // Fallback
-
-  console.log("NavTeacher: Effective role for menu:", effectiveRole);
+    'profesor';
 
   return menuItemsConfig.map(item => {
-    // Si es un menú desplegable, filtramos sus elementos
     if (item.type === 'dropdown') {
       return {
         ...item,
@@ -142,7 +104,6 @@ const menuItems = computed(() => {
         )
       };
     }
-    // Si es un elemento normal, lo devolvemos tal cual
     return item;
   });
 });
@@ -150,6 +111,7 @@ const menuItems = computed(() => {
 const router = useRouter();
 const route = useRoute();
 
+// Resto de funciones del componente...
 const goHome = () => {
   const userString = localStorage.getItem("user");
   if (!userString) {
@@ -159,60 +121,36 @@ const goHome = () => {
 
   try {
     const user = JSON.parse(userString);
-    console.log("User desde navteacher:", user);
-
-    if (user && user.role && user.role.name) {
-      // console.log("Role name:", user.role.name);
-
-      if (user.role.name === "orientador") {
-        router.push("/orientador/dashboard");
-        return;
-      }
-      if (user.role.name === "profesor") {
-        router.push("/professor/dashboard");
-        return;
-      }
-      if (user.role.name === "tutor") {
-        router.push("/tutor/dashboard");
-        return;
-      }
+    if (user?.role?.name === "orientador") {
+      router.push("/orientador/dashboard");
+    } else if (user?.role?.name === "profesor") {
+      router.push("/professor/dashboard");
+    } else if (user?.role?.name === "tutor") {
+      router.push("/tutor/dashboard");
     } else {
-      console.error("La estructura del objeto usuario no es la esperada:", user);
+      router.push("/professor/dashboard");
     }
   } catch (error) {
     console.error("Error al parsear el usuario desde localStorage:", error);
     router.push("/login");
-    return;
   }
-
-  // Por defecto, si no se ha detectado un rol específico
-  router.push("/professor/dashboard");
 };
 
 const isActiveRoute = itemRoute => route.path === itemRoute;
-
-// Nueva función para manejar cada desplegable individualmente
 const toggleDropdown = (dropdownId, event) => {
-  // Cerrar todos los otros desplegables
   for (const key in openDropdowns.value) {
     if (key !== dropdownId) {
       openDropdowns.value[key] = false;
     }
   }
-  // Toggle el desplegable actual
   openDropdowns.value[dropdownId] = !openDropdowns.value[dropdownId];
 };
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
-  isMobileFormsOpen.value = false; // Cerrar el menú desplegable al abrir/cerrar el menú móvil
+  isMobileFormsOpen.value = false;
 };
 
-const toggleMobileForms = () => {
-  isMobileFormsOpen.value = !isMobileFormsOpen.value;
-};
-
-// Cerrar todos los desplegables cuando se hace clic fuera
 const closeDropdowns = (event) => {
   if (!event.target.closest('.dropdown-container')) {
     for (const key in openDropdowns.value) {
@@ -223,21 +161,7 @@ const closeDropdowns = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', closeDropdowns);
-
-  // Inicializar el authStore para asegurar que los datos del usuario estén cargados
   authStore.initialize();
-
-  // Verificar y mostrar información del rol para depuración
-  if (authStore.user && authStore.user.role) {
-    console.log("Rol de usuario en NavTeacher:", authStore.user.role.name);
-  } else {
-    console.log("Usuario o rol no disponible en NavTeacher, cargando desde localStorage");
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const user = JSON.parse(userData);
-      console.log("Datos de usuario desde localStorage:", user);
-    }
-  }
 });
 
 onUnmounted(() => {
@@ -262,20 +186,27 @@ onUnmounted(() => {
         <div class="hidden md:flex space-x-1">
           <template v-for="item in menuItems" :key="item.title">
             <!-- Menú normal -->
-            <component v-if="!item.type" :is="item.route.startsWith('http') ? 'a' : 'NuxtLink'"
-              :to="!item.route.startsWith('http') ? item.route : undefined"
-              :href="item.route.startsWith('http') ? item.route : undefined" target="_blank" rel="noopener noreferrer"
-              class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
-              :class="[
-                isActiveRoute(item.route)
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-50 hover:bg-blue-600 hover:text-white',
-              ]">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
-              </svg>
-              <span>{{ item.title }}</span>
-            </component>
+            <template v-if="!item.type">
+              <NuxtLink v-if="!item.route.startsWith('http')" :to="item.route"
+                class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
+                :class="[
+                  isActiveRoute(item.route)
+                    ? 'bg-blue-700 text-white'
+                    : 'text-blue-50 hover:bg-blue-600 hover:text-white',
+                ]">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                </svg>
+                <span>{{ item.title }}</span>
+              </NuxtLink>
+              <a v-else :href="item.route" target="_blank" rel="noopener noreferrer"
+                class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200 text-blue-50 hover:bg-blue-600 hover:text-white">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                </svg>
+                <span>{{ item.title }}</span>
+              </a>
+            </template>
 
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative dropdown-container">
@@ -293,7 +224,7 @@ onUnmounted(() => {
                 </svg>
               </button>
 
-              <!-- Menú desplegable mejorado -->
+              <!-- Menú desplegable -->
               <div v-show="openDropdowns[item.id]"
                 class="absolute z-10 right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top transition-all duration-200">
                 <div class="py-2 divide-y divide-gray-100">
@@ -328,13 +259,17 @@ onUnmounted(() => {
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <template v-for="item in menuItems" :key="item.title">
             <!-- Menú normal -->
-            <component v-if="!item.type" :is="item.route.startsWith('http') ? 'a' : 'NuxtLink'"
-              :to="!item.route.startsWith('http') ? item.route : undefined"
-              :href="item.route.startsWith('http') ? item.route : undefined" target="_blank" rel="noopener noreferrer"
-              class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
-              :class="{ 'bg-blue-700': isActiveRoute(item.route) }">
-              {{ item.title }}
-            </component>
+            <template v-if="!item.type">
+              <NuxtLink v-if="!item.route.startsWith('http')" :to="item.route"
+                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
+                :class="{ 'bg-blue-700': isActiveRoute(item.route) }">
+                {{ item.title }}
+              </NuxtLink>
+              <a v-else :href="item.route" target="_blank" rel="noopener noreferrer"
+                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600">
+                {{ item.title }}
+              </a>
+            </template>
 
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative">
@@ -349,7 +284,7 @@ onUnmounted(() => {
                 </svg>
               </button>
 
-              <!-- Menú desplegable mejorado -->
+              <!-- Menú desplegable -->
               <div v-show="openDropdowns[item.id]" class="pl-4">
                 <NuxtLink v-for="subItem in item.items" :key="subItem.title" :to="subItem.route"
                   class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
