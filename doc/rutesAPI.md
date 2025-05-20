@@ -21,11 +21,11 @@ El backend de Grupify exposa una API RESTful que segueix les convencions HTTP es
 
 | Endpoint | Metode | Descripcio | Requereix autenticacio |
 |:---------|:------:|:-----------|:----------------------:|
-| `/api/login` | `POST` | Inici de sessio d'usuari | No L |
-| `/api/register` | `POST` | Registre d'usuari | No L |
+| `/api/login` | `POST` | Inici de sessio d'usuari | No  |
+| `/api/register` | `POST` | Registre d'usuari | No  |
 | `/api/logout` | `POST` | Tancament de sessio de l'usuari | Si  |
 | `/api/user` | `GET` | Obten un usuari autenticat | Si  |
-| `/api/google-login` | `POST` | Inicia la sessio amb Google | No L |
+| `/api/google-login` | `POST` | Inicia la sessio amb Google | No  |
 
 ---
 
@@ -50,8 +50,8 @@ El backend de Grupify exposa una API RESTful que segueix les convencions HTTP es
 
 | Endpoint | Metode | Descripcio | Requereix auth | Rols permesos |
 |:---------|:------:|:-----------|:-------------:|:--------------|
-| `/api/roles` | `GET` | Llistar tots els rols | No L | Tots |
-| `/api/roles/{id}` | `GET` | Obtenir un rol especific | No L | Tots |
+| `/api/roles` | `GET` | Llistar tots els rols | No  | Tots |
+| `/api/roles/{id}` | `GET` | Obtenir un rol especific | No  | Tots |
 | `/api/roles` | `POST` | Crear un rol | Si  | admin |
 | `/api/roles/{id}` | `PUT` | Actualitzar un rol | Si  | admin |
 | `/api/roles/{id}` | `DELETE` | Eliminar un rol | Si  | admin |
@@ -185,17 +185,17 @@ El backend de Grupify exposa una API RESTful que segueix les convencions HTTP es
 
 ---
 
-## 11. Rutes de Bitacola
+## 11. Rutes de Bitacora
 
 | Endpoint | Metode | Descripcio | Requereix auth |
 |:---------|:------:|:-----------|:-------------:|
-| `/api/bitacoras` | `GET` | Obtenir totes les bitacoles | Si  |
-| `/api/bitacoras` | `POST` | Crear una bitacola | Si  |
-| `/api/bitacoras/{id}` | `GET` | Obtenir una bitacola especifica | Si  |
-| `/api/bitacoras/{id}` | `PUT` | Actualitzar una bitacola | Si  |
-| `/api/bitacoras/{id}` | `DELETE` | Eliminar una bitacola | Si  |
-| `/api/bitacoras/{bitacoraId}/notes` | `GET` | Obtenir notes d'una bitacola | Si  |
-| `/api/bitacoras/{bitacoraId}/notes` | `POST` | Afegir nota a una bitacola | Si  |
+| `/api/bitacoras` | `GET` | Obtenir totes les bitacores | Si  |
+| `/api/bitacoras` | `POST` | Crear una bitacora | Si  |
+| `/api/bitacoras/{id}` | `GET` | Obtenir una bitacora especifica | Si  |
+| `/api/bitacoras/{id}` | `PUT` | Actualitzar una bitacora | Si  |
+| `/api/bitacoras/{id}` | `DELETE` | Eliminar una bitacora | Si  |
+| `/api/bitacoras/{bitacoraId}/notes` | `GET` | Obtenir notes d'una bitacora | Si  |
+| `/api/bitacoras/{bitacoraId}/notes` | `POST` | Afegir nota a una bitacora | Si  |
 | `/api/bitacoras/{bitacoraId}/notes/{noteId}` | `GET` | Obtenir una nota especifica | Si  |
 | `/api/bitacoras/{bitacoraId}/notes/{noteId}` | `PUT` | Actualitzar una nota | Si  |
 | `/api/bitacoras/{bitacoraId}/notes/{noteId}` | `DELETE` | Eliminar una nota | Si  |
