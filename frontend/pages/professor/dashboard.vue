@@ -74,7 +74,7 @@ const allMenuItems = [
   {
     title: "Xat IA",
     icon: "M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z",
-    route: "/professor/assistent",
+    route: "http://localhost:8501",
     requiredPermission: null,
     description: "Assistència intel·ligent per a professors"
   },
@@ -632,7 +632,14 @@ const getCurrentDate = () => {
             </div>
             <div class="p-6">
               <div class="grid grid-cols-1 gap-2">
-                <NuxtLink v-for="item in menuItems" :key="item.title" :to="item.route"
+                <component
+                  v-for="item in menuItems" 
+                  :key="item.title" 
+                  :is="item.route.startsWith('http') ? 'a' : 'NuxtLink'"
+                  :to="!item.route.startsWith('http') ? item.route : undefined"
+                  :href="item.route.startsWith('http') ? item.route : undefined"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   class="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
                   <svg class="h-5 w-5 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
@@ -641,7 +648,7 @@ const getCurrentDate = () => {
                     <span class="text-sm font-medium text-gray-800">{{ item.title }}</span>
                     <p class="text-xs text-gray-500">{{ item.description }}</p>
                   </div>
-                </NuxtLink>
+                </component>
               </div>
             </div>
           </div>
