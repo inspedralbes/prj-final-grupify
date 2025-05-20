@@ -101,8 +101,8 @@
           <!-- Team Member 1 -->
           <div class="text-center group">
             <div class="relative inline-block mb-4">
-              <div class="w-32 h-32 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-full flex items-center justify-center text-white text-2xl font-bold group-hover:scale-110 transition-transform duration-300">
-                LB
+              <div class="w-32 h-32 rounded-full overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                <img src="/img/lucas.jpg" alt="Lucas Benitez" class="w-full h-full object-cover" />
               </div>
               <div class="absolute bottom-0 right-0 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
             </div>
@@ -114,8 +114,8 @@
           <!-- Team Member 2 -->
           <div class="text-center group">
             <div class="relative inline-block mb-4">
-              <div class="w-32 h-32 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-full flex items-center justify-center text-white text-2xl font-bold group-hover:scale-110 transition-transform duration-300">
-                AP
+              <div class="w-32 h-32 rounded-full overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                <img src="/img/ara.jpg" alt="Araceli Pacheco" class="w-full h-full object-cover" />
               </div>
               <div class="absolute bottom-0 right-0 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
             </div>
@@ -127,8 +127,8 @@
           <!-- Team Member 3 -->
           <div class="text-center group">
             <div class="relative inline-block mb-4">
-              <div class="w-32 h-32 bg-gradient-to-br from-purple-200 to-blue-200 rounded-full flex items-center justify-center text-white text-2xl font-bold group-hover:scale-110 transition-transform duration-300">
-                JN
+              <div class="w-32 h-32 rounded-full overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                <img src="/img/jos.jpg" alt="Joselyn Ninahuaman" class="w-full h-full object-cover" />
               </div>
               <div class="absolute bottom-0 right-0 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
             </div>
@@ -140,8 +140,8 @@
           <!-- Team Member 4 -->
           <div class="text-center group">
             <div class="relative inline-block mb-4">
-              <div class="w-32 h-32 bg-gradient-to-br from-purple-200 to-blue-200 rounded-full flex items-center justify-center text-white text-2xl font-bold group-hover:scale-110 transition-transform duration-300">
-                AM
+              <div class="w-32 h-32 rounded-full overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                <img src="/img/ale.jpg" alt="Aleiram Minaya" class="w-full h-full object-cover" />
               </div>
               <div class="absolute bottom-0 right-0 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
             </div>
@@ -153,8 +153,8 @@
           <!-- Team Member 5 -->
           <div class="text-center group">
             <div class="relative inline-block mb-4">
-              <div class="w-32 h-32 bg-gradient-to-br from-purple-200 to-blue-200 rounded-full flex items-center justify-center text-white text-2xl font-bold group-hover:scale-110 transition-transform duration-300">
-                AE
+              <div class="w-32 h-32 rounded-full overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                <img src="/img/adri.jpg" alt="Adrian Estevez" class="w-full h-full object-cover" />
               </div>
               <div class="absolute bottom-0 right-0 w-8 h-8 bg-green-500 rounded-full border-4 border-white"></div>
             </div>
@@ -168,9 +168,6 @@
   </div>
 </template>
 
-<script setup>
-// This component doesn't need reactive state or methods
-</script>
 
 <style scoped>
 /* Timeline connector line */
@@ -201,5 +198,15 @@
 
 .group:hover .relative {
   animation: float 3s ease-in-out infinite;
+}
+
+/* Avatar image styles */
+.rounded-full.overflow-hidden img {
+  object-position: center;
+  transition: transform 0.5s ease;
+}
+
+.group:hover .rounded-full.overflow-hidden img {
+  transform: scale(1.05);
 }
 </style>
