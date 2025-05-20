@@ -4,8 +4,8 @@ import { useCoursesStore } from "~/stores/coursesStore";
 import { useRelationshipsStore } from "~/stores/relationships"; 
 import { useStudentsStore } from "~/stores/studentsStore";
 import { useAuthStore } from "~/stores/authStore";
-import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
-import CourseFilter from "@/components/Teacher/SociogramaComponents/CourseFilterComponent.vue"; // Importar el nuevo componente
+import DashboardNavOrientador from "@/components/Orientador/DashboardNavOrientador.vue";
+import CourseFilter from "@/components/Orientador/SociogramaComponents/CourseFilterComponent.vue"; // Usar el componente del Orientador
 import { use } from "echarts/core";
 import { CanvasRenderer } from "echarts/renderers";
 import { BarChart, RadarChart } from "echarts/charts";
@@ -18,7 +18,6 @@ import {
 } from "echarts/components";
 import VChart from "vue-echarts";
 import { useRouter } from "vue-router";
-import DashboardNavOrientador from "~/components/Orientador/DashboardNavOrientador.vue";
 
 // Registrar componentes de ECharts
 use([
