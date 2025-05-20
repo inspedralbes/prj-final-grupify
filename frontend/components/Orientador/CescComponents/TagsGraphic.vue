@@ -3,7 +3,7 @@
     <!-- Pantalla de carga -->
     <div v-if="isLoading" class="flex flex-col justify-center items-center h-64 bg-white rounded-xl shadow-md p-8">
       <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#00ADEC] mb-4"></div>
-      <p class="text-gray-600 font-medium">Cargando datos...</p>
+      <p class="text-gray-600 font-medium">Carregant dades...</p>
     </div>
 
     <!-- Mensaje de error -->
@@ -11,7 +11,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
       </svg>
-      <h3 class="text-lg font-semibold mb-2">Error al cargar los datos</h3>
+      <h3 class="text-lg font-semibold mb-2">Error en carregar les dades</h3>
       <p>{{ error }}</p>
     </div>
 
@@ -44,7 +44,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-green-800 text-lg">Popular (A)</h3>
-            <p class="text-green-600 mt-1">Estudiantes que son populares entre sus compañeros. Tienen buena aceptación social en el grupo.</p>
+            <p class="text-green-600 mt-1">Estudiants que són populars entre els seus companys. Tenen bona acceptació social al grup.</p>
           </div>
         </div>
 
@@ -57,7 +57,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-blue-800 text-lg">Rebutjat (C)</h3>
-            <p class="text-blue-600 mt-1">Estudiantes que son rechazados por sus compañeros. Identificar estos casos es crucial para mejorar la integración social.</p>
+            <p class="text-blue-600 mt-1">Estudiants que són rebutjats pels seus companys. Identificar aquests casos és crucial per millorar la integració social.</p>
           </div>
         </div>
 
@@ -70,7 +70,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-red-800 text-lg">Agressiu (B)</h3>
-            <p class="text-red-600 mt-1">Estudiantes que muestran comportamientos agresivos hacia otros. Necesitan atención para mejorar su interacción social.</p>
+            <p class="text-red-600 mt-1">Estudiants que mostren comportaments agressius cap a altres. Necessiten atenció per millorar la seva interacció social.</p>
           </div>
         </div>
 
@@ -83,7 +83,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-purple-800 text-lg">Prosocial (A)</h3>
-            <p class="text-purple-600 mt-1">Estudiantes que muestran comportamientos positivos y de ayuda hacia los demás. Son un activo valioso para el clima de clase.</p>
+            <p class="text-purple-600 mt-1">Estudiants que mostren comportaments positius i d'ajuda cap als altres. Són un actiu valuós per al clima de classe.</p>
           </div>
         </div>
 
@@ -97,7 +97,7 @@
           </div>
           <div>
             <h3 class="font-semibold text-amber-800 text-lg">Víctima (C)</h3>
-            <p class="text-amber-600 mt-1">Estudiantes que son víctimas de comportamientos negativos. Requieren atención y apoyo para prevenir problemas de bienestar emocional.</p>
+            <p class="text-amber-600 mt-1">Estudiants que són víctimes de comportaments negatius. Requereixen atenció i suport per prevenir problemes de benestar emocional.</p>
           </div>
         </div>
       </div>
@@ -105,14 +105,14 @@
       <!-- Estadísticas generales -->
       <div class="px-6 pb-4">
         <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-          <h3 class="font-semibold text-gray-700 mb-2">Estadísticas generales</h3>
+          <h3 class="font-semibold text-gray-700 mb-2">Estadístiques generals</h3>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div class="bg-white p-3 rounded-lg shadow-sm">
-              <p class="text-sm text-gray-500">Total de clases</p>
+              <p class="text-sm text-gray-500">Total de classes</p>
               <p class="text-xl font-bold text-gray-800">{{ graphData.length }}</p>
             </div>
             <div class="bg-white p-3 rounded-lg shadow-sm">
-              <p class="text-sm text-gray-500">Total de estudiantes</p>
+              <p class="text-sm text-gray-500">Total d'estudiants</p>
               <p class="text-xl font-bold text-gray-800">{{ totalStudents }}</p>
             </div>
             <!-- Solo mostramos la estadística de la categoría seleccionada -->
@@ -148,14 +148,14 @@
             class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             :class="chartType === 'stacked' ? 'bg-[#00ADEC] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
           >
-            Gráfico apilado
+            Gràfic apilat
           </button>
           <button
             @click="chartType = 'grouped'"
             class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             :class="chartType === 'grouped' ? 'bg-[#00ADEC] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
           >
-            Gráfico agrupado
+            Gràfic agrupat
           </button>
         </div>
       </div>
@@ -187,7 +187,7 @@
             <!-- Lista de los 5 primeros alumnos con más puntos del tag seleccionado -->
             <div v-if="topStudents.length > 0">
               <h4 class="font-semibold text-gray-800 text-lg mb-4">
-                Top 5 Alumnos - {{ getTagNameByIndex(selectedTagIndex) }}
+                Top 5 Alumnes - {{ getTagNameByIndex(selectedTagIndex) }}
               </h4>
               
               <div class="space-y-3">
@@ -200,24 +200,24 @@
                     </div>
                     <div>
                       <p class="font-medium">{{ student.name }}</p>
-                      <p class="text-sm text-gray-500">Participación: {{ student.percentage }}%</p>
+                      <p class="text-sm text-gray-500">Participació: {{ student.percentage }}%</p>
                     </div>
                   </div>
                   <span class="font-bold" :class="getTagTextColorClass(selectedTagIndex)">
-                    {{ student.points }} puntos
+                    {{ student.points }} punts
                   </span>
                 </div>
               </div>
 
               <div class="mt-4 text-center">
-                <p class="text-sm text-gray-600">Estos alumnos representan el {{ studentsCoverage }}% del total de puntos de {{ getTagNameByIndex(selectedTagIndex) }} en la clase.</p>
+                <p class="text-sm text-gray-600">Aquests alumnes representen el {{ studentsCoverage }}% del total de punts de {{ getTagNameByIndex(selectedTagIndex) }} a la classe.</p>
               </div>
             </div>
             
             <!-- Mensaje de carga mientras se obtienen los datos -->
             <div v-else-if="loadingStudents" class="flex flex-col items-center justify-center py-8">
               <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00ADEC] mb-4"></div>
-              <p class="text-gray-600">Cargando datos de alumnos...</p>
+              <p class="text-gray-600">Carregant dades d'alumnes...</p>
             </div>
             
             <!-- Mensaje si no hay datos disponibles -->
@@ -225,12 +225,12 @@
               <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <p class="text-gray-600">No se encontraron datos de alumnos para esta categoría.</p>
+              <p class="text-gray-600">No s'han trobat dades d'alumnes per a aquesta categoria.</p>
             </div>
           </div>
           <div class="bg-gray-50 p-4 rounded-b-xl border-t border-gray-200 flex justify-end">
             <button @click="selectedClass = null" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
-              Cerrar
+              Tancar
             </button>
           </div>
         </div>
@@ -242,8 +242,8 @@
       <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
-      <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay datos disponibles</h3>
-      <p class="text-gray-500 max-w-md mx-auto">No se encontraron datos para mostrar en el gráfico. Esto puede deberse a que no hay resultados CESC registrados o a que no hay estudiantes con los tags seleccionados.</p>
+      <h3 class="text-xl font-semibold text-gray-700 mb-2">No hi ha dades disponibles</h3>
+      <p class="text-gray-500 max-w-md mx-auto">No s'han trobat dades per mostrar al gràfic. Això pot ser degut a què no hi ha resultats CESC registrats o a què no hi ha estudiants amb les etiquetes seleccionades.</p>
     </div>
   </div>
 </template>
@@ -318,14 +318,14 @@ const filteredSeries = computed(() => {
   // Primera pasada: calcular totales para cada categoría para poder hacer porcentajes relativos
   const categoryTotals = graphData.value.map(item => {
     const socialTotal = item.tag_1_count + item.tag_4_count;
-    const violentoTotal = item.tag_3_count;
-    const afectadoTotal = item.tag_2_count + item.tag_5_count;
+    const violentTotal = item.tag_3_count;
+    const afectatTotal = item.tag_2_count + item.tag_5_count;
     const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
     
     return {
       socialTotal: socialTotal,
-      violentoTotal: violentoTotal,
-      afectadoTotal: afectadoTotal,
+      violentTotal: violentTotal,
+      afectatTotal: afectatTotal,
       allTotal: allTotal
     };
   });
@@ -427,7 +427,7 @@ const filteredSeries = computed(() => {
     });
   }
   
-  if (props.categoria === 'all' || props.categoria === 'violento') {
+  if (props.categoria === 'all' || props.categoria === 'violent') {
     series.push({
       name: 'Agressiu (B)',
       type: 'bar',
@@ -450,8 +450,8 @@ const filteredSeries = computed(() => {
           const tagCount = item.tag_3_count;
           
           if (chartType.value === 'percentage') {
-            // En caso de 'violento', como es el único tag, mostramos el % respecto al total de tags
-            if (props.categoria === 'violento') {
+            // En caso de 'violent', como es el único tag, mostramos el % respecto al total de tags
+            if (props.categoria === 'violent') {
               // Usamos el total de tags en lugar del total de estudiantes
               const allTotal = item.tag_1_count + item.tag_2_count + item.tag_3_count + item.tag_4_count + item.tag_5_count;
               const percentage = allTotal > 0 ? (tagCount / allTotal) * 100 : 0;
@@ -470,9 +470,9 @@ const filteredSeries = computed(() => {
     });
   }
   
-  if (props.categoria === 'all' || props.categoria === 'afectado') {
-    // Calculamos el total para la categoría 'afectado' usando la suma de ambos tags
-    const afectadoTotals = graphData.value.map(item => item.tag_2_count + item.tag_5_count);
+  if (props.categoria === 'all' || props.categoria === 'afectat') {
+    // Calculamos el total para la categoría 'afectat' usando la suma de ambos tags
+    const afectatTotals = graphData.value.map(item => item.tag_2_count + item.tag_5_count);
     
     series.push({
       name: 'Rebutjat (C)',
@@ -482,8 +482,8 @@ const filteredSeries = computed(() => {
       itemStyle: { color: '#3b82f6' }, // Azul
       data: graphData.value.map((item, index) => {
         if (chartType.value === 'percentage') {
-          // Para la categoría 'afectado', calculamos el porcentaje relativo a la suma de ambos tags
-          if (props.categoria === 'afectado') {
+          // Para la categoría 'afectat', calculamos el porcentaje relativo a la suma de ambos tags
+          if (props.categoria === 'afectat') {
             const total = item.tag_2_count + item.tag_5_count;
             return total > 0 ? (item.tag_2_count / total) * 100 : 0;
           } else {
@@ -503,7 +503,7 @@ const filteredSeries = computed(() => {
           
           if (chartType.value === 'percentage') {
             // Para calcular el porcentaje correcto según la categoría
-            if (props.categoria === 'afectado') {
+            if (props.categoria === 'afectat') {
               const total = item.tag_2_count + item.tag_5_count;
               const percentage = total > 0 ? (tagCount / total) * 100 : 0;
               return `${tagCount} (${percentage.toFixed(1)}%)`;
@@ -528,8 +528,8 @@ const filteredSeries = computed(() => {
       itemStyle: { color: '#f59e0b' }, // Amarillo
       data: graphData.value.map((item, index) => {
         if (chartType.value === 'percentage') {
-          // Para la categoría 'afectado', calculamos el porcentaje relativo a la suma de ambos tags
-          if (props.categoria === 'afectado') {
+          // Para la categoría 'afectat', calculamos el porcentaje relativo a la suma de ambos tags
+          if (props.categoria === 'afectat') {
             const total = item.tag_2_count + item.tag_5_count;
             return total > 0 ? (item.tag_5_count / total) * 100 : 0;
           } else {
@@ -549,7 +549,7 @@ const filteredSeries = computed(() => {
           
           if (chartType.value === 'percentage') {
             // Para calcular el porcentaje correcto según la categoría
-            if (props.categoria === 'afectado') {
+            if (props.categoria === 'afectat') {
               const total = item.tag_2_count + item.tag_5_count;
               const percentage = total > 0 ? (tagCount / total) * 100 : 0;
               return `${tagCount} (${percentage.toFixed(1)}%)`;
