@@ -62,7 +62,7 @@
               </p>
             </div>
 
-            <!-- Relaciones sociométricas -->
+            <!-- Relaciones sociométricas (para formularios 3 y 2) -->
             <div
               v-if="
                 answers.relationships &&
@@ -73,7 +73,7 @@
                 class="text-lg font-medium mb-4 pb-2 border-b"
                 style="color: rgb(0, 173, 238)"
               >
-                Relacions sociomètriques
+                Relacions sociomètriques {{ formId === '2' ? 'CESC' : '' }}
               </h2>
               <div
                 v-for="(relationship, questionId) in answers.relationships"
@@ -93,7 +93,9 @@
                       <span class="text-gray-800">
                         {{ peer.name }} {{ peer.last_name }}
                       </span>
+                      <!-- Para sociogramas estándar (formId 3) -->
                       <span
+                        v-if="formId === '3'"
                         :class="
                           peer.relationship_type === 'positive'
                             ? 'bg-green-100 text-green-700'
@@ -106,6 +108,14 @@
                             ? "Positive"
                             : "Negative"
                         }}
+                      </span>
+                      <!-- Para CESC (formId 2) -->
+                      <span
+                        v-else-if="formId === '2'"
+                        :class="getCescTagClass(peer.tag_id)"
+                        class="px-2 py-1 rounded-full text-xs"
+                      >
+                        {{ peer.tag_name || getCescTagName(peer.tag_id) }}
                       </span>
                     </div>
                   </div>
@@ -253,6 +263,30 @@ const getSkillColor = (answer) => {
   return { background: "bg-gradient-to-r from-gray-400 to-gray-600", text: "text-gray-600" }; // Color por defecto
 };
 
+// Obtener el nombre de la etiqueta CESC según el tag_id
+const getCescTagName = (tagId) => {
+  const tagNames = {
+    1: "Popular",
+    2: "Rebutjat",
+    3: "Agressiu",
+    4: "Prosocial",
+    5: "Víctima"
+  };
+  return tagNames[tagId] || "Desconegut";
+};
+
+// Obtener la clase CSS para la etiqueta CESC según el tag_id
+const getCescTagClass = (tagId) => {
+  const tagClasses = {
+    1: "bg-blue-100 text-blue-700", // Popular
+    2: "bg-orange-100 text-orange-700", // Rebutjat
+    3: "bg-red-100 text-red-700", // Agressiu
+    4: "bg-green-100 text-green-700", // Prosocial
+    5: "bg-purple-100 text-purple-700" // Víctima
+  };
+  return tagClasses[tagId] || "bg-gray-100 text-gray-700";
+};
+
 // Obtener respuestas del formulario
 const fetchAnswers = async (formId, userId) => {
   try {
@@ -294,9 +328,47 @@ const fetchAnswers = async (formId, userId) => {
   }
 };
 
+// Obtener relaciones sociométricas CESC
+const fetchAnswersCesc = async (formId, userId) => {
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/forms/${formId}/users/${userId}/relationships-cesc`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authStore.token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener relaciones CESC: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("CESC Data from API:", data); // Depuración
+    
+    // Transformar las relaciones de objeto a array para que se pueda recorrer en el template
+    if (data.relationships && typeof data.relationships === 'object') {
+      const relationshipsArray = Object.values(data.relationships);
+      data.relationships = relationshipsArray;
+    }
+    
+    answers.value = data;
+  } catch (err) {
+    console.error("Error:", err);
+    error.value = err.message;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 // Obtener relaciones sociométricas
 const fetchAnswersSociogram = async (formId, userId) => {
   try {
+    isLoading.value = true;
     const response = await fetch(
       `http://localhost:8000/api/forms/${formId}/users/${userId}/relationships`,
       {
@@ -310,14 +382,33 @@ const fetchAnswersSociogram = async (formId, userId) => {
     );
 
     if (!response.ok) {
-      throw new Error(`Error al obtener relaciones: ${response.statusText}`);
+      throw new Error(`Error al obtener relaciones: ${response.statusText || response.status}`);
     }
 
     const data = await response.json();
+    console.log("Sociogram Data from API:", data); // Depuración
+    
+    // Verificar la estructura de datos y formatear si es necesario
+    if (data && data.relationships) {
+      // Si relationships ya es un objeto, convertirlo a array para facilitar su uso en la vista
+      if (typeof data.relationships === 'object' && !Array.isArray(data.relationships)) {
+        data.relationships = Object.values(data.relationships);
+      }
+    }
+    
     answers.value = data;
   } catch (err) {
     console.error("Error:", err);
-    error.value = err.message;
+    error.value = err.message || "Error al cargar las respuestas";
+    
+    // Si hay problemas con el formato o estructura, intentar usar la petición de respuestas normal
+    if (err.message && err.message.includes("TypeError")) {
+      try {
+        await fetchAnswers(formId, userId);
+      } catch (backupErr) {
+        console.error("Error en la solicitud de respaldo:", backupErr);
+      }
+    }
   } finally {
     isLoading.value = false;
   }
@@ -327,6 +418,8 @@ const fetchAnswersSociogram = async (formId, userId) => {
 onMounted(() => {
   if (formId === "3") {
     fetchAnswersSociogram(formId, userId); // Formulario sociométrico
+  } else if (formId === "2") {
+    fetchAnswersCesc(formId, userId); // Formulario CESC
   } else {
     fetchAnswers(formId, userId); // Formulario estándar
   }

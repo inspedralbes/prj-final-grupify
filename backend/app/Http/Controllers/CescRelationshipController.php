@@ -2,175 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CescRelationship;
-use App\Models\CescResult;
 use App\Models\Form;
 use App\Models\User;
+use App\Models\FormUser;
+use App\Models\CescRelationship;
 use App\Models\TagCesc;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class CescRelationshipController extends Controller
 {
-    public function getResponsesByCourseAndDivision(Request $request)
-    {
-        try {
-            // Validar los datos de entrada
-            $validated = $request->validate([
-                'course_id' => 'required|exists:courses,id',
-                'division_id' => 'required|exists:divisions,id',
-            ]);
-
-            $courseId = $validated['course_id'];
-            $divisionId = $validated['division_id'];
-
-            // Obtener los usuarios que pertenecen al curso y división
-            $userIds = DB::table('course_division_user')
-                ->where('course_id', $courseId)
-                ->where('division_id', $divisionId)
-                ->pluck('user_id')
-                ->unique();
-
-            // Verificar si hay usuarios en el curso y división
-            if ($userIds->isEmpty()) {
-                return response()->json(['message' => 'No se encontraron usuarios en esta combinación de curso y división.'], 404);
-            }
-
-            // Obtener las relaciones Cesc de los usuarios encontrados
-            $relationships = CescRelationship::whereIn('user_id', $userIds)
-                ->with(['user', 'peer', 'question']) // Cargar relaciones necesarias
-                ->get();
-
-            // Verificar si hay relaciones disponibles
-            if ($relationships->isEmpty()) {
-                return response()->json(['message' => 'No hay respuestas registradas para los usuarios de este curso y división.'], 404);
-            }
-
-            // Agrupar las relaciones por formulario
-            $groupedResponses = $relationships->groupBy('question.form_id')->map(function ($formRelationships, $formId) {
-                // Obtener el título del formulario (si existe)
-                $formTitle = optional($formRelationships->first()->question->form)->title;
-
-                // Agrupar las relaciones por usuario
-                return [
-                    'form_id' => $formId,
-                    'form_title' => $formTitle,
-                    'responses' => $formRelationships->groupBy('user_id')->map(function ($userRelationships, $userId) {
-                        return [
-                            'user_id' => $userId,
-                            'user_name' => optional($userRelationships->first()->user)->name,
-                            'user_last_name' => optional($userRelationships->first()->user)->last_name,
-                            'responses' => $userRelationships->groupBy('question_id')->map(function ($questionRelationships, $questionId) {
-                                return [
-                                    'question_id' => $questionId,
-                                    'question_title' => optional($questionRelationships->first()->question)->title,
-                                    'peers' => $questionRelationships->map(function ($relationship) {
-                                        return [
-                                            'peer_id' => optional($relationship->peer)->id,
-                                            'peer_name' => optional($relationship->peer)->name,
-                                            'peer_last_name' => optional($relationship->peer)->last_name,
-                                            'tag_id' => $relationship->tag_id, // Se cambió de relationship_type a tag_id
-                                        ];
-                                    }),
-                                ];
-                            }),
-                        ];
-                    }),
-                ];
-            });
-
-            // Devolver las respuestas estructuradas
-            return response()->json([
-                'all_responses' => $groupedResponses->values(), // Respuestas agrupadas por formulario
-            ], 200);
-        } catch (\Exception $e) {
-            // Manejar cualquier excepción
-            return response()->json(['message' => 'Error interno en el servidor', 'error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * Obtener todas las respuestas de todos los formularios.
-     */
-    public function getAllResponses()
-    {
-        try {
-            // Cargar las relaciones incluyendo las relaciones Many-to-Many de user con courses y divisions
-            $relationships = CescRelationship::with([
-                'user.courses',      // Carga los courses asociados al user
-                'user.divisions',    // Carga las divisions asociadas al user
-                'peer',
-                'question.form'
-            ])->get();
-
-            // Verificar si hay relaciones disponibles
-            if ($relationships->isEmpty()) {
-                return response()->json(['message' => 'No hay respuestas registradas'], 404);
-            }
-
-            // Agrupar las relaciones por formulario
-            $groupedResponses = $relationships->groupBy('question.form_id')->map(function ($formRelationships, $formId) {
-                // Obtener el título del formulario (si existe)
-                $formTitle = optional($formRelationships->first()->question->form)->title;
-
-                // Agrupar las relaciones por usuario
-                return [
-                    'form_id' => $formId,
-                    'form_title' => $formTitle,
-                    'responses' => $formRelationships->groupBy('user_id')->map(function ($userRelationships, $userId) {
-                        $firstUser = $userRelationships->first()->user;
-
-                        return [
-                            'user_id' => $userId,
-                            'user_name' => optional($firstUser)->name,
-                            'user_last_name' => optional($firstUser)->last_name,
-                            // Mapear cada course asociado al usuario
-                            'course' => $firstUser->courses->map(function ($course) {
-                                return [
-                                    'id' => $course->id,
-                                    'name' => $course->name,
-                                ];
-                            }),
-                            // Mapear cada division asociada al usuario
-                            'division' => $firstUser->divisions->map(function ($division) {
-                                return [
-                                    'id' => $division->id,
-                                    'name' => $division->name,
-                                ];
-                            }),
-                            'responses' => $userRelationships->groupBy('question_id')->map(function ($questionRelationships, $questionId) {
-                                return [
-                                    'question_id' => $questionId,
-                                    'question_title' => optional($questionRelationships->first()->question)->title,
-                                    'peers' => $questionRelationships->map(function ($relationship) {
-                                        return [
-                                            'peer_id' => optional($relationship->peer)->id,
-                                            'peer_name' => optional($relationship->peer)->name,
-                                            'peer_last_name' => optional($relationship->peer)->last_name,
-                                            'tag_id' => $relationship->tag_id,
-                                        ];
-                                    }),
-                                ];
-                            }),
-                        ];
-                    }),
-                ];
-            });
-
-            // Devolver las respuestas estructuradas
-            return response()->json([
-                'all_responses' => $groupedResponses->values(),
-            ], 200);
-        } catch (\Exception $e) {
-            // Manejar cualquier excepción
-            return response()->json([
-                'message' => 'Error interno en el servidor',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
     /**
      * Obtener los usuarios que respondieron a un formulario Cesc.
      */
@@ -183,15 +27,26 @@ class CescRelationshipController extends Controller
                 return response()->json(['message' => 'Formulario no encontrado'], 404);
             }
 
-            // Obtener los IDs únicos de los usuarios que han respondido el formulario
-            $userIds = CescRelationship::whereHas('question', function ($query) use ($formId) {
-                $query->where('form_id', $formId); // Relación con preguntas dentro del formulario
+            // Obtener los usuarios que han respondido basado en la tabla form_user
+            $respondedUserIds = \App\Models\FormUser::where('form_id', $formId)
+                ->where('answered', true)
+                ->pluck('user_id')
+                ->unique()
+                ->toArray();
+                
+            // También obtener los IDs de usuarios con relaciones CESC (como respaldo)
+            $relationshipUserIds = CescRelationship::whereHas('question', function ($query) use ($formId) {
+                $query->where('form_id', $formId);
             })
                 ->pluck('user_id')
-                ->unique();
+                ->unique()
+                ->toArray();
+                
+            // Combinar ambos conjuntos de IDs para mayor certeza
+            $userIds = array_unique(array_merge($respondedUserIds, $relationshipUserIds));
 
             // Verificar si existen usuarios
-            if ($userIds->isEmpty()) {
+            if (empty($userIds)) {
                 return response()->json(['message' => 'No hay usuarios que hayan respondido este formulario'], 404);
             }
 
@@ -208,421 +63,232 @@ class CescRelationshipController extends Controller
 
     public function getAnswersByUser($formId, $userId)
     {
-        // Verificar si el formulario existe
-        $form = Form::find($formId);
-        if (!$form) {
-            return response()->json(['message' => 'Formulario no encontrado'], 404);
-        }
+        try {
+            // Verificar si el formulario existe
+            $form = Form::find($formId);
+            if (!$form) {
+                return response()->json(['message' => 'Formulario no encontrado'], 404);
+            }
 
-        // Verificar si el usuario existe
-        $user = User::find($userId);
-        if (!$user) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
-        }
+            // Verificar si el usuario existe
+            $user = User::find($userId);
+            if (!$user) {
+                return response()->json(['message' => 'Usuario no encontrado'], 404);
+            }
 
-        // Obtener las preguntas del formulario
-        $questions = $form->questions; // Suponiendo que el formulario tiene una relación de preguntas
+            // Obtener las preguntas del formulario 
+            $questions = $form->questions()->get();
+            
+            if ($questions->isEmpty()) {
+                return response()->json([
+                    'form_title' => $form->title,
+                    'user_name' => $user->name,
+                    'user_lastname' => $user->last_name,
+                    'relationships' => [],
+                    'message' => 'No hay preguntas en este formulario'
+                ], 200);
+            }
 
-        // Obtener las relaciones Cesc del usuario que pertenecen a las preguntas del formulario
-        $relationships = CescRelationship::where('user_id', $userId)
-            ->whereIn('question_id', $questions->pluck('id')) // Filtrar solo las relaciones con preguntas del formulario
-            ->with(['peer', 'question']) // Cargar las relaciones con peers y preguntas
-            ->get();
+            // Obtener las relaciones CESC donde el usuario es el que respondió (no el peer)
+            $relationships = CescRelationship::where('user_id', $userId)
+                ->whereIn('question_id', $questions->pluck('id'))
+                ->with(['peer', 'question', 'tag'])
+                ->get();
 
-        // Verificar si existen relaciones para el usuario
-        if ($relationships->isEmpty()) {
-            return response()->json(['message' => 'El usuario no tiene relaciones Cesc registradas para este formulario.'], 404);
-        }
+            // Si no hay relaciones, devolver una respuesta vacía
+            if ($relationships->isEmpty()) {
+                return response()->json([
+                    'form_title' => $form->title,
+                    'user_name' => $user->name,
+                    'user_lastname' => $user->last_name,
+                    'relationships' => [],
+                    'message' => 'El usuario no ha completado el cuestionario CESC'
+                ], 200);
+            }
 
-        // Agrupar las relaciones por question_id
-        $groupedRelationships = $relationships->groupBy(function ($relationship) {
-            return $relationship->question_id;
-        });
-
-        // Formatear las relaciones agrupadas
-        $formattedRelationships = $groupedRelationships->map(function ($group, $questionId) {
-            return [
-                'question_id' => $questionId,
-                'question_title' => optional($group->first()->question)->title,
-                'peers' => $group->map(function ($relationship) {
-                    return [
-                        'id' => optional($relationship->peer)->id,
-                        'name' => optional($relationship->peer)->name,
-                        'last_name' => optional($relationship->peer)->last_name,
-                        'tag_id' => $relationship->tag_id, // Se cambió de relationship_type a tag_id
+            // Agrupar las relaciones por question_id
+            $groupedRelationships = [];
+            
+            foreach ($relationships as $relationship) {
+                $questionId = $relationship->question_id;
+                
+                if (!isset($groupedRelationships[$questionId])) {
+                    $groupedRelationships[$questionId] = [
+                        'question_id' => $questionId,
+                        'question_title' => $relationship->question ? $relationship->question->title : 'Pregunta sin título',
+                        'peers' => []
                     ];
-                }),
-            ];
-        });
+                }
+                
+                // Añadir el peer a la lista de peers de esta pregunta
+                $peer = $relationship->peer;
+                if ($peer) {
+                    $groupedRelationships[$questionId]['peers'][] = [
+                        'id' => $peer->id,
+                        'name' => $peer->name,
+                        'last_name' => $peer->last_name,
+                        'tag_id' => $relationship->tag_id,
+                        'tag_name' => $relationship->tag ? $relationship->tag->name : 'Etiqueta desconocida'
+                    ];
+                }
+            }
 
-        // Devolver las relaciones con el título del formulario
-        return response()->json([
-            'form_title' => $form->title, // Suponiendo que el modelo Form tiene un campo 'title'
-            'user_name' => $user->name,
-            'user_lastname' => $user->last_name,
-            'relationships' => $formattedRelationships,
-        ], 200);
+            // Devolver las relaciones con el título del formulario
+            return response()->json([
+                'form_title' => $form->title,
+                'user_name' => $user->name,
+                'user_lastname' => $user->last_name,
+                'relationships' => $groupedRelationships,
+            ], 200);
+            
+        } catch (\Exception $e) {
+            // Log the error
+            \Log::error('Error en getAnswersByUser CESC: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            
+            // Return a more informative error message
+            return response()->json([
+                'message' => 'Error interno del servidor',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTrace()
+            ], 500);
+        }
     }
 
     /**
- * Listar todas las relaciones Cesc.
- */
-public function index()
-{
-    $relationships = CescRelationship::with(['user', 'peer', 'question', 'tag'])->get();
-    return response()->json($relationships, 200);
-}
+     * Listar todas las relaciones Cesc.
+     */
+    public function index()
+    {
+        $relationships = CescRelationship::with(['user', 'peer', 'question', 'tag'])->get();
+        return response()->json($relationships, 200);
+    }
 
-/**
- * Filtrar relaciones por usuario que respondió.
- */
-public function byUser($userId)
-{
-    $relationships = CescRelationship::where('user_id', $userId)
-        ->with(['peer', 'question', 'tag'])
-        ->get();
+    /**
+     * Filtrar relaciones por usuario que respondió.
+     */
+    public function byUser($userId)
+    {
+        $relationships = CescRelationship::where('user_id', $userId)
+            ->with(['peer', 'question', 'tag'])
+            ->get();
 
-    return response()->json($relationships, 200);
-}
+        return response()->json($relationships, 200);
+    }
 
-/**
- * Guardar nuevas relaciones Cesc.
- */
-public function store(Request $request)
-{
-    $data = $request->validate([
-        'user_id' => 'required|exists:users,id',
-        'form_id' => 'required|exists:forms,id', // Añadido: recibir el ID del formulario desde la solicitud
-        'relationships' => 'required|array',
-        'relationships.*.peer_id' => 'required|exists:users,id',
-        'relationships.*.question_id' => 'required|exists:questions,id',
-        'relationships.*.tag_id' => 'required|exists:tags_cesc,id',
-    ]);
+    /**
+     * Guardar nuevas relaciones Cesc.
+     */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'form_id' => 'required|exists:forms,id', // Añadido: recibir el ID del formulario desde la solicitud
+            'relationships' => 'required|array',
+            'relationships.*.peer_id' => 'required|exists:users,id',
+            'relationships.*.question_id' => 'required|exists:questions,id',
+            'relationships.*.tag_id' => 'required|exists:tags_cesc,id',
+        ]);
 
-    // Iniciar una transacción para garantizar consistencia
-    DB::beginTransaction();
-    
-    try {
-        // Guardar cada relación individual
-        foreach ($data['relationships'] as $relationship) {
-            CescRelationship::create([
-                'user_id' => $data['user_id'],
-                'peer_id' => $relationship['peer_id'],
-                'question_id' => $relationship['question_id'],
-                'tag_id' => $relationship['tag_id'],
-            ]);
-        }
+        // Iniciar una transacción para garantizar consistencia
+        DB::beginTransaction();
         
-        // Obtener el formulario usando el ID proporcionado en la solicitud
-        $form = Form::find($data['form_id']);
-        if (!$form) {
-            throw new \Exception("Formulario no encontrado con ID: " . $data['form_id']);
-        }
-
-        // Obtener el usuario
-        $user = User::find($data['user_id']);
-        if (!$user) {
-            throw new \Exception("Usuario no encontrado.");
-        }
-        
-        // Obtener el curso y división del usuario
-        $courseDivision = DB::table('course_division_user')
-            ->where('user_id', $data['user_id'])
-            ->orderBy('id', 'desc')
-            ->first();
+        try {
+            // Guardar cada relación individual
+            foreach ($data['relationships'] as $relationship) {
+                CescRelationship::create([
+                    'user_id' => $data['user_id'],
+                    'peer_id' => $relationship['peer_id'],
+                    'question_id' => $relationship['question_id'],
+                    'tag_id' => $relationship['tag_id'],
+                ]);
+            }
             
-        if (!$courseDivision) {
-            throw new \Exception("Usuario sin curso/división asignados.");
-        }
-        
-        // Actualizar o crear el registro en form_user con answered = 1
-        DB::table('form_user')->updateOrInsert(
-            [
+            // Obtener el formulario usando el ID proporcionado en la solicitud
+            $form = Form::find($data['form_id']);
+            if (!$form) {
+                throw new \Exception("Formulario no encontrado con ID: " . $data['form_id']);
+            }
+
+            // Obtener el usuario
+            $user = User::find($data['user_id']);
+            if (!$user) {
+                throw new \Exception("Usuario no encontrado.");
+            }
+            
+            // Obtener el curso y división del usuario
+            $courseDivision = DB::table('course_division_user')
+                ->where('user_id', $data['user_id'])
+                ->orderBy('id', 'desc')
+                ->first();
+                
+            if (!$courseDivision) {
+                throw new \Exception("Usuario sin curso/división asignados.");
+            }
+            
+            // Actualizar o crear el registro en form_user con answered = 1
+            DB::table('form_user')->updateOrInsert(
+                [
+                    'user_id' => $data['user_id'],
+                    'form_id' => $form->id,
+                    'course_id' => $courseDivision->course_id,
+                    'division_id' => $courseDivision->division_id,
+                ],
+                [
+                    'answered' => 1, // Marca como respondido (1 en lugar de true para asegurar compatibilidad)
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+            
+            // Actualizar el contador de respuestas en el formulario si es necesario
+            if (Schema::hasTable('form_assignments')) {
+                $formAssignment = \App\Models\FormAssignment::where('form_id', $form->id)
+                    ->where('course_id', $courseDivision->course_id)
+                    ->where('division_id', $courseDivision->division_id)
+                    ->first();
+                    
+                if ($formAssignment) {
+                    // Contar el número de usuarios que han respondido el formulario 
+                    $answeredCount = DB::table('form_user')
+                        ->where('form_id', $form->id)
+                        ->where('course_id', $courseDivision->course_id)
+                        ->where('division_id', $courseDivision->division_id)
+                        ->where('answered', 1)
+                        ->count();
+                    
+                    // Actualizar el contador de respuestas
+                    $formAssignment->responses_count = $answeredCount;
+                    $formAssignment->save();
+                }
+            }
+            
+            // Confirmar la transacción
+            DB::commit();
+            
+            // Registrar la acción completada
+            \Illuminate\Support\Facades\Log::info('Cesc completado', [
                 'user_id' => $data['user_id'],
                 'form_id' => $form->id,
                 'course_id' => $courseDivision->course_id,
-                'division_id' => $courseDivision->division_id,
-            ],
-            [
-                'answered' => 1,
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
-        
-        // Actualizar el contador de respuestas en el formulario si es necesario
-        if (Schema::hasTable('form_assignments')) {
-            $formAssignment = \App\Models\FormAssignment::where('form_id', $form->id)
-                ->where('course_id', $courseDivision->course_id)
-                ->where('division_id', $courseDivision->division_id)
-                ->first();
-                
-            if ($formAssignment) {
-                // Contar el número de usuarios que han respondido el formulario 
-                $answeredCount = DB::table('form_user')
-                    ->where('form_id', $form->id)
-                    ->where('course_id', $courseDivision->course_id)
-                    ->where('division_id', $courseDivision->division_id)
-                    ->where('answered', 1)
-                    ->count();
-                
-                // Actualizar el contador de respuestas
-                $formAssignment->responses_count = $answeredCount;
-                $formAssignment->save();
-            }
-        }
-        
-        // Confirmar la transacción
-        DB::commit();
-        
-        // Registrar la acción completada
-        \Illuminate\Support\Facades\Log::info('CESC completado', [
-            'user_id' => $data['user_id'],
-            'form_id' => $form->id,
-            'course_id' => $courseDivision->course_id,
-            'division_id' => $courseDivision->division_id
-        ]);
-        
-        // Devolver una respuesta exitosa
-        return response()->json(['message' => 'Relaciones CESC guardadas correctamente y formulario marcado como respondido.'], 201);
-        
-    } catch (\Exception $e) {
-        // Si hay algún error, revertir la transacción
-        DB::rollback();
-        
-        // Registrar el error
-        \Illuminate\Support\Facades\Log::error('Error al guardar CESC: ' . $e->getMessage());
-        
-        // Devolver respuesta de error
-        return response()->json(['error' => 'Error al guardar las relaciones CESC: ' . $e->getMessage()], 500);
-    }
-}
-
-/**
- * Eliminar una relación específica.
- */
-public function destroy($id)
-{
-    $relationship = CescRelationship::findOrFail($id);
-    $relationship->delete();
-
-    return response()->json(['message' => 'Relación eliminada correctamente.'], 200);
-}
-
-/**
- * Ver relaciones para hacer el Cesc.
- */
-public function getCesc()
-{
-    $relationships = CescRelationship::with(['peer', 'question', 'tag'])
-        ->get()
-        ->makeHidden(['peer', 'question', 'tag']); // Asegúrate de que los datos no sean revelados
-
-    return response()->json($relationships);
-}
-
-public function calcularResultados()
-{
-    // Obtener el recuento de votos agrupado por peer_id y tag_id
-    $resultados = CescRelationship::select('peer_id', 'tag_id', \DB::raw('COUNT(*) as vote_count'))
-        ->groupBy('peer_id', 'tag_id')
-        ->get();
-
-    // Guardar los resultados en la tabla cesc_results
-    foreach ($resultados as $resultado) {
-        CescResult::updateOrCreate(
-            ['peer_id' => $resultado->peer_id, 'tag_id' => $resultado->tag_id],
-            ['vote_count' => $resultado->vote_count]
-        );
-    }
-
-    return response()->json(['message' => 'Resultados actualizados']);
-}
-
-public function verResultados()
-{
-    try {
-        $resultados = CescResult::with(['peer', 'tag'])
-            ->get();
+                'division_id' => $courseDivision->division_id
+            ]);
             
-        // Transformar los resultados para incluir información necesaria del peer y tag
-        $transformedResults = $resultados->map(function ($resultado) {
-            return [
-                'id' => $resultado->id,
-                'peer_id' => $resultado->peer_id,
-                'tag_id' => $resultado->tag_id,
-                'vote_count' => $resultado->vote_count,
-                'peer_name' => $resultado->peer ? $resultado->peer->name : 'Desconocido',
-                'peer_last_name' => $resultado->peer ? $resultado->peer->last_name : '',
-                'tag_name' => $resultado->tag ? $resultado->tag->name : 'Desconocido'
-            ];
-        });
-
-        return response()->json($transformedResults);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Error al obtener resultados: ' . $e->getMessage()], 500);
+            // Devolver una respuesta exitosa
+            return response()->json(['message' => 'Relaciones guardadas correctamente y formulario marcado como respondido.'], 201);
+            
+        } catch (\Exception $e) {
+            // Si hay algún error, revertir la transacción
+            DB::rollback();
+            
+            // Registrar el error
+            \Illuminate\Support\Facades\Log::error('Error al guardar relaciones CESC', [
+                'error' => $e->getMessage(),
+                'user_id' => $data['user_id'] ?? null,
+                'form_id' => $data['form_id'] ?? null
+            ]);
+            
+            // Devolver un mensaje de error
+            return response()->json(['message' => 'Error al guardar las relaciones: ' . $e->getMessage()], 500);
+        }
     }
-}
-
-/**
- * Obtener datos para gráficos comparativos entre divisiones por curso
- * con todos los tags CESC (1: Popular, 2: Rebutjat, 3: Agressiu, 4: Prosocial, 5: Víctima)
- */
-public function getTagsGraphData()
-{
-    try {
-        // Obtener resultados para todos los tags CESC (1-5)
-        $resultados = CescResult::whereIn('tag_id', [1, 2, 3, 4, 5])
-            ->with(['peer.courseDivisions', 'tag'])
-            ->get();
-
-        // Verificar si hay resultados
-        if ($resultados->isEmpty()) {
-            return response()->json(['message' => 'No hay resultados disponibles para estos tags'], 404);
-        }
-
-        // Agrupar por curso, división y tag
-        $datosPorCursoDivision = [];
-
-        foreach ($resultados as $resultado) {
-            // Obtener el usuario (peer) y sus relaciones de curso-división
-            $peer = $resultado->peer;
-            if (!$peer || !$peer->courseDivisions) {
-                continue; // Saltar si no hay información de curso-división
-            }
-
-            // Recorrer las relaciones curso-división del usuario
-            foreach ($peer->courseDivisions as $course) {
-                $courseId = $course->id;
-                $courseName = $course->name;
-                $divisionId = $course->pivot->division_id;
-
-                // Obtener el nombre de la división
-                $division = DB::table('divisions')->where('id', $divisionId)->first();
-                if (!$division) {
-                    continue; // Saltar si no se encuentra la división
-                }
-                $divisionName = $division->division;
-
-                // Crear clave única para este curso-división
-                $key = $courseName . '-' . $divisionName;
-
-                // Inicializar el contador si no existe
-                if (!isset($datosPorCursoDivision[$key])) {
-                    $datosPorCursoDivision[$key] = [
-                        'course_id' => $courseId,
-                        'course_name' => $courseName,
-                        'division_id' => $divisionId,
-                        'division_name' => $divisionName,
-                        'tag_1_count' => 0, // Popular
-                        'tag_2_count' => 0, // Rebutjat
-                        'tag_3_count' => 0, // Agressiu
-                        'tag_4_count' => 0, // Prosocial
-                        'tag_5_count' => 0, // Víctima
-                        'total_students' => 0
-                    ];
-                }
-
-                // Incrementar el contador del tag correspondiente
-                $tagKey = 'tag_' . $resultado->tag_id . '_count';
-                if (isset($datosPorCursoDivision[$key][$tagKey])) {
-                    $datosPorCursoDivision[$key][$tagKey] += $resultado->vote_count;
-                }
-            }
-        }
-
-        // Obtener el total de estudiantes por curso-división
-        foreach ($datosPorCursoDivision as $key => &$data) {
-            $totalStudents = DB::table('course_division_user')
-                ->where('course_id', $data['course_id'])
-                ->where('division_id', $data['division_id'])
-                ->count();
-
-            $data['total_students'] = $totalStudents;
-        }
-
-        // Convertir a array para la respuesta
-        $resultado = array_values($datosPorCursoDivision);
-
-        // Ordenar por curso y división
-        usort($resultado, function($a, $b) {
-            // Primero comparar por curso
-            $courseComparison = strcmp($a['course_name'], $b['course_name']);
-            if ($courseComparison !== 0) {
-                return $courseComparison;
-            }
-            // Si los cursos son iguales, comparar por división
-            return strcmp($a['division_name'], $b['division_name']);
-        });
-
-        return response()->json($resultado, 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Error al obtener los datos para gráficos',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
-
-/**
- * Obtener los 5 mejores estudiantes con más puntos para un tag específico en un curso/división
- */
-public function getTopStudentsByTag($courseId, $divisionId, $tagId)
-{
-    try {
-        // Validar que el curso, división y tag existan
-        $courseExists = DB::table('courses')->where('id', $courseId)->exists();
-        $divisionExists = DB::table('divisions')->where('id', $divisionId)->exists();
-        $tagExists = DB::table('tags_cesc')->where('id', $tagId)->exists();
-
-        if (!$courseExists || !$divisionExists || !$tagExists) {
-            return response()->json([
-                'message' => 'Curso, división o tag no encontrado',
-                'errors' => [
-                    'course' => !$courseExists ? 'Curso no encontrado' : null,
-                    'division' => !$divisionExists ? 'División no encontrada' : null,
-                    'tag' => !$tagExists ? 'Tag no encontrado' : null,
-                ]
-            ], 404);
-        }
-
-        // Obtener los estudiantes del curso/división
-        $studentIds = DB::table('course_division_user')
-            ->where('course_id', $courseId)
-            ->where('division_id', $divisionId)
-            ->pluck('user_id');
-
-        // Obtener los resultados CESC para estos estudiantes y el tag específico
-        $topStudents = CescResult::whereIn('peer_id', $studentIds)
-            ->where('tag_id', $tagId)
-            ->with(['peer'])
-            ->orderBy('vote_count', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($result) {
-                return [
-                    'id' => $result->peer_id,
-                    'name' => $result->peer ? $result->peer->name . ' ' . $result->peer->last_name : 'Estudiante desconocido',
-                    'points' => $result->vote_count
-                ];
-            });
-
-        // Obtener el nombre del tag
-        $tagName = TagCesc::find($tagId)->name ?? 'Desconocido';
-
-        return response()->json([
-            'course_id' => $courseId,
-            'division_id' => $divisionId,
-            'tag_id' => $tagId,
-            'tag_name' => $tagName,
-            'students' => $topStudents
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Error al obtener los datos de los estudiantes',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
-
 }

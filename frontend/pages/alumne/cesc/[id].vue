@@ -39,7 +39,10 @@ async function fetchQuestions() {
       `http://localhost:8000/api/forms/${formId}/questions-and-answers`
     );
     if (!response.ok) throw new Error("Error al cargar las preguntas");
-    questions.value = await response.json();
+    const formData = await response.json();
+    // La API devuelve el objeto completo del formulario, pero necesitamos solo las preguntas
+    questions.value = formData.questions || [];
+    console.log("Preguntas cargadas:", questions.value);
   } catch (error) {
     console.error("Error al cargar las preguntas:", error);
     triggerToast("Error al cargar las preguntas.", "error");
@@ -200,8 +203,19 @@ onMounted(async () => {
 
 <template>
   <div class="p-6 space-y-6 max-w-2xl mx-auto">
+    <!-- Loading indicator -->
+    <div v-if="questions.length === 0" class="text-center py-10">
+      <div class="mb-4">
+        <svg class="animate-spin h-10 w-10 mx-auto text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      <p class="text-gray-600">Cargando formulario...</p>
+    </div>
+
     <div
-      v-if="currentQuestionIndex < questions.length"
+      v-else-if="questions.length > 0 && currentQuestionIndex < questions.length"
       class="bg-white rounded-lg shadow-lg p-6"
     >
       <h2 class="text-2xl font-bold mb-4">{{ currentQuestion?.title }}</h2>
@@ -263,7 +277,8 @@ onMounted(async () => {
     </div>
 
     <div v-else class="text-center">
-      <h3 class="text-xl font-bold mb-4">¡Quiz completat!</h3>
+      <h3 class="text-xl font-bold mb-4" v-if="currentQuestionIndex >= questions.length && questions.length > 0">¡Quiz completat!</h3>
+      <h3 class="text-xl font-bold mb-4" v-else>No se han encontrado preguntas para este formulario.</h3>
     </div>
 
     <!-- Toast -->
