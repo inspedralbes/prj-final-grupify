@@ -81,6 +81,17 @@ const getUsersByForm = async (formId) => {
 const handleReturn = () => {
   navigateTo('/professor/formularis');
 };
+
+// Función para manejar errores de carga de imágenes
+const onImageError = (event, student) => {
+  // Ocultar la imagen con error y mostrar iniciales en su lugar
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent) {
+    parent.classList.add('bg-primary/10', 'flex', 'items-center', 'justify-center', 'text-primary', 'font-bold');
+    parent.textContent = student.name.split(" ").map(n => n[0]).join("").toUpperCase();
+  }
+};
 </script>
 
 <template>
@@ -188,7 +199,13 @@ const handleReturn = () => {
                   <tr v-for="student in students" :key="student.id" class="border-b hover:bg-gray-50">
                     <td class="py-4 px-4">
                       <div class="flex items-center space-x-3">
+                        <!-- Avatar con imagen si existe, o iniciales como fallback -->
+                        <div v-if="student.image" class="w-10 h-10 rounded-full overflow-hidden">
+                          <img :src="student.image" alt="Avatar" class="w-full h-full object-cover" 
+                               @error="onImageError($event, student)" />
+                        </div>
                         <div
+                          v-else
                           class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"
                         >
                           {{ student.name.split(" ").map(n => n[0]).join("").toUpperCase() }}

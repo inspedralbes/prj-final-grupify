@@ -57,9 +57,22 @@
               >
                 Dades de l'estudiant
               </h2>
-              <p class="text-gray-700 capitalize">
-                {{ answers.user_name }} {{ answers.user_lastname }}
-              </p>
+              <!-- Información del estudiante con avatar si está disponible -->
+              <div class="flex items-center space-x-3">
+                <div v-if="answers.user_image" class="w-12 h-12 rounded-full overflow-hidden">
+                  <img :src="answers.user_image" alt="Avatar" class="w-full h-full object-cover" 
+                       @error="onImageError" />
+                </div>
+                <div
+                  v-else
+                  class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold"
+                >
+                  {{ answers.user_name ? answers.user_name.split(" ").map(n => n[0]).join("").toUpperCase() : 'U' }}
+                </div>
+                <p class="text-gray-700 capitalize">
+                  {{ answers.user_name }} {{ answers.user_lastname }}
+                </p>
+              </div>
             </div>
 
             <!-- Relaciones sociométricas (para formularios 3 y 2) -->
@@ -411,6 +424,22 @@ const fetchAnswersSociogram = async (formId, userId) => {
     }
   } finally {
     isLoading.value = false;
+  }
+};
+
+// Función para manejar errores de carga de imágenes
+const onImageError = (event) => {
+  // Ocultar la imagen con error y mostrar iniciales en su lugar
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent) {
+    parent.classList.add('bg-primary/10', 'flex', 'items-center', 'justify-center', 'text-primary', 'font-bold');
+    // Mostrar iniciales basadas en el nombre
+    if (answers.value.user_name) {
+      parent.textContent = answers.value.user_name.split(" ").map(n => n[0]).join("").toUpperCase();
+    } else {
+      parent.textContent = 'U'; // Default si no hay nombre
+    }
   }
 };
 

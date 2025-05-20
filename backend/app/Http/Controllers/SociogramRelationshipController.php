@@ -290,6 +290,7 @@ class SociogramRelationshipController extends Controller
             'form_title' => $form->title, // Suponiendo que el modelo Form tiene un campo 'title'
             'user_name' => $user->name,
             'user_lastname' => $user->last_name,
+            'user_image' => $user->image,
             'relationships' => $formattedRelationships,
         ], 200);
     }

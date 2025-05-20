@@ -84,6 +84,7 @@ class CescRelationshipController extends Controller
                     'form_title' => $form->title,
                     'user_name' => $user->name,
                     'user_lastname' => $user->last_name,
+                    'user_image' => $user->image,
                     'relationships' => [],
                     'message' => 'No hay preguntas en este formulario'
                 ], 200);
@@ -101,6 +102,7 @@ class CescRelationshipController extends Controller
                     'form_title' => $form->title,
                     'user_name' => $user->name,
                     'user_lastname' => $user->last_name,
+                    'user_image' => $user->image,
                     'relationships' => [],
                     'message' => 'El usuario no ha completado el cuestionario CESC'
                 ], 200);
@@ -138,6 +140,7 @@ class CescRelationshipController extends Controller
                 'form_title' => $form->title,
                 'user_name' => $user->name,
                 'user_lastname' => $user->last_name,
+                'user_image' => $user->image,
                 'relationships' => $groupedRelationships,
             ], 200);
             

@@ -236,6 +236,7 @@ class FormUserController extends Controller
                     'division' => $division->name ?? '',
                     'answered' => $hasAnswered,
                     'status' => $hasAnswered ? 'Contestado' : 'Pendiente',
+                    'image' => $user->image ?? null, // Agregamos el campo de imagen
                 ];
             });
             
