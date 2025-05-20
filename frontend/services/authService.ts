@@ -3,6 +3,7 @@ const config = useRuntimeConfig().public;
 interface LoginCredentials {
     email: string;
     password: string;
+    invitation_token?: string;
 }
 
 // Definición de roles para mayor tipado

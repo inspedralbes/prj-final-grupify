@@ -71,7 +71,9 @@ const sendToBackend = async (userData) => {
       body: postData,
     });
 
-    // Actualizar para incluir el role
+    console.log('Respuesta del servidor:', { token, user, role }); // Depuración
+
+    // Asegurarse de que se guardan correctamente todos los datos del usuario
     authStore.setAuth(token, user, role || user?.role?.name);
 
     // Determinar la ruta del dashboard basada en el rol

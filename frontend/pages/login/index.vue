@@ -13,15 +13,22 @@ const password = ref("");
 const isLoading = ref(false);
 const msgError = ref("");
 const successMessage = ref("");
+const invitationToken = ref(null);
 
 // Router y rutas
 const route = useRoute();
 const { $socket } = useNuxtApp();
 
-// Mensaje de registro exitoso
+// Mensaje de registro exitoso y captura del token de invitación
 onMounted(() => {
   if (route.query.registered === "true") {
     successMessage.value = "Usuari registrat correctament. Inicia sessió.";
+  }
+  
+  // Capturar el token de invitación si existe en la URL
+  if (route.query.invitation) {
+    invitationToken.value = route.query.invitation;
+    console.log("Token de invitación detectado:", invitationToken.value);
   }
 });
 
@@ -50,6 +57,11 @@ const gestioSubmit = async (e) => {
     email: email.value,
     password: password.value,
   };
+  
+  // Añadir el token de invitación si existe
+  if (invitationToken.value) {
+    userData.invitation_token = invitationToken.value;
+  }
 
   try {
     const response = await HandleLogin(userData);
