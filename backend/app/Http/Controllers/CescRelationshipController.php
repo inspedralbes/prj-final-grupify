@@ -390,12 +390,16 @@ class CescRelationshipController extends Controller
             $courseId = $parts[0];
             $divisionId = $parts[1];
             
+            // Obtener los IDs de roles de estudiante
+            $studentRoleIds = DB::table('roles')->where('name', 'alumne')->pluck('id')->toArray();
+            
             // Obtener los students_ids en este curso y división
-            $studentIds = DB::table('course_division_user')
-                ->where('course_id', $courseId)
-                ->where('division_id', $divisionId)
-                ->whereIn('role_id', [3, 4]) // Roles de estudiante (ajustar según la estructura)
-                ->pluck('user_id')
+            $studentIds = DB::table('course_division_user as cdu')
+                ->join('users as u', 'cdu.user_id', '=', 'u.id')
+                ->where('cdu.course_id', $courseId)
+                ->where('cdu.division_id', $divisionId)
+                ->whereIn('u.role_id', $studentRoleIds)
+                ->pluck('cdu.user_id')
                 ->toArray();
             
             if (empty($studentIds)) {
@@ -478,14 +482,98 @@ class CescRelationshipController extends Controller
     
     /**
      * Obtener datos para los gráficos de tags CESC agrupados por cursos.
-     * Esta función permite a los orientadores ver datos de todos los cursos sin filtrar.
+     * Esta función permite a los orientadores ver datos de todos los cursos de su nivel educativo.
      */
     public function getTagsGraphData() 
     {
         try {
-            // Obtener todas las relaciones CESC con sus respectivos tags
+            // Obtener el ID del rol de alumno
+            $studentRoleIds = DB::table('roles')->where('name', 'alumne')->pluck('id')->toArray();
+            
+            // Obtener el usuario actual
+            $userId = request()->header('X-Auth-User-Id');
+            if (!$userId) {
+                // Si no hay ID en los headers, intentar obtenerlo de session
+                $userId = session('user_id');
+            }
+            
+            if (!$userId) {
+                // Si aún no tenemos ID, usamos un enfoque de fallback basado en el email
+                // Asumimos que es el orientador por defecto
+                $userEmail = 'orientador@test.com';
+                $user = DB::table('users')->where('email', $userEmail)->first();
+                if ($user) {
+                    $userId = $user->id;
+                }
+            }
+            
+            \Log::info("Procesando solicitud para el usuario ID: {$userId}");
+            
+            // Determinar el nivel educativo del orientador basado en sus asignaciones de curso
+            $nivelEducativo = 'eso'; // Por defecto, establecemos ESO
+            
+            if ($userId) {
+                // Obtener los cursos asignados al orientador
+                $cursos = DB::table('course_division_user as cdu')
+                    ->join('courses as c', 'cdu.course_id', '=', 'c.id')
+                    ->where('cdu.user_id', $userId)
+                    ->pluck('c.name')
+                    ->toArray();
+                
+                \Log::info("Cursos asignados al usuario: " . implode(', ', $cursos));
+                
+                // Verificar si hay cursos de bachillerato
+                $hasBatxillerat = false;
+                foreach ($cursos as $curso) {
+                    if (strpos($curso, 'BATX') !== false || strpos($curso, 'BACHILLER') !== false) {
+                        $hasBatxillerat = true;
+                        break;
+                    }
+                }
+                
+                // Si tiene cursos de bachillerato, usamos ese nivel
+                if ($hasBatxillerat) {
+                    $nivelEducativo = 'bachillerato';
+                }
+            }
+            
+            \Log::info("Nivel educativo determinado: {$nivelEducativo}");
+            
+            // Obtener los cursos correspondientes al nivel educativo
+            if ($nivelEducativo == 'eso') {
+                $filteredCourseIds = DB::table('courses')
+                    ->where('name', 'like', '%ESO%')
+                    ->pluck('id')
+                    ->toArray();
+            } else {
+                $filteredCourseIds = DB::table('courses')
+                    ->where('name', 'like', '%BATX%')
+                    ->orWhere('name', 'like', '%BACHILLER%')
+                    ->pluck('id')
+                    ->toArray();
+            }
+            
+            \Log::info("Cursos filtrados para nivel {$nivelEducativo}: " . implode(', ', $filteredCourseIds));
+            
+            // Obtener TODOS los IDs de estudiantes del nivel educativo correspondiente, 
+            // incluso los que no tienen relaciones CESC
+            $allStudentIds = DB::table('course_division_user as cdu')
+                ->join('users as u', 'cdu.user_id', '=', 'u.id')
+                ->whereIn('cdu.course_id', $filteredCourseIds)
+                ->whereIn('u.role_id', $studentRoleIds)
+                ->select('u.id')
+                ->distinct()
+                ->pluck('id')
+                ->toArray();
+                
+            \Log::info("Total de estudiantes encontrados en el nivel educativo {$nivelEducativo}: " . count($allStudentIds));
+            
+            // Obtener todas las relaciones CESC con sus respectivos tags donde el peer es un alumno del nivel educativo
             $relationships = CescRelationship::with(['peer', 'tag', 'question'])
-                ->whereHas('peer')
+                ->whereIn('peer_id', $allStudentIds)
+                ->whereHas('peer', function ($query) use ($studentRoleIds) {
+                    $query->whereIn('role_id', $studentRoleIds);
+                })
                 ->whereHas('tag')
                 ->get();
                 
@@ -509,7 +597,7 @@ class CescRelationshipController extends Controller
                     ->join('courses as c', 'cdu.course_id', '=', 'c.id')
                     ->join('divisions as d', 'cdu.division_id', '=', 'd.id')
                     ->where('cdu.user_id', $peerId)
-                    ->select('cdu.course_id', 'c.name as course_name', 'cdu.division_id', 'd.name as division_name')
+                    ->select('cdu.course_id', 'c.name as course_name', 'cdu.division_id', 'd.division as division_name')
                     ->orderBy('cdu.id', 'desc')
                     ->first();
                     
@@ -525,6 +613,44 @@ class CescRelationshipController extends Controller
             
             // Agrupar los conteos de tags por curso y división
             $tagCountsByCourse = [];
+            
+            // Primero, obtener todos los cursos/divisiones del nivel educativo
+            $courseDivisions = DB::table('courses as c')
+                ->join('divisions as d', function($join) {
+                    $join->on(DB::raw('1'), '=', DB::raw('1')); // Cross join
+                })
+                ->whereIn('c.id', $filteredCourseIds)
+                ->select('c.id as course_id', 'c.name as course_name', 'd.id as division_id', 'd.division as division_name')
+                ->get();
+                
+            // Inicializar todos los cursos/divisiones con ceros
+            foreach ($courseDivisions as $cd) {
+                $key = "{$cd->course_id}-{$cd->division_id}";
+                
+                // Verificar si hay estudiantes en este curso/división
+                $hasStudents = DB::table('course_division_user as cdu')
+                    ->join('users as u', 'cdu.user_id', '=', 'u.id')
+                    ->where('cdu.course_id', $cd->course_id)
+                    ->where('cdu.division_id', $cd->division_id)
+                    ->whereIn('u.role_id', $studentRoleIds)
+                    ->exists();
+                    
+                if ($hasStudents) {
+                    $tagCountsByCourse[$key] = [
+                        'course_id' => $cd->course_id,
+                        'course_name' => $cd->course_name,
+                        'division_id' => $cd->division_id,
+                        'division_name' => $cd->division_name,
+                        'tag_1_count' => 0, // Popular
+                        'tag_2_count' => 0, // Rechazado
+                        'tag_3_count' => 0, // Agresivo
+                        'tag_4_count' => 0, // Prosocial
+                        'tag_5_count' => 0, // Víctima
+                        'total_students' => 0,
+                        'total_tags' => 0
+                    ];
+                }
+            }
             
             foreach ($relationships as $rel) {
                 $peerId = $rel->peer_id;
@@ -543,7 +669,7 @@ class CescRelationshipController extends Controller
                 // Crear clave única para este curso y división
                 $key = "{$courseId}-{$divisionId}";
                 
-                // Inicializar el registro para este curso/división si no existe
+                // Inicializar el registro para este curso/división si no existe (no debería ocurrir porque ya inicializamos todos)
                 if (!isset($tagCountsByCourse[$key])) {
                     $tagCountsByCourse[$key] = [
                         'course_id' => $courseId,
@@ -566,26 +692,73 @@ class CescRelationshipController extends Controller
                 $tagCountsByCourse[$key]['total_tags']++;
             }
             
-            // Obtener el número total de estudiantes por curso/división
+            // Obtener el número total de estudiantes para TODOS los cursos y divisiones
+            $allCourseStudentCounts = DB::table('course_division_user as cdu')
+                ->join('users as u', 'cdu.user_id', '=', 'u.id')
+                ->whereIn('cdu.course_id', $filteredCourseIds)
+                ->whereIn('u.role_id', $studentRoleIds)
+                ->select('cdu.course_id', 'cdu.division_id', DB::raw('COUNT(DISTINCT u.id) as student_count'))
+                ->groupBy('cdu.course_id', 'cdu.division_id')
+                ->get()
+                ->keyBy(function ($item) {
+                    return "{$item->course_id}-{$item->division_id}";
+                });
+                
+            // Actualizar los conteos de estudiantes para todos los cursos/divisiones
             foreach ($tagCountsByCourse as $key => &$courseData) {
-                $studentCount = DB::table('course_division_user')
-                    ->where('course_id', $courseData['course_id'])
-                    ->where('division_id', $courseData['division_id'])
-                    ->whereIn('role_id', [3, 4]) // IDs de roles de estudiantes
-                    ->distinct('user_id')
-                    ->count('user_id');
-                    
-                $courseData['total_students'] = $studentCount;
+                $count = $allCourseStudentCounts[$key]->student_count ?? 0;
+                $courseData['total_students'] = $count;
+                
+                \Log::info("Curso: {$courseData['course_name']} {$courseData['division_name']}, Estudiantes: {$count}");
             }
+            
+            // Obtener el total de estudiantes únicos de todos los cursos/divisiones
+            $totalUniqueStudents = count($allStudentIds);
+            
+            // Contabilizar el total general de estudiantes
+            $totalStudentsCount = DB::table('course_division_user as cdu')
+                ->join('users as u', 'cdu.user_id', '=', 'u.id')
+                ->whereIn('u.role_id', $studentRoleIds)
+                ->whereIn('cdu.course_id', $filteredCourseIds)
+                ->count('cdu.user_id');
+                
+            \Log::info("Total de estudiantes (con duplicados): {$totalStudentsCount}");
+            \Log::info("Total de estudiantes únicos: {$totalUniqueStudents}");
             
             // Convertir a array para la respuesta JSON
             $result = array_values($tagCountsByCourse);
+            
+            // Añadir metadatos para debugging y reconciliación de números
+            $metadata = [
+                'course_id' => 0,
+                'course_name' => 'METADATA',
+                'division_id' => 0,
+                'division_name' => 'INFO',
+                'tag_1_count' => 0,
+                'tag_2_count' => 0,
+                'tag_3_count' => 0,
+                'tag_4_count' => 0,
+                'tag_5_count' => 0,
+                'total_students' => $totalUniqueStudents, // Total real de estudiantes ÚNICOS
+                'total_tags' => 0,
+                'is_metadata' => true,
+            ];
+            
+            // Solo añadir metadatos en entorno de desarrollo
+            if (app()->environment('local')) {
+                array_unshift($result, $metadata);
+            }
+            
+            // Log del total de estudiantes (suma por curso vs únicos)
+            $courseSum = array_sum(array_column($result, 'total_students'));
+            \Log::info("Total de estudiantes (suma por cursos): {$courseSum}");
+            \Log::info("Total de estudiantes únicos: {$totalUniqueStudents}");
             
             return response()->json($result, 200);
             
         } catch (\Exception $e) {
             // Log del error
-            \Log::error('Error al obtener datos para gráficos CESC: ' . $e->getMessage());
+            \Log::error('Error al obtener datos para gráficos CESC: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             
             // Retornar error
             return response()->json([
@@ -601,6 +774,9 @@ class CescRelationshipController extends Controller
     public function getTopStudentsByTag($courseId, $divisionId, $tagId)
     {
         try {
+            // Obtener el ID del rol de alumno
+            $studentRoleIds = DB::table('roles')->where('name', 'alumne')->pluck('id')->toArray();
+            
             // Validar que el tag existe
             $tagExists = TagCesc::where('id', $tagId)->exists();
             if (!$tagExists) {
@@ -609,13 +785,83 @@ class CescRelationshipController extends Controller
                 ], 404);
             }
             
+            // Obtener el usuario actual
+            $userId = request()->header('X-Auth-User-Id');
+            if (!$userId) {
+                // Si no hay ID en los headers, intentar obtenerlo de session
+                $userId = session('user_id');
+            }
+            
+            if (!$userId) {
+                // Si aún no tenemos ID, usamos un enfoque de fallback basado en el email
+                // Asumimos que es el orientador por defecto
+                $userEmail = 'orientador@test.com';
+                $user = DB::table('users')->where('email', $userEmail)->first();
+                if ($user) {
+                    $userId = $user->id;
+                }
+            }
+            
+            // Determinar el nivel educativo del orientador basado en sus asignaciones de curso
+            $nivelEducativo = 'eso'; // Por defecto, establecemos ESO
+            
+            if ($userId) {
+                // Obtener los cursos asignados al orientador
+                $cursos = DB::table('course_division_user as cdu')
+                    ->join('courses as c', 'cdu.course_id', '=', 'c.id')
+                    ->where('cdu.user_id', $userId)
+                    ->pluck('c.name')
+                    ->toArray();
+                
+                // Verificar si hay cursos de bachillerato
+                $hasBatxillerat = false;
+                foreach ($cursos as $curso) {
+                    if (strpos($curso, 'BATX') !== false || strpos($curso, 'BACHILLER') !== false) {
+                        $hasBatxillerat = true;
+                        break;
+                    }
+                }
+                
+                // Si tiene cursos de bachillerato, usamos ese nivel
+                if ($hasBatxillerat) {
+                    $nivelEducativo = 'bachillerato';
+                }
+            }
+            
+            // Verificar que el curso solicitado pertenece al nivel educativo del orientador
+            $courseName = DB::table('courses')->where('id', $courseId)->value('name');
+            
+            $courseNivelMatch = false;
+            if ($nivelEducativo == 'eso' && strpos($courseName, 'ESO') !== false) {
+                $courseNivelMatch = true;
+            } elseif ($nivelEducativo == 'bachillerato' && (strpos($courseName, 'BATX') !== false || strpos($courseName, 'BACHILLER') !== false)) {
+                $courseNivelMatch = true;
+            }
+            
+            if (!$courseNivelMatch) {
+                \Log::warning("El curso {$courseName} no pertenece al nivel educativo {$nivelEducativo} del orientador");
+                return response()->json([
+                    'message' => 'El curso solicitado no pertenece al nivel educativo asignado',
+                    'students' => []
+                ], 200);
+            }
+            
             // Obtener los IDs de los estudiantes en este curso/división
-            $studentIds = DB::table('course_division_user')
-                ->where('course_id', $courseId)
-                ->where('division_id', $divisionId)
-                ->whereIn('role_id', [3, 4]) // Roles de estudiante
-                ->pluck('user_id')
+            $studentIds = DB::table('course_division_user as cdu')
+                ->join('users as u', 'cdu.user_id', '=', 'u.id')
+                ->where('cdu.course_id', $courseId)
+                ->where('cdu.division_id', $divisionId)
+                ->whereIn('u.role_id', $studentRoleIds)
+                ->select('u.id')
+                ->distinct()
+                ->pluck('id')
                 ->toArray();
+                
+            \Log::info('Estudiantes encontrados en curso/división:', [
+                'course_id' => $courseId,
+                'division_id' => $divisionId,
+                'student_count' => count($studentIds)
+            ]);
                 
             if (empty($studentIds)) {
                 return response()->json([
@@ -633,6 +879,11 @@ class CescRelationshipController extends Controller
                 ->groupBy('cr.peer_id', 'u.name', 'u.last_name')
                 ->orderBy('points', 'desc')
                 ->get();
+                
+            \Log::info('Estudiantes con menciones para el tag:', [
+                'tag_id' => $tagId,
+                'student_count' => $studentCounts->count()
+            ]);
                 
             // Devolver los resultados
             return response()->json([

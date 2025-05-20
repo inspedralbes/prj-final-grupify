@@ -1246,7 +1246,9 @@ class UserController extends Controller
     public function getStudents(Request $request)
     {
         $query = User::where('role_id', 2)
-            ->with(['courseDivisionUsers.course', 'courseDivisionUsers.division']);
+            ->with(['courseDivisionUsers.course', 'courseDivisionUsers.division'])
+            ->select('users.*')
+            ->distinct();
 
         // Verificar si hay parámetros de filtrado
         $hasCourseFilter = $request->has('course_id') || $request->has('course_ids');

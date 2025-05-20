@@ -216,7 +216,7 @@ const fetchAssignedClasses = async () => {
       // Para cada clase asignada, obtenemos la lista de estudiantes
       const assignedClasses = [];
 
-      // Variable para contar el número total de estudiantes únicos
+      // Set para almacenar todos los IDs de estudiantes únicos
       const allStudentIds = new Set();
 
       for (const cd of authStore.user.course_divisions) {
@@ -269,7 +269,7 @@ const fetchAssignedClasses = async () => {
       const allCourses = coursesStore.courses;
       const allClasses = [];
 
-      // Variable para contar el número total de estudiantes únicos
+      // Set para almacenar todos los IDs de estudiantes únicos
       const allStudentIds = new Set();
 
       for (const course of allCourses) {
