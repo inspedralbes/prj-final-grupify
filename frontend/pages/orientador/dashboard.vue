@@ -424,7 +424,7 @@ const getCurrentDate = () => {
             <!-- Perfil de usuario -->
             <div class="flex items-center">
               <div v-if="userData" class="flex items-center">
-                <img :src="userData.image || `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`" alt="Avatar" class="h-8 w-8 rounded-full">
+                <img :src="userData.image || 'https://i.pravatar.cc/150?img=42'" alt="Avatar" class="h-8 w-8 rounded-full">
                 <span class="ml-2 text-sm font-medium text-gray-700 hidden sm:block">{{ userData.name }}</span>
               </div>
               <button @click="logout" class="ml-3 text-gray-500 hover:text-primary">

@@ -3,7 +3,7 @@
     <div class="flex flex-col items-center">
       <div class="relative group">
         <img
-          :src="userData.image"
+          :src="userData.image || 'https://i.pravatar.cc/150?img=42'"
           alt="Avatar"
           class="w-24 h-24 rounded-full object-cover mb-4"
         />
