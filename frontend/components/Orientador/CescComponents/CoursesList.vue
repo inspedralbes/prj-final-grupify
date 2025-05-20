@@ -2,7 +2,7 @@
 import { defineProps } from 'vue'; 
 import CoursesListItem from './CoursesListItem.vue'; 
 
-// Propiedades del componente (Recibe la lista de cursos)
+// Propietats del component (Rep la llista de cursos)
 const props = defineProps({
   courses: {
     type: Array,
@@ -25,7 +25,7 @@ const props = defineProps({
           </tr>
         </thead>
         <tbody>
-          <!-- Por cada curso, pasa a CoursesListItem -->
+          <!-- Per cada curs, passa a CoursesListItem -->
           <CoursesListItem
             v-for="course in props.courses" 
             :key="course.id"

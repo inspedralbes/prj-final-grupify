@@ -13,7 +13,7 @@ defineProps({
 
 const checkFormCompletion = async (course) => {
   if (!course) {
-    console.error("No se ha pasado un curso válido");
+    console.error("No s'ha passat un curs vàlid");
     return;
   }
 
@@ -23,7 +23,7 @@ const checkFormCompletion = async (course) => {
     );
 
     if (!response.ok) {
-      throw new Error("Error al obtener los datos");
+      throw new Error("Error en obtenir les dades");
     }
 
     const data = await response.json();
@@ -34,7 +34,7 @@ const checkFormCompletion = async (course) => {
       course.cesc_available = false;
     }
   } catch (error) {
-    console.error("Error al verificar si el formulario ha sido contestado:", error);
+    console.error("Error en verificar si el formulari ha estat contestat:", error);
     course.cesc_available = false;
   }
 };
