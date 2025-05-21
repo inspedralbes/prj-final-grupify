@@ -7,7 +7,7 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: 'https://grupify.cat',
+    origin: 'https://basebrutt.com',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
     // Encontrar y eliminar el usuario desconectado
     const entries = Array.from(onlineUsers.entries());
     const [userId] = entries.find(([_, sid]) => sid === socket.id) || [];
-    
+
     if (userId) {
       onlineUsers.delete(userId);
       io.emit('user_offline', userId); // Notificar a todos
