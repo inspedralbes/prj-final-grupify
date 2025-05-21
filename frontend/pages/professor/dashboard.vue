@@ -14,17 +14,13 @@ const groupStore = useGroupStore();
 
 // Estado del dashboard
 const dashboardState = reactive({
-  pendingForms: 3,
-  completedForms: 15,
+  pendingForms: 0,
+  completedForms: 0,
   activeGroups: 0,
   totalStudents: 0,  // Inicializar a 0, se actualizará con los datos reales
   currentClasses: [],
-  formCompletion: {
-    'Avaluació Inicial': { completed: 78, total: 78, percentage: 100 },
-    'Sociograma Trimestral': { completed: 67, total: 78, percentage: 86 },
-    'CESC Bullying': { completed: 45, total: 78, percentage: 58 },
-    'Qüestionari Final': { completed: 12, total: 78, percentage: 15 },
-  }
+  formCompletion: {},
+  loadingForms: true // Flag para mostrar estado de carga de formularios
 });
 
 // Definición completa de todos los elementos del menú
@@ -110,6 +106,18 @@ const formCompletionAverage = computed(() => {
 
   const sum = forms.reduce((acc, form) => acc + form.percentage, 0);
   return Math.round(sum / forms.length);
+});
+
+// Calcular el porcentaje real de respuestas totales (respuestas / total posible)
+const totalResponsesPercentage = computed(() => {
+  const forms = Object.values(dashboardState.formCompletion);
+  if (forms.length === 0) return 0;
+  
+  const totalStudents = forms.reduce((acc, form) => acc + form.total, 0);
+  const completedResponses = forms.reduce((acc, form) => acc + form.completed, 0);
+  
+  if (totalStudents === 0) return 0;
+  return Math.round((completedResponses / totalStudents) * 100);
 });
 
 // Función para obtener datos actualizados del usuario desde el backend
@@ -306,6 +314,9 @@ onMounted(async () => {
 
   // Cargar datos reales de clases
   await loadClassesData();
+  
+  // Cargar información de formularios
+  await fetchFormStats();
 
   console.log("Estado final del dashboard:", {
     totalStudents: dashboardState.totalStudents,
@@ -356,6 +367,140 @@ const selectCourseAndDivision = async (courseName, divisionName) => {
     }
   } catch (error) {
     console.error("Error al seleccionar curso y división:", error);
+  }
+};
+
+// Función para obtener estadísticas de formularios
+const fetchFormStats = async () => {
+  try {
+    // Activar estado de carga
+    dashboardState.loadingForms = true;
+    
+    // Obtener formularios asignados al profesor
+    const token = authStore.token;
+    const teacherId = authStore.user?.id;
+
+    if (!token || !teacherId) {
+      console.error("No hay token o ID de profesor disponible");
+      dashboardState.loadingForms = false;
+      return;
+    }
+
+    // Obtener todos los formularios del profesor
+    const formsResponse = await fetch(`http://localhost:8000/api/forms?teacher_id=${teacherId}`, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!formsResponse.ok) {
+      throw new Error("Error al obtener los formularios");
+    }
+
+    const forms = await formsResponse.json();
+    console.log("Formularios obtenidos:", forms.length);
+
+    // Objeto para almacenar el recuento de formularios por tipo
+    const formStats = {};
+    
+    // Variables para contar formularios completados y pendientes
+    let completedCount = 0;
+    let pendingCount = 0;
+    let totalStudentsCount = 0;
+    const processedStudentIds = new Set(); // Para contar estudiantes únicos
+    
+    // Si no hay formularios, terminar aquí
+    if (!forms || forms.length === 0) {
+      console.log("No se encontraron formularios para este profesor");
+      dashboardState.formCompletion = {};
+      dashboardState.completedForms = 0;
+      dashboardState.pendingForms = 0;
+      dashboardState.loadingForms = false;
+      return;
+    }
+
+    // Para cada formulario, obtener los usuarios asignados y sus respuestas
+    for (const form of forms) {
+      try {
+        // Obtener las respuestas detalladas para ver quién ha contestado realmente
+        const apiUrl = `http://localhost:8000/api/form-user/${form.id}/assigned-users`;
+        const response = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          console.error(`Error al obtener respuestas para formulario ${form.id}: ${response.status}`);
+          continue;
+        }
+
+        const data = await response.json();
+        
+        if (data.users && data.users.length > 0) {
+          // Guardar los IDs de estudiantes para contar estudiantes únicos
+          data.users.forEach(user => {
+            processedStudentIds.add(user.id);
+          });
+
+          const totalStudents = data.users.length;
+          
+          // Verificamos explícitamente el campo answered en cada usuario
+          let answeredCount = 0;
+          for (const user of data.users) {
+            if (user.answered === true || user.answered === 1 || user.answered === '1') {
+              answeredCount++;
+            }
+          }
+          
+          // Usar el contador explícito en lugar del filtrado rápido
+          const percentage = totalStudents > 0 ? Math.round((answeredCount / totalStudents) * 100) : 0;
+
+          console.log(`Formulario ${form.title}: ${answeredCount}/${totalStudents} (${percentage}%)`);
+
+          // Guardar estadísticas para este formulario
+          formStats[form.title] = {
+            completed: answeredCount,
+            total: totalStudents,
+            percentage: percentage
+          };
+
+          // Actualizar contadores globales
+          // Para Formularis Completats, solo contar formularios con 100% de respuestas
+          if (percentage === 100) {
+            completedCount += 1; // Contar el formulario, no las respuestas
+          } else {
+            pendingCount += 1; // Contar como pendiente si no está al 100%
+          }
+        }
+      } catch (error) {
+        console.error(`Error al obtener estadísticas para el formulario ${form.id}:`, error);
+      }
+    }
+
+    // Actualizar el estado del dashboard con las estadísticas reales
+    dashboardState.formCompletion = formStats;
+    dashboardState.completedForms = completedCount;
+    dashboardState.pendingForms = pendingCount;
+    
+    // Actualizar el total de estudiantes único si no se estableció anteriormente
+    if (dashboardState.totalStudents === 0) {
+      dashboardState.totalStudents = processedStudentIds.size;
+    }
+
+    console.log("Estadísticas de formularios cargadas:", formStats);
+    console.log("Total de estudiantes únicos:", processedStudentIds.size);
+    console.log("Respuestas completadas:", completedCount);
+    console.log("Respuestas pendientes:", pendingCount);
+  } catch (error) {
+    console.error("Error al obtener estadísticas de formularios:", error);
+  } finally {
+    // Desactivar estado de carga al finalizar
+    dashboardState.loadingForms = false;
   }
 };
 
@@ -523,8 +668,11 @@ const getCurrentDate = () => {
             <p class="text-gray-500 text-sm">Formularis Completats</p>
             <div class="flex items-baseline">
               <p class="text-2xl font-bold">{{ dashboardState.completedForms }}</p>
-              <p class="ml-2 text-sm text-green-600">+{{ formCompletionAverage }}%</p>
+              <p class="ml-2 text-sm text-gray-600">de {{ Object.keys(dashboardState.formCompletion).length }}</p>
             </div>
+            <p class="text-xs text-gray-500 mt-1">
+              Total de respostes: <span class="font-medium">{{ totalResponsesPercentage }}%</span>
+            </p>
           </div>
         </div>
       </div>
@@ -595,11 +743,33 @@ const getCurrentDate = () => {
           <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 class="text-lg font-medium text-gray-900">Estat dels Formularis</h2>
-              <span class="text-sm text-gray-400">
-                Resum
-              </span>
+              <NuxtLink to="/professor/formularis" class="text-sm text-primary hover:text-primary-dark">
+                Veure tots els formularis
+              </NuxtLink>
             </div>
-            <div class="p-6 space-y-4">
+            
+            <!-- Estado de carga -->
+            <div v-if="dashboardState.loadingForms" class="p-12 flex justify-center items-center">
+              <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+            
+            <!-- Estado vacío - No hay formularios asignados -->
+            <div v-else-if="Object.keys(dashboardState.formCompletion).length === 0" class="p-8 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 class="mt-4 text-lg font-medium text-gray-900">Cap formulari assignat</h3>
+              <p class="mt-2 text-sm text-gray-500">No tens cap formulari assignat als teus estudiants.</p>
+              <div class="mt-6">
+                <NuxtLink to="/professor/formularis" 
+                  class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                  Assignar formularis
+                </NuxtLink>
+              </div>
+            </div>
+            
+            <!-- Lista de formularios -->
+            <div v-else class="p-6 space-y-4">
               <div v-for="(form, name) in dashboardState.formCompletion" :key="name" class="space-y-2">
                 <div class="flex justify-between text-sm">
                   <span>{{ name }}</span>

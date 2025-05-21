@@ -2,6 +2,7 @@
 import DashboardNavTeacher from "@/components/Teacher/DashboardNavTeacher.vue";
 import { EyeIcon } from '@heroicons/vue/24/outline';
 import { useAuthStore } from "~/stores/authStore";
+import EstatsFormularisChart from '@/components/Teacher/EstatsFormularisChart.vue';
 
 const route = useRoute();
 const navigate = useRouter();
@@ -11,6 +12,7 @@ const students = ref([]);
 const isMobile = ref(false);
 const formNotAssigned = ref(false);
 const authStore = useAuthStore();
+const showDetailedChart = ref(false); // Para controlar la visualización de la gráfica detallada
 
 // Detectar si es mobile
 onMounted(() => {
@@ -146,28 +148,36 @@ const onImageError = (event, student) => {
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="students.length === 0" class="text-center text-gray-500 py-6 md:py-8">
-          No hi ha estudiants en aquest formulari
+        <div v-else-if="students.length === 0" class="text-center py-10">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <h3 class="mt-4 text-xl font-medium text-gray-900">No hi ha estudiants assignats</h3>
+          <p class="mt-2 text-gray-500">Aquest formulari no té estudiants assignats encara.</p>
+          <div class="mt-6">
+            <NuxtLink to="/professor/formularis" 
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              Tornar a formularis
+            </NuxtLink>
+          </div>
         </div>
 
         <!-- Students list -->
         <div v-else class="space-y-4">
           <div class="card">
-            <!-- Status summary -->
-            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-              <div class="flex justify-between items-center mb-2">
-                <h3 class="font-medium text-gray-800">Estat de Respostes</h3>
-                <span class="text-sm font-bold">{{Math.round((students.filter(s => s.answered).length /
-                  students.length) * 100) || 0 }}%</span>
-              </div>
-              <div class="w-full bg-gray-200 rounded-full h-2.5">
-                <div class="bg-blue-600 h-2.5 rounded-full"
-                  :style="`width: ${Math.round((students.filter(s => s.answered).length / students.length) * 100) || 0}%`">
-                </div>
-              </div>
-              <div class="mt-2 text-sm text-gray-600">
-                {{students.filter(s => s.answered).length}} de {{ students.length }} estudiants han contestat
-              </div>
+            <!-- Estado y gráficos de respuestas -->
+            <EstatsFormularisChart :students="students" :showByCourse="showDetailedChart" />
+            
+            <!-- Botón para alternar vista detallada por curso -->
+            <div class="flex justify-end mb-4">
+              <button @click="showDetailedChart = !showDetailedChart" 
+                      class="text-sm flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                {{ showDetailedChart ? 'Veure Resum' : 'Veure per Curs' }}
+              </button>
             </div>
 
             <div class="overflow-x-auto">
