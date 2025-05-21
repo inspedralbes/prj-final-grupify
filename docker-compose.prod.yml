@@ -26,7 +26,9 @@ services:
       - app-network
 
   nuxt-app:
-    image: ghcr.io/adriapedralbes/frontend:v2.5
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nuxt-app.rule=Host(`basebrutt.com`) || Host(`www.basebrutt.com`)"
@@ -42,7 +44,9 @@ services:
       - app-network
 
   laravel-app:
-    image: ghcr.io/adriapedralbes/backend:v2.5
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.laravel-app.rule=Host(`api.basebrutt.com`)"
@@ -67,7 +71,9 @@ services:
       - app-network
 
   queue-worker:
-    image: ghcr.io/adriapedralbes/backend:v2.5
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
     command: "php artisan queue:work redis --tries=3 --timeout=90"
     restart: always
     environment:
@@ -87,7 +93,9 @@ services:
       - app-network
 
   node-app:
-    image: ghcr.io/adriapedralbes/nodejs:v2.5
+    build:
+      context: ./backend/node-app
+      dockerfile: Dockerfile.prod
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.node-app.rule=Host(`node.basebrutt.com`)"
@@ -151,7 +159,9 @@ services:
       - app-network
 
   chat:
-    image: ghcr.io/adriapedralbes/grupify-chat:v2.5
+    build:
+      context: ./mcp-use-grupify
+      dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`chat.basebrutt.com`)"
