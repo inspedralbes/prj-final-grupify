@@ -29,7 +29,7 @@ Route::get('/dashboard', function () {
 Route::post('/logout', function () {
     Auth::logout();
     // Redireccionar al login del frontend
-    return redirect('http://localhost:3000/login');
+    return redirect('https://basebrutt.com/login');
 })->name('logout');
 
 Route::get('/forms/{id}', [FormController::class, 'show'])->name('forms.show');
@@ -50,5 +50,3 @@ Route::resource('forms', FormController::class);
 Route::resource('questions', QuestionController::class);
 Route::resource('answers', AnswerController::class);
 Route::resource('groups', GroupController::class);
-
-

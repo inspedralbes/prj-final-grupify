@@ -193,7 +193,7 @@ export const useGroupStore = defineStore("groups", {
 
         console.log("Creating group with data:", groupData);
 
-        const response = await fetch("http://api.grupify.cat/api/groups", {
+        const response = await fetch("http://api.basebrutt.com/api/groups", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
