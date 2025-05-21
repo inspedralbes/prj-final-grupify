@@ -162,6 +162,7 @@ class AnswerController extends Controller
             'form_title' => $form->title ?? 'Formulario de Autoavaluación',
             'user_name' => $user->name,
             'user_lastname' => $user->last_name,
+            'user_image' => $user->image,
             'answers' => $formattedAnswers,
         ], 200);
     }

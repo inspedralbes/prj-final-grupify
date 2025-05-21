@@ -1,8 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useRuntimeConfig } from "#app";
 
-// Initialize the Generative AI client with API key
-// Note: Ideally, this should be in an environment variable
-const API_KEY = "AIzaSyCeLUwISVfHOQbA7HeN_coGBnMZHvHNgic";
+// Initialize the Generative AI client with API key from environment variables
+const config = useRuntimeConfig();
+const API_KEY = config.public.geminiApiKey;
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Modelo actualizado - usar gemini-1.5-pro en lugar de gemini-pro
@@ -141,6 +142,12 @@ export async function generateFormQuestions(prompt, retryCount = 0) {
   });
 
   try {
+    // Verificar que tenemos una API key
+    if (!API_KEY) {
+      console.error("No se ha configurado GEMINI_API_KEY en las variables de entorno");
+      throw new Error("Error de configuración: No se ha encontrado la clave de API de Gemini");
+    }
+
     // Get the Gemini model
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
@@ -218,6 +225,21 @@ Genera un total de 4 a 8 preguntas, dependiendo de la complejidad del formulario
     console.log("Detalles del prompt:", prompt);
     console.log("Intento número:", retryCount + 1);
 
+    // Si hay un error de cuota o API, proporciona un mensaje específico
+    if (error.message.includes("quota") || 
+        error.message.includes("429") || 
+        error.message.includes("exceeded your current quota")) {
+      console.error("Error de cuota en la API de Gemini:", error.message);
+      
+      // Si tenemos un template de respaldo disponible, lo devolvemos en lugar de fallar
+      if (fallbackTemplates) {
+        console.log("Usando plantilla de respaldo debido a error de cuota de API");
+        return fallbackTemplates;
+      }
+      
+      throw new Error("S'ha excedit la quota d'API. Si us plau, intenta-ho més tard.");
+    }
+    
     // Si hay un error de red o API, proporciona un mensaje específico
     if (error.message.includes("network") || error.message.includes("API") || error.message.includes("404")) {
       console.error("Problema de conexión con la API de Gemini:", error.message);

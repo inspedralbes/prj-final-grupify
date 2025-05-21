@@ -22,7 +22,7 @@ defineProps({
 const viewProfile = (course) => {
   if (!course) return;
   router.push({
-    path: `/professor/sociograma/sociogramaProlife/${course.classId}`,
+    path: `/orientador/sociograma/sociogramaProlife/${course.classId}`,
   });
 };
 
@@ -78,7 +78,7 @@ const analyzeWithAI = async (course) => {
 
     // Redirigir al chat solo después de que todo esté listo
     router.push({
-      path: "/professor/assistent",
+      path: "/orientador/assistent",
     });
   } catch (error) {
     console.error("Error durante el análisis con IA:", error);

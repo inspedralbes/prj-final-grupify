@@ -391,7 +391,7 @@
     <nav class="navbar">
         <!-- Logo y título -->
         <a href="{{ route('dashboard') }}" class="navbar-brand">
-            <i class="fas fa-th-large"></i> Grupify
+            <img src="/images/icono.png" alt="Grupify Logo" style="height: 30px; width: auto;"> Grupify
         </a>
 
         <!-- Enlaces de navegación -->
@@ -479,7 +479,7 @@
     @if (request()->routeIs('dashboard'))
     <header class="dashboard-header">
         <div class="dashboard-title">
-            <i class="fas fa-th-large"></i> Grupify
+            <img src="/images/icono.png" alt="Grupify Logo" style="height: 30px; width: auto;"> Grupify
         </div>
 
         <!-- Botón de cierre de sesión -->

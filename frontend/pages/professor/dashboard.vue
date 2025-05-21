@@ -74,7 +74,7 @@ const allMenuItems = [
   {
     title: "Xat IA",
     icon: "M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z",
-    route: "/professor/assistent",
+    route: "http://localhost:8501",
     requiredPermission: null,
     description: "Assistència intel·ligent per a professors"
   },
@@ -175,10 +175,10 @@ const loadClassesData = async () => {
       studentCountMap.forEach(count => {
         totalStudents += count;
       });
-      
+
       // Actualizar el contador total de estudiantes
       dashboardState.totalStudents = totalStudents;
-      
+
       console.log("Total de estudiantes calculado:", totalStudents);
 
       // Transformar course_divisions en el formato requerido para currentClasses
@@ -244,7 +244,7 @@ const fetchTeacherGroups = async () => {
       // Solo actualizar si no tenemos datos de estudiantes aún
       dashboardState.totalStudents = groupStudents;
     }
-    
+
     console.log("Total de estudiantes después de fetchTeacherGroups:", dashboardState.totalStudents);
 
     // Si hay datos de formularios completados en authStore, usar esos datos
@@ -306,7 +306,7 @@ onMounted(async () => {
 
   // Cargar datos reales de clases
   await loadClassesData();
-  
+
   console.log("Estado final del dashboard:", {
     totalStudents: dashboardState.totalStudents,
     activeGroups: dashboardState.activeGroups,
@@ -431,38 +431,28 @@ const getCurrentDate = () => {
           <div class="flex items-center">
             <div class="flex-shrink-0 flex items-center">
               <svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
               <span class="ml-2 text-xl font-semibold text-gray-900">Grupify</span>
             </div>
           </div>
 
-          <!-- Búsqueda -->
-          <div class="hidden sm:flex flex-1 max-w-xl px-4">
-            <div class="w-full">
-              <label for="search" class="sr-only">Cercar</label>
-              <div class="relative">
-                <input id="search" type="text" placeholder="Cercar alumnes, grups o formularis..." class="block w-full bg-gray-100 border border-transparent rounded-md py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:outline-none focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <!-- Herramientas de usuario -->
           <div class="flex items-center space-x-4">
             <!-- Perfil de usuario -->
             <div class="flex items-center">
               <div v-if="userData" class="flex items-center">
-                <img :src="userData.image || 'https://via.placeholder.com/32'" alt="Avatar" class="h-8 w-8 rounded-full">
+                <img :src="userData.image || 'https://via.placeholder.com/32'" alt="Avatar"
+                  class="h-8 w-8 rounded-full">
                 <span class="ml-2 text-sm font-medium text-gray-700 hidden sm:block">{{ userData.name }}</span>
               </div>
               <button @click="logout" class="ml-3 text-gray-500 hover:text-primary">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </button>
             </div>
@@ -493,12 +483,14 @@ const getCurrentDate = () => {
         <div class="bg-white rounded-lg shadow p-5 flex items-center">
           <div class="rounded-full bg-blue-100 p-3 mr-4">
             <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
           <div>
             <p class="text-gray-500 text-sm">Alumnes</p>
-            <div v-if="coursesStore.loading || groupStore.loading" class="h-8 w-12 animate-pulse bg-gray-200 rounded"></div>
+            <div v-if="coursesStore.loading || groupStore.loading" class="h-8 w-12 animate-pulse bg-gray-200 rounded">
+            </div>
             <p v-else class="text-2xl font-bold">{{ dashboardState.totalStudents }}</p>
           </div>
         </div>
@@ -507,12 +499,14 @@ const getCurrentDate = () => {
         <div class="bg-white rounded-lg shadow p-5 flex items-center">
           <div class="rounded-full bg-green-100 p-3 mr-4">
             <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
           <div>
             <p class="text-gray-500 text-sm">Grups Actius</p>
-            <div v-if="coursesStore.loading || groupStore.loading" class="h-8 w-8 animate-pulse bg-gray-200 rounded"></div>
+            <div v-if="coursesStore.loading || groupStore.loading" class="h-8 w-8 animate-pulse bg-gray-200 rounded">
+            </div>
             <p v-else class="text-2xl font-bold">{{ dashboardState.activeGroups }}</p>
           </div>
         </div>
@@ -521,7 +515,8 @@ const getCurrentDate = () => {
         <div class="bg-white rounded-lg shadow p-5 flex items-center">
           <div class="rounded-full bg-indigo-100 p-3 mr-4">
             <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
           <div>
@@ -553,14 +548,17 @@ const getCurrentDate = () => {
             <!-- Estado vacío -->
             <div v-else-if="dashboardState.currentClasses.length === 0" class="py-10 text-center">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
               <h3 class="mt-2 text-sm font-medium text-gray-900">No s'han trobat classes</h3>
               <p class="mt-1 text-sm text-gray-500">Comença creant una classe o grup nou.</p>
               <div class="mt-6">
-                <NuxtLink to="/professor/grups" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                <NuxtLink to="/professor/grups"
+                  class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
                   <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                   Crear nou grup
                 </NuxtLink>
@@ -568,15 +566,13 @@ const getCurrentDate = () => {
             </div>
             <!-- Lista de clases -->
             <div v-else class="divide-y divide-gray-200">
-              <div
-                v-for="(classItem, index) in dashboardState.currentClasses"
-                :key="index"
+              <div v-for="(classItem, index) in dashboardState.currentClasses" :key="index"
                 class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
-                @click="navigateToClass(classItem)"
-              >
+                @click="navigateToClass(classItem)">
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                    <div
+                      class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
                       {{ classItem.name.substring(0, 2) }}
                     </div>
                   </div>
@@ -610,13 +606,11 @@ const getCurrentDate = () => {
                   <span class="font-medium">{{ form.completed }}/{{ form.total }} ({{ form.percentage }}%)</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div class="h-2 rounded-full"
-                       :class="{
-                         'bg-green-500': form.percentage >= 80,
-                         'bg-yellow-500': form.percentage >= 50 && form.percentage < 80,
-                         'bg-red-500': form.percentage < 50
-                       }"
-                       :style="`width: ${form.percentage}%`"></div>
+                  <div class="h-2 rounded-full" :class="{
+                    'bg-green-500': form.percentage >= 80,
+                    'bg-yellow-500': form.percentage >= 50 && form.percentage < 80,
+                    'bg-red-500': form.percentage < 50
+                  }" :style="`width: ${form.percentage}%`"></div>
                 </div>
               </div>
             </div>
@@ -632,16 +626,28 @@ const getCurrentDate = () => {
             </div>
             <div class="p-6">
               <div class="grid grid-cols-1 gap-2">
-                <NuxtLink v-for="item in menuItems" :key="item.title" :to="item.route"
-                  class="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
-                  <svg class="h-5 w-5 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
-                  </svg>
-                  <div>
-                    <span class="text-sm font-medium text-gray-800">{{ item.title }}</span>
-                    <p class="text-xs text-gray-500">{{ item.description }}</p>
-                  </div>
-                </NuxtLink>
+                <template v-for="item in menuItems" :key="item.title">
+                  <NuxtLink v-if="!item.route.startsWith('http')" :to="item.route"
+                    class="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="h-5 w-5 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                    </svg>
+                    <div>
+                      <span class="text-sm font-medium text-gray-800">{{ item.title }}</span>
+                      <p class="text-xs text-gray-500">{{ item.description }}</p>
+                    </div>
+                  </NuxtLink>
+                  <a v-else :href="item.route" target="_blank" rel="noopener noreferrer"
+                    class="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="h-5 w-5 text-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                    </svg>
+                    <div>
+                      <span class="text-sm font-medium text-gray-800">{{ item.title }}</span>
+                      <p class="text-xs text-gray-500">{{ item.description }}</p>
+                    </div>
+                  </a>
+                </template>
               </div>
             </div>
           </div>

@@ -59,23 +59,23 @@ const selectCourseAndDivision = async (courseName, divisionName) => {
   // Actualizar estado visual primero para feedback inmediato
   selectedCourse.value = courseName;
   selectedDivision.value = divisionName;
-  
+
   // Actualizar datos - mostrar loading state
   isLoading.value = true;
-  
+
   try {
     // Buscar el course_id y division_id correspondientes en las asignaciones del profesor
     const assignment = authStore.user?.course_divisions?.find(
       cd => cd.course_name === courseName && cd.division_name === divisionName
     );
-    
+
     // Si se encuentra la asignación, cargar los estudiantes de ese curso y división
     if (assignment) {
       await studentsStore.fetchStudents(true, assignment.course_id, assignment.division_id);
     } else {
       console.error("No se encontró la asignación para el curso y división seleccionados");
     }
-    
+
     // Resetear a página 1 al cambiar de selección
     currentPage.value = 1;
   } catch (error) {
@@ -89,31 +89,31 @@ const selectCourseAndDivision = async (courseName, divisionName) => {
 const loadInitialData = async () => {
   try {
     isLoading.value = true;
-    
+
     // Cargar los cursos para la invitación
     await fetchCourses();
-    
+
     // Si el profesor tiene cursos asignados mediante course_divisions
     if (authStore.user?.course_divisions?.length > 0) {
       // Seleccionar el primer curso/división automáticamente
       const firstAssignment = authStore.user.course_divisions[0];
       selectedCourse.value = firstAssignment.course_name;
       selectedDivision.value = firstAssignment.division_name;
-      
+
       // Cargar los estudiantes del curso/división seleccionado
       await studentsStore.fetchStudents(true, firstAssignment.course_id, firstAssignment.division_id);
-    } 
+    }
     // Plan B: Usar course_id/division_id (método original)
     else if (authStore.user?.course_id && authStore.user?.division_id) {
       // Cargar estudiantes usando el método anterior
       await studentsStore.fetchStudents(true, authStore.user.course_id, authStore.user.division_id);
-      
+
       // Establecer curso/división en la interfaz
       if (authStore.user?.course_name && authStore.user?.division_name) {
         selectedCourse.value = authStore.user.course_name;
         selectedDivision.value = authStore.user.division_name;
       }
-    } 
+    }
     // Plan C: Si no hay información de curso/división, cargar todos los estudiantes
     else {
       await studentsStore.fetchStudents(true);
@@ -135,48 +135,72 @@ const setupSocketListeners = () => {
   });
 };
 
-// Funció per obtenir tots els cursos
+// Funció per obtenir només els cursos assignats al professor
 const fetchCourses = async () => {
   try {
-    const response = await fetch("https://api.grupify.cat/api/courses", {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    });
-    if (!response.ok) throw new Error("Error al carregar els cursos");
-    const data = await response.json();
-    courses.value = data;
+    // Usamos directamente las asignaciones del profesor en lugar de obtener todos los cursos
+    if (authStore.user?.course_divisions?.length > 0) {
+      // Crear un mapa para evitar duplicados de cursos
+      const courseMap = new Map();
+
+      // Extraer los cursos de las asignaciones del profesor
+      authStore.user.course_divisions.forEach(cd => {
+        courseMap.set(cd.course_id, {
+          id: cd.course_id,
+          name: cd.course_name
+        });
+      });
+
+      // Convertir el mapa a un array
+      courses.value = Array.from(courseMap.values());
+    }
+    // Plan B: Usar el curso asignado al profesor (método antiguo)
+    else if (authStore.user?.course_id && authStore.user?.course_name) {
+      courses.value = [{
+        id: authStore.user.course_id,
+        name: authStore.user.course_name
+      }];
+    }
+    // Si no hay cursos asignados
+    else {
+      courses.value = [];
+    }
   } catch (error) {
     console.error("Error al carregar els cursos:", error);
   }
 };
 
-// Funció per obtenir les divisions segons el curs seleccionat
+// Funció per obtenir només les divisions del curs assignat al professor
 const fetchInvitationDivisions = async () => {
   if (!selectedInvitationCourse.value) {
     divisions.value = [];
     return;
   }
+
   try {
-    const response = await fetch(
-      `https://api.grupify.cat/api/course-divisions?course_id=${selectedInvitationCourse.value}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      }
-    );
-    if (!response.ok) throw new Error("Error al carregar les divisions");
-    const data = await response.json();
-    if (data.divisions) {
-      divisions.value = data.divisions;
-    } else {
+    // Filtrar las divisiones de las asignaciones del profesor
+    if (authStore.user?.course_divisions?.length > 0) {
+      // Seleccionar sólo las divisiones del curso seleccionado y que están asignadas al profesor
+      const filteredDivisions = authStore.user.course_divisions
+        .filter(cd => cd.course_id === parseInt(selectedInvitationCourse.value))
+        .map(cd => ({
+          id: cd.division_id,
+          division: cd.division_name
+        }));
+
+      divisions.value = filteredDivisions;
+    }
+    // Plan B: Usar la división asignada al profesor (método antiguo)
+    else if (authStore.user?.division_id && authStore.user?.division_name &&
+      authStore.user?.course_id === parseInt(selectedInvitationCourse.value)) {
+      divisions.value = [{
+        id: authStore.user.division_id,
+        division: authStore.user.division_name
+      }];
+    }
+    // Si no hay divisiones asignadas
+    else {
       divisions.value = [];
-      console.error(data.message || "No s'han trobat divisions");
     }
   } catch (error) {
     console.error("Error al carregar les divisions:", error);
@@ -245,7 +269,7 @@ onMounted(async () => {
           Gestiona i supervisa l'alumnat registrat a l'institut
         </p>
       </div>
-      
+
       <!-- Selector de cursos exclusivamente asignados al profesor -->
       <div class="bg-white rounded-lg shadow mb-6">
         <div class="p-4 sm:p-6 border-b border-gray-200">
@@ -254,40 +278,44 @@ onMounted(async () => {
         </div>
         <div class="p-4 sm:p-6">
           <!-- Si el profesor tiene cursos asignados -->
-          <div v-if="authStore.user?.course_divisions?.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div v-if="authStore.user?.course_divisions?.length > 0"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <!-- Tarjeta para cada curso específico -->
-            <div 
-              v-for="(cd, index) in authStore.user.course_divisions" 
-              :key="index" 
+            <div v-for="(cd, index) in authStore.user.course_divisions" :key="index"
               @click="selectCourseAndDivision(cd.course_name, cd.division_name)"
               class="course-selection-card border rounded-lg p-4 cursor-pointer transition-all duration-300 flex flex-col items-center text-center"
               :class="[
-                selectedCourse === cd.course_name && selectedDivision === cd.division_name 
-                  ? 'bg-primary-50 border-primary-500 shadow-md' 
+                selectedCourse === cd.course_name && selectedDivision === cd.division_name
+                  ? 'bg-primary-50 border-primary-500 shadow-md'
                   : 'bg-white hover:bg-gray-50 border-gray-200'
-              ]"
-            >
+              ]">
               <div class="bg-blue-100 p-4 rounded-full mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
                   <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                  <path
+                    d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
                 </svg>
               </div>
               <h3 class="text-lg font-medium text-gray-900 mb-1">{{ cd.course_name }} {{ cd.division_name }}</h3>
               <p class="text-sm text-gray-600">Veure alumnes d'aquest curs</p>
               <div class="mt-3" v-if="selectedCourse === cd.course_name && selectedDivision === cd.division_name">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                   Seleccionat
                 </span>
               </div>
             </div>
           </div>
-          
+
           <!-- Mensaje si el profesor no tiene cursos asignados -->
           <div v-else class="text-center py-6">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <h3 class="text-lg font-medium text-gray-900 mb-1">No tens cursos assignats</h3>
             <p class="text-sm text-gray-600">Contacta amb l'administrador per assignar-te cursos</p>
@@ -312,79 +340,66 @@ onMounted(async () => {
                   Llista d'alumnes de {{ selectedCourse }} {{ selectedDivision }}
                 </h2>
               </div>
-              
+
               <div class="mt-3 sm:mt-0 flex items-center">
                 <!-- Botón de invitación -->
-                <button
-                  @click="openInvitationModal"
+                <button @click="openInvitationModal"
                   class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-[rgb(0,173,238)] text-white rounded-full mr-3"
-                  title="Generar enllaç d'invitació"
-                >
+                  title="Generar enllaç d'invitació">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="white" class="w-4 h-4 sm:w-5 sm:h-5">
                     <path stroke-linecap="round" stroke-linejoin="round"
                       d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
                   </svg>
                 </button>
-                
+
                 <!-- Contador de estudiantes -->
                 <span class="px-3 py-1.5 text-sm font-medium text-primary-800 bg-primary-100 rounded-full">
                   {{ filteredStudents.length }} estudiants
                 </span>
               </div>
             </div>
-            
+
             <!-- Campo de búsqueda de estudiantes -->
             <div class="mt-4">
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="Buscar alumne per nom, cognom o email..."
-                  class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                />
+                <input v-model="searchQuery" type="text" placeholder="Buscar alumne per nom, cognom o email..."
+                  class="pl-10 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" />
               </div>
             </div>
           </div>
-          
+
           <!-- Mensaje de carga -->
           <div v-if="isLoading" class="bg-white rounded-lg p-8 text-center">
             <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
             <p class="mt-4 text-gray-600 font-medium">Carregant estudiants...</p>
           </div>
-          
+
           <!-- Mostrem els estudiants paginats -->
-          <TeacherStudentList 
-            :students="paginatedStudents" 
-            class="divide-y divide-gray-200" 
-            v-if="paginatedStudents.length > 0" 
-          />
+          <TeacherStudentList :students="paginatedStudents" class="divide-y divide-gray-200"
+            v-if="paginatedStudents.length > 0" />
           <div v-else class="p-6 text-center text-gray-500">
             No s'han trobat estudiants en aquest curs i divisió.
           </div>
 
           <!-- Controls de paginació -->
           <div class="flex items-center justify-between px-4 py-3 sm:px-6">
-            <button
-              @click="currentPage--"
-              :disabled="currentPage === 1"
-              class="px-3 py-1 text-sm text-blue-600 bg-white border border-gray-200 rounded disabled:opacity-50"
-            >
+            <button @click="currentPage--" :disabled="currentPage === 1"
+              class="px-3 py-1 text-sm text-blue-600 bg-white border border-gray-200 rounded disabled:opacity-50">
               Anterior
             </button>
             <div class="hidden sm:block text-sm text-gray-600">
               Pàgina {{ currentPage }} de {{ totalPages }}
             </div>
-            <button
-              @click="currentPage++"
-              :disabled="currentPage === totalPages"
-              class="px-3 py-1 text-sm text-blue-600 bg-white border border-gray-200 rounded disabled:opacity-50"
-            >
+            <button @click="currentPage++" :disabled="currentPage === totalPages"
+              class="px-3 py-1 text-sm text-blue-600 bg-white border border-gray-200 rounded disabled:opacity-50">
               Següent
             </button>
           </div>
@@ -399,7 +414,7 @@ onMounted(async () => {
       <!-- Contingut del modal -->
       <div class="bg-white rounded-lg p-4 sm:p-6 relative z-10 w-full max-w-md mx-4">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg sm:text-xl font-bold">Generar enllaç d'invitació</h2>
+          <h2 class="text-lg sm:text-xl font-bold">Generar enllaç d'invitació per als teus cursos</h2>
           <button @click="closeInvitationModal" class="text-gray-500 hover:text-gray-700" title="Tanca">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
               stroke="currentColor" stroke-width="2">
@@ -410,7 +425,7 @@ onMounted(async () => {
 
         <!-- Formulari per generar la invitació -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona un curs</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona un dels teus cursos assignats</label>
           <select v-model="selectedInvitationCourse" @change="fetchInvitationDivisions"
             class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
             <option disabled value="">Selecciona un curs</option>
@@ -418,6 +433,9 @@ onMounted(async () => {
               {{ course.name }}
             </option>
           </select>
+          <p v-if="courses.length === 0" class="mt-2 text-sm text-red-600">
+            No tens cursos assignats. Si necessites accés, contacta amb l'administrador.
+          </p>
         </div>
 
         <!-- Selector de divisió -->
@@ -430,6 +448,12 @@ onMounted(async () => {
               {{ division.division }}
             </option>
           </select>
+        </div>
+
+        <!-- Mensaje informativo cuando no hay divisiones disponibles -->
+        <div v-else-if="selectedInvitationCourse"
+          class="mb-4 p-2 bg-amber-50 border border-amber-200 rounded text-amber-700 text-sm">
+          <p>No tens cap divisió assignada per a aquest curs. Si necessites accés, contacta amb l'administrador.</p>
         </div>
 
         <button @click="generateInvitation"
@@ -456,14 +480,10 @@ onMounted(async () => {
         </div>
 
         <!-- Toast de error -->
-        <transition
-          enter-active-class="transition ease-out duration-300 transform"
-          enter-from-class="opacity-0 translate-y-2"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition ease-in duration-200 transform"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 translate-y-2"
-        >
+        <transition enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2">
           <div v-if="showErrorToast"
             class="fixed bottom-6 right-6 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -475,14 +495,10 @@ onMounted(async () => {
         </transition>
 
         <!-- Pop-up per confirmar copia -->
-        <transition
-          enter-active-class="transition ease-out duration-300 transform"
-          enter-from-class="opacity-0 translate-y-2"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition ease-in duration-200 transform"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 translate-y-2"
-        >
+        <transition enter-active-class="transition ease-out duration-300 transform"
+          enter-from-class="opacity-0 translate-y-2" enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-200 transform" leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-2">
           <div v-if="showCopyPopup"
             class="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"

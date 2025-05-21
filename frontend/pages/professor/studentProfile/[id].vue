@@ -54,7 +54,7 @@ async function obtenerDatosAlumno(studentId) {
 
     // URL principal según el controlador del backend (AnswerController)
     // La ruta correcta debe ser: /api/forms/{formId}/users/{userId}/answers
-    const url = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
+    const url = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
 
     console.log("Realizando petición a:", url);
 
@@ -417,7 +417,7 @@ onMounted(async () => {
         console.log(`Cargando respuestas de autoavaluación para el estudiante ${studentId}`);
 
         // Usar la ruta completamente pública para autoavaluaciones
-        const url = `http://localhost:8000/api/public/forms/autoavaluacion/${studentId}`;
+        const url = `https://api.grupify.cat/api/public/forms/autoavaluacion/${studentId}`;
 
         console.log("Consultando URL:", url);
 
@@ -458,7 +458,7 @@ onMounted(async () => {
         console.log("Intentando método alternativo...");
         try {
           // Intento alternativo con otra URL
-          const altUrl = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
+          const altUrl = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
           console.log("Intentando con URL alternativa:", altUrl);
 
           const altResponse = await fetch(altUrl);
@@ -509,7 +509,7 @@ const checkForm4Status = async studentId => {
     );
 
     // Intentar usar el endpoint principal para obtener la lista de usuarios que han respondido
-    const url = `http://localhost:8000/api/forms/4/users`;
+    const url = `https://api.grupify.cat/api/forms/4/users`;
 
     console.log("Intentando obtener lista de usuarios que han respondido:", url);
 
@@ -561,7 +561,7 @@ const checkDirectResponses = async (studentId) => {
     console.log("Intentando verificación directa de respuestas para estudiante:", studentId);
 
     // Intentar obtener directamente las respuestas del estudiante
-    const directUrl = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
+    const directUrl = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
 
     const directResponse = await fetch(directUrl, {
       method: "GET",
@@ -667,7 +667,7 @@ const addComment = async () => {
 const deleteComment = async commentId => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/comments/${commentId}`,
+      `https://api.grupify.cat/api/comments/${commentId}`,
       { method: "DELETE" }
     );
 
@@ -880,8 +880,7 @@ watch(isFormVisible, async (newValue) => {
               <button @click="isFormVisible = !isFormVisible" :class="{
                 'bg-[rgb(0,173,238)]': isFormVisible,
                 'bg-gray-300': !isFormVisible,
-              }"
-                class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none">
+              }" class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none">
                 <span :class="{
                   'translate-x-6': isFormVisible,
                   'translate-x-1': !isFormVisible,

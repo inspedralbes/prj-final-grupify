@@ -8,33 +8,14 @@
       <CescCategoryCards v-if="!showGraph" @category-selected="handleCategorySelected" class="pt-4" />
       
       <!-- Vista de gráficos (solo visible después de seleccionar una categoría) -->
-      <div v-if="showGraph" class="grid grid-cols-1 gap-8">
-        <!-- Título de la categoría seleccionada -->
-        <div v-if="categoria !== 'all'" class="bg-white rounded-xl shadow-lg p-6">
-          <h2 class="text-2xl font-bold" :class="{
-            'text-green-600': categoria === 'social',
-            'text-red-600': categoria === 'violento',
-            'text-yellow-600': categoria === 'afectado'
-          }">
-            Comparativa CESC: {{ categoriaTitulo }}
-          </h2>
-          <p class="text-gray-600 mt-2">
-            <template v-if="categoria === 'social'">
-              Comparativa dels tags CESC: Popular (1) i Prosocial (4)
-            </template>
-            <template v-else-if="categoria === 'violento'">
-              Comparativa dels tags CESC: Agressiu (3)
-            </template>
-            <template v-else-if="categoria === 'afectado'">
-              Comparativa dels tags CESC: Rebutjat (2) i Víctima (5)
-            </template>
-          </p>
-        </div>
-        
+      <div v-if="showGraph" class="grid grid-cols-1 gap-8">        
         <!-- Gráfico de Tags CESC -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
           <div class="p-1">
-            <TagsGraphic :categoria="categoria" />
+            <TagsGraphic 
+              :categoria="categoria" 
+              @return-to-categories="showGraph = false" 
+            />
           </div>
         </div>
       </div>
@@ -83,6 +64,9 @@ onMounted(() => {
   if (storedUser) {
     userData.value = JSON.parse(storedUser);
   }
+  
+  // Establecer la preferencia de mostrar todos los datos cuando se navega directamente a esta página
+  localStorage.setItem('orientadorViewAllData', 'true');
   
   // Obtener categoría de la URL si existe
   if (route.query.categoria) {

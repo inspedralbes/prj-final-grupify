@@ -39,7 +39,10 @@ async function fetchQuestions() {
       `https://api.grupify.cat/api/forms/${formId}/questions-and-answers`
     );
     if (!response.ok) throw new Error("Error al cargar las preguntas");
-    questions.value = await response.json();
+    const formData = await response.json();
+    // La API devuelve el objeto completo del formulario, pero necesitamos solo las preguntas
+    questions.value = formData.questions || [];
+    console.log("Preguntas cargadas:", questions.value);
   } catch (error) {
     console.error("Error al cargar las preguntas:", error);
     triggerToast("Error al cargar las preguntas.", "error");
@@ -52,7 +55,7 @@ async function fetchUsers() {
     // Obtener el curso y división del usuario actual
     const courseId = authStore.user.course_id;
     const divisionId = authStore.user.division_id;
-    
+
     // Filtrar para obtener solo estudiantes del mismo curso y división
     const response = await fetch(`https://api.grupify.cat/api/get-students?course_id=${courseId}&division_id=${divisionId}`, {
       method: "GET",
@@ -63,7 +66,7 @@ async function fetchUsers() {
 
     if (!response.ok) throw new Error("Error al cargar los usuarios");
     const allStudents = await response.json();
-    
+
     // Excluir al usuario actual de la lista
     userNames.value = allStudents.filter(student => student.id !== userId);
   } catch (error) {
@@ -104,41 +107,40 @@ async function submitResponses() {
     // Formatear las respuestas para el controlador CescRelationship
     // Crear un array de relaciones en el formato que espera el controlador
     const relationships = [];
-    
+
     // Para cada pregunta respondida
     for (const questionId in responses.value) {
       // Obtener los IDs de los peers seleccionados
       const selectedPeerIds = responses.value[questionId];
-      
+
       // Para cada peer seleccionado, crear una relación
       for (const peerId of selectedPeerIds) {
-        // Determinar el tag_id basado en la pregunta
-        // Asumimos que cada pregunta del CESC corresponde a un tag específico
-        // Pregunta 1: Popular (tag_id: 1)
-        // Pregunta 2: Rebutjat (tag_id: 2)
-        // Pregunta 3: Agressiu (tag_id: 3)
-        // Pregunta 4: Prosocial (tag_id: 4)
-        // Pregunta 5: Víctima (tag_id: 5)
-        
-        // Buscar la pregunta actual en el array de preguntas
-        const currentQuestion = questions.value.find(q => q.id == questionId);
-        let tagId = 1; // Valor predeterminado (Popular)
-        
-        // Determinar el tag_id basado en el título o contenido de la pregunta
-        if (currentQuestion) {
-          const questionTitle = currentQuestion.title.toLowerCase();
-          
-          if (questionTitle.includes('rechazados') || questionTitle.includes('rebutjats')) {
-            tagId = 2; // Rebutjat
-          } else if (questionTitle.includes('agresivos') || questionTitle.includes('agressius')) {
-            tagId = 3; // Agressiu
-          } else if (questionTitle.includes('prosociales') || questionTitle.includes('prosocials')) {
-            tagId = 4; // Prosocial
-          } else if (questionTitle.includes('víctimas') || questionTitle.includes('víctima')) {
-            tagId = 5; // Víctima
-          }
-        }
-        
+        // Determinar el tag_id basado en el ID de la pregunta
+        // Mapeamos los IDs de las preguntas a los IDs de los tags según el seeder
+        // POPULAR (tag_id: 1): Preguntas 3, 14
+        // REBUTJAT (tag_id: 2): Pregunta 4
+        // AGRESSIU (tag_id: 3): Preguntas 5, 7, 8, 10
+        // PROSOCIAL (tag_id: 4): Preguntas 6, 9
+        // VÍCTIMA (tag_id: 5): Preguntas 11, 12, 13
+
+        // Convertir questionId a número para comparaciones
+        const qId = parseInt(questionId);
+
+        // Mapeo directo de question_id a tag_id
+        const questionTagMap = {
+          3: 1, 14: 1,  // POPULAR
+          4: 2,         // REBUTJAT
+          5: 3, 7: 3, 8: 3, 10: 3,  // AGRESSIU
+          6: 4, 9: 4,   // PROSOCIAL
+          11: 5, 12: 5, 13: 5  // VÍCTIMA
+        };
+
+        // Asignar tag_id según el mapeo, o usar 1 (Popular) como valor predeterminado
+        let tagId = questionTagMap[qId] || 1;
+
+        // Añadir logs para depuración
+        console.log(`Pregunta ID: ${qId}, Tag ID asignado: ${tagId}`);
+
         // Añadir la relación al array
         relationships.push({
           peer_id: peerId,
@@ -147,6 +149,9 @@ async function submitResponses() {
         });
       }
     }
+
+    // Mostrar las relaciones que se van a enviar para depuración
+    console.log("Relaciones a enviar:", JSON.stringify(relationships, null, 2));
 
     // Enviar los datos al endpoint correcto utilizando el formato adecuado
     const response = await fetch(
@@ -200,8 +205,19 @@ onMounted(async () => {
 
 <template>
   <div class="p-6 space-y-6 max-w-2xl mx-auto">
+    <!-- Loading indicator -->
+    <div v-if="questions.length === 0" class="text-center py-10">
+      <div class="mb-4">
+        <svg class="animate-spin h-10 w-10 mx-auto text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      <p class="text-gray-600">Cargando formulario...</p>
+    </div>
+
     <div
-      v-if="currentQuestionIndex < questions.length"
+      v-else-if="questions.length > 0 && currentQuestionIndex < questions.length"
       class="bg-white rounded-lg shadow-lg p-6"
     >
       <h2 class="text-2xl font-bold mb-4">{{ currentQuestion?.title }}</h2>
@@ -263,7 +279,8 @@ onMounted(async () => {
     </div>
 
     <div v-else class="text-center">
-      <h3 class="text-xl font-bold mb-4">¡Quiz completat!</h3>
+      <h3 class="text-xl font-bold mb-4" v-if="currentQuestionIndex >= questions.length && questions.length > 0">¡Quiz completat!</h3>
+      <h3 class="text-xl font-bold mb-4" v-else>No se han encontrado preguntas para este formulario.</h3>
     </div>
 
     <!-- Toast -->

@@ -206,6 +206,9 @@ class RegisteredUserController extends Controller
                 if ($invitation) {
                     $course_id = $invitation->course_id;
                     $division_id = $invitation->division_id;
+                    
+                    \Log::info("Procesando token de invitación: " . $request->invitation_token);
+                    \Log::info("Curso ID: " . $course_id . ", División ID: " . $division_id);
                 }
             }
 
@@ -214,6 +217,7 @@ class RegisteredUserController extends Controller
             if ($existingAssociation) {
                 // Si se envió invitation_token, actualizamos la asociación
                 if ($request->has('invitation_token') && isset($invitation)) {
+                    \Log::info("Actualizando asociación existente para usuario ID: " . $user->id);
                     $existingAssociation->update([
                         'course_id'   => $course_id,
                         'division_id' => $division_id,
@@ -221,6 +225,7 @@ class RegisteredUserController extends Controller
                 }
             } else {
                 // Si no existe, se crea la asociación (con los valores de la invitación o null)
+                \Log::info("Creando nueva asociación para usuario ID: " . $user->id);
                 CourseDivisionUser::create([
                     'user_id'     => $user->id,
                     'course_id'   => $course_id,
@@ -228,23 +233,52 @@ class RegisteredUserController extends Controller
                 ]);
             }
 
+            // Recargar el usuario con sus relaciones para tener datos actualizados
+            $user = User::with(['role', 'courseDivisions', 'courseDivisionUsers.course', 'courseDivisionUsers.division'])->find($user->id);
+
             // Cargar la asociación y agregar los valores al objeto user
-            $association = CourseDivisionUser::where('user_id', $user->id)->first();
+            $association = CourseDivisionUser::with(['course', 'division'])->where('user_id', $user->id)->first();
             if ($association) {
-                // Se asignan al objeto _user_ para que se retornen al frontend
+                // Asignar IDs
                 $user->course_id = $association->course_id;
                 $user->division_id = $association->division_id;
+                
+                // Asignar nombres
+                $course = \App\Models\Course::find($association->course_id);
+                $division = \App\Models\Division::find($association->division_id);
+                
+                $user->course_name = $course ? $course->name : null;
+                $user->division_name = $division ? $division->division : null;
+                
+                \Log::info("Datos finales del usuario:");
+                \Log::info("Course ID: " . $user->course_id . ", Course Name: " . $user->course_name);
+                \Log::info("Division ID: " . $user->division_id . ", Division Name: " . $user->division_name);
             }
 
             // Generar token de autenticación
             $token = $user->createToken('GroupifyToken')->plainTextToken;
 
-            // Cargar la relación del role
-            $user->load('role');
+            // Preparar el objeto de usuario para la respuesta, asegurando que incluya todos los campos necesarios
+            $responseUser = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'image' => $user->image,
+                'role_id' => $user->role_id,
+                'google_id' => $user->google_id,
+                'course_id' => $user->course_id,
+                'division_id' => $user->division_id,
+                'course_name' => $user->course_name,
+                'division_name' => $user->division_name,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+                'role' => $user->role,
+            ];
 
             return response()->json([
                 'token' => $token,
-                'user'  => $user,
+                'user' => $responseUser,
                 'role' => $user->role->name
             ], 200);
         } catch (\Exception $e) {

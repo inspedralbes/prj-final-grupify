@@ -3,12 +3,12 @@ import { onMounted, ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useCoursesStore } from "~/stores/coursesStore";
 import { useRelationshipsStore } from "~/stores/relationships";
-import Relations from "@/components/Teacher/SociogramaComponents/Relations.vue";
-import Roles from "@/components/Teacher/SociogramaComponents/Roles.vue";
-import RolesGraphic from "~/components/Teacher/SociogramaComponents/RolesGraphic.vue";
-import Skills from "@/components/Teacher/SociogramaComponents/Skills.vue";
+import Relations from "@/components/Orientador/SociogramaComponents/Relations.vue";
+import Roles from "@/components/Orientador/SociogramaComponents/Roles.vue";
+import RolesGraphic from "~/components/Orientador/SociogramaComponents/RolesGraphic.vue";
+import Skills from "@/components/Orientador/SociogramaComponents/Skills.vue";
 import DashboardNavOrientador from "@/components/Orientador/DashboardNavOrientador.vue";
-import SociogramStatus from "@/components/Teacher/SociogramaComponents/SociogramStatus.vue";
+import SociogramStatus from "@/components/Orientador/SociogramaComponents/SociogramStatus.vue";
 import { useStudentsStore } from "~/stores/studentsStore";
 import { ScatterChart } from "echarts/charts";
 // Existing setup code remains the same

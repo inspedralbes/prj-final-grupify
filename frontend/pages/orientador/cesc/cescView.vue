@@ -3,9 +3,9 @@ import { ref, computed, onMounted } from 'vue';
 import { useCoursesStore } from '~/stores/coursesStore'; 
 import { useAuthStore } from '~/stores/authStore';
 import { useCourseSearch } from '~/composables/useCourseSearch';
-import CoursesFilters from '~/components/Teacher/CescComponents/CoursesFilters.vue';
+import CoursesFilters from '~/components/Orientador/CescComponents/CoursesFilters.vue';
 import DashboardNavOrientador from '~/components/Orientador/DashboardNavOrientador.vue';
-import CoursesList from '~/components/Teacher/CescComponents/CoursesList.vue';
+import CoursesList from '~/components/Orientador/CescComponents/CoursesList.vue';
 
 const error = ref(null);
 const isLoading = ref(true);

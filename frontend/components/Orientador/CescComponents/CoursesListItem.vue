@@ -21,7 +21,7 @@ defineProps({
 const viewProfile = (course) => {
   if (!course) return;
   router.push({
-    path: `/professor/cesc/cescProfile/${course.classId}`,
+    path: `/orientador/cesc/cescProfile/${course.classId}`,
   });
 };
 
@@ -43,7 +43,7 @@ const analyzeWithAI = async (course) => {
     });
 
     if (!response.ok) {
-      throw new Error("Error al obtener las respuestas del sociograma.");
+      throw new Error("Error en obtenir les respostes del sociograma.");
     }
 
     const data = await response.json();
@@ -58,15 +58,14 @@ const analyzeWithAI = async (course) => {
     chatStore.addMessage(chatStore.currentChatId, {
       type: "system",
       content: `Benvingut a la sessió de CESC. \n 
-    CURSO: ${cescStore.currentCourse.courseName} \n
-    DIVISION: ${cescStore.currentDivision.divisionName}
+    CURS: ${cescStore.currentCourse.courseName} \n
+    DIVISIÓ: ${cescStore.currentDivision.divisionName}
     \n Com puc ajudar-te?\n
-      Pot fer preguntes sobre:\n
-      - Puedes preguntarme sobre:\n
-      - Preferencias individuales: Puedes preguntar por las respuestas de un alumno específico.\n
-      - Relaciones entre alumnos: Puedo analizar las respuestas para identificar quiénes se llevan bien, quiénes no, etc.\n
-      - Comportamientos en el aula:  Puedo ofrecer información sobre quiénes difunden rumores, ayudan a los demás, dan empujones, etc.\n
-      - Grupos sociales: Puedo ayudarte a identificar los grupos de amigos y amigas dentro del aula.\n
+      Pots fer preguntes sobre:\n
+      - Preferències individuals: Pots preguntar per les respostes d'un alumne específic.\n
+      - Relacions entre alumnes: Puc analitzar les respostes per identificar qui es porta bé, qui no, etc.\n
+      - Comportaments a l'aula: Puc oferir informació sobre qui difon rumors, ajuda als altres, empeny, etc.\n
+      - Grups socials: Puc ajudar-te a identificar els grups d'amics i amigues dins de l'aula.\n
       I més...
     `,
       timestamp: new Date().toISOString(),
@@ -74,11 +73,11 @@ const analyzeWithAI = async (course) => {
 
 
     router.push({
-      path: "/professor/assistent",
+      path: "/orientador/assistent",
     });
   } catch (error) {
-    console.error("Error durante el análisis con IA:", error);
-    alert("Ocurrió un error al analizar los datos. Por favor, inténtalo de nuevo.");
+    console.error("Error durant l'anàlisi amb IA:", error);
+    alert("S'ha produït un error en analitzar les dades. Si us plau, torna-ho a provar.");
   } finally {
     isLoading.value = false;
   }
@@ -93,9 +92,6 @@ const analyzeWithAI = async (course) => {
       <button class="p-1 hover:text-primary" @click="viewProfile(course)">
         <EyeIcon class="w-5 h-5" />
       </button>
-    </td>
-    <td>
-      <button @click="analyzeWithAI(course)">Analizar IA</button>
     </td>
   </tr>
 </template>

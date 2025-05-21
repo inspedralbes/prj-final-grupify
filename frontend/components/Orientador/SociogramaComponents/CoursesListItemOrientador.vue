@@ -100,11 +100,5 @@ const analyzeWithAI = async (course) => {
         <EyeIcon class="w-5 h-5" />
       </button>
     </td>
-    <td>
-      <button @click="analyzeWithAI(course)"
-              class="px-3 py-1 bg-[#00ADEC] hover:bg-[#0099CC] text-white rounded-md shadow-sm transition-colors">
-        Analitzar IA
-      </button>
-    </td>
   </tr>
 </template>

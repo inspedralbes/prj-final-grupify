@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use App\Mail\LoginNotificationMail;
 use Illuminate\Support\Facades\Mail;
+use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -42,6 +43,7 @@ class AuthenticatedSessionController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'invitation_token' => 'nullable|exists:invitations,token',
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
@@ -56,8 +58,34 @@ class AuthenticatedSessionController extends Controller
         // Crear nuevo token
         $token = $user->createToken('Groupify')->plainTextToken;
 
+        // Procesar token de invitación si existe
+        if ($request->has('invitation_token')) {
+            $invitation = \App\Models\Invitation::where('token', $request->invitation_token)->first();
+            
+            if ($invitation) {
+                // Actualizar o crear la asignación de curso y división
+                $existingAssignment = \App\Models\CourseDivisionUser::where('user_id', $user->id)->first();
+                
+                if ($existingAssignment) {
+                    $existingAssignment->update([
+                        'course_id' => $invitation->course_id,
+                        'division_id' => $invitation->division_id
+                    ]);
+                } else {
+                    \App\Models\CourseDivisionUser::create([
+                        'user_id' => $user->id,
+                        'course_id' => $invitation->course_id,
+                        'division_id' => $invitation->division_id
+                    ]);
+                }
+            }
+        }
+
         // Cargar las relaciones necesarias
         $user->load(['forms', 'subjects', 'role', 'courseDivisions', 'courseDivisionUsers.course', 'courseDivisionUsers.division']);
+
+        // Recarga el usuario después de posibles cambios por la invitación
+        $user = User::with(['forms', 'subjects', 'role', 'courseDivisions', 'courseDivisionUsers.course', 'courseDivisionUsers.division'])->find($user->id);
 
         // Para todos los usuarios: extraer el primer course_id y division_id para compatibilidad
         $courseDivision = $user->courseDivisions->first(); // Obtenemos solo el primer curso/división

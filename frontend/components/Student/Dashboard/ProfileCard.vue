@@ -3,7 +3,7 @@
     <div class="flex flex-col items-center">
       <div class="relative group">
         <img
-          :src="userData.image"
+          :src="userData.image || 'https://i.pravatar.cc/150?img=42'"
           alt="Avatar"
           class="w-24 h-24 rounded-full object-cover mb-4"
         />
@@ -45,7 +45,7 @@
       </h2>
       <p class="text-gray-500 text-sm">{{ userData.email }}</p>
       <p class="text-gray-500 text-sm">
-        Curs: {{ userData.course_name }} {{ userData.division_name }}
+        Curs: {{ userData.course_name || 'Sense curs' }} {{ userData.division_name || 'Sense divisió' }}
       </p>
     </div>
   </div>
@@ -60,6 +60,8 @@ const fileInput = ref(null);
 
 // Datos reactivos del usuario
 const userData = computed(() => {
+  console.log("Datos de usuario en el perfil:", authStore.user); // Depuración
+  
   const user = authStore.user;
 
   if (!user) {
@@ -68,8 +70,8 @@ const userData = computed(() => {
       last_name: "",
       email: "",
       image: "",
-      course_name: "Sense curs",
-      division_name: "Sense divisió",
+      course_name: null,
+      division_name: null,
     };
   }
 
@@ -78,8 +80,8 @@ const userData = computed(() => {
     last_name: user.last_name || "",
     email: user.email || "",
     image: user.image || "",
-    course_name: user.course_name || "Sense curs",
-    division_name: user.division_name || "Sense divisió",
+    course_name: user.course_name || null,
+    division_name: user.division_name || null,
   };
 });
 

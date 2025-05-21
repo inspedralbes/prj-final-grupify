@@ -210,11 +210,22 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    // Simplificado para manejar exactamente el formato de respuesta del backend
+    // Método para establecer la autenticación con todos los datos del usuario
     setAuth(token: string, user: User, role: string): void {
       this.token = token;
       this.user = user;
       this.isAuthenticated = true;
+
+      // Asegurarnos de que los datos de curso y división estén presentes
+      console.log("Estableciendo autenticación con datos:", {
+        token: token ? "token-presente" : "token-ausente",
+        user: user,
+        role: role,
+        course_id: user.course_id,
+        division_id: user.division_id,
+        course_name: user.course_name,
+        division_name: user.division_name
+      });
 
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));

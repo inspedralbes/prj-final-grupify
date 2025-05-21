@@ -22,7 +22,7 @@ const menuItemsConfig = [
   },
   {
     type: "dropdown",
-    id: "formularis", // Añadimos un ID único para cada desplegable
+    id: "formularis",
     title: "Formularis",
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     items: [
@@ -32,12 +32,6 @@ const menuItemsConfig = [
         icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
         showFor: ['profesor', 'tutor', 'admin'],
       },
-      // {
-      //   title: "Cesc",
-      //   route: "/professor/cesc/CescView",
-      //   icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
-      //   showFor: ['orientador', 'admin'],
-      // }
       {
         title: "Cesc",
         route: "/professor/cesc/CescView",
@@ -54,15 +48,10 @@ const menuItemsConfig = [
   },
   {
     type: "dropdown",
-    id: "grafiques", 
+    id: "grafiques",
     title: "Gràfiques",
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     items: [
-      // {
-      //   title: "Cesc",
-      //   route: "/professor/graficas",
-      //   icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-      // },
       {
         title: "CESC",
         route: "/orientador/cesc/comparative",
@@ -71,7 +60,7 @@ const menuItemsConfig = [
       },
       {
         title: "Sociograma",
-        route:"/professor/sociograma/comparative",
+        route: "/professor/sociograma/comparative",
         icon: "M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z",
         showFor: ['orientador', 'admin'],
       },
@@ -82,67 +71,39 @@ const menuItemsConfig = [
       }
     ]
   },
-
   {
-    title: "Chat IA",
-    route: "/professor/assistent",
+    title: "Xat IA",
+    route: "http://localhost:8501",
     icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
   },
   {
-    title: "Notificacions", 
+    title: "Notificacions",
     route: "/professor/notificacions",
     icon: "M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6V9a6 6 0 10-12 0v7a2 2 0 01-2 2h16a2 2 0 01-2-2zm-6-13a4 4 0 014 4h-8a4 4 0 014-4z",
   },
 ];
 
-// Filtrar los elementos del menú según el rol del usuario
+// El resto del código del componente se mantiene igual hasta el template
+
 const menuItems = computed(() => {
-  // Asegurarnos de inicializar el authStore antes de acceder a los datos
   if (authStore.token && (!authStore.user || !authStore.user.role)) {
-    console.log("NavTeacher: authStore not initialized, initializing...");
     authStore.initialize();
   }
-  
-  const userRole = authStore.userRole;
-  console.log("NavTeacher: User role for menu filtering:", userRole);
-  
-  // Si no hay rol, intentar cargar desde localStorage
-  if (!userRole && authStore.token) {
-    console.log("NavTeacher: No role detected, trying localStorage...");
-    try {
-      const userString = localStorage.getItem("user");
-      if (userString) {
-        const user = JSON.parse(userString);
-        console.log("NavTeacher: User from localStorage:", user?.role?.name);
-        if (user && user.role && user.role.name) {
-          // Forzar la actualización del authStore
-          authStore.user = user;
-        }
-      }
-    } catch (e) {
-      console.error("NavTeacher: Error loading user from localStorage:", e);
-    }
-  }
-  
-  // Obtener el rol, potencialmente actualizado
-  const effectiveRole = authStore.userRole || 
-                       (authStore.user?.role?.name) || 
-                       JSON.parse(localStorage.getItem("user") || "{}")?.role?.name || 
-                       'profesor'; // Fallback
-  
-  console.log("NavTeacher: Effective role for menu:", effectiveRole);
-  
+
+  const effectiveRole = authStore.userRole ||
+    (authStore.user?.role?.name) ||
+    JSON.parse(localStorage.getItem("user") || "{}")?.role?.name ||
+    'profesor';
+
   return menuItemsConfig.map(item => {
-    // Si es un menú desplegable, filtramos sus elementos
     if (item.type === 'dropdown') {
       return {
         ...item,
-        items: item.items.filter(subItem => 
+        items: item.items.filter(subItem =>
           !subItem.showFor || subItem.showFor.includes(effectiveRole)
         )
       };
     }
-    // Si es un elemento normal, lo devolvemos tal cual
     return item;
   });
 });
@@ -150,6 +111,7 @@ const menuItems = computed(() => {
 const router = useRouter();
 const route = useRoute();
 
+// Resto de funciones del componente...
 const goHome = () => {
   const userString = localStorage.getItem("user");
   if (!userString) {
@@ -159,60 +121,36 @@ const goHome = () => {
 
   try {
     const user = JSON.parse(userString);
-    console.log("User desde navteacher:", user);
-    
-    if (user && user.role && user.role.name) {
-      // console.log("Role name:", user.role.name);
-      
-      if (user.role.name === "orientador") {
-        router.push("/orientador/dashboard");
-        return;
-      }
-      if (user.role.name === "profesor") {
-        router.push("/professor/dashboard");
-        return;
-      }
-      if (user.role.name === "tutor") {
-        router.push("/tutor/dashboard");
-        return;
-      }
+    if (user?.role?.name === "orientador") {
+      router.push("/orientador/dashboard");
+    } else if (user?.role?.name === "profesor") {
+      router.push("/professor/dashboard");
+    } else if (user?.role?.name === "tutor") {
+      router.push("/tutor/dashboard");
     } else {
-      console.error("La estructura del objeto usuario no es la esperada:", user);
+      router.push("/professor/dashboard");
     }
   } catch (error) {
     console.error("Error al parsear el usuario desde localStorage:", error);
     router.push("/login");
-    return;
   }
-  
-  // Por defecto, si no se ha detectado un rol específico
-  router.push("/professor/dashboard");
 };
 
 const isActiveRoute = itemRoute => route.path === itemRoute;
-
-// Nueva función para manejar cada desplegable individualmente
 const toggleDropdown = (dropdownId, event) => {
-  // Cerrar todos los otros desplegables
   for (const key in openDropdowns.value) {
     if (key !== dropdownId) {
       openDropdowns.value[key] = false;
     }
   }
-  // Toggle el desplegable actual
   openDropdowns.value[dropdownId] = !openDropdowns.value[dropdownId];
 };
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
-  isMobileFormsOpen.value = false; // Cerrar el menú desplegable al abrir/cerrar el menú móvil
+  isMobileFormsOpen.value = false;
 };
 
-const toggleMobileForms = () => {
-  isMobileFormsOpen.value = !isMobileFormsOpen.value;
-};
-
-// Cerrar todos los desplegables cuando se hace clic fuera
 const closeDropdowns = (event) => {
   if (!event.target.closest('.dropdown-container')) {
     for (const key in openDropdowns.value) {
@@ -223,21 +161,7 @@ const closeDropdowns = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', closeDropdowns);
-  
-  // Inicializar el authStore para asegurar que los datos del usuario estén cargados
   authStore.initialize();
-  
-  // Verificar y mostrar información del rol para depuración
-  if (authStore.user && authStore.user.role) {
-    console.log("Rol de usuario en NavTeacher:", authStore.user.role.name);
-  } else {
-    console.log("Usuario o rol no disponible en NavTeacher, cargando desde localStorage");
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const user = JSON.parse(userData);
-      console.log("Datos de usuario desde localStorage:", user);
-    }
-  }
 });
 
 onUnmounted(() => {
@@ -250,22 +174,10 @@ onUnmounted(() => {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <!-- Botón de inicio -->
-        <button
-          @click="goHome"
-          class="flex items-center text-white hover:text-blue-100 transition-colors duration-200"
-        >
-          <svg
-            class="w-6 h-6 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
+        <button @click="goHome" class="flex items-center text-white hover:text-blue-100 transition-colors duration-200">
+          <svg class="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <span class="text-lg font-semibold">Inici</span>
         </button>
@@ -274,95 +186,55 @@ onUnmounted(() => {
         <div class="hidden md:flex space-x-1">
           <template v-for="item in menuItems" :key="item.title">
             <!-- Menú normal -->
-            <NuxtLink
-              v-if="!item.type"
-              :to="item.route"
-              class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
-              :class="[
-                isActiveRoute(item.route)
-                  ? 'bg-blue-700 text-white'
-                  : 'text-blue-50 hover:bg-blue-600 hover:text-white',
-              ]"
-            >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  :d="item.icon"
-                />
-              </svg>
-              <span>{{ item.title }}</span>
-            </NuxtLink>
+            <template v-if="!item.type">
+              <NuxtLink v-if="!item.route.startsWith('http')" :to="item.route"
+                class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200"
+                :class="[
+                  isActiveRoute(item.route)
+                    ? 'bg-blue-700 text-white'
+                    : 'text-blue-50 hover:bg-blue-600 hover:text-white',
+                ]">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                </svg>
+                <span>{{ item.title }}</span>
+              </NuxtLink>
+              <a v-else :href="item.route" target="_blank" rel="noopener noreferrer"
+                class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200 text-blue-50 hover:bg-blue-600 hover:text-white">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
+                </svg>
+                <span>{{ item.title }}</span>
+              </a>
+            </template>
 
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative dropdown-container">
-              <button
-                @click="toggleDropdown(item.id, $event)"
+              <button @click="toggleDropdown(item.id, $event)"
                 class="group px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition-all duration-200 text-blue-50 hover:bg-blue-600 hover:text-white"
-                :class="{ 'bg-blue-700': openDropdowns[item.id] }"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    :d="item.icon"
-                  />
+                :class="{ 'bg-blue-700': openDropdowns[item.id] }">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
                 </svg>
                 <span>{{ item.title }}</span>
-                <svg
-                  class="w-4 h-4 ml-1 transition-transform duration-200"
-                  :class="{ 'transform rotate-180': openDropdowns[item.id] }"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
+                <svg class="w-4 h-4 ml-1 transition-transform duration-200"
+                  :class="{ 'transform rotate-180': openDropdowns[item.id] }" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
-              <!-- Menú desplegable mejorado -->
-              <div
-                v-show="openDropdowns[item.id]"
-                class="absolute z-10 right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top transition-all duration-200"
-              >
+              <!-- Menú desplegable -->
+              <div v-show="openDropdowns[item.id]"
+                class="absolute z-10 right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top transition-all duration-200">
                 <div class="py-2 divide-y divide-gray-100">
-                  <NuxtLink
-                    v-for="subItem in item.items"
-                    :key="subItem.title"
-                    :to="subItem.route"
+                  <NuxtLink v-for="subItem in item.items" :key="subItem.title" :to="subItem.route"
                     class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors duration-200 first:rounded-t-lg last:rounded-b-lg"
-                    :class="{ 'bg-blue-50 text-blue-700': isActiveRoute(subItem.route) }"
-                  >
-                    <svg
-                      class="w-5 h-5 mr-3 text-gray-400 group-hover:text-blue-500"
-                      :class="{ 'text-blue-500': isActiveRoute(subItem.route) }"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        :d="subItem.icon"
-                      />
+                    :class="{ 'bg-blue-50 text-blue-700': isActiveRoute(subItem.route) }">
+                    <svg class="w-5 h-5 mr-3 text-gray-400 group-hover:text-blue-500"
+                      :class="{ 'text-blue-500': isActiveRoute(subItem.route) }" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="subItem.icon" />
                     </svg>
                     <span class="flex-1">{{ subItem.title }}</span>
                   </NuxtLink>
@@ -374,22 +246,9 @@ onUnmounted(() => {
 
         <!-- Botón de menú móvil -->
         <div class="md:hidden flex items-center">
-          <button
-            @click="toggleMobileMenu"
-            class="text-white hover:text-blue-100 focus:outline-none"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16m-7 6h7"
-              />
+          <button @click="toggleMobileMenu" class="text-white hover:text-blue-100 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
             </svg>
           </button>
         </div>
@@ -400,51 +259,36 @@ onUnmounted(() => {
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <template v-for="item in menuItems" :key="item.title">
             <!-- Menú normal -->
-            <NuxtLink
-              v-if="!item.type"
-              :to="item.route"
-              class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
-              :class="{ 'bg-blue-700': isActiveRoute(item.route) }"
-            >
-              {{ item.title }}
-            </NuxtLink>
+            <template v-if="!item.type">
+              <NuxtLink v-if="!item.route.startsWith('http')" :to="item.route"
+                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
+                :class="{ 'bg-blue-700': isActiveRoute(item.route) }">
+                {{ item.title }}
+              </NuxtLink>
+              <a v-else :href="item.route" target="_blank" rel="noopener noreferrer"
+                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600">
+                {{ item.title }}
+              </a>
+            </template>
 
             <!-- Menú desplegable -->
             <div v-else-if="item.type === 'dropdown'" class="relative">
-              <button
-                @click="toggleDropdown(item.id, $event)"
+              <button @click="toggleDropdown(item.id, $event)"
                 class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
-                :class="{ 'bg-blue-700': openDropdowns[item.id] }"
-              >
+                :class="{ 'bg-blue-700': openDropdowns[item.id] }">
                 <span>{{ item.title }}</span>
-                <svg
-                  class="w-4 h-4 ml-1 transition-transform duration-200"
-                  :class="{ 'transform rotate-180': openDropdowns[item.id] }"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                  />
+                <svg class="w-4 h-4 ml-1 transition-transform duration-200"
+                  :class="{ 'transform rotate-180': openDropdowns[item.id] }" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
-              <!-- Menú desplegable mejorado -->
-              <div
-                v-show="openDropdowns[item.id]"
-                class="pl-4"
-              >
-                <NuxtLink
-                  v-for="subItem in item.items"
-                  :key="subItem.title"
-                  :to="subItem.route"
+              <!-- Menú desplegable -->
+              <div v-show="openDropdowns[item.id]" class="pl-4">
+                <NuxtLink v-for="subItem in item.items" :key="subItem.title" :to="subItem.route"
                   class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-blue-600"
-                  :class="{ 'bg-blue-700': isActiveRoute(subItem.route) }"
-                >
+                  :class="{ 'bg-blue-700': isActiveRoute(subItem.route) }">
                   {{ subItem.title }}
                 </NuxtLink>
               </div>

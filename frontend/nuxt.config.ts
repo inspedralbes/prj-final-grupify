@@ -12,6 +12,7 @@ export default defineNuxtConfig({
       googleClientId: process.env.GOOGLE_CLIENT_ID,
       apiBaseUrl: process.env.API_BASE_URL,
       openaiApiKey: process.env.OPENAI_API_KEY,
+      geminiApiKey: process.env.GEMINI_API_KEY,
     },
   },
   googleSignIn: {

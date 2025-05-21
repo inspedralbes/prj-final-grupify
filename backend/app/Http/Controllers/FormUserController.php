@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\FormUser;
+use App\Models\SociogramRelationship;
+use App\Models\CescRelationship;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -150,46 +152,100 @@ class FormUserController extends Controller
                 ];
             })->toArray();
             
-            // Obtenemos los usuarios (alumnos) que pertenecen a esos cursos y divisiones
-            $formUsers = collect();
+            // Obtener todos los usuarios (alumnos) asignados a estos cursos y divisiones
+            $users = collect();
             
             foreach ($coursesDivisions as $cd) {
-                $users = FormUser::where('form_id', $formId)
-                    ->where('course_id', $cd['course_id'])
+                // Primero obtenemos los usuarios de course_division_user para este curso y división
+                $courseUsers = \App\Models\CourseDivisionUser::where('course_id', $cd['course_id'])
                     ->where('division_id', $cd['division_id'])
+                    ->whereHas('user', function($query) {
+                        // Solo alumnos, no profesores ni otros roles
+                        $query->whereHas('role', function($q) {
+                            $q->where('name', 'alumne');
+                        });
+                    })
                     ->with(['user', 'course', 'division'])
                     ->get();
-                    
-                $formUsers = $formUsers->merge($users);
+                
+                $users = $users->merge($courseUsers);
             }
             
-            if ($formUsers->isEmpty()) {
+            if ($users->isEmpty()) {
                 return response()->json([
-                    'message' => 'No se han encontrado usuarios asignados a este formulario en tus cursos',
+                    'message' => 'No se han encontrado alumnos en los cursos asignados a este formulario',
                     'users' => [],
                 ]);
             }
             
+            // Ahora obtenemos el estado de respuesta de cada alumno desde form_user
+            $formUsers = \App\Models\FormUser::where('form_id', $formId)
+                ->whereIn('user_id', $users->pluck('user_id'))
+                ->get()
+                ->keyBy('user_id');
+                
+            // Para el formulario sociograma (ID 3), también verificamos en las relaciones sociométricas
+            $sociogramResponses = collect();
+            if ($formId == 3) {
+                $sociogramResponses = \App\Models\SociogramRelationship::whereHas('question', function ($query) {
+                    $query->where('form_id', 3);
+                })
+                ->pluck('user_id')
+                ->unique()
+                ->flip()
+                ->map(function() { return true; });
+            }
+            
+            // Para el formulario CESC (ID 2), también verificamos en las relaciones CESC
+            $cescResponses = collect();
+            if ($formId == 2) {
+                $cescResponses = \App\Models\CescRelationship::whereHas('question', function ($query) {
+                    $query->where('form_id', 2);
+                })
+                ->pluck('user_id')
+                ->unique()
+                ->flip()
+                ->map(function() { return true; });
+            }
+            
             // Mapear los resultados
-            $users = $formUsers->map(function($formUser) {
+            $mappedUsers = $users->map(function($courseUser) use ($formUsers, $sociogramResponses, $cescResponses, $formId) {
+                $user = $courseUser->user;
+                $course = $courseUser->course;
+                $division = $courseUser->division;
+                
+                // Verificar si ha respondido basado en form_user
+                $hasAnswered = isset($formUsers[$user->id]) && $formUsers[$user->id]->answered;
+                
+                // Para el sociograma, también verificamos en las relaciones sociométricas
+                if ($formId == 3 && isset($sociogramResponses[$user->id])) {
+                    $hasAnswered = true;
+                }
+                
+                // Para el CESC, también verificamos en las relaciones CESC
+                if ($formId == 2 && isset($cescResponses[$user->id])) {
+                    $hasAnswered = true;
+                }
+                
                 return [
-                    'id' => $formUser->user->id,
-                    'name' => $formUser->user->name,
-                    'last_name' => $formUser->user->surname ?? '',
-                    'email' => $formUser->user->email,
-                    'course' => $formUser->course->name ?? '',
-                    'division' => $formUser->division->name ?? '',
-                    'answered' => $formUser->answered == 1,
-                    'status' => $formUser->answered == 1 ? 'Contestado' : 'Pendiente',
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'last_name' => $user->surname ?? '',
+                    'email' => $user->email,
+                    'course' => $course->name ?? '',
+                    'division' => $division->name ?? '',
+                    'answered' => $hasAnswered,
+                    'status' => $hasAnswered ? 'Contestado' : 'Pendiente',
+                    'image' => $user->image ?? null, // Agregamos el campo de imagen
                 ];
             });
             
             // Estadísticas
-            $total = $users->count();
-            $answered = $users->where('answered', true)->count();
+            $total = $mappedUsers->count();
+            $answered = $mappedUsers->where('answered', true)->count();
             
             return response()->json([
-                'users' => $users,
+                'users' => $mappedUsers->values(),
                 'stats' => [
                     'total' => $total,
                     'answered' => $answered,
