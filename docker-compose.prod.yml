@@ -29,6 +29,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
+      args:
+        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+        API_BASE_URL: ${API_BASE_URL}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nuxt-app.rule=Host(`basebrutt.com`) || Host(`www.basebrutt.com`)"
@@ -39,6 +42,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       API_BASE_URL: ${API_BASE_URL}
       NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=8192
     restart: always
     networks:
       - app-network
