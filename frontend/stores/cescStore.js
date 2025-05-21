@@ -16,7 +16,7 @@ export const useCescStore = defineStore("cesc", {
   actions: {
     async fetchResponses() {
       try {
-        const response = await fetch("https://api.grupify.cat/api/forms/all-responses-cesc");
+        const response = await fetch("https://api.basebrutt.com/api/forms/all-responses-cesc");
         const data = await response.json();
         console.log("Data:", data);
         this.responsesByCourseDivision = data;
@@ -32,7 +32,7 @@ export const useCescStore = defineStore("cesc", {
     setResponsesByCourseDivision(data) {
       this.responsesByCourseDivision = data;
     },
-    setCurrentCourseAndDivision(courseName,courseId,divisionName,divisionId) {
+    setCurrentCourseAndDivision(courseName, courseId, divisionName, divisionId) {
       this.currentCourse.courseName = courseName;
       this.currentCourse.courseId = courseId;
       this.currentDivision.divisionName = divisionName;

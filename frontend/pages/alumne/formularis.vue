@@ -45,7 +45,7 @@ const userId = user.id;
 const loadFormsByUserId = async userId => {
   try {
     const response = await fetch(
-      `https://api.grupify.cat/api/forms/user/${userId}`,
+      `https://api.basebrutt.com/api/forms/user/${userId}`,
       {
         method: "GET",
         headers: {

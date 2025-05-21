@@ -16,7 +16,17 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=root"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "--password=root",
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -48,7 +58,7 @@ services:
       dockerfile: Dockerfile
     container_name: laravel
     ports:
-      - "8000:8000" 
+      - "8000:8000"
     volumes:
       - ./backend:/var/www/
     working_dir: /var/www/
@@ -71,7 +81,7 @@ services:
       - app-network
     command: bash -c "chmod +x entrypoint.sh && ./entrypoint.sh"
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://api.grupify.cat"]
+      test: ["CMD", "curl", "-f", "https://api.basebrutt.com"]
       interval: 10s
       timeout: 10s
       start_period: 350s
@@ -97,7 +107,7 @@ services:
     command: php artisan queue:work redis --tries=3 --timeout=90
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: vue

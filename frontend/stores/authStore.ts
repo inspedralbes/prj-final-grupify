@@ -163,7 +163,7 @@ export const useAuthStore = defineStore("auth", {
           throw new Error("No authentication token");
         }
 
-        const response = await $fetch<{ user: User }>('https://api.grupify.cat/api/user', {
+        const response = await $fetch<{ user: User }>('https://api.basebrutt.com/api/user', {
           headers: { Authorization: `Bearer ${this.token}` }
         });
 
@@ -234,7 +234,7 @@ export const useAuthStore = defineStore("auth", {
     async logout(): Promise<void> {
       try {
         if (this.token) {
-          await $fetch('https://api.grupify.cat/api/logout', {
+          await $fetch('https://api.basebrutt.com/api/logout', {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${this.token}`,
@@ -273,7 +273,7 @@ export const useAuthStore = defineStore("auth", {
 
         // Solo los profesores no pueden acceder a análisis (tutores sí pueden)
         if (roleName === 'profesor' &&
-            (route.includes('/sociogram') || route.includes('/cesc') || route.includes('/grafico'))) {
+          (route.includes('/sociogram') || route.includes('/cesc') || route.includes('/grafico'))) {
           console.log("Profesor intentando acceder a rutas de análisis, acceso denegado");
           return false;
         }

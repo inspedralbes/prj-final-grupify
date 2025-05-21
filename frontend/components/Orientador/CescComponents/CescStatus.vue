@@ -19,7 +19,7 @@ const checkFormCompletion = async (course) => {
 
   try {
     const response = await fetch(
-      `https://api.grupify.cat/api/check-form-completion/${course.courseId}/${course.division.id}/2`
+      `https://api.basebrutt.com/api/check-form-completion/${course.courseId}/${course.division.id}/2`
     );
 
     if (!response.ok) {

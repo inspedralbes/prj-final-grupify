@@ -19,9 +19,9 @@ export const useStudentsStore = defineStore("students", {
       this.students = []; // Limpiar estudiantes anteriores
 
       // Construir la URL con parámetros de filtro
-      let url = "https://api.grupify.cat/api/get-students";
+      let url = "https://api.basebrutt.com/api/get-students";
       const params = new URLSearchParams();
-      
+
       // Manejar tanto IDs individuales como arrays de IDs
       if (courseId) {
         if (Array.isArray(courseId)) {
@@ -32,7 +32,7 @@ export const useStudentsStore = defineStore("students", {
           params.append('course_id', courseId);
         }
       }
-      
+
       if (divisionId) {
         if (Array.isArray(divisionId)) {
           // Si es un array, usar division_ids[]
@@ -42,7 +42,7 @@ export const useStudentsStore = defineStore("students", {
           params.append('division_id', divisionId);
         }
       }
-      
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
@@ -53,7 +53,7 @@ export const useStudentsStore = defineStore("students", {
           "Content-Type": "application/json",
           Accept: "application/json",
         };
-        
+
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
@@ -76,7 +76,7 @@ export const useStudentsStore = defineStore("students", {
           ...student,
           status: student.status ?? 1,
         }));
-        
+
       } catch (error) {
         this.error = `Error al cargar estudiantes: ${error.message}`;
         console.error("Error fetching students:", error);

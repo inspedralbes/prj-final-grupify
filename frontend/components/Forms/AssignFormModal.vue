@@ -49,7 +49,7 @@ const assignFormToCourseAndDivision = async () => {
       return;
     }
     
-    const response = await fetch('https://api.grupify.cat/api/forms/assign-to-course-division', {
+    const response = await fetch('https://api.basebrutt.com/api/forms/assign-to-course-division', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -113,7 +113,7 @@ onMounted(async () => {
       }
     } else {
       // Fallback: cargar todos los cursos si no se encontraron cursos asignados al profesor
-      const response = await fetch("https://api.grupify.cat/api/courses");
+      const response = await fetch("https://api.basebrutt.com/api/courses");
       if (!response.ok) throw new Error("Error al cargar los cursos");
       
       const data = await response.json();
@@ -161,7 +161,7 @@ const loadDivisionsForCourse = async () => {
       }
     } else {
       // Fallback: obtener las divisiones del curso desde la API
-      const response = await fetch(`https://api.grupify.cat/api/course-divisions?course_id=${selectedCourse.value}`);
+      const response = await fetch(`https://api.basebrutt.com/api/course-divisions?course_id=${selectedCourse.value}`);
       if (!response.ok) throw new Error("Error al cargar las divisiones");
 
       const data = await response.json();

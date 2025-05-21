@@ -61,7 +61,7 @@ onMounted(async () => {
 // Cargar información del estudiante
 async function loadStudentInfo() {
   try {
-    const response = await fetch(`https://api.grupify.cat/api/users/${studentId}`, {
+    const response = await fetch(`https://api.basebrutt.com/api/users/${studentId}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -89,7 +89,7 @@ async function fetchFormQuestions() {
   hasError.value = false;
 
   try {
-    const response = await fetch(`https://api.grupify.cat/api/forms/${formId}/questions`, {
+    const response = await fetch(`https://api.basebrutt.com/api/forms/${formId}/questions`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -206,7 +206,7 @@ async function submitResponses() {
     }
 
     // URL para enviar las respuestas
-    const submitUrl = `https://api.grupify.cat/api/forms/${formId}/submit-responses`;
+    const submitUrl = `https://api.basebrutt.com/api/forms/${formId}/submit-responses`;
 
     // Datos a enviar
     const postData = {

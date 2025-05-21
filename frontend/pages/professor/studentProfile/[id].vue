@@ -54,7 +54,7 @@ async function obtenerDatosAlumno(studentId) {
 
     // URL principal según el controlador del backend (AnswerController)
     // La ruta correcta debe ser: /api/forms/{formId}/users/{userId}/answers
-    const url = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
+    const url = `https://api.basebrutt.com/api/forms/4/users/${studentId}/answers`;
 
     console.log("Realizando petición a:", url);
 
@@ -303,7 +303,7 @@ const handleBaja = async () => {
   try {
     // Enviar el estado actualizado al backend
     const response = await fetch(
-      `https://api.grupify.cat/api/user/${student.value.id}/status`,
+      `https://api.basebrutt.com/api/user/${student.value.id}/status`,
       {
         method: "PUT",
         headers: {
@@ -343,7 +343,7 @@ const handleAlta = async () => {
   try {
     // Enviar el estado actualizado al backend
     const response = await fetch(
-      `https://api.grupify.cat/api/user/${student.value.id}/status`,
+      `https://api.basebrutt.com/api/user/${student.value.id}/status`,
       {
         method: "PUT",
         headers: {
@@ -417,7 +417,7 @@ onMounted(async () => {
         console.log(`Cargando respuestas de autoavaluación para el estudiante ${studentId}`);
 
         // Usar la ruta completamente pública para autoavaluaciones
-        const url = `https://api.grupify.cat/api/public/forms/autoavaluacion/${studentId}`;
+        const url = `https://api.basebrutt.com/api/public/forms/autoavaluacion/${studentId}`;
 
         console.log("Consultando URL:", url);
 
@@ -458,7 +458,7 @@ onMounted(async () => {
         console.log("Intentando método alternativo...");
         try {
           // Intento alternativo con otra URL
-          const altUrl = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
+          const altUrl = `https://api.basebrutt.com/api/forms/4/users/${studentId}/answers`;
           console.log("Intentando con URL alternativa:", altUrl);
 
           const altResponse = await fetch(altUrl);
@@ -509,7 +509,7 @@ const checkForm4Status = async studentId => {
     );
 
     // Intentar usar el endpoint principal para obtener la lista de usuarios que han respondido
-    const url = `https://api.grupify.cat/api/forms/4/users`;
+    const url = `https://api.basebrutt.com/api/forms/4/users`;
 
     console.log("Intentando obtener lista de usuarios que han respondido:", url);
 
@@ -561,7 +561,7 @@ const checkDirectResponses = async (studentId) => {
     console.log("Intentando verificación directa de respuestas para estudiante:", studentId);
 
     // Intentar obtener directamente las respuestas del estudiante
-    const directUrl = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
+    const directUrl = `https://api.basebrutt.com/api/forms/4/users/${studentId}/answers`;
 
     const directResponse = await fetch(directUrl, {
       method: "GET",
@@ -610,7 +610,7 @@ const checkDirectResponses = async (studentId) => {
 const fetchComments = async studentId => {
   try {
     const response = await fetch(
-      `https://api.grupify.cat/api/comments/students/${studentId}`,
+      `https://api.basebrutt.com/api/comments/students/${studentId}`,
       {
         method: "GET",
         headers: {
@@ -646,7 +646,7 @@ const addComment = async () => {
   };
 
   try {
-    const response = await fetch(`https://api.grupify.cat/api/comments`, {
+    const response = await fetch(`https://api.basebrutt.com/api/comments`, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -667,7 +667,7 @@ const addComment = async () => {
 const deleteComment = async commentId => {
   try {
     const response = await fetch(
-      `https://api.grupify.cat/api/comments/${commentId}`,
+      `https://api.basebrutt.com/api/comments/${commentId}`,
       { method: "DELETE" }
     );
 
@@ -689,7 +689,7 @@ const updateComment = async commentId => {
 
   try {
     const response = await fetch(
-      `https://api.grupify.cat/api/comments/${commentId}`,
+      `https://api.basebrutt.com/api/comments/${commentId}`,
       {
         method: "PUT",
         headers: {

@@ -7,9 +7,9 @@ async function testGetStudentResponses(studentId) {
 
   // Intentar todas las rutas posibles
   const urls = [
-    `https://api.grupify.cat/api/autoavaluacion/estudiante/${studentId}`,
-    `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`,
-    `https://api.grupify.cat/api/forms/4/student/${studentId}/responses`
+    `https://api.basebrutt.com/api/autoavaluacion/estudiante/${studentId}`,
+    `https://api.basebrutt.com/api/forms/4/users/${studentId}/answers`,
+    `https://api.basebrutt.com/api/forms/4/student/${studentId}/responses`
   ];
 
   for (const url of urls) {

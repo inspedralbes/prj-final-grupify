@@ -108,19 +108,19 @@
         let url = "";
         switch (type) {
           case "autoavaluacion":
-            url = `https://api.grupify.cat/api/autoavaluacion/estudiante/${studentId}`;
+            url = `https://api.basebrutt.com/api/autoavaluacion/estudiante/${studentId}`;
             break;
           case "debug":
-            url = `https://api.grupify.cat/api/debug/autoavaluacion/${studentId}`;
+            url = `https://api.basebrutt.com/api/debug/autoavaluacion/${studentId}`;
             break;
           case "public":
-            url = `https://api.grupify.cat/api/public/forms/autoavaluacion/${studentId}`;
+            url = `https://api.basebrutt.com/api/public/forms/autoavaluacion/${studentId}`;
             break;
           case "forms4":
-            url = `https://api.grupify.cat/api/forms/4/users/${studentId}/answers`;
+            url = `https://api.basebrutt.com/api/forms/4/users/${studentId}/answers`;
             break;
           default:
-            url = `https://api.grupify.cat/api/autoavaluacion/estudiante/${studentId}`;
+            url = `https://api.basebrutt.com/api/autoavaluacion/estudiante/${studentId}`;
         }
 
         try {

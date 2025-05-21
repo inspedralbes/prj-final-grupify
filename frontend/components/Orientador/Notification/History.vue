@@ -52,7 +52,7 @@ function formatDate(dateString) {
 
 async function fetchNotifications() {
   try {
-    const data = await $fetch('https://api.grupify.cat/api/teacher-notifications', {
+    const data = await $fetch('https://api.basebrutt.com/api/teacher-notifications', {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
         Accept: 'application/json',
@@ -71,7 +71,7 @@ async function cancelNotification(id) {
   if (!confirm('¿Seguro que quieres cancelar esta notificación?')) return;
 
   try {
-    await $fetch(`https://api.grupify.cat/api/notifications/${id}`, {
+    await $fetch(`https://api.basebrutt.com/api/notifications/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${authStore.token}`,

@@ -26,7 +26,7 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
     const fetchResults = async () => {
         isLoading.value = true;
         try {
-            const response = await fetch("https://api.grupify.cat/api/cesc/ver-resultados");
+            const response = await fetch("https://api.basebrutt.com/api/cesc/ver-resultados");
             if (!response.ok) {
                 const errorData = await response.text();
                 console.error("Respuesta del servidor:", errorData);
@@ -58,10 +58,10 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
             .map(rel => {
                 // Encontrar los datos del estudiante
                 const peer = studentsStore.students.find(student => student.id === rel.peer_id);
-                
+
                 // Obtener el nombre de la etiqueta (tag)
                 const tag = tagTypes.find(tag => tag.id === rel.tag_id);
-                
+
                 return {
                     ...rel,
                     peer_name: peer ? peer.name : "Desconocido",

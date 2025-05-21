@@ -34,7 +34,7 @@ const analyzeWithAI = async (course) => {
     isLoading.value = true;
 
     // Realizar la solicitud a la API
-    const response = await fetch("https://api.grupify.cat/api/sociogram/responses", {
+    const response = await fetch("https://api.basebrutt.com/api/sociogram/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

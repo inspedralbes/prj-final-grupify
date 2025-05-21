@@ -66,7 +66,7 @@ const sendToBackend = async (userData) => {
   console.log('Datos enviados al backend:', postData); // Para depuración
 
   try {
-    const { token, user, role } = await $fetch('https://api.grupify.cat/api/google-login', {
+    const { token, user, role } = await $fetch('https://api.basebrutt.com/api/google-login', {
       method: 'POST',
       body: postData,
     });

@@ -68,7 +68,7 @@ class RegisteredUserController extends Controller
                 'email'     => $request->email,
                 'password'  => Hash::make($request->password),
                 'role_id'   => $request->role_id ?? 2,
-                'image'     => $request->image ?? 'https://api.grupify.cat/images/default.png',
+                'image'     => $request->image ?? 'https://api.basebrutt.com/images/default.png',
             ]);
 
             // Find invitation and get course/division
@@ -206,7 +206,7 @@ class RegisteredUserController extends Controller
                 if ($invitation) {
                     $course_id = $invitation->course_id;
                     $division_id = $invitation->division_id;
-                    
+
                     \Log::info("Procesando token de invitación: " . $request->invitation_token);
                     \Log::info("Curso ID: " . $course_id . ", División ID: " . $division_id);
                 }
@@ -242,14 +242,14 @@ class RegisteredUserController extends Controller
                 // Asignar IDs
                 $user->course_id = $association->course_id;
                 $user->division_id = $association->division_id;
-                
+
                 // Asignar nombres
                 $course = \App\Models\Course::find($association->course_id);
                 $division = \App\Models\Division::find($association->division_id);
-                
+
                 $user->course_name = $course ? $course->name : null;
                 $user->division_name = $division ? $division->division : null;
-                
+
                 \Log::info("Datos finales del usuario:");
                 \Log::info("Course ID: " . $user->course_id . ", Course Name: " . $user->course_name);
                 \Log::info("Division ID: " . $user->division_id . ", Division Name: " . $user->division_name);

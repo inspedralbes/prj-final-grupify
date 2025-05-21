@@ -37,7 +37,7 @@ const currentQuestion = computed(
 async function fetchQuestions() {
   try {
     const response = await fetch(
-      `https://api.grupify.cat/api/forms/${formId}/questions-and-answers`
+      `https://api.basebrutt.com/api/forms/${formId}/questions-and-answers`
     );
     if (!response.ok) throw new Error("Error al cargar las preguntas");
     questions.value = await response.json();
@@ -50,7 +50,7 @@ async function fetchQuestions() {
 // Función para cargar usuarios
 async function fetchUsers() {
   try {
-    const response = await fetch("https://api.grupify.cat/api/get-students", {
+    const response = await fetch("https://api.basebrutt.com/api/get-students", {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -105,7 +105,7 @@ async function submitResponses() {
     });
 
     const response = await fetch(
-      `https://api.grupify.cat/api/forms/${formId}/submit-responses`,
+      `https://api.basebrutt.com/api/forms/${formId}/submit-responses`,
       {
         method: "POST",
         headers: {

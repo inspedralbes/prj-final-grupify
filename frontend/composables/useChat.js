@@ -118,7 +118,7 @@ export function useChat() {
   });
   // Cargar formularios activos
   onMounted(async () => {
-    fetch("https://api.grupify.cat/api/forms/active")
+    fetch("https://api.basebrutt.com/api/forms/active")
       .then(response => response.json())
       .then(data => {
         forms.value = data;
@@ -131,7 +131,7 @@ export function useChat() {
 
   // Cargar respuestas
   onMounted(async () => {
-    fetch("https://api.grupify.cat/api/all-responses")
+    fetch("https://api.basebrutt.com/api/all-responses")
       .then(response => response.json())
       .then(data => {
         responses.value = data;
@@ -298,11 +298,11 @@ export function useChat() {
         ? `
           Informació dels alumnes:
           ${students.value
-            .map(
-              student =>
-                `Nom: ${student.name}, Cognoms: ${student.last_name}, Curs: ${student.course}, Divisió: ${student.division}`
-            )
-            .join("\n")}
+          .map(
+            student =>
+              `Nom: ${student.name}, Cognoms: ${student.last_name}, Curs: ${student.course}, Divisió: ${student.division}`
+          )
+          .join("\n")}
         `
         : "No hi ha informació d'alumnes disponible.";
 
@@ -311,10 +311,10 @@ export function useChat() {
         ? `
           Informació dels cursos:
           ${courses.value
-            .map(
-              course => `- Curs ${course.courseId}: Nom - ${course.courseName}`
-            )
-            .join("\n")}
+          .map(
+            course => `- Curs ${course.courseId}: Nom - ${course.courseName}`
+          )
+          .join("\n")}
         `
         : "No hi ha informació de cursos disponible.";
 
@@ -323,11 +323,11 @@ export function useChat() {
         ? `
           Informació dels formularis actius:
           ${forms.value
-            .map(
-              form =>
-                `- Formulari ID: ${form.id}, Títol: ${form.title}, Estat: ${form.status === 1 ? "Actiu" : "Inactiu"}`
-            )
-            .join("\n")}
+          .map(
+            form =>
+              `- Formulari ID: ${form.id}, Títol: ${form.title}, Estat: ${form.status === 1 ? "Actiu" : "Inactiu"}`
+          )
+          .join("\n")}
         `
         : "No hi ha informació de formularis disponibles.";
 
@@ -336,11 +336,11 @@ export function useChat() {
         ? `
           Informació de les respostes:
           ${responses.value
-            .map(
-              response =>
-                `- Formulari: ${response.form_id}, Pregunta: ${response.question_id}, Respostes: ${JSON.stringify(response.responses)}`
-            )
-            .join("\n")}
+          .map(
+            response =>
+              `- Formulari: ${response.form_id}, Pregunta: ${response.question_id}, Respostes: ${JSON.stringify(response.responses)}`
+          )
+          .join("\n")}
         `
         : "No hi ha informació de respostes disponibles.";
 

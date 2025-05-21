@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "https://api.grupify.cat/",
+            "url": "https://api.basebrutt.com/",
             "description": "local server"
         },
         {
