@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*'],
+    'paths' => ['api/*', 'dashboard/*', 'dashboard'],
     'allowed_methods' => ['*'],
     'allowed_origins' => ['https://basebrutt.com', 'https://www.basebrutt.com'],
     'allowed_origins_patterns' => [],
