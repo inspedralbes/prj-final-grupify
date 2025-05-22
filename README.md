@@ -53,7 +53,7 @@ Taiga: https://tree.taiga.io/project/aleiram19-2daw_projectefinal_grupify/timeli
 
 Penpot: https://design.penpot.app/#/view/7ad540b5-8190-815d-8005-5ce4491a439f?page-id=7ad540b5-8190-815d-8005-5ce4491a43a0&section=interactions&index=0&share-id=0b127ab7-8934-814e-8005-bc502dc95691
 
-URL Producció (proxy invers): https://grupify.cat | https://api.basebrutt.com
+URL Producció (proxy invers): https://grupify.cat | https://api.grupify.cat
 
 ## 🐳 Projecte amb Vue, Nodejs + Laravel 🐳
 
@@ -73,6 +73,7 @@ Abans de començar, assegura't de tenir instal·lat el següent component:
   ```bash
   sudo usermod -aG docker $USER
   **Configuració abans d'aixecar els serveis**
+  ```
 
 > **Nota**: Suposem que el projecte està clonat en el teu directori home (~/).
 > Si ho tens en una altra ubicació, ajusta les rutes segons correspongui.
@@ -101,14 +102,16 @@ Abans de començar, assegura't de tenir instal·lat el següent component:
   cd ~/prj-final-grupify/frontend
   cp .env.example .env
   GOOGLE_CLIENT_ID=
-  API_BASE_URL=https://api.basebrutt.com #URL de Laravel
+  API_BASE_URL=https://api.grupify.cat #URL de Laravel
   **Aixeca els serveis per desenvolupament de forma senzilla (Nuxt, Node, Laravel, Redis, MySQL, Adminer)**
+  ```
 - Les **comandes principals** per obrir el projecte de forma ràpida i segura.
   ```bash
   cd prj-final-grupify
   docker compose -f docker-compose.yml up # Encendre els contenidors
   docker compose -f docker-compose.yml down # Apagar els contenidors
   Aquest projecte utilitza Docker per gestionar de manera senzilla els serveis.
+  ```
 
 ---
 

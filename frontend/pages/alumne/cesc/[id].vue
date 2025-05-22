@@ -36,7 +36,7 @@ const currentQuestion = computed(
 async function fetchQuestions() {
   try {
     const response = await fetch(
-      `https://api.basebrutt.com/api/forms/${formId}/questions-and-answers`
+      `https://api.grupify.cat/api/forms/${formId}/questions-and-answers`
     );
     if (!response.ok) throw new Error("Error al cargar las preguntas");
     const formData = await response.json();
@@ -57,7 +57,7 @@ async function fetchUsers() {
     const divisionId = authStore.user.division_id;
 
     // Filtrar para obtener solo estudiantes del mismo curso y división
-    const response = await fetch(`https://api.basebrutt.com/api/get-students?course_id=${courseId}&division_id=${divisionId}`, {
+    const response = await fetch(`https://api.grupify.cat/api/get-students?course_id=${courseId}&division_id=${divisionId}`, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -155,7 +155,7 @@ async function submitResponses() {
 
     // Enviar los datos al endpoint correcto utilizando el formato adecuado
     const response = await fetch(
-      `https://api.basebrutt.com/api/cesc-relationships`,
+      `https://api.grupify.cat/api/cesc-relationships`,
       {
         method: "POST",
         headers: {

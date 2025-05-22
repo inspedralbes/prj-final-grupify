@@ -68,7 +68,7 @@ const loadFormsByUserId = async () => {
   if (!userId.value) return;
   
   try {
-    const response = await $fetch(`https://api.basebrutt.com/api/forms/user/${userId.value}`, {
+    const response = await $fetch(`https://api.grupify.cat/api/forms/user/${userId.value}`, {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
       }

@@ -89,7 +89,7 @@ const getProfileImageUrl = (imagePath) => {
   }
 
   // Otherwise, construct the URL to the backend storage
-  return `https://api.basebrutt.com/storage/${imagePath}`;
+  return `https://api.grupify.cat/storage/${imagePath}`;
 };
 
 const handleImageError = (event, member) => {

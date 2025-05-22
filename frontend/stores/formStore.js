@@ -14,7 +14,7 @@ export const useFormStore = defineStore("formStore", () => {
 
       // You might need to fetch from your API endpoint
       // This is a placeholder implementation that you can modify based on your backend
-      const response = await fetch("https://api.basebrutt.com/api/forms");
+      const response = await fetch("https://api.grupify.cat/api/forms");
 
       if (!response.ok) {
         throw new Error("Failed to fetch forms");

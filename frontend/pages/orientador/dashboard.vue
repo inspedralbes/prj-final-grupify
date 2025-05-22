@@ -65,14 +65,14 @@ const updateCescData = async () => {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    console.log("[DASHBOARD ORIENTADOR] Solicitando datos CESC a API:", "https://api.basebrutt.com/api/cesc-stats");
+    console.log("[DASHBOARD ORIENTADOR] Solicitando datos CESC a API:", "https://api.grupify.cat/api/cesc-stats");
     console.log("[DASHBOARD ORIENTADOR] Headers:", {
       tieneToken: !!token,
       authHeader: token ? 'Bearer ' + token.substr(0, 10) + '...' : 'No hay token'
     });
 
     // Intenta cargar datos CESC reales - Ajusta la URL según la API
-    const response = await fetch("https://api.basebrutt.com/api/cesc-stats", { headers });
+    const response = await fetch("https://api.grupify.cat/api/cesc-stats", { headers });
 
     console.log("[DASHBOARD ORIENTADOR] Respuesta API CESC:", {
       status: response.status,

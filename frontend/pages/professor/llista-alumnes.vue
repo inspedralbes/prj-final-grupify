@@ -217,7 +217,7 @@ const generateInvitation = async () => {
     return;
   }
   try {
-    const response = await fetch("https://api.basebrutt.com/api/invitations", {
+    const response = await fetch("https://api.grupify.cat/api/invitations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

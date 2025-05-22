@@ -71,7 +71,7 @@ const gestioSubmit = async (e) => {
     }
 
     // Registration request
-    const response = await fetch("https://api.basebrutt.com/api/register", {
+    const response = await fetch("https://api.grupify.cat/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -96,7 +96,7 @@ const gestioSubmit = async (e) => {
     console.log("Usuari registrat!", data);
 
     // Iniciar sesión automáticamente después del registro
-    const loginResponse = await fetch("https://api.basebrutt.com/api/login", {
+    const loginResponse = await fetch("https://api.grupify.cat/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

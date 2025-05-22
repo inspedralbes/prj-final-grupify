@@ -17,7 +17,7 @@ export const useFormAssignmentsStore = defineStore("formAssignments", () => {
     for (const assignment of newAssignments) {
       try {
         const response = await fetch(
-          "https://api.basebrutt.com/api/assign-form-to-user",
+          "https://api.grupify.cat/api/assign-form-to-user",
           {
             method: "POST",
             headers: {

@@ -68,7 +68,7 @@ class RegisteredUserController extends Controller
                 'email'     => $request->email,
                 'password'  => Hash::make($request->password),
                 'role_id'   => $request->role_id ?? 2,
-                'image'     => $request->image ?? 'https://api.basebrutt.com/images/default.png',
+                'image'     => $request->image ?? 'https://api.grupify.cat/images/default.png',
             ]);
 
             // Find invitation and get course/division

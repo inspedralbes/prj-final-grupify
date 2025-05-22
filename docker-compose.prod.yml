@@ -34,7 +34,7 @@ services:
         API_BASE_URL: ${API_BASE_URL}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nuxt-app.rule=Host(`basebrutt.com`) || Host(`www.basebrutt.com`)"
+      - "traefik.http.routers.nuxt-app.rule=Host(`grupify.cat`) || Host(`www.grupify.cat`)"
       - "traefik.http.routers.nuxt-app.entrypoints=websecure"
       - "traefik.http.routers.nuxt-app.tls.certresolver=myresolver"
       - "traefik.http.services.nuxt-app.loadbalancer.server.port=3000"
@@ -53,7 +53,7 @@ services:
       dockerfile: Dockerfile.prod
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.laravel-app.rule=Host(`api.basebrutt.com`)"
+      - "traefik.http.routers.laravel-app.rule=Host(`api.grupify.cat`)"
       - "traefik.http.routers.laravel-app.entrypoints=websecure"
       - "traefik.http.routers.laravel-app.tls.certresolver=myresolver"
       - "traefik.http.services.laravel-app.loadbalancer.server.port=80"
@@ -102,7 +102,7 @@ services:
       dockerfile: Dockerfile.prod
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.node-app.rule=Host(`node.basebrutt.com`)"
+      - "traefik.http.routers.node-app.rule=Host(`node.grupify.cat`)"
       - "traefik.http.routers.node-app.entrypoints=websecure"
       - "traefik.http.routers.node-app.tls.certresolver=myresolver"
       - "traefik.http.services.node-app.loadbalancer.server.port=5000"
@@ -116,7 +116,7 @@ services:
     image: adminer:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.adminer.rule=Host(`adminer.basebrutt.com`)"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.grupify.cat`)"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=myresolver"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
@@ -168,7 +168,7 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.chat.rule=Host(`chat.basebrutt.com`)"
+      - "traefik.http.routers.chat.rule=Host(`chat.grupify.cat`)"
       - "traefik.http.routers.chat.entrypoints=websecure"
       - "traefik.http.routers.chat.tls.certresolver=myresolver"
       - "traefik.http.routers.chat.middlewares=chat-auth"

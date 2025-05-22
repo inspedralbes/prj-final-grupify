@@ -19,7 +19,7 @@ export const useStudentsStore = defineStore("students", {
       this.students = []; // Limpiar estudiantes anteriores
 
       // Construir la URL con parámetros de filtro
-      let url = "https://api.basebrutt.com/api/get-students";
+      let url = "https://api.grupify.cat/api/get-students";
       const params = new URLSearchParams();
 
       // Manejar tanto IDs individuales como arrays de IDs

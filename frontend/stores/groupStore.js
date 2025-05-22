@@ -14,7 +14,7 @@ export const useGroupStore = defineStore("groups", {
         const token = authStore.token;
 
         // Construir la URL con parámetros de filtro
-        let url = "https://api.basebrutt.com/api/groups";
+        let url = "https://api.grupify.cat/api/groups";
         const params = new URLSearchParams();
 
         // Añadir filtros si están definidos
@@ -72,7 +72,7 @@ export const useGroupStore = defineStore("groups", {
         const bitacoraStore = useBitacoraStore();
 
         const response = await fetch(
-          `https://api.basebrutt.com/api/groups/${groupId}/addStudentsToGroup`,
+          `https://api.grupify.cat/api/groups/${groupId}/addStudentsToGroup`,
           {
             method: "POST",
             headers: {
@@ -107,7 +107,7 @@ export const useGroupStore = defineStore("groups", {
         // Verificar si la bitácora existe
         let bitacoraId = null;
         try {
-          const bitacoraResponse = await fetch(`https://api.basebrutt.com/api/bitacoras/${groupId}`, {
+          const bitacoraResponse = await fetch(`https://api.grupify.cat/api/bitacoras/${groupId}`, {
             headers: {
               Authorization: `Bearer ${token}`,
               Accept: "application/json",
@@ -123,7 +123,7 @@ export const useGroupStore = defineStore("groups", {
         }
 
         const response = await fetch(
-          `https://api.basebrutt.com/api/groups/${groupId}/removeStudentFromGroup`,
+          `https://api.grupify.cat/api/groups/${groupId}/removeStudentFromGroup`,
           {
             method: "DELETE",
             headers: {
@@ -161,7 +161,7 @@ export const useGroupStore = defineStore("groups", {
         const token = authStore.token;
 
         const response = await fetch(
-          `https://api.basebrutt.com/api/groups/${groupId}`,
+          `https://api.grupify.cat/api/groups/${groupId}`,
           {
             method: "DELETE",
             headers: {
@@ -193,7 +193,7 @@ export const useGroupStore = defineStore("groups", {
 
         console.log("Creating group with data:", groupData);
 
-        const response = await fetch("http://api.basebrutt.com/api/groups", {
+        const response = await fetch("http://api.grupify.cat/api/groups", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

@@ -696,7 +696,7 @@ const fetchTopStudentsByTag = async (courseId, divisionId, tagId) => {
 
   try {
     const response = await fetch(
-      `https://api.basebrutt.com/api/cesc/top-students/${courseId}/${divisionId}/${tagId}`
+      `https://api.grupify.cat/api/cesc/top-students/${courseId}/${divisionId}/${tagId}`
     );
 
     if (!response.ok) {
@@ -868,7 +868,7 @@ const fetchData = async () => {
 
   try {
     // La URL ahora se mantiene genérica sin filtrar por curso
-    const response = await fetch('https://api.basebrutt.com/api/cesc/graficas-tags', {
+    const response = await fetch('https://api.grupify.cat/api/cesc/graficas-tags', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

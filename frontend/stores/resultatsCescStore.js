@@ -26,7 +26,7 @@ export const useResultatCescStore = defineStore("resultatCesc", () => {
     const fetchResults = async () => {
         isLoading.value = true;
         try {
-            const response = await fetch("https://api.basebrutt.com/api/cesc/ver-resultados");
+            const response = await fetch("https://api.grupify.cat/api/cesc/ver-resultados");
             if (!response.ok) {
                 const errorData = await response.text();
                 console.error("Respuesta del servidor:", errorData);

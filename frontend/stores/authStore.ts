@@ -163,7 +163,7 @@ export const useAuthStore = defineStore("auth", {
           throw new Error("No authentication token");
         }
 
-        const response = await $fetch<{ user: User }>('https://api.basebrutt.com/api/user', {
+        const response = await $fetch<{ user: User }>('https://api.grupify.cat/api/user', {
           headers: { Authorization: `Bearer ${this.token}` }
         });
 
@@ -234,7 +234,7 @@ export const useAuthStore = defineStore("auth", {
     async logout(): Promise<void> {
       try {
         if (this.token) {
-          await $fetch('https://api.basebrutt.com/api/logout', {
+          await $fetch('https://api.grupify.cat/api/logout', {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${this.token}`,

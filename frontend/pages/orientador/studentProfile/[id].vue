@@ -53,7 +53,7 @@ async function obtenerDatosAlumno(studentId) {
 
     // Obtener preguntas y respuestas del formulario 5 (contiene las competencias 34 y 35)
     try {
-      const form5Response = await fetch(`https://api.basebrutt.com/api/forms/5/questions`);
+      const form5Response = await fetch(`https://api.grupify.cat/api/forms/5/questions`);
 
       if (form5Response.ok) {
         const form5Data = await form5Response.json();
@@ -66,7 +66,7 @@ async function obtenerDatosAlumno(studentId) {
 
     // Obtener preguntas y respuestas del formulario 4 (contiene las competencias 36-41)
     try {
-      const form4Response = await fetch(`https://api.basebrutt.com/api/forms/4/questions`);
+      const form4Response = await fetch(`https://api.grupify.cat/api/forms/4/questions`);
 
       if (form4Response.ok) {
         const form4Data = await form4Response.json();
@@ -123,7 +123,7 @@ async function obtenerDatosAlumno(studentId) {
 const fetchStudentById = async (id) => {
   try {
     console.log("Obteniendo estudiante directamente por ID:", id);
-    const response = await fetch(`https://api.basebrutt.com/api/users/${id}`);
+    const response = await fetch(`https://api.grupify.cat/api/users/${id}`);
 
     if (!response.ok) {
       console.error(`Error al obtener estudiante: ${response.status}`);
@@ -319,7 +319,7 @@ const handleBaja = async () => {
   try {
     // Enviar el estado actualizado al backend
     const response = await fetch(
-      `https://api.basebrutt.com/api/user/${student.value.id}/status`,
+      `https://api.grupify.cat/api/user/${student.value.id}/status`,
       {
         method: "PUT",
         headers: {
@@ -359,7 +359,7 @@ const handleAlta = async () => {
   try {
     // Enviar el estado actualizado al backend
     const response = await fetch(
-      `https://api.basebrutt.com/api/user/${student.value.id}/status`,
+      `https://api.grupify.cat/api/user/${student.value.id}/status`,
       {
         method: "PUT",
         headers: {
@@ -528,7 +528,7 @@ onMounted(async () => {
 const fetchComments = async studentId => {
   try {
     const response = await fetch(
-      `https://api.basebrutt.com/api/comments/students/${studentId}`,
+      `https://api.grupify.cat/api/comments/students/${studentId}`,
       {
         method: "GET",
         headers: {
@@ -564,7 +564,7 @@ const addComment = async () => {
   };
 
   try {
-    const response = await fetch(`https://api.basebrutt.com/api/comments`, {
+    const response = await fetch(`https://api.grupify.cat/api/comments`, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -585,7 +585,7 @@ const addComment = async () => {
 const deleteComment = async commentId => {
   try {
     const response = await fetch(
-      ` https://api.basebrutt.com/api/comments/${commentId}`,
+      ` https://api.grupify.cat/api/comments/${commentId}`,
       { method: "DELETE" }
     );
 
@@ -607,7 +607,7 @@ const updateComment = async commentId => {
 
   try {
     const response = await fetch(
-      `https://api.basebrutt.com/api/comments/${commentId}`,
+      `https://api.grupify.cat/api/comments/${commentId}`,
       {
         method: "PUT",
         headers: {

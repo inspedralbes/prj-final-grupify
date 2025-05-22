@@ -29,7 +29,7 @@ Route::get('/dashboard', function () {
 Route::post('/logout', function () {
     Auth::logout();
     // Redireccionar al login del frontend
-    return redirect('https://basebrutt.com/login');
+    return redirect('https://grupify.cat/login');
 })->name('logout');
 
 Route::get('/forms/{id}', [FormController::class, 'show'])->name('forms.show');

@@ -26,7 +26,7 @@ COPY --from=builder /app/node_modules ./node_modules
 
 # También necesitamos las variables en tiempo de ejecución
 ENV GOOGLE_CLIENT_ID="1025572623897-qvms38f9tt7je63tfgluvomnfv9uibbr.apps.googleusercontent.com"
-ENV API_BASE_URL="https://api.basebrutt.com"
+ENV API_BASE_URL="https://api.grupify.cat"
 
 EXPOSE 3000
 CMD ["node", ".output/server/index.mjs"]

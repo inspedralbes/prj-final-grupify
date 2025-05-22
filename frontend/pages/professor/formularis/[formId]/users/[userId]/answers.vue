@@ -242,7 +242,7 @@ const getCescTagClass = (tagId) => {
 const fetchAnswers = async (formId, userId) => {
   try {
     const response = await fetch(
-      `https://api.basebrutt.com/api/forms/${formId}/users/${userId}/answers`,
+      `https://api.grupify.cat/api/forms/${formId}/users/${userId}/answers`,
       {
         method: "GET",
         headers: {
@@ -283,7 +283,7 @@ const fetchAnswers = async (formId, userId) => {
 const fetchAnswersCesc = async (formId, userId) => {
   try {
     const response = await fetch(
-      `https://api.basebrutt.com/api/forms/${formId}/users/${userId}/relationships-cesc`,
+      `https://api.grupify.cat/api/forms/${formId}/users/${userId}/relationships-cesc`,
       {
         method: "GET",
         headers: {
@@ -321,7 +321,7 @@ const fetchAnswersSociogram = async (formId, userId) => {
   try {
     isLoading.value = true;
     const response = await fetch(
-      `https://api.basebrutt.com/api/forms/${formId}/users/${userId}/relationships`,
+      `https://api.grupify.cat/api/forms/${formId}/users/${userId}/relationships`,
       {
         method: "GET",
         headers: {

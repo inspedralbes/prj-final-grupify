@@ -15,7 +15,7 @@ const toast = useToast();
 const router = useRouter();
 
 // Obtener lista de estudiantes para asignación
-const { data: students } = await useFetch('https://api.basebrutt.com/api/students');
+const { data: students } = await useFetch('https://api.grupify.cat/api/students');
 
 const goBack = () => {
   navigateTo("/professor/formularis");
@@ -123,7 +123,7 @@ const saveForm = async () => {
     console.log("Enviando formulario:", formData);
 
     // Envía los datos al endpoint de guardado de formularios
-    const response = await fetch("https://api.basebrutt.com/api/forms-save", {
+    const response = await fetch("https://api.grupify.cat/api/forms-save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -204,7 +204,7 @@ const handleFormAssigned = async assignments => {
 
     console.log("Guardando formulario para asignación:", formData);
 
-    const saveResponse = await fetch("https://api.basebrutt.com/api/forms-save", {
+    const saveResponse = await fetch("https://api.grupify.cat/api/forms-save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -233,7 +233,7 @@ const handleFormAssigned = async assignments => {
 
     console.log("Asignando formulario:", assignmentData);
 
-    const assignResponse = await fetch("https://api.basebrutt.com/api/forms/assign-to-course-division", {
+    const assignResponse = await fetch("https://api.grupify.cat/api/forms/assign-to-course-division", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

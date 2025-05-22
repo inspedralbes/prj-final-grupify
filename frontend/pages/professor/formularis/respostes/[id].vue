@@ -31,7 +31,7 @@ const getUsersByForm = async (formId) => {
   try {
     // Para todos los formularios, incluido el sociograma (ID 3), usamos la misma API
     // que nos devolverá solo estudiantes de cursos asignados al profesor
-    const apiUrl = `https://api.basebrutt.com/api/form-user/${formId}/assigned-users`;
+    const apiUrl = `https://api.grupify.cat/api/form-user/${formId}/assigned-users`;
     const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
