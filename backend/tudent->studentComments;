@@ -1,0 +1,26 @@
+[90m= [39m[34;4mIlluminate\Database\Eloquent\Collection[39;24m {#6358
+    [34mall[39m: [
+      [34;4mApp\Models\Comment[39;24m {#6359
+        [34mid[39m: [35m1[39m,
+        [34mteacher_id[39m: [35m26[39m,
+        [34mcontent[39m: "[32mÉs un estudiant responsable i amb bones qualificacions.[39m",
+        [34mcreated_at[39m: "[32m2025-01-24 18:24:38[39m",
+        [34mupdated_at[39m: "[32m2025-01-24 18:24:38[39m",
+      },
+      [34;4mApp\Models\Comment[39;24m {#6348
+        [34mid[39m: [35m5[39m,
+        [34mteacher_id[39m: [35m26[39m,
+        [34mcontent[39m: "[32mComporta’s millor amb els altres alumnes i respon adequadament.[39m",
+        [34mcreated_at[39m: "[32m2025-01-24 18:24:38[39m",
+        [34mupdated_at[39m: "[32m2025-01-24 18:24:38[39m",
+      },
+      [34;4mApp\Models\Comment[39;24m {#6349
+        [34mid[39m: [35m10[39m,
+        [34mteacher_id[39m: [35m26[39m,
+        [34mcontent[39m: "[32mRendiment acadèmic excel·lent durant el semestre.[39m",
+        [34mcreated_at[39m: "[32m2025-01-24 18:24:38[39m",
+        [34mupdated_at[39m: "[32m2025-01-24 18:24:38[39m",
+      },
+    ],
+  }
+
