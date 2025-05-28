@@ -9,7 +9,7 @@ class FormSeeder extends Seeder
 {
     public function run()
     {
-        // Verificar si el formulario ya existe antes de crear uno nuevo
+        // Verificar si el formulari ja existeix abans de crear-ne un de nou
         if (!Form::where('title', 'Formulari de prova')->exists()) {
             Form::create([
                 'title' => 'Formulari de prova',
@@ -21,7 +21,7 @@ class FormSeeder extends Seeder
 
         if (!Form::where('title', 'Formulari CESC')->exists()) {
             Form::create([
-                'title' => 'Formulario CESC',
+                'title' => 'Formulari CESC',
                 'description' => 'Conducta i Experiències Socials a Classe',
                 'is_global' => true,
             ]);
@@ -30,7 +30,7 @@ class FormSeeder extends Seeder
         if (!Form::where('title', 'Formulari Sociograma')->exists()) {
             Form::create([
                 'title' => 'Formulari Sociograma',
-                'description' => 'Relacions entre estudiants a l aula.',
+                'description' => 'Relacions entre estudiants a l\'aula.',
                 'is_global' => true,
             ]);
         }

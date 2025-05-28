@@ -39,7 +39,7 @@
         </button>
       </div>
 
-      <!-- Mensajes de éxito/error -->
+      <!-- Missatges d'èxit/error -->
       <div v-if="successMessage || errorMessage" class="mb-4">
         <p v-if="successMessage" class="bg-green-100 text-green-800 p-3 rounded-lg">
           {{ successMessage }}
@@ -241,7 +241,7 @@ const goToGroup = groupId => {
 };
 
 onMounted(async () => {
-  // Verificar que el usuario está autenticado y cargar su información
+  // Verificar que l'usuari està autenticat i carregar la seva informació
   if (authStore.isAuthenticated && !authStore.user) {
     await authStore.checkAuth();
   }
@@ -249,7 +249,7 @@ onMounted(async () => {
   // Cargar estudiantes
   await studentsStore.fetchStudents();
   
-  // Inicialmente cargar todos los grupos del profesor
+  // Inicialment carregar tots els grups del professor
   await groupStore.fetchGroups();
 });
 
@@ -269,11 +269,11 @@ const {
   resetFilters 
 } = useGroupSearch(groups);
 
-// Seleccionar un curso y división específicos desde las tarjetas
+// Seleccionar un curs i divisió específics des de les targetes
 const selectAssignment = async (courseId, divisionId) => {
   await setFilters(courseId, divisionId);
   
-  // Mostrar mensaje informativo
+  // Mostrar missatge informatiu
   successMessage.value = `Mostrant grups de ${
     teacherAssignments.value.find(a => 
       a.courseId === courseId && a.divisionId === divisionId
@@ -312,7 +312,7 @@ const handleDeleteGroup = async () => {
     successMessage.value = "Grup eliminat correctament";
     showDeleteModal.value = false;
     
-    // Recargar grupos con los filtros actuales
+    // Recarregar grups amb els filtres actuals
     await groupStore.fetchGroups({
       course_id: selectedCourseId.value,
       division_id: selectedDivisionId.value

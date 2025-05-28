@@ -237,7 +237,7 @@ const close = () => {
             <!-- Selector de cursos -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">
-                Seleccionar Curso
+                Seleccionar Curs
               </label>
               <select v-model="selectedCourse" @change="fetchDivisions"
                 class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
@@ -251,11 +251,11 @@ const close = () => {
             <!-- Selector de divisiones -->
             <div v-if="divisions.length > 0">
               <label class="block text-sm font-medium text-gray-700 mb-1">
-                Seleccionar División
+                Seleccionar Divisió
               </label>
               <select v-model="selectedDivision"
                 class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent">
-                <option value="" disabled selected>Selecciona una división</option>
+                <option value="" disabled selected>Seleccioneu una divisió</option>
                 <option v-for="division in divisions" :key="division.id" :value="division.id">
                   {{ division.division }}
                 </option>
@@ -264,7 +264,7 @@ const close = () => {
             
             <!-- No divisiones message -->
             <div v-else-if="selectedCourse && !isLoading" class="text-yellow-600 text-sm mt-2">
-              No hay divisiones disponibles para este curso.
+              No hi ha divisions disponibles per a aquest curs.
             </div>
           </div>
         </div>

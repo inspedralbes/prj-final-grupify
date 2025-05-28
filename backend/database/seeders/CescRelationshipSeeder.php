@@ -16,21 +16,21 @@ class CescRelationshipSeeder extends Seeder
 
         $questionTags = [
             3 => 1,  14 => 1,  // POPULAR
-            4 => 2,            // RECHAZADO
-            5 => 3,  7 => 3,  8 => 3,  10 => 3,  // AGRESIVO
+            4 => 2,            // REBUTJAT
+            5 => 3,  7 => 3,  8 => 3,  10 => 3,  // AGRESSIU
             6 => 4,  9 => 4,  // PROSOCIAL
             11 => 5, 12 => 5, 13 => 5 // VÍCTIMA
         ];
 
-        // Obtener combinaciones únicas de curso y división
+        // Obtenir combinacions úniques de curs i divisió
         $classGroups = DB::table('course_division_user')
             ->select('course_id', 'division_id')
             ->distinct()
             ->get();
 
-        // Iterar sobre cada grupo de clase
+        // Iterar sobre cada grup de classe
         foreach ($classGroups as $group) {
-            // Obtener estudiantes de la misma clase
+            // Obtenir estudiants de la mateixa classe
             $students = User::where('role_id', 2)
                 ->whereIn('id', function ($query) use ($group) {
                     $query->select('user_id')
@@ -40,18 +40,18 @@ class CescRelationshipSeeder extends Seeder
                 })
                 ->get();
 
-            // Generar relaciones para cada estudiante con sus compañeros de clase
+            // Generar relacions per a cada estudiant amb els seus companys de classe
             foreach ($students as $user) {
                 $peers = $students->where('id', '!=', $user->id)->pluck('id')->toArray();
 
-                if (count($peers) >= 6) { // Asegurar que hay suficientes compañeros
-                    $usedPeers3 = []; // Para la pregunta 3
-                    $usedPeers4 = []; // Para la pregunta 4
+                if (count($peers) >= 6) { // Assegurar que hi ha suficients companys
+                    $usedPeers3 = []; // Per a la pregunta 3
+                    $usedPeers4 = []; // Per a la pregunta 4
 
                     foreach ($questionTags as $questionId => $tagId) {
                         $availablePeers = $peers;
 
-                        // Evitar duplicados entre preguntas 3 y 4
+                        // Evitar duplicats entre preguntes 3 i 4
                         if ($questionId == 3) {
                             $selectedPeers = $faker->randomElements($availablePeers, 3);
                             $usedPeers3 = $selectedPeers;
@@ -60,11 +60,11 @@ class CescRelationshipSeeder extends Seeder
                             $selectedPeers = $faker->randomElements($availablePeers, 3);
                             $usedPeers4 = $selectedPeers;
                         } else {
-                            // Para las demás preguntas, no hay restricciones
+                            // Per a les altres preguntes, no hi ha restriccions
                             $selectedPeers = $faker->randomElements($availablePeers, 3);
                         }
 
-                        // Insertar las relaciones en la base de datos
+                        // Inserir les relacions en la base de dades
                         foreach ($selectedPeers as $peerId) {
                             DB::table('cesc_relationships')->insert([
                                 'user_id' => $user->id,

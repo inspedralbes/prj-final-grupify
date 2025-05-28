@@ -83,7 +83,7 @@ async function loadStudentInfo() {
   }
 }
 
-// Función para obtener preguntas desde el backend
+// Funció per obtenir preguntes des del backend
 async function fetchFormQuestions() {
   isLoading.value = true;
   hasError.value = false;
@@ -102,15 +102,15 @@ async function fetchFormQuestions() {
     }
     
     const data = await response.json();
-    console.log('Datos recibidos de la API:', data);
+    console.log('Dades rebudes de l\'API:', data);
     
     if (!Array.isArray(data) || data.length === 0) {
       hasError.value = true;
-      errorMessage.value = 'No se encontraron preguntas para este formulario';
+      errorMessage.value = 'No es trobaren preguntes per a aquest formulari';
       return;
     }
     
-    // Filtrar preguntas para incluir solo las competencias
+    // Filtrar preguntes per incloure només les competències
     questions.value = data.filter(question => 
       question.id.toString().startsWith('modificar')
     );
@@ -138,7 +138,7 @@ async function fetchFormQuestions() {
 // Función para enviar respuestas al backend
 async function submitResponses() {
   if (isSubmitting.value) {
-    console.log('Ya se está enviando el formulario, evitando doble envío');
+    console.log('Ja s\'està enviant el formulari, evitant doble enviament');
     return;
   }
   
@@ -172,11 +172,11 @@ async function submitResponses() {
       })
       .filter(response => response !== null);
     
-    console.log('Datos formateados para enviar:', formattedResponses);
+    console.log('Dades formatejades per enviar:', formattedResponses);
 
-    // Verificar si hay respuestas para enviar
+    // Verificar si hi ha respostes per enviar
     if (formattedResponses.length === 0) {
-      triggerToast('Por favor, responde alguna pregunta antes de enviar.', 'error');
+      triggerToast('Si us plau, respon alguna pregunta abans d\'enviar.', 'error');
       isSubmitting.value = false;
       return;
     }
@@ -214,11 +214,11 @@ async function submitResponses() {
       course_id: courseId,
       division_id: divisionId,
       responses: formattedResponses,
-      completed_by_teacher: true, // Indicamos que fue completado por un profesor
+      completed_by_teacher: true, // Indiquem que va ser completat per un professor
       teacher_id: authStore.user.id
     };
     
-    console.log('Datos a enviar:', JSON.stringify(postData, null, 2));
+    console.log('Dades a enviar:', JSON.stringify(postData, null, 2));
     
     const fetchOptions = {
       method: 'POST',

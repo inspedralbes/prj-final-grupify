@@ -73,7 +73,7 @@ const sendToBackend = async (userData) => {
 
     console.log('Respuesta del servidor:', { token, user, role }); // Depuración
 
-    // Asegurarse de que se guardan correctamente todos los datos del usuario
+    // Assegurar-se que es guarden correctament totes les dades de l'usuari
     authStore.setAuth(token, user, role || user?.role?.name);
 
     // Determinar la ruta del dashboard basada en el rol
@@ -82,11 +82,11 @@ const sendToBackend = async (userData) => {
       admin: "/admin/dashboard",
       profesor: "/professor/dashboard",
       alumne: "/alumne/dashboard",
-      tutor: "/professor/dashboard", // Los tutores usan el mismo dashboard que los profesores
+      tutor: "/professor/dashboard", // Els tutors usen el mateix dashboard que els professors
       orientador: "/orientador/dashboard"
     };
 
-    // Redirigir al dashboard correspondiente
+    // Redirigir al dashboard corresponent
     const route = dashboardRoutes[userRole] || '/login';
     window.location.href = route;
   } catch (error) {
@@ -96,7 +96,7 @@ const sendToBackend = async (userData) => {
     } else {
       errorMessage.value = 'Error en el servidor. Por favor, intenta de nuevo más tarde.';
     }
-    // Limpiar mensaje después de 5 segundos
+    // Netejar missatge després de 5 segons
     setTimeout(() => {
       errorMessage.value = '';
     }, 5000);

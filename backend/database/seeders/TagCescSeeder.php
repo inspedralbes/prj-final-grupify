@@ -9,13 +9,13 @@ use App\Models\TagCesc;
 class TagCescSeeder extends Seeder
 {
     /**
-     * Ejecutar la siembra de la base de datos.
+     * Executar la sembrada de la base de dades.
      *
      * @return void
      */
     public function run()
     {
-        // Insertar los 5 tags predefinidos en la tabla tags_cesc
+        // Inserir els 5 tags predefinits en la taula tags_cesc
         $tags = [
             ['name' => 'popular'],
             ['name' => 'rebutjat'],
@@ -24,10 +24,10 @@ class TagCescSeeder extends Seeder
             ['name' => 'víctima'],
         ];
 
-        // Usar el modelo Tag para insertar los tags en la base de datos
+        // Usar el model Tag per inserir els tags en la base de dades
         TagCesc::insert($tags);
 
-        // Si prefieres usar create en lugar de insert:
+        // Si prefereixes usar create en lloc d'insert:
         // foreach ($tags as $tag) {
         //     Tag::create($tag);
         // }

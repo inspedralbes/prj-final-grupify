@@ -50,15 +50,15 @@ if (storedUser) {
 // Función de respaldo para obtener las respuestas del alumno (Formulario de autoavaliación id4)
 async function obtenerDatosAlumno(studentId) {
   try {
-    console.log("Método de respaldo: Obteniendo datos del formulario 4 para el estudiante ID:", studentId);
+    console.log("Mètode de recanvi: Obtenint dades del formulari 4 per a l'estudiant ID:", studentId);
     
-    // URL principal según el controlador del backend (AnswerController)
-    // La ruta correcta debe ser: /api/forms/{formId}/users/{userId}/answers
+    // URL principal segons el controlador del backend (AnswerController)
+    // La ruta correcta ha de ser: /api/forms/{formId}/users/{userId}/answers
     const url = `http://localhost:8000/api/forms/4/users/${studentId}/answers`;
     
-    console.log("Realizando petición a:", url);
+    console.log("Realitzant petició a:", url);
     
-    // Realizar petición con opciones optimizadas
+    // Realitzar petició amb opcions optimitzades
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -75,9 +75,9 @@ async function obtenerDatosAlumno(studentId) {
     
     // Procesar la respuesta
     const data = await response.json();
-    console.log("Datos recibidos del backend:", data);
+    console.log("Dades rebudes del backend:", data);
     
-    // Extraer las respuestas
+    // Extreure les respostes
     let answers = [];
     if (data && data.answers) {
       answers = data.answers;
@@ -141,16 +141,16 @@ async function obtenerDatosAlumno(studentId) {
 }
 // Función para actualizar el gráfico de autoavaluación
 function actualizarGrafico(respuestas) {
-  console.log("Actualizando gráfico con respuestas para estudiante ID:", studentId);
-  console.log("Datos de respuestas:", respuestas);
+  console.log("Actualitzant gràfic amb respostes per a estudiant ID:", studentId);
+  console.log("Dades de respostes:", respuestas);
 
-  // Usamos setTimeout para dar tiempo a que el DOM esté listo
+  // Usem setTimeout per donar temps a que el DOM estigui preparat
   setTimeout(() => {
     try {
-      // Obtener referencias al SVG y sus elementos
+      // Obtenir referències al SVG i els seus elements
       const svg = document.getElementById("radial-graph");
       if (!svg) {
-        console.error("No se encontró el elemento SVG principal (id: radial-graph)");
+        console.error("No es trobà l'element SVG principal (id: radial-graph)");
         return;
       }
 
@@ -387,15 +387,15 @@ onMounted(async () => {
     
     // Verificar si tenemos estudiantes cargados
     if (!studentsStore.students.length) {
-      console.log("Cargando lista de estudiantes...");
+      console.log("Carregant llista d'estudiants...");
       await studentsStore.fetchStudents();
     }
     
-    // Obtener datos del estudiante
+    // Obtenir dades de l'estudiant
     student.value = studentsStore.getStudentById(Number(studentId));
     
     if (!student.value) {
-      console.error("Estudiante no encontrado con ID:", studentId);
+      console.error("Estudiant no trobat amb ID:", studentId);
       error.value = "Estudiant no trobat";
     } else {
       console.log("Estudiante encontrado:", student.value.name, student.value.last_name);
@@ -414,12 +414,12 @@ onMounted(async () => {
       await nextTick();
 
       try {
-        console.log(`Cargando respuestas de autoavaluación para el estudiante ${studentId}`);
+        console.log(`Carregant respostes d'autoavaluació per a l'estudiant ${studentId}`);
 
-        // Usar la ruta completamente pública para autoavaluaciones
+        // Usar la ruta completament pública per a autoavaluacions
         const url = `http://localhost:8000/api/public/forms/autoavaluacion/${studentId}`;
         
-        console.log("Consultando URL:", url);
+        console.log("Consultant URL:", url);
         
         const response = await fetch(url, {
           method: "GET",
@@ -435,14 +435,14 @@ onMounted(async () => {
         }
         
         const data = await response.json();
-        console.log("Datos de autoavaluación (ruta pública):", data);
+        console.log("Dades d'autoavaluació (ruta pública):", data);
         
-        // Actualizar el estado basado en los datos recibidos
+        // Actualitzar l'estat basat en les dades rebudes
         hasAnsweredForm4.value = data.has_answered === true;
         
-        // Almacenar las respuestas mapeadas para usarlas cuando el gráfico sea visible
+        // Emmagatzemar les respostes mapejades per usar-les quan el gràfic sigui visible
         datosRespuestas.value = data.answers || [];
-        console.log("Competencias mapeadas para el gráfico:", datosRespuestas.value);
+        console.log("Competències mapejades per al gràfic:", datosRespuestas.value);
         
         // Si el gráfico está visible, actualizarlo inmediatamente
         if (isFormVisible.value) {
@@ -464,12 +464,12 @@ onMounted(async () => {
           const altResponse = await fetch(altUrl);
           if (altResponse.ok) {
             const altData = await altResponse.json();
-            console.log("Datos obtenidos con URL alternativa:", altData);
+            console.log("Dades obtingudes amb URL alternativa:", altData);
             
-            // Extraer respuestas
+            // Extreure respostes
             const altAnswers = altData.answers || [];
             
-            // Mapear respuestas
+            // Mapejar respostes
             const altMappedAnswers = competences.map(competence => {
               const answer = altAnswers.find(a => a.question_id === competence.id);
               const rating = answer ? (answer.rating || answer.answer || 0) : 0;
@@ -511,7 +511,7 @@ const checkForm4Status = async studentId => {
     // Intentar usar el endpoint principal para obtener la lista de usuarios que han respondido
     const url = `http://localhost:8000/api/forms/4/users`;
     
-    console.log("Intentando obtener lista de usuarios que han respondido:", url);
+    console.log("Intentant obtenir llista d'usuaris que han respost:", url);
     
     const response = await fetch(url, {
       method: "GET",
@@ -530,9 +530,9 @@ const checkForm4Status = async studentId => {
     }
 
     const data = await response.json();
-    console.log("Datos obtenidos del endpoint de usuarios:", data);
+    console.log("Dades obtingudes de l'endpoint d'usuaris:", data);
     
-    // Extraer lista de usuarios que han respondido
+    // Extreure llista d'usuaris que han respost
     const usersList = Array.isArray(data) ? data : (data.users || data.data || []);
     
     // Verificar si el estudiante está en la lista
@@ -580,9 +580,9 @@ const checkDirectResponses = async (studentId) => {
     }
     
     const directData = await directResponse.json();
-    console.log("Datos de verificación directa:", directData);
+    console.log("Dades de verificació directa:", directData);
     
-    // Extraer respuestas
+    // Extreure respostes
     let answers = [];
     if (directData && directData.answers) {
       answers = directData.answers;
@@ -715,12 +715,12 @@ const cancelEdit = () => {
 // Observar cambios en isFormVisible para actualizar el gráfico cuando se hace visible
 watch(isFormVisible, async (newValue) => {
   if (newValue && datosRespuestas.value) {
-    console.log("El gráfico se ha hecho visible, actualizando con datos almacenados:", datosRespuestas.value);
+    console.log("El gràfic s'ha fet visible, actualitzant amb dades emmagatzemades:", datosRespuestas.value);
     
-    // Esperar a que el DOM se actualice con el gráfico visible
+    // Esperar a que el DOM s'actualitzi amb el gràfic visible
     await nextTick();
     
-    // Dar un poco más de tiempo para asegurar que el DOM esté completamente listo
+    // Donar una mica més de temps per assegurar que el DOM estigui completament preparat
     setTimeout(() => {
       actualizarGrafico(datosRespuestas.value);
     }, 200);

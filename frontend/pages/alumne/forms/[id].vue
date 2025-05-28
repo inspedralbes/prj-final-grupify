@@ -333,7 +333,7 @@ function getRatingLabel(n) {
       <!-- Estado de carga -->
       <div v-if="isLoading" class="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center justify-center">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p class="mt-4 text-gray-600 font-medium">Cargando formulario...</p>
+        <p class="mt-4 text-gray-600 font-medium">Carregant formulari...</p>
       </div>
       
       <!-- Error -->
@@ -343,13 +343,13 @@ function getRatingLabel(n) {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h3 class="text-xl font-semibold text-gray-800 mb-2">Error al cargar las preguntas</h3>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Error en carregar les preguntes</h3>
         <p class="text-gray-600 mb-4">{{ errorMessage }}</p>
         <button 
           @click="navigateTo('/alumne/dashboard')" 
           class="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
         >
-          Volver al Dashboard
+          Tornar al Dashboard
         </button>
       </div>
       
@@ -509,16 +509,16 @@ function getRatingLabel(n) {
                 :class="{ 'opacity-70 cursor-wait': isSubmitting }"
               >
                 <span v-if="isSubmitting">
-                  <span class="inline-block animate-spin mr-2">⟳</span> Enviando...
+                  <span class="inline-block animate-spin mr-2">⟳</span> Enviant...
                 </span>
-                <span v-else>Enviar respuestas</span>
+                <span v-else> Enviant respoestes</span>
               </button>
               <button
                 v-else
                 @click="nextQuestion"
                 class="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
               >
-                Siguiente →
+                Següent →
               </button>
             </div>
           </div>
@@ -532,13 +532,13 @@ function getRatingLabel(n) {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h3 class="text-xl font-semibold text-gray-800 mb-2">No hay preguntas disponibles</h3>
-        <p class="text-gray-600 mb-4">Este formulario no tiene preguntas configuradas.</p>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No hi ha preguntes disponibles</h3>
+        <p class="text-gray-600 mb-4">Aquest formulari no té preguntes configurades.</p>
         <button 
           @click="navigateTo('/alumne/dashboard')" 
           class="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
         >
-          Volver al Dashboard
+          Tornar al Dashboard
         </button>
       </div>
     </div>

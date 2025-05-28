@@ -94,7 +94,7 @@ const saveForm = async () => {
         context: question.context || null
       };
 
-      // Añadir opciones solo si es pregunta de tipo multiple o checkbox
+      // Afegir opcions només si és pregunta de tipus multiple o checkbox
       if (['multiple', 'checkbox'].includes(question.type) && question.options) {
         formattedQuestion.options = question.options.map((option, index) => ({
           text: option.text,
@@ -120,9 +120,9 @@ const saveForm = async () => {
       time_limit: timeLimit.value
     };
     
-    console.log("Enviando formulario:", formData);
+    console.log("Enviant formulari:", formData);
     
-    // Envía los datos al endpoint de guardado de formularios
+    // Envia les dades a l'endpoint de guardat de formularis
     const response = await fetch("http://localhost:8000/api/forms-save", {
       method: "POST",
       headers: {
@@ -177,7 +177,7 @@ const handleFormAssigned = async assignments => {
         context: question.context || null
       };
 
-      // Añadir opciones solo si es pregunta de tipo multiple o checkbox
+      // Afegir opcions només si és pregunta de tipus multiple o checkbox
       if (['multiple', 'checkbox'].includes(question.type) && question.options) {
         formattedQuestion.options = question.options.map((option, index) => ({
           text: option.text,
@@ -223,15 +223,15 @@ const handleFormAssigned = async assignments => {
     }
     
     const savedForm = await saveResponse.json();
-    console.log("Formulario guardado:", savedForm);
+    console.log("Formulari guardat:", savedForm);
     
     // Then create assignments
     const assignmentData = {
-      form_id: savedForm.id || savedForm.form.id, // Maneja ambos formatos posibles de respuesta
+      form_id: savedForm.id || savedForm.form.id, // Maneja tots dos formats possibles de resposta
       assignments: assignments
     };
     
-    console.log("Asignando formulario:", assignmentData);
+    console.log("Assignant formulari:", assignmentData);
     
     const assignResponse = await fetch("http://localhost:8000/api/forms/assign-to-course-division", {
       method: "POST",
@@ -252,7 +252,7 @@ const handleFormAssigned = async assignments => {
     }
     
     const assignResult = await assignResponse.json();
-    console.log("Resultado de asignación:", assignResult);
+    console.log("Resultat d'assignació:", assignResult);
     
     toast.success("Formulari enviat correctament als alumnes seleccionats");
     

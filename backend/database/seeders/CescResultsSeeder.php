@@ -9,16 +9,16 @@ class CescResultsSeeder extends Seeder
 {
     public function run()
     {
-        // Vaciar la tabla antes de insertar nuevos datos (opcional)
+        // Buidar la taula abans d'inserir noves dades (opcional)
         DB::table('cesc_results')->truncate();
 
-        // Obtener los votos recibidos agrupados por peer_id y tag_id
+        // Obtenir els vots rebuts agrupats per peer_id i tag_id
         $results = DB::table('cesc_relationships')
             ->select('peer_id', 'tag_id', DB::raw('COUNT(*) as vote_count'))
             ->groupBy('peer_id', 'tag_id')
             ->get();
 
-        // Insertar los resultados en la tabla cesc_results
+        // Inserir els resultats en la taula cesc_results
         foreach ($results as $result) {
             DB::table('cesc_results')->insert([
                 'peer_id' => $result->peer_id,

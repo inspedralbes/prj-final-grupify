@@ -13,18 +13,18 @@ use Carbon\Carbon;
 class CompetenceAnswerSeeder extends Seeder
 {
     /**
-     * Ejecutar el seeder para generar respuestas de autoavaluación de competencias
+     * Executar el seeder per generar respostes d'autoavaluació de competències
      */
     public function run()
     {
-        // Obtener todos los estudiantes que tienen rol de estudiante
+        // Obtenir tots els estudiants que tenen rol d'estudiant
         $studentRoleId = \DB::table('roles')->where('name', 'student')->value('id');
         $students = User::where('role_id', $studentRoleId)->get();
 
-        // Obtener todas las competencias
+        // Obtenir totes les competències
         $competences = Competence::all();
         
-        // Buscar o crear un formulario para autoavaluación de competencias
+        // Buscar o crear un formulari per a autoavaluació de competències
         $form = Form::firstOrCreate(
             ['title' => 'Autoavaluació de Competències'],
             [
@@ -34,7 +34,7 @@ class CompetenceAnswerSeeder extends Seeder
             ]
         );
         
-        // Crear preguntas para cada competencia si no existen
+        // Crear preguntes per a cada competència si no existeixen
         foreach ($competences as $competence) {
             $question = Question::firstOrCreate(
                 [
@@ -48,48 +48,48 @@ class CompetenceAnswerSeeder extends Seeder
                 ]
             );
             
-            // Asociar la pregunta con la competencia si no lo está ya
+            // Associar la pregunta amb la competència si no ho està ja
             if (!$question->competences()->where('competence_id', $competence->id)->exists()) {
                 $question->competences()->attach($competence->id);
             }
         }
         
-        // Generar respuestas para cada estudiante
+        // Generar respostes per a cada estudiant
         foreach ($students as $student) {
-            // Generar respuestas para los últimos 4 años
+            // Generar respostes per als últims 4 anys
             for ($yearOffset = 0; $yearOffset < 4; $yearOffset++) {
                 $year = now()->subYears($yearOffset);
                 
-                // Para cada competencia, crear una respuesta aleatoria
+                // Per a cada competència, crear una resposta aleatòria
                 foreach ($competences as $competence) {
-                    // Obtener las preguntas asociadas a esta competencia
+                    // Obtenir les preguntes associades a aquesta competència
                     $questions = Question::whereHas('competences', function ($query) use ($competence) {
                         $query->where('competences.id', $competence->id);
                     })->where('form_id', $form->id)->get();
                     
                     foreach ($questions as $question) {
-                        // Generar un valor base para mantener coherencia entre años
-                        $baseValue = mt_rand(5, 8); // Valor base entre 5 y 8
+                        // Generar un valor base per mantenir coherència entre anys
+                        $baseValue = mt_rand(5, 8); // Valor base entre 5 i 8
                         
-                        // Añadir variación según el año (tendencia a mejorar con el tiempo)
-                        $yearFactor = $yearOffset * 0.5; // Factor incremental por año (más reciente = mejor valoración)
-                        $randomVariation = (mt_rand(-10, 10) / 10); // Variación aleatoria entre -1 y 1
+                        // Afegir variació segons l'any (tendència a millorar amb el temps)
+                        $yearFactor = $yearOffset * 0.5; // Factor incremental per any (més recent = millor valoració)
+                        $randomVariation = (mt_rand(-10, 10) / 10); // Variació aleatòria entre -1 i 1
                         
-                        // Calcular el valor final con límites entre 0 y 10
+                        // Calcular el valor final amb límits entre 0 i 10
                         $rating = max(0, min(10, $baseValue + $yearFactor + $randomVariation));
                         
-                        // Crear o actualizar la respuesta
+                        // Crear o actualitzar la resposta
                         Answer::updateOrCreate(
                             [
                                 'user_id' => $student->id,
                                 'form_id' => $form->id,
                                 'question_id' => $question->id,
-                                // Asegurarse de que solo haya una respuesta por año
+                                // Assegurar-se que només hi hagi una resposta per any
                                 'created_at' => Carbon::create($year->year, mt_rand(1, 12), mt_rand(1, 28))
                             ],
                             [
                                 'answer' => json_encode(['competence_id' => $competence->id]),
-                                'rating' => round($rating, 1), // Redondear a 1 decimal
+                                'rating' => round($rating, 1), // Arrodonir a 1 decimal
                                 'answer_type' => 'competence_rating',
                                 'updated_at' => Carbon::create($year->year, mt_rand(1, 12), mt_rand(1, 28))
                             ]
@@ -99,6 +99,6 @@ class CompetenceAnswerSeeder extends Seeder
             }
         }
         
-        $this->command->info('Se han generado respuestas de autoavaluación de competencias para todos los estudiantes.');
+        $this->command->info('S\'han generat respostes d\'autoavaluació de competències per a tots els estudiants.');
     }
 }

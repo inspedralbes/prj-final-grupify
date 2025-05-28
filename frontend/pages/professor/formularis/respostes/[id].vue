@@ -31,8 +31,8 @@ const checkIfMobile = () => {
 
 const getUsersByForm = async (formId) => {
   try {
-    // Para todos los formularios, incluido el sociograma (ID 3), usamos la misma API
-    // que nos devolverá solo estudiantes de cursos asignados al profesor
+    // Per a tots els formularis, inclòs el sociograma (ID 3), usem la mateixa API
+    // que ens retornarà només estudiants de cursos assignats al professor
     const apiUrl = `http://localhost:8000/api/form-user/${formId}/assigned-users`;
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -43,9 +43,9 @@ const getUsersByForm = async (formId) => {
       },
     });
 
-    // Si no está autorizado o no se encontró el recurso, marcamos como no asignado
+    // Si no està autoritzat o no es trobà el recurs, marquem com no assignat
     if (response.status === 401 || response.status === 403) {
-      console.log("Formulario no asignado a ninguno de tus cursos");
+      console.log("Formulari no assignat a cap dels teus cursos");
       formNotAssigned.value = true;
       students.value = [];
       return;
@@ -63,12 +63,12 @@ const getUsersByForm = async (formId) => {
     }
 
     const data = await response.json();
-    console.log("Datos recibidos:", data);
+    console.log("Dades rebudes:", data);
 
     if (data.users && data.users.length > 0) {
       students.value = data.users;
     } else {
-      // Si no hay usuarios pero el formulario está asignado, mostramos una lista vacía
+      // Si no hi ha usuaris però el formulari està assignat, mostrem una llista buida
       students.value = [];
     }
   } catch (error) {
@@ -165,10 +165,10 @@ const onImageError = (event, student) => {
         <!-- Students list -->
         <div v-else class="space-y-4">
           <div class="card">
-            <!-- Estado y gráficos de respuestas -->
+            <!-- Estat i gràfics de respostes -->
             <EstatsFormularisChart :students="students" :showByCourse="showDetailedChart" />
             
-            <!-- Botón para alternar vista detallada por curso -->
+            <!-- Botó per alternar vista detallada per curs -->
             <div class="flex justify-end mb-4">
               <button @click="showDetailedChart = !showDetailedChart" 
                       class="text-sm flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">

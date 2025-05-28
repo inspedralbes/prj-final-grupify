@@ -28,10 +28,10 @@ onMounted(async () => {
     const token = authStore.token;
 
     if (!token) {
-      throw new Error("No se encontró token de autenticación. Por favor, inicie sesión de nuevo.");
+      throw new Error("No es trobà token d'autenticació. Si us plau, iniciï sessió de nou.");
     }
 
-    // Mantener la forma original de obtener los formularios desde la tabla forms
+    // Mantenir la forma original d'obtenir els formularis des de la taula forms
     const response = await fetch(`http://localhost:8000/api/forms?teacher_id=${teacherId.value}`, {
       method: "GET",
       headers: {
@@ -40,12 +40,12 @@ onMounted(async () => {
       }
     });
 
-    if (!response.ok) throw new Error("Error obteniendo los datos.");
+    if (!response.ok) throw new Error("Error obtenint les dades.");
 
-    // Obtener los formularios
+    // Obtenir els formularis
     forms.value = await response.json();
 
-    // Adicionalmente, obtenemos las asignaciones para tener los datos de course_id y division_id
+    // Addicionalment, obtenim les assignacions per tenir les dades de course_id i division_id
     const assignmentsResponse = await fetch(`http://localhost:8000/api/form-assignments/teacher/${teacherId.value}`, {
       method: "GET",
       headers: {
@@ -57,19 +57,19 @@ onMounted(async () => {
     if (assignmentsResponse.ok) {
       const formAssignments = await assignmentsResponse.json();
 
-      // Enriquecer los formularios con la información de asignaciones
+      // Enriquir els formularis amb la informació d'assignacions
       forms.value = forms.value.map(form => {
-        // Buscar la asignación correspondiente a este formulario
+        // Buscar l'assignació corresponent a aquest formulari
         const assignment = formAssignments.find(a => a.form_id === form.id);
 
         if (assignment) {
-          // Si encontramos la asignación, añadimos course_id y division_id al formulario
-          // Y obtenemos el estado desde assignments si está disponible
+          // Si trobem l'assignació, afegim course_id i division_id al formulari
+          // I obtenim l'estat des d'assignments si està disponible
           return {
             ...form,
             course_id: assignment.course_id,
             division_id: assignment.division_id,
-            // Usar el status de la asignación si está disponible (asegurando que sea 0 o 1)
+            // Usar l'estat de l'assignació si està disponible (assegurant que sigui 0 o 1)
             status: assignment.status !== undefined ?
               (typeof assignment.status === 'boolean' ?
                 (assignment.status ? 1 : 0) :
@@ -84,8 +84,8 @@ onMounted(async () => {
 
     filterForms(forms.value);
   } catch (error) {
-    console.error("Error al cargar los formularios:", error.message);
-    toastMessage.value = "Error al cargar los formularios: " + error.message;
+    console.error("Error al carregar els formularis:", error.message);
+    toastMessage.value = "Error al carregar els formularis: " + error.message;
     toastType.value = "error";
     showToast.value = true;
     setTimeout(() => {
@@ -109,7 +109,7 @@ const updateFormStatus = async (formId, newStatus, courseId, divisionId) => {
   try {
     // Verificar si tenemos course_id y division_id
     if (!courseId || !divisionId) {
-      throw new Error("No se encontró información de curso y división para este formulario.");
+      throw new Error("No es trobà informació de curs i divisió per a aquest formulari.");
     }
 
     // Obtener el token del authStore
@@ -142,30 +142,30 @@ const updateFormStatus = async (formId, newStatus, courseId, divisionId) => {
 
       try {
         const errorData = JSON.parse(errorText);
-        throw new Error(`Error al actualizar el estado: ${errorData.message || response.statusText}`);
+        throw new Error(`Error en actualitzar l'estat: ${errorData.message || response.statusText}`);
       } catch (e) {
-        throw new Error(`Error al actualizar el estado: ${response.statusText}`);
+        throw new Error(`Error en actualitzar l'estat: ${response.statusText}`);
       }
     }
 
     const responseData = await response.json();
 
-    // Actualizar la interfaz de usuario para reflejar el cambio
+    // Actualitzar la interfície d'usuari per reflectir el canvi
     forms.value = forms.value.map(form =>
       form.id === formId ? { ...form, status: newStatus } : form
     );
 
-    // Mostrar mensaje de éxito
-    toastMessage.value = "Estado de la asignación actualizado correctamente";
+    // Mostrar missatge d'èxit
+    toastMessage.value = "Estat de l'assignació actualitzat correctament";
     toastType.value = "success";
     showToast.value = true;
     setTimeout(() => {
       showToast.value = false;
     }, 3000);
   } catch (error) {
-    console.error("Error al actualizar el estado:", error.message);
-    // Mostrar mensaje de error
-    toastMessage.value = "Error al actualizar el estado: " + error.message;
+    console.error("Error en actualitzar l'estat:", error.message);
+    // Mostrar missatge d'error
+    toastMessage.value = "Error en actualitzar l'estat: " + error.message;
     toastType.value = "error";
     showToast.value = true;
     setTimeout(() => {
@@ -385,7 +385,7 @@ const filteredForms = computed(() => {
                       <span class="sr-only">{{ form.status === 1 ? 'Desactivar' : 'Activar' }} formulario</span>
                     </button>
                     <button @click="viewUsersAnswered(form.id)">
-                      Ver respuestas
+                      Veure respostes
                     </button>
                   </div>
                 </td>

@@ -54,7 +54,7 @@ const handleDelete = async () => {
     }
     successMessage.value = "Elemento eliminado correctamente";
   } catch (error) {
-    errorMessage.value = "Hubo un error al eliminar el elemento";
+    errorMessage.value = "Hi va haver un error en eliminar l'element";
   } finally {
     showDeleteModal.value = false;
     setTimeout(() => {
@@ -100,7 +100,7 @@ const handleSaveBitacoraEntry = async (userId) => {
 
     successMessage.value = "Entrada guardada correctamente";
   } catch (error) {
-    errorMessage.value = "Error al guardar la entrada";
+    errorMessage.value = "Error en guardar l'entrada";
   }
 };
 
@@ -122,9 +122,9 @@ const handleAddComment = async () => {
   }
 
   try {
-    // Usar el ID del usuario autenticado, que debería ser un profesor, tutor u orientador
+    // Usar l'ID de l'usuari autenticat, que hauria de ser un professor, tutor o orientador
     const commentData = {
-      teacher_id: authStore.user?.id, // Usar el ID del usuario autenticado
+      teacher_id: authStore.user?.id, // Usar l'ID de l'usuari autenticat
       content: newComment.value,
     };
 
@@ -257,7 +257,7 @@ const saveGroup = () => {
         </NuxtLink>
       </div>
 
-      <!-- Sección de Estudiantes -->
+      <!-- Secció d'Estudiants -->
       <div class="mb-8">
         <h2 class="text-2xl font-semibold text-gray-800 mb-4">Gestió d'Estudiants</h2>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -290,7 +290,7 @@ const saveGroup = () => {
               </button>
             </div>
 
-            <!-- Mensaje -->
+            <!-- Missatge -->
             <div class="mt-4">
               <p v-if="successMessage" class="px-4 py-3 bg-green-50 text-green-700 rounded-lg">
                 {{ successMessage }}
@@ -312,7 +312,7 @@ const saveGroup = () => {
               </span>
             </div>
 
-            <!-- Mensaje de carga -->
+            <!-- Missatge de càrrega -->
             <div v-if="isLoadingusers" class="py-8 text-center text-gray-500">
               <svg class="animate-spin h-8 w-8 mx-auto mb-3 text-gray-400" xmlns="http://www.w3.org/2000/svg"
                 fill="none" viewBox="0 0 24 24">
@@ -324,12 +324,12 @@ const saveGroup = () => {
               <p>Carregant membres del grup...</p>
             </div>
 
-            <!-- Lista de miembros -->
+            <!-- Llista de membres -->
             <div v-else class="space-y-3 max-h-[500px] overflow-y-auto pr-2 -mr-2">
               <div v-for="user in group?.users" :key="user.id"
                 class="group relative bg-gray-50 rounded-lg p-4 flex items-center justify-between hover:bg-[rgba(0,173,238,0.05)] transition-colors">
                 <div class="flex items-center gap-3">
-                  <!-- Mostrar imagen de perfil o inicial -->
+                  <!-- Mostrar imatge de perfil o inicial -->
                   <div class="relative">
                     <div v-if="user.image" class="w-8 h-8 rounded-full overflow-hidden">
                       <img :src="user.image" class="w-full h-full object-cover" :alt="`Foto de ${user.name}`" />

@@ -253,14 +253,14 @@ const setupSocketListeners = () => {
 
 // Montar el componente y cargar datos
 onMounted(async () => {
-  console.log("Componente montado: Lista de alumnos del orientador");
-  console.log("Rol del usuario:", authStore.userRole);
-  console.log("¿Es orientador?", authStore.isOrientador);
+  console.log("Component muntat: Llista d'alumnes de l'orientador");
+  console.log("Rol de l'usuari:", authStore.userRole);
+  console.log("És orientador?", authStore.isOrientador);
 
   if (authStore.user?.course_divisions) {
     console.log("Divisiones asignadas:", authStore.user.course_divisions.length);
   } else {
-    console.log("No hay divisiones asignadas en el usuario");
+    console.log("No hi ha divisions assignades en l'usuari");
   }
 
   setupSocketListeners();

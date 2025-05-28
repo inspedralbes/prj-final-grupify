@@ -19,9 +19,9 @@ class BitacoraSeeder extends Seeder
         foreach ($groups as $group) {
             // Crear la bitácora asociada al grupo
             $bitacora = Bitacora::create([
-                'group_id' => $group->id, // Asociar la bitácora con el grupo
-                'title' => 'Bitàcora del Grup' . $group->name,
-                'description' => 'Descripció general de les activitats del grup'  . $group->name,
+                'group_id' => $group->id, // Associar la bitàcora amb el grup
+                'title' => 'Bitàcora del Grup ' . $group->name,
+                'description' => 'Descripció general de les activitats del grup ' . $group->name,
             ]);
 
             $users = $group->users; // Relación entre usuarios y grupos

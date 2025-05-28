@@ -13,15 +13,15 @@ class SociogramRelationshipSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        // Obtener combinaciones únicas de curso y división
+        // Obtenir combinacions úniques de curs i divisió
         $classGroups = DB::table('course_division_user')
             ->select('course_id', 'division_id')
             ->distinct()
             ->get();
 
-        // Iterar sobre cada grupo de clase
+        // Iterar sobre cada grup de classe
         foreach ($classGroups as $group) {
-            // Obtener estudiantes de la misma clase
+            // Obtenir estudiants de la mateixa classe
             $students = User::where('role_id', 2)
                 ->whereIn('id', function ($query) use ($group) {
                     $query->select('user_id')
@@ -31,36 +31,36 @@ class SociogramRelationshipSeeder extends Seeder
                 })
                 ->get();
 
-            // Generar relaciones para cada estudiante con sus compañeros de clase
+            // Generar relacions per a cada estudiant amb els seus companys de classe
             foreach ($students as $user) {
                 $peers = $students->where('id', '!=', $user->id)->pluck('id')->toArray();
 
-                if (count($peers) >= 6) { // Asegurarse de tener suficientes compañeros
-                    $usedPeers15 = []; // Para la pregunta 15
-                    $usedPeers16 = []; // Para la pregunta 16
+                if (count($peers) >= 6) { // Assegurar-se de tenir suficients companys
+                    $usedPeers15 = []; // Per a la pregunta 15
+                    $usedPeers16 = []; // Per a la pregunta 16
 
                     for ($questionId = 15; $questionId <= 21; $questionId++) {
-                        // Definir el tipo de relación: solo la pregunta 16 es negativa
+                        // Definir el tipus de relació: només la pregunta 16 és negativa
                         $relationshipType = ($questionId == 16) ? 'negative' : 'positive';
 
-                        // Filtrar compañeros ya elegidos para evitar duplicados entre preguntas 15 y 16
+                        // Filtrar companys ja escollits per evitar duplicats entre preguntes 15 i 16
                         $availablePeers = $peers;
 
-                        // Para la pregunta 15 y 16 asegurarse que no se repitan entre ellas
+                        // Per a la pregunta 15 i 16 assegurar-se que no es repeteixin entre elles
                         if ($questionId == 15) {
                             $selectedPeers = $faker->randomElements($availablePeers, 3);
                             $usedPeers15 = array_merge($usedPeers15, $selectedPeers);
                         } elseif ($questionId == 16) {
-                            // Filtrar los compañeros ya seleccionados en la pregunta 15
+                            // Filtrar els companys ja seleccionats en la pregunta 15
                             $availablePeers = array_diff($peers, $usedPeers15);
                             $selectedPeers = $faker->randomElements($availablePeers, 3);
                             $usedPeers16 = array_merge($usedPeers16, $selectedPeers);
                         } else {
-                            // Para las preguntas 17-21 no se aplican restricciones
+                            // Per a les preguntes 17-21 no s'apliquen restriccions
                             $selectedPeers = $faker->randomElements($availablePeers, 3);
                         }
 
-                        // Insertar las relaciones
+                        // Inserir les relacions
                         foreach ($selectedPeers as $peerId) {
                             DB::table('sociogram_relationships')->insert([
                                 'user_id' => $user->id,

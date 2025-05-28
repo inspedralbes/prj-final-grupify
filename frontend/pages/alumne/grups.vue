@@ -115,17 +115,17 @@ const navigateToBitacora = (groupId) => {
 
 onMounted(async () => {
   try {
-    console.log("Iniciando carga de grupos para alumno...");
+    console.log("Iniciant càrrega de grups per a alumne...");
     await groupStore.fetchGroups();
-    console.log(`Grupos cargados: ${groupStore.groups.length}`);
+    console.log(`Grups carregats: ${groupStore.groups.length}`);
     
-    // Verificar si algún grupo está vacío
+    // Verificar si algun grup està buit
     groupStore.groups.forEach((group, index) => {
-      console.log(`Grupo ${index + 1}: ID=${group.id}, Nombre=${group.name}, Miembros=${(group.users || []).length}`);
+      console.log(`Grup ${index + 1}: ID=${group.id}, Nom=${group.name}, Membres=${(group.users || []).length}`);
       
       // Log users with images
       (group.users || []).forEach(user => {
-        console.log(`  - Usuario: ${user.name} ${user.last_name}, Image: ${user.image || 'No image'}`);
+        console.log(`  - Usuari: ${user.name} ${user.last_name}, Imatge: ${user.image || 'No image'}`);
       });
     });
   } catch (error) {

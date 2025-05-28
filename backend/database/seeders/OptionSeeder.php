@@ -9,22 +9,22 @@ class OptionSeeder extends Seeder
 {
     public function run()
     {
-        // Crear opciones básicas relacionadas a la primera pregunta con ID 1
+        // Crear opcions bàsiques relacionades amb la primera pregunta amb ID 1
         Option::create([
-            'question_id' => 1, // Asegúrate de que exista una Question con ID 1
-            'text' => 'Rojo',
+            'question_id' => 1, // Assegura't que existeixi una Question amb ID 1
+            'text' => 'Vermell',
             'value' => 1,
         ]);
 
         Option::create([
             'question_id' => 1,
-            'text' => 'Azul',
+            'text' => 'Blau',
             'value' => 2,
         ]);
 
-        // Crear opciones para otra pregunta con ID 2
+        // Crear opcions per a una altra pregunta amb ID 2
         Option::create([
-            'question_id' => 2, // Asegúrate de que exista una Question con ID 2
+            'question_id' => 2, // Assegura't que existeixi una Question amb ID 2
             'text' => 'Pizza',
             'value' => 1,
         ]);

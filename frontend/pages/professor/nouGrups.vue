@@ -169,7 +169,7 @@ const handleCreateGroup = async () => {
       division_id: selectedDivisionId.value
     };
 
-    console.log("Enviando datos del grupo:", groupData);
+    console.log("Enviant dades del grup:", groupData);
 
     const response = await groupStore.createGroup(groupData);
 

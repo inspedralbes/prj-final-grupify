@@ -89,7 +89,7 @@ const menuItems = computed(() => {
       return true; // Todos tienen acceso a este elemento
     }
 
-    // Verificar si el usuario tiene el permiso requerido
+    // Verificar si l'usuari té el permís requerit
     return authStore[item.requiredPermission];
   });
 });
@@ -120,23 +120,23 @@ const totalResponsesPercentage = computed(() => {
   return Math.round((completedResponses / totalStudents) * 100);
 });
 
-// Función para obtener datos actualizados del usuario desde el backend
+// Funció per obtenir dades actualitzades de l'usuari des del backend
 const fetchUserData = async () => {
   try {
-    // Solo obtenemos datos nuevos si el usuario está autenticado
+    // Només obtenim dades noves si l'usuari està autenticat
     if (authStore.token) {
       await authStore.checkAuth();
-      console.log("Datos de usuario actualizados desde el servidor");
+      console.log("Dades d'usuari actualitzades des del servidor");
     }
   } catch (error) {
-    console.error("Error al obtener datos del usuario:", error);
+    console.error("Error al obtenir dades de l'usuari:", error);
   }
 };
 
-// Función para cargar los datos de clases desde el authStore
+// Funció per carregar les dades de classes des de l'authStore
 const loadClassesData = async () => {
   try {
-    // Primero, obtenemos datos actualizados del usuario
+    // Primer, obtenim dades actualitzades de l'usuari
     await fetchUserData();
 
     // Cargar cursos disponibles
@@ -219,27 +219,27 @@ const loadClassesData = async () => {
         };
       });
     } else {
-      console.log("No se encontraron course_divisions en el perfil del usuario");
+      console.log("No es trobaren course_divisions en el perfil de l'usuari");
     }
 
-    // Cargar grupos asignados al profesor
+    // Carregar grups assignats al professor
     await fetchTeacherGroups();
 
   } catch (error) {
-    console.error("Error al cargar datos de clases:", error);
+    console.error("Error al carregar dades de classes:", error);
   }
 };
 
-// Función para cargar los grupos creados por el profesor
+// Funció per carregar els grups creats pel professor
 const fetchTeacherGroups = async () => {
   try {
-    // Obtener los grupos del profesor
+    // Obtenir els grups del professor
     await groupStore.fetchGroups();
 
-    // Actualizar el número de grupos activos
+    // Actualitzar el nombre de grups actius
     dashboardState.activeGroups = groupStore.groups.length;
 
-    // Calcular el número total de estudiantes en todos los grupos
+    // Calcular el nombre total d'estudiants en tots els grups
     let groupStudents = groupStore.groups.reduce(
       (total, group) => total + (group.number_of_students || 0),
       0
@@ -265,17 +265,17 @@ const fetchTeacherGroups = async () => {
       dashboardState.pendingForms = authStore.user.pending_forms_count;
     }
 
-    // Si no hay clases en currentClasses, usar los grupos como clases
+    // Si no hi ha classes a currentClasses, usar els grups com a classes
     if (dashboardState.currentClasses.length === 0 && groupStore.groups.length > 0) {
       dashboardState.currentClasses = groupStore.groups.map(group => ({
         name: group.name,
         students: group.number_of_students || 0,
-        nextClass: getNextClassTime(), // Función para generar un horario simulado
-        groupId: group.id // Guardamos el ID del grupo para navegación
+        nextClass: getNextClassTime(), // Funció per generar un horari simulat
+        groupId: group.id // Guardem l'ID del grup per a navegació
       }));
     }
   } catch (error) {
-    console.error("Error al cargar grupos del profesor:", error);
+    console.error("Error al carregar grups del professor:", error);
   }
 };
 
@@ -295,17 +295,17 @@ const getNextClassTime = () => {
   return `${randomDay} ${randomHour}`;
 };
 
-// Cargar el usuario y los datos desde el localStorage cuando el componente se monta
+// Carregar l'usuari i les dades des del localStorage quan el component es munta
 onMounted(async () => {
-  // Verificar que sea un profesor, tutor o administrador
+  // Verificar que sigui un professor, tutor o administrador
   if (!authStore.isProfesor && !authStore.isTutor && !authStore.isAdmin) {
-    console.log("Usuario no autorizado para acceder al dashboard de profesor");
+    console.log("Usuari no autoritzat per accedir al dashboard de professor");
     router.push('/login');
     return;
   }
-  console.log("Usuario autorizado para acceder al dashboard de profesor:", authStore.userRole);
+  console.log("Usuari autoritzat per accedir al dashboard de professor:", authStore.userRole);
 
-  // Cargar datos del usuario
+  // Carregar dades de l'usuari
   const storedUser = localStorage.getItem("user");
   if (storedUser) {
     userData.value = JSON.parse(storedUser);
@@ -315,7 +315,7 @@ onMounted(async () => {
   // Cargar datos reales de clases
   await loadClassesData();
   
-  // Cargar información de formularios
+  // Carregar informació de formularis
   await fetchFormStats();
 
   console.log("Estado final del dashboard:", {
@@ -334,10 +334,10 @@ const logout = () => {
   authStore.logout();
 };
 
-// Función para seleccionar un curso y división específicos
+// Funció per seleccionar un curs i divisió específics
 const selectCourseAndDivision = async (courseName, divisionName) => {
   try {
-    // Buscar el course_id y division_id correspondientes en las asignaciones del profesor
+    // Buscar el course_id i division_id corresponents en les assignacions del professor
     const assignment = authStore.user?.course_divisions?.find(
       cd => cd.course_name === courseName && cd.division_name === divisionName
     );
@@ -421,10 +421,10 @@ const fetchFormStats = async () => {
       return;
     }
 
-    // Para cada formulario, obtener los usuarios asignados y sus respuestas
+    // Per a cada formulari, obtenir els usuaris assignats i les seves respostes
     for (const form of forms) {
       try {
-        // Obtener las respuestas detalladas para ver quién ha contestado realmente
+        // Obtenir les respostes detallades per veure qui ha contestat realment
         const apiUrl = `http://localhost:8000/api/form-user/${form.id}/assigned-users`;
         const response = await fetch(apiUrl, {
           method: "GET",
@@ -449,7 +449,7 @@ const fetchFormStats = async () => {
 
           const totalStudents = data.users.length;
           
-          // Verificamos explícitamente el campo answered en cada usuario
+          // Verifiquem explícitament el camp answered en cada usuari
           let answeredCount = 0;
           for (const user of data.users) {
             if (user.answered === true || user.answered === 1 || user.answered === '1') {
@@ -457,10 +457,10 @@ const fetchFormStats = async () => {
             }
           }
           
-          // Usar el contador explícito en lugar del filtrado rápido
+          // Usar el comptador explícit en lloc del filtrat ràpid
           const percentage = totalStudents > 0 ? Math.round((answeredCount / totalStudents) * 100) : 0;
 
-          console.log(`Formulario ${form.title}: ${answeredCount}/${totalStudents} (${percentage}%)`);
+          console.log(`Formulari ${form.title}: ${answeredCount}/${totalStudents} (${percentage}%)`);
 
           // Guardar estadísticas para este formulario
           formStats[form.title] = {
