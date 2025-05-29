@@ -74,7 +74,7 @@ const sections = [
   {
     title: "Amb qui prefereixes no treballar?",
     description:
-      "Selecciona 3 compañeros/as con los que prefieres evitar trabajar",
+      "Selecciona 3 companys/es amb els que vas preferir evitar treballar",
     id: 16,
     icon: UserIcon,
     selectionKey: "avoidWorkPartners",
@@ -83,7 +83,7 @@ const sections = [
   {
     title: "Amb qui has treballat anteriorment?",
     description:
-      "Selecciona 3 compañeros/as con los que hayas trabajado anteriormente",
+      "Selecciona 3 companys/es amb els que hagis treballat anteriorment",
     id: 17,
     icon: UserIcon,
     selectionKey: "habitualWorkPartners",
@@ -92,7 +92,7 @@ const sections = [
 
   {
     title: "Qui té habilitats de lideratge",
-    description: "Selecciona 2 compañeros/as que consideras buenos líderes",
+    description: "Selecciona 2 companys/es que consideres bons líders",
     id: 18,
     icon: StarIcon,
     selectionKey: "potentialLeaders",
@@ -117,7 +117,7 @@ const sections = [
   {
     title: "Amb qui no has treballat anteriorment?",
     description:
-      "Selecciona 2 compañeros/as con los que no hayas trabajado anteriormente",
+      "Selecciona 2 companys/es amb qui no hagis treballat anteriorment",
     id: 21,
     icon: UserIcon,
     selectionKey: "inhabitualWorkPartners",

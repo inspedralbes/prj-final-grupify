@@ -222,7 +222,7 @@ onMounted(async () => {
     >
       <h2 class="text-2xl font-bold mb-4">{{ currentQuestion?.title }}</h2>
       <p class="text-gray-600 mb-4">
-        {{ currentQuestion?.placeholder || "Selecciona 3 personas" }}
+        {{ currentQuestion?.placeholder || "Selecciona 3 persones" }}
       </p>
 
       <div class="grid grid-cols-3 gap-4">
@@ -255,7 +255,7 @@ onMounted(async () => {
       </div>
 
       <div class="mt-4 text-sm text-gray-600">
-        Seleccionados: {{ responses[currentQuestion?.id]?.length || 0 }}/3
+        Seleccionats: {{ responses[currentQuestion?.id]?.length || 0 }}/3
       </div>
 
       <button
@@ -274,7 +274,7 @@ onMounted(async () => {
         class="mt-6 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         @click="submitResponses"
       >
-        Finalizar
+        Finalitzar
       </button>
     </div>
 

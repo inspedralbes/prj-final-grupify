@@ -118,13 +118,13 @@ async function submitResponses() {
       }
     );
 
-    if (!response.ok) throw new Error("Error al enviar respuestas");
+    if (!response.ok) throw new Error("Error en enviar respostes");
 
-    triggerToast("Respuestas enviadas correctamente.", "success");
+    triggerToast("Respostes enviades correctament.", "success");
     setTimeout(() => (window.location.href = "/student/dashboard"), 1000);
   } catch (error) {
     console.error("Error al enviar las respuestas:", error);
-    triggerToast("Error al enviar las respuestas.", "error");
+    triggerToast("Error en enviar les respostes.", "error");
   }
 }
 

@@ -290,7 +290,7 @@ async function submitResponses() {
 
         // Si llegamos aquí, fue exitoso
         submitted = true;
-        triggerToast("¡Respuestas enviadas correctamente!", "success");
+        triggerToast("¡Respostes enviades correctament!", "success");
         
         // Esperamos un poco antes de redirigir
         setTimeout(() => {
@@ -396,7 +396,7 @@ function getRatingLabel(n) {
                 v-model="responses[questions[currentQuestionIndex].id].value"
                 type="text"
                 class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                :placeholder="questions[currentQuestionIndex].placeholder || 'Escribe tu respuesta aquí'"
+                :placeholder="questions[currentQuestionIndex].placeholder || 'Escriu la teva resposta aquí'"
               />
             </div>
 
@@ -511,7 +511,7 @@ function getRatingLabel(n) {
                 <span v-if="isSubmitting">
                   <span class="inline-block animate-spin mr-2">⟳</span> Enviant...
                 </span>
-                <span v-else> Enviant respoestes</span>
+                <span v-else> Enviant respostes</span>
               </button>
               <button
                 v-else

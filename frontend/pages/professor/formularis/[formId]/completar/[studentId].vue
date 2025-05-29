@@ -253,7 +253,7 @@ async function submitResponses() {
     }
 
     // Si llegamos aquí, fue exitoso
-    triggerToast('¡Respuestas enviadas correctamente!', 'success');
+    triggerToast('¡Respostes enviades correctament!', 'success');
     
     // Esperamos un poco antes de redirigir
     setTimeout(() => {
