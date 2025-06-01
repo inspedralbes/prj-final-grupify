@@ -1,0 +1,32 @@
+# Etapa 1: Construcción
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Agregar ARG para las variables de construcción
+ARG GOOGLE_CLIENT_ID
+ARG API_BASE_URL
+
+# Establecer como variables de entorno
+ENV GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+ENV API_BASE_URL=$API_BASE_URL
+
+COPY package*.json ./
+RUN npm install
+COPY . .
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+RUN npm run build
+
+# Etapa 2: Ejecución
+FROM node:18-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app/.output ./.output
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+
+# También necesitamos las variables en tiempo de ejecución
+ENV GOOGLE_CLIENT_ID="1025572623897-qvms38f9tt7je63tfgluvomnfv9uibbr.apps.googleusercontent.com"
+ENV API_BASE_URL="https://api.grupify.cat"
+
+EXPOSE 3000
+CMD ["node", ".output/server/index.mjs"]

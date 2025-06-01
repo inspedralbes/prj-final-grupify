@@ -1,0 +1,30 @@
+{
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": false,  // Puedes cambiarlo a true cuando todo tu código sea compatible con TypeScript
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./*"],
+      "@/*": ["./*"]
+    },
+    "types": [
+      "node",
+      "nuxt"
+    ]
+  },
+  "include": [
+    ".nuxt/nuxt.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.vue"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
